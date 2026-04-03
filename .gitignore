@@ -1,0 +1,48 @@
+# Dependencias
+node_modules/
+**/node_modules/
+
+# Variables de entorno (Seguridad)
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*.local
+*.pem
+*.key
+
+# Build y Archivos temporales
+dist/
+dist-ssr/
+build/
+.vite/
+.output/
+.vercel
+**/.temp/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Cobertura de tests
+coverage/
+.nyc_output/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editores y IDEs
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
