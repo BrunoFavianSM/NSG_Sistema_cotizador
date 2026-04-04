@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tests para SelectorComponente
  * 
  * Valida:
@@ -412,4 +412,5 @@ describe('SelectorComponente', () => {
     expect(onSeleccionar).toHaveBeenCalledWith([]);
   });
 });
+
 

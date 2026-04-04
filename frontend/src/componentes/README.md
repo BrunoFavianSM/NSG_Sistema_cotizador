@@ -1,4 +1,4 @@
-# Componentes Reutilizables
+﻿# Componentes Reutilizables
 
 ## SelectorComponente
 
@@ -27,7 +27,7 @@ Componente reutilizable para seleccionar componentes de hardware en el cotizador
 
 ### Ejemplo de Uso
 
-#### Selección Única (Procesador)
+#### Selección �snica (Procesador)
 
 ```jsx
 import SelectorComponente from '../componentes/SelectorComponente';
@@ -328,8 +328,8 @@ function PaginaCotizador() {
   compatible: true,
   errores: [],
   advertencias: [
-    '⚠️ Margen ajustado: recomendado 600W',
-    '⚠️ Componentes a pedido: 7 días de entrega'
+    '�s�️ Margen ajustado: recomendado 600W',
+    '�s�️ Componentes a pedido: 7 días de entrega'
   ]
 }
 // Muestra panel amarillo con advertencias
@@ -341,8 +341,8 @@ function PaginaCotizador() {
 {
   compatible: false,
   errores: [
-    '❌ Socket incompatible: AM5 vs LGA1700',
-    '❌ Fuente insuficiente: requiere 500W, tiene 400W'
+    '�O Socket incompatible: AM5 vs LGA1700',
+    '�O Fuente insuficiente: requiere 500W, tiene 400W'
   ],
   advertencias: []
 }
@@ -355,10 +355,10 @@ function PaginaCotizador() {
 {
   compatible: false,
   errores: [
-    '❌ RAM incompatible: Placa soporta DDR5, seleccionado DDR4'
+    '�O RAM incompatible: Placa soporta DDR5, seleccionado DDR4'
   ],
   advertencias: [
-    '⚠️ Componentes a pedido: 10 días de entrega'
+    '�s�️ Componentes a pedido: 10 días de entrega'
   ]
 }
 // Muestra ambos paneles (rojo y amarillo)
@@ -373,10 +373,10 @@ function PaginaCotizador() {
 
 El backend valida:
 
-1. **Socket**: Procesador ↔ Placa Madre
-2. **Tipo de RAM**: RAM ↔ Placa Madre
-3. **Form Factor**: Placa Madre ↔ Case
-4. **Potencia**: Consumo Total ↔ Fuente de Poder
+1. **Socket**: Procesador �?" Placa Madre
+2. **Tipo de RAM**: RAM �?" Placa Madre
+3. **Form Factor**: Placa Madre �?" Case
+4. **Potencia**: Consumo Total �?" Fuente de Poder
 5. **Componentes a Pedido**: Identifica y calcula tiempo de entrega
 
 ### Comportamiento
@@ -408,7 +408,7 @@ El backend valida:
 El componente usa Tailwind CSS con:
 - **Errores**: `bg-red-50`, `border-red-500`, `text-red-800`
 - **Advertencias**: `bg-yellow-50`, `border-yellow-500`, `text-yellow-800`
-- **Éxito**: `bg-green-50`, `border-green-500`, `text-green-800`
+- **�?xito**: `bg-green-50`, `border-green-500`, `text-green-800`
 
 ### Testing
 
@@ -535,13 +535,13 @@ function CotizadorConSidebar() {
 El componente calcula automáticamente:
 - **Precio Base**: Suma de todos los precios_base de los componentes
 - **Margen**: Porcentaje aplicado al precio base
-- **Precio Total**: Precio base × (1 + margen/100)
+- **Precio Total**: Precio base �- (1 + margen/100)
 
 ```javascript
 // Ejemplo:
 // Precio base: S/ 4000
 // Margen: 20%
-// Total: S/ 4000 × 1.20 = S/ 4800
+// Total: S/ 4000 �- 1.20 = S/ 4800
 ```
 
 #### 2. Detección de Componentes a Pedido
@@ -831,17 +831,17 @@ El modal usa clases de Tailwind CSS. Puedes modificar:
 
 El componente incluye tests unitarios que verifican:
 
-✅ Renderizado del botón "Ayuda IA"
-✅ Apertura del modal
-✅ Mensaje de bienvenida
-✅ Envío de mensajes
-✅ Inicio de conversación
-✅ Continuación de conversación
-✅ Mostrar recomendación
-✅ Aplicar recomendación
-✅ Manejo de errores
-✅ Reiniciar conversación
-✅ Cerrar modal
+�o. Renderizado del botón "Ayuda IA"
+�o. Apertura del modal
+�o. Mensaje de bienvenida
+�o. Envío de mensajes
+�o. Inicio de conversación
+�o. Continuación de conversación
+�o. Mostrar recomendación
+�o. Aplicar recomendación
+�o. Manejo de errores
+�o. Reiniciar conversación
+�o. Cerrar modal
 
 Ejecutar tests:
 ```bash
@@ -994,9 +994,9 @@ const LayoutAdmin = ({ children }) => (
 
 1. **Usuario intenta acceder a /admin/productos**
 2. **RutaProtegida verifica autenticación**
-3. **Si cargandoAuth = true** → Muestra loading
-4. **Si autenticado = false** → Redirige a /login
-5. **Si autenticado = true** → Renderiza AdminProductos
+3. **Si cargandoAuth = true** �?' Muestra loading
+4. **Si autenticado = false** �?' Redirige a /login
+5. **Si autenticado = true** �?' Renderiza AdminProductos
 
 ### Estados del Componente
 
@@ -1062,3 +1062,4 @@ Ver `ejemplo-uso-ruta-protegida.jsx` para más ejemplos y `DEMO_RUTA_PROTEGIDA.m
 - Manejo de redirecciones
 - Mejores prácticas de seguridad
 - Troubleshooting común
+

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Componente Validador de Compatibilidad
  * 
  * Muestra en tiempo real los resultados de la validación de compatibilidad
@@ -100,7 +100,7 @@ const ValidadorCompatibilidad = ({
                       variants={variantesItem}
                       className="text-sm text-red-700 flex items-start"
                     >
-                      <span className="mr-2 flex-shrink-0">•</span>
+                      <span className="mr-2 flex-shrink-0">�?�</span>
                       <span className="flex-1">{error}</span>
                     </motion.li>
                   ))}
@@ -146,7 +146,7 @@ const ValidadorCompatibilidad = ({
                       variants={variantesItem}
                       className="text-sm text-yellow-700 flex items-start"
                     >
-                      <span className="mr-2 flex-shrink-0">•</span>
+                      <span className="mr-2 flex-shrink-0">�?�</span>
                       <span className="flex-1">{advertencia}</span>
                     </motion.li>
                   ))}
@@ -208,3 +208,4 @@ ValidadorCompatibilidad.propTypes = {
 };
 
 export default ValidadorCompatibilidad;
+

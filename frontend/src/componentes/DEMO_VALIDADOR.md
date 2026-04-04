@@ -1,4 +1,4 @@
-# Demo: ValidadorCompatibilidad
+﻿# Demo: ValidadorCompatibilidad
 
 Este documento muestra cómo el componente `ValidadorCompatibilidad` se integra en el flujo de cotización.
 
@@ -6,31 +6,31 @@ Este documento muestra cómo el componente `ValidadorCompatibilidad` se integra 
 
 ```
 Usuario selecciona Procesador (AM4)
-    ↓
-Usuario selecciona Placa Madre (AM4) ✓
-    ↓
+    �?"
+Usuario selecciona Placa Madre (AM4) �o"
+    �?"
 ValidadorCompatibilidad: No muestra nada (compatible)
-    ↓
-Usuario selecciona RAM (DDR4) ✓
-    ↓
+    �?"
+Usuario selecciona RAM (DDR4) �o"
+    �?"
 ValidadorCompatibilidad: No muestra nada (compatible)
-    ↓
+    �?"
 Usuario selecciona GPU (RTX 4090, 450W TDP)
-    ↓
+    �?"
 Usuario selecciona Fuente (500W)
-    ↓
-ValidadorCompatibilidad: ⚠️ "Margen ajustado: recomendado 600W"
+    �?"
+ValidadorCompatibilidad: �s�️ "Margen ajustado: recomendado 600W"
 ```
 
 ## Ejemplo de Incompatibilidad
 
 ```
 Usuario selecciona Procesador (AM4)
-    ↓
-Usuario selecciona Placa Madre (LGA1700) ✗
-    ↓
-ValidadorCompatibilidad: ❌ "Socket incompatible: AM4 vs LGA1700"
-    ↓
+    �?"
+Usuario selecciona Placa Madre (LGA1700) �o-
+    �?"
+ValidadorCompatibilidad: �O "Socket incompatible: AM4 vs LGA1700"
+    �?"
 Botón "Continuar" deshabilitado
 ```
 
@@ -213,7 +213,7 @@ function obtenerFiltros(categoria, componentes) {
   compatible: true,
   errores: [],
   advertencias: [
-    '⚠️ Margen ajustado: recomendado 750W'
+    '�s�️ Margen ajustado: recomendado 750W'
   ]
 }
 ```
@@ -233,7 +233,7 @@ function obtenerFiltros(categoria, componentes) {
 {
   compatible: false,
   errores: [
-    '❌ Socket incompatible: LGA1700 vs AM4'
+    '�O Socket incompatible: LGA1700 vs AM4'
   ],
   advertencias: []
 }
@@ -255,7 +255,7 @@ function obtenerFiltros(categoria, componentes) {
 {
   compatible: false,
   errores: [
-    '❌ RAM incompatible: Placa soporta DDR5, seleccionado DDR4'
+    '�O RAM incompatible: Placa soporta DDR5, seleccionado DDR4'
   ],
   advertencias: []
 }
@@ -277,7 +277,7 @@ function obtenerFiltros(categoria, componentes) {
 {
   compatible: false,
   errores: [
-    '❌ Fuente insuficiente: requiere 650W, tiene 500W'
+    '�O Fuente insuficiente: requiere 650W, tiene 500W'
   ],
   advertencias: []
 }
@@ -301,9 +301,9 @@ function obtenerFiltros(categoria, componentes) {
 {
   compatible: false,
   errores: [
-    '❌ Socket incompatible: LGA1700 vs AM4',
-    '❌ RAM incompatible: Placa soporta DDR4, seleccionado DDR5',
-    '❌ Fuente insuficiente: requiere 650W, tiene 500W'
+    '�O Socket incompatible: LGA1700 vs AM4',
+    '�O RAM incompatible: Placa soporta DDR4, seleccionado DDR5',
+    '�O Fuente insuficiente: requiere 650W, tiene 500W'
   ],
   advertencias: []
 }
@@ -326,7 +326,7 @@ function obtenerFiltros(categoria, componentes) {
   compatible: true,
   errores: [],
   advertencias: [
-    '⚠️ Componentes a pedido: 10 días de entrega'
+    '�s�️ Componentes a pedido: 10 días de entrega'
   ]
 }
 ```
@@ -350,3 +350,4 @@ function obtenerFiltros(categoria, componentes) {
 - El botón "Siguiente" se deshabilita si `compatible === false`
 - Las advertencias no bloquean el avance (solo informan)
 - Los errores sí bloquean el avance (requieren corrección)
+

@@ -10,7 +10,9 @@
  * - Configuración inicial del sistema
  */
 
-require('dotenv').config();
+const path = require('path');
+const envPath = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
+require('dotenv').config({ path: path.resolve(__dirname, '..', envPath) });
 const { pool } = require('../src/configuracion/baseDatos');
 const { hashPassword } = require('../src/servicios/servicioAuth');
 
@@ -80,7 +82,7 @@ async function insertarProductos(cliente) {
   const procesadores = [
     {
       nombre: 'Intel Core i9-13900K',
-      categoria: 'Procesador',
+      categoria: 'procesador',
       socket: 'LGA1700',
       tdp: 125,
       precio_base: 2899.00,
@@ -91,7 +93,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'Intel Core i7-13700K',
-      categoria: 'Procesador',
+      categoria: 'procesador',
       socket: 'LGA1700',
       tdp: 125,
       precio_base: 2199.00,
@@ -102,7 +104,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'Intel Core i5-13600K',
-      categoria: 'Procesador',
+      categoria: 'procesador',
       socket: 'LGA1700',
       tdp: 125,
       precio_base: 1599.00,
@@ -113,7 +115,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'AMD Ryzen 9 7950X',
-      categoria: 'Procesador',
+      categoria: 'procesador',
       socket: 'AM5',
       tdp: 170,
       precio_base: 3299.00,
@@ -124,7 +126,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'AMD Ryzen 7 7700X',
-      categoria: 'Procesador',
+      categoria: 'procesador',
       socket: 'AM5',
       tdp: 105,
       precio_base: 1899.00,
@@ -135,7 +137,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'AMD Ryzen 5 7600X',
-      categoria: 'Procesador',
+      categoria: 'procesador',
       socket: 'AM5',
       tdp: 105,
       precio_base: 1399.00,
@@ -161,7 +163,7 @@ async function insertarProductos(cliente) {
   const placasMadre = [
     {
       nombre: 'ASUS ROG STRIX Z790-E GAMING',
-      categoria: 'Placa Madre',
+      categoria: 'placa_madre',
       socket: 'LGA1700',
       ram_type: 'DDR5',
       form_factor: 'ATX',
@@ -173,7 +175,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'MSI MAG B760 TOMAHAWK',
-      categoria: 'Placa Madre',
+      categoria: 'placa_madre',
       socket: 'LGA1700',
       ram_type: 'DDR5',
       form_factor: 'ATX',
@@ -185,7 +187,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'GIGABYTE B760M DS3H',
-      categoria: 'Placa Madre',
+      categoria: 'placa_madre',
       socket: 'LGA1700',
       ram_type: 'DDR4',
       form_factor: 'mATX',
@@ -197,7 +199,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'ASUS ROG STRIX X670E-E GAMING',
-      categoria: 'Placa Madre',
+      categoria: 'placa_madre',
       socket: 'AM5',
       ram_type: 'DDR5',
       form_factor: 'ATX',
@@ -209,7 +211,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'MSI B650 GAMING PLUS',
-      categoria: 'Placa Madre',
+      categoria: 'placa_madre',
       socket: 'AM5',
       ram_type: 'DDR5',
       form_factor: 'ATX',
@@ -237,7 +239,7 @@ async function insertarProductos(cliente) {
   const memoriaRAM = [
     {
       nombre: 'Corsair Vengeance DDR5 32GB (2x16GB) 6000MHz',
-      categoria: 'RAM',
+      categoria: 'ram',
       ram_type: 'DDR5',
       precio_base: 899.00,
       stock: 15,
@@ -247,7 +249,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'G.Skill Trident Z5 RGB DDR5 32GB (2x16GB) 6400MHz',
-      categoria: 'RAM',
+      categoria: 'ram',
       ram_type: 'DDR5',
       precio_base: 1099.00,
       stock: 8,
@@ -257,7 +259,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'Kingston FURY Beast DDR5 16GB (2x8GB) 5200MHz',
-      categoria: 'RAM',
+      categoria: 'ram',
       ram_type: 'DDR5',
       precio_base: 499.00,
       stock: 20,
@@ -267,7 +269,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'Corsair Vengeance RGB DDR4 32GB (2x16GB) 3600MHz',
-      categoria: 'RAM',
+      categoria: 'ram',
       ram_type: 'DDR4',
       precio_base: 599.00,
       stock: 18,
@@ -277,7 +279,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'Kingston FURY Beast DDR4 16GB (2x8GB) 3200MHz',
-      categoria: 'RAM',
+      categoria: 'ram',
       ram_type: 'DDR4',
       precio_base: 299.00,
       stock: 25,
@@ -302,7 +304,7 @@ async function insertarProductos(cliente) {
   const almacenamiento = [
     {
       nombre: 'Samsung 990 PRO 2TB NVMe SSD',
-      categoria: 'Almacenamiento',
+      categoria: 'almacenamiento',
       precio_base: 1299.00,
       stock: 10,
       disponible_a_pedido: true,
@@ -311,7 +313,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'WD Black SN850X 1TB NVMe SSD',
-      categoria: 'Almacenamiento',
+      categoria: 'almacenamiento',
       precio_base: 699.00,
       stock: 15,
       disponible_a_pedido: true,
@@ -320,7 +322,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'Kingston NV2 500GB NVMe SSD',
-      categoria: 'Almacenamiento',
+      categoria: 'almacenamiento',
       precio_base: 299.00,
       stock: 20,
       disponible_a_pedido: true,
@@ -329,7 +331,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'Seagate Barracuda 2TB HDD',
-      categoria: 'Almacenamiento',
+      categoria: 'almacenamiento',
       precio_base: 399.00,
       stock: 12,
       disponible_a_pedido: true,
@@ -338,7 +340,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'WD Blue 1TB HDD',
-      categoria: 'Almacenamiento',
+      categoria: 'almacenamiento',
       precio_base: 249.00,
       stock: 0,
       disponible_a_pedido: true,
@@ -362,7 +364,7 @@ async function insertarProductos(cliente) {
   const gpus = [
     {
       nombre: 'NVIDIA GeForce RTX 4090 24GB',
-      categoria: 'GPU',
+      categoria: 'gpu',
       wattage: 450,
       precio_base: 9999.00,
       stock: 2,
@@ -372,7 +374,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'NVIDIA GeForce RTX 4080 16GB',
-      categoria: 'GPU',
+      categoria: 'gpu',
       wattage: 320,
       precio_base: 6999.00,
       stock: 4,
@@ -382,7 +384,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'NVIDIA GeForce RTX 4070 Ti 12GB',
-      categoria: 'GPU',
+      categoria: 'gpu',
       wattage: 285,
       precio_base: 4999.00,
       stock: 6,
@@ -392,7 +394,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'AMD Radeon RX 7900 XTX 24GB',
-      categoria: 'GPU',
+      categoria: 'gpu',
       wattage: 355,
       precio_base: 5999.00,
       stock: 3,
@@ -402,7 +404,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'AMD Radeon RX 7800 XT 16GB',
-      categoria: 'GPU',
+      categoria: 'gpu',
       wattage: 263,
       precio_base: 3299.00,
       stock: 5,
@@ -412,7 +414,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'NVIDIA GeForce RTX 4060 8GB',
-      categoria: 'GPU',
+      categoria: 'gpu',
       wattage: 115,
       precio_base: 1999.00,
       stock: 0,
@@ -437,7 +439,7 @@ async function insertarProductos(cliente) {
   const fuentes = [
     {
       nombre: 'Corsair RM1000x 1000W 80+ Gold',
-      categoria: 'Fuente',
+      categoria: 'fuente',
       wattage: 1000,
       precio_base: 999.00,
       stock: 8,
@@ -447,7 +449,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'EVGA SuperNOVA 850 G6 850W 80+ Gold',
-      categoria: 'Fuente',
+      categoria: 'fuente',
       wattage: 850,
       precio_base: 799.00,
       stock: 10,
@@ -457,7 +459,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'Thermaltake Toughpower GF1 750W 80+ Gold',
-      categoria: 'Fuente',
+      categoria: 'fuente',
       wattage: 750,
       precio_base: 599.00,
       stock: 12,
@@ -467,7 +469,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'Cooler Master MWE 650W 80+ Bronze',
-      categoria: 'Fuente',
+      categoria: 'fuente',
       wattage: 650,
       precio_base: 399.00,
       stock: 15,
@@ -477,7 +479,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'ASUS ROG Thor 1200W 80+ Platinum',
-      categoria: 'Fuente',
+      categoria: 'fuente',
       wattage: 1200,
       precio_base: 1799.00,
       stock: 3,
@@ -502,7 +504,7 @@ async function insertarProductos(cliente) {
   const cases = [
     {
       nombre: 'Lian Li O11 Dynamic EVO',
-      categoria: 'Case',
+      categoria: 'case',
       form_factor: 'ATX',
       precio_base: 899.00,
       stock: 6,
@@ -512,7 +514,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'NZXT H510 Elite',
-      categoria: 'Case',
+      categoria: 'case',
       form_factor: 'ATX',
       precio_base: 699.00,
       stock: 8,
@@ -522,7 +524,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'Corsair 4000D Airflow',
-      categoria: 'Case',
+      categoria: 'case',
       form_factor: 'ATX',
       precio_base: 549.00,
       stock: 10,
@@ -532,7 +534,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'Cooler Master MasterBox Q300L',
-      categoria: 'Case',
+      categoria: 'case',
       form_factor: 'mATX',
       precio_base: 299.00,
       stock: 12,
@@ -542,7 +544,7 @@ async function insertarProductos(cliente) {
     },
     {
       nombre: 'Fractal Design Meshify 2',
-      categoria: 'Case',
+      categoria: 'case',
       form_factor: 'ATX',
       precio_base: 799.00,
       stock: 0,
@@ -578,7 +580,8 @@ async function insertarProductos(cliente) {
 /**
  * Función principal
  */
-async function main() {
+async function main(opciones = {}) {
+  const { cerrarPool = true } = opciones;
   const cliente = await pool.connect();
   
   try {
@@ -607,9 +610,21 @@ async function main() {
     process.exit(1);
   } finally {
     cliente.release();
-    await pool.end();
+    if (cerrarPool) {
+      await pool.end();
+    }
   }
 }
 
+module.exports = {
+  main,
+  limpiarDatos,
+  crearAdministrador,
+  insertarProductos
+};
+
 // Ejecutar script
-main();
+if (require.main === module) {
+  main();
+}
+

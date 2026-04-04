@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ejemplo de Uso: ResumenCotizacion
  * 
  * Este archivo muestra cómo usar el componente ResumenCotizacion
@@ -161,7 +161,7 @@ function EjemploModal() {
                 onClick={() => setMostrarModal(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                ✕
+                �o.
               </button>
             </div>
 
@@ -293,3 +293,4 @@ export {
   EjemploConValidacion,
   EjemploComparacion
 };
+

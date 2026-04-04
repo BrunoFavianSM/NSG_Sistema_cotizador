@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tests para GeneradorPDF
  * 
  * Valida:
@@ -143,7 +143,7 @@ describe('GeneradorPDF', () => {
   });
 
   // ============================================
-  // TESTS DE VALIDACIÓN
+  // TESTS DE VALIDACI�"N
   // ============================================
 
   test('debe validar email inválido', async () => {
@@ -198,7 +198,7 @@ describe('GeneradorPDF', () => {
   });
 
   // ============================================
-  // TESTS DE GENERACIÓN DE COTIZACIÓN
+  // TESTS DE GENERACI�"N DE COTIZACI�"N
   // ============================================
 
   test('debe generar cotización sin datos de cliente', async () => {
@@ -472,7 +472,7 @@ describe('GeneradorPDF', () => {
   });
 
   // ============================================
-  // TESTS DE PREPARACIÓN DE COMPONENTES
+  // TESTS DE PREPARACI�"N DE COMPONENTES
   // ============================================
 
   test('debe incluir todos los componentes en la solicitud', async () => {
@@ -589,3 +589,4 @@ describe('GeneradorPDF', () => {
     });
   });
 });
+

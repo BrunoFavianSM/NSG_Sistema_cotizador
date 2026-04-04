@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tests para Componente RutaProtegida
  * 
  * Valida:
@@ -319,3 +319,4 @@ describe('RutaProtegida', () => {
     });
   });
 });
+

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tests para ValidadorCotizaciones
  * 
  * Valida:
@@ -81,7 +81,7 @@ describe('ValidadorCotizaciones', () => {
     test('deshabilita el botón de búsqueda cuando está vacío', () => {
       renderWithContext(<ValidadorCotizaciones />);
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       expect(botonBuscar).toBeDisabled();
     });
 
@@ -91,7 +91,7 @@ describe('ValidadorCotizaciones', () => {
       const input = screen.getByPlaceholderText('NSG-2024-0001');
       fireEvent.change(input, { target: { value: 'NSG-2024-0001' } });
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       expect(botonBuscar).not.toBeDisabled();
     });
 
@@ -105,7 +105,7 @@ describe('ValidadorCotizaciones', () => {
       const input = screen.getByPlaceholderText('NSG-2024-0001');
       fireEvent.change(input, { target: { value: 'NSG-2024-9999' } });
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       fireEvent.click(botonBuscar);
       
       await waitFor(() => {
@@ -124,7 +124,7 @@ describe('ValidadorCotizaciones', () => {
       const input = screen.getByPlaceholderText('NSG-2024-0001');
       fireEvent.change(input, { target: { value: 'NSG-2024-0001' } });
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       fireEvent.click(botonBuscar);
       
       await waitFor(() => {
@@ -179,7 +179,7 @@ describe('ValidadorCotizaciones', () => {
       const input = screen.getByPlaceholderText('NSG-2024-0001');
       fireEvent.change(input, { target: { value: 'NSG-2024-0001' } });
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       fireEvent.click(botonBuscar);
       
       await waitFor(() => {
@@ -196,7 +196,7 @@ describe('ValidadorCotizaciones', () => {
       const input = screen.getByPlaceholderText('NSG-2024-0001');
       fireEvent.change(input, { target: { value: 'NSG-2024-0001' } });
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       fireEvent.click(botonBuscar);
       
       await waitFor(() => {
@@ -214,7 +214,7 @@ describe('ValidadorCotizaciones', () => {
       const input = screen.getByPlaceholderText('NSG-2024-0001');
       fireEvent.change(input, { target: { value: 'NSG-2024-0001' } });
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       fireEvent.click(botonBuscar);
       
       await waitFor(() => {
@@ -230,7 +230,7 @@ describe('ValidadorCotizaciones', () => {
       const input = screen.getByPlaceholderText('NSG-2024-0001');
       fireEvent.change(input, { target: { value: 'NSG-2024-0001' } });
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       fireEvent.click(botonBuscar);
       
       await waitFor(() => {
@@ -249,7 +249,7 @@ describe('ValidadorCotizaciones', () => {
       const input = screen.getByPlaceholderText('NSG-2024-0001');
       fireEvent.change(input, { target: { value: 'NSG-2024-0001' } });
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       fireEvent.click(botonBuscar);
       
       await waitFor(() => {
@@ -283,11 +283,11 @@ describe('ValidadorCotizaciones', () => {
       const input = screen.getByPlaceholderText('NSG-2024-0001');
       fireEvent.change(input, { target: { value: 'NSG-2024-0001' } });
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       fireEvent.click(botonBuscar);
       
       await waitFor(() => {
-        expect(screen.getByText('✓ Marcar como Reclamada')).toBeInTheDocument();
+        expect(screen.getByText('�o" Marcar como Reclamada')).toBeInTheDocument();
       });
     });
 
@@ -307,11 +307,11 @@ describe('ValidadorCotizaciones', () => {
       const input = screen.getByPlaceholderText('NSG-2024-0001');
       fireEvent.change(input, { target: { value: 'NSG-2024-0001' } });
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       fireEvent.click(botonBuscar);
       
       await waitFor(() => {
-        expect(screen.queryByText('✓ Marcar como Reclamada')).not.toBeInTheDocument();
+        expect(screen.queryByText('�o" Marcar como Reclamada')).not.toBeInTheDocument();
       });
     });
 
@@ -327,14 +327,14 @@ describe('ValidadorCotizaciones', () => {
       const input = screen.getByPlaceholderText('NSG-2024-0001');
       fireEvent.change(input, { target: { value: 'NSG-2024-0001' } });
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       fireEvent.click(botonBuscar);
       
       await waitFor(() => {
-        expect(screen.getByText('✓ Marcar como Reclamada')).toBeInTheDocument();
+        expect(screen.getByText('�o" Marcar como Reclamada')).toBeInTheDocument();
       });
 
-      const botonReclamar = screen.getByText('✓ Marcar como Reclamada');
+      const botonReclamar = screen.getByText('�o" Marcar como Reclamada');
       fireEvent.click(botonReclamar);
       
       await waitFor(() => {
@@ -354,14 +354,14 @@ describe('ValidadorCotizaciones', () => {
       const input = screen.getByPlaceholderText('NSG-2024-0001');
       fireEvent.change(input, { target: { value: 'NSG-2024-0001' } });
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       fireEvent.click(botonBuscar);
       
       await waitFor(() => {
-        expect(screen.getByText('✓ Marcar como Reclamada')).toBeInTheDocument();
+        expect(screen.getByText('�o" Marcar como Reclamada')).toBeInTheDocument();
       });
 
-      const botonReclamar = screen.getByText('✓ Marcar como Reclamada');
+      const botonReclamar = screen.getByText('�o" Marcar como Reclamada');
       fireEvent.click(botonReclamar);
       
       await waitFor(() => {
@@ -392,7 +392,7 @@ describe('ValidadorCotizaciones', () => {
       const input = screen.getByPlaceholderText('NSG-2024-0001');
       fireEvent.change(input, { target: { value: 'NSG-2024-0001' } });
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       fireEvent.click(botonBuscar);
       
       await waitFor(() => {
@@ -421,7 +421,7 @@ describe('ValidadorCotizaciones', () => {
       const input = screen.getByPlaceholderText('NSG-2024-0001');
       fireEvent.change(input, { target: { value: 'NSG-2024-0001' } });
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       fireEvent.click(botonBuscar);
       
       await waitFor(() => {
@@ -458,7 +458,7 @@ describe('ValidadorCotizaciones', () => {
       const input = screen.getByPlaceholderText('NSG-2024-0001');
       fireEvent.change(input, { target: { value: 'NSG-2024-0001' } });
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       fireEvent.click(botonBuscar);
       
       await waitFor(() => {
@@ -489,7 +489,7 @@ describe('ValidadorCotizaciones', () => {
       const input = screen.getByPlaceholderText('NSG-2024-0001');
       fireEvent.change(input, { target: { value: 'NSG-2024-0001' } });
       
-      const botonBuscar = screen.getByText('🔍 Buscar');
+      const botonBuscar = screen.getByText('�Y"� Buscar');
       fireEvent.click(botonBuscar);
       
       await waitFor(() => {
@@ -499,3 +499,4 @@ describe('ValidadorCotizaciones', () => {
     });
   });
 });
+

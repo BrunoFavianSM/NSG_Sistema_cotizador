@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Componente Selector de Componentes
  * 
  * Componente reutilizable para seleccionar componentes de hardware.
@@ -116,7 +116,7 @@ const SelectorComponente = ({
       return {
         texto: `En Stock (${producto.stock})`,
         clase: 'bg-green-100 text-green-800',
-        icono: '✓'
+        icono: '�o"'
       };
     } else if (producto.disponible_a_pedido) {
       const dias = producto.tiempo_entrega_dias || 7;
@@ -129,7 +129,7 @@ const SelectorComponente = ({
       return {
         texto: 'Sin Stock',
         clase: 'bg-red-100 text-red-800',
-        icono: '✗'
+        icono: '�o-'
       };
     }
   };
@@ -249,7 +249,7 @@ const SelectorComponente = ({
                     {producto.nombre}
                   </h4>
                   {seleccionado && (
-                    <span className="ml-2 text-blue-600 text-xl">✓</span>
+                    <span className="ml-2 text-blue-600 text-xl">�o"</span>
                   )}
                 </div>
 
@@ -335,3 +335,4 @@ SelectorComponente.propTypes = {
 };
 
 export default SelectorComponente;
+

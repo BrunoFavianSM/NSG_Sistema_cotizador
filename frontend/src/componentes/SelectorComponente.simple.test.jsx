@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tests simples para SelectorComponente
  */
 
@@ -92,3 +92,4 @@ describe('SelectorComponente - Tests Básicos', () => {
     expect(screen.getByText(/A Pedido \(7d\)/)).toBeInTheDocument();
   });
 });
+

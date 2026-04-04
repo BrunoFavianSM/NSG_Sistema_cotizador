@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Property-Based Tests para Cotizador - Flujo Secuencial
  * 
  * Valida:
@@ -313,7 +313,7 @@ describe('Property 9: Navegación hacia atrás permitida', () => {
 
           // Verificar que el botón Anterior esté habilitado
           // Usar getAllByText y tomar el último (el más reciente)
-          const botonesAnteriores = screen.getAllByText('← Anterior');
+          const botonesAnteriores = screen.getAllByText('�?� Anterior');
           const botonAnterior = botonesAnteriores[botonesAnteriores.length - 1];
           expect(botonAnterior).not.toBeDisabled();
           
@@ -344,7 +344,7 @@ describe('Property 9: Navegación hacia atrás permitida', () => {
           fireEvent.click(botonPaso0);
 
           // Verificar que el botón Anterior esté deshabilitado
-          const botonesAnteriores = screen.getAllByText('← Anterior');
+          const botonesAnteriores = screen.getAllByText('�?� Anterior');
           const botonAnterior = botonesAnteriores[botonesAnteriores.length - 1];
           expect(botonAnterior).toBeDisabled();
           
@@ -375,12 +375,12 @@ describe('Property 9: Navegación hacia atrás permitida', () => {
           fireEvent.click(botonPasoInicial);
 
           // Navegar hacia atrás
-          const botonesAnteriores = screen.getAllByText('← Anterior');
+          const botonesAnteriores = screen.getAllByText('�?� Anterior');
           const botonAnterior = botonesAnteriores[botonesAnteriores.length - 1];
           fireEvent.click(botonAnterior);
 
           // Navegar hacia adelante
-          const botonesSiguientes = screen.getAllByText('Siguiente →');
+          const botonesSiguientes = screen.getAllByText('Siguiente �?'');
           const botonSiguiente = botonesSiguientes[botonesSiguientes.length - 1];
           fireEvent.click(botonSiguiente);
 
@@ -529,3 +529,4 @@ describe('Property 10: Modificación dispara revalidación', () => {
     container.remove();
   });
 });
+

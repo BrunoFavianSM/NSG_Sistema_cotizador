@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ejemplo de Uso: HistorialCliente
  * 
  * Este archivo demuestra cómo integrar el componente HistorialCliente
@@ -277,11 +277,11 @@ function EjemploAppCompleto() {
 }
 
 // ============================================
-// NOTAS DE IMPLEMENTACIÓN
+// NOTAS DE IMPLEMENTACI�"N
 // ============================================
 
 /*
-INTEGRACIÓN EN App.jsx:
+INTEGRACI�"N EN App.jsx:
 
 import HistorialCliente from './paginas/HistorialCliente';
 
@@ -313,7 +313,7 @@ FLUJO DE USO:
 5. Usuario puede descargar PDFs de cada cotización
 6. Usuario puede hacer una nueva búsqueda
 
-PERSONALIZACIÓN:
+PERSONALIZACI�"N:
 - Colores: Modificar clases de Tailwind
 - Animaciones: Ajustar variantes de Framer Motion
 - Formato de fecha: Cambiar opciones en formatearFecha()
@@ -328,3 +328,4 @@ export {
   EjemploConEmailPrellenado,
   EjemploAppCompleto
 };
+

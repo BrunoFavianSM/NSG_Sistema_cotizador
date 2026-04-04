@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tests Unitarios para Login
  * 
  * Valida:
@@ -485,3 +485,4 @@ describe('Login - Casos Edge', () => {
     });
   });
 });
+

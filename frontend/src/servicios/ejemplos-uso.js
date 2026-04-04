@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ejemplos de uso del servicio de API
  * 
  * Este archivo muestra cómo usar las funciones del servicio de API
@@ -213,14 +213,14 @@ export const ejemploValidarCompatibilidad = async () => {
     console.log('Compatibilidad:', resultado);
     
     if (resultado.compatible) {
-      console.log('✓ Todos los componentes son compatibles');
+      console.log('�o" Todos los componentes son compatibles');
     } else {
-      console.log('✗ Problemas de compatibilidad encontrados:');
+      console.log('�o- Problemas de compatibilidad encontrados:');
       resultado.errores.forEach(error => console.log(`  - ${error}`));
     }
     
     if (resultado.advertencias.length > 0) {
-      console.log('⚠ Advertencias:');
+      console.log('�s� Advertencias:');
       resultado.advertencias.forEach(adv => console.log(`  - ${adv}`));
     }
   } catch (error) {
@@ -292,9 +292,9 @@ export const ejemploVerificarSalud = async () => {
     console.log('Estado del servidor:', salud);
     
     if (salud.estado === 'ok' && salud.baseDatos === 'conectada') {
-      console.log('✓ Servidor y base de datos funcionando correctamente');
+      console.log('�o" Servidor y base de datos funcionando correctamente');
     } else {
-      console.log('✗ Problemas con el servidor o base de datos');
+      console.log('�o- Problemas con el servidor o base de datos');
     }
   } catch (error) {
     console.error('Error al verificar salud:', error);
@@ -345,7 +345,7 @@ export const ejemploFlujoCompleto = async () => {
           }))
         });
         
-        console.log('✓ Flujo completado exitosamente');
+        console.log('�o" Flujo completado exitosamente');
         console.log('Código de ticket:', cotizacion.codigoTicket);
         
         return cotizacion;
@@ -391,3 +391,4 @@ export const ejemploManejoErrores = async () => {
     console.error('Error de conexión:', error.mensaje);
   }
 };
+

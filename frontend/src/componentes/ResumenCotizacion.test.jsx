@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tests Unitarios para ResumenCotizacion
  * 
  * Valida:
@@ -280,7 +280,7 @@ describe('ResumenCotizacion', () => {
     render(<ResumenCotizacion configuracion={configuracion} margenGanancia={20} />);
 
     // Precio base: 849.99
-    // Con margen 20%: 849.99 * 1.20 = 1019.988 ≈ 1019.99
+    // Con margen 20%: 849.99 * 1.20 = 1019.988 �?^ 1019.99
     expect(screen.getByText('S/ 1019.99')).toBeInTheDocument();
   });
 
@@ -322,3 +322,4 @@ describe('ResumenCotizacion', () => {
     expect(screen.getByText('PC Case')).toBeInTheDocument();
   });
 });
+

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tests para ValidadorCompatibilidad
  * 
  * Valida que el componente muestre correctamente:
@@ -44,8 +44,8 @@ describe('ValidadorCompatibilidad', () => {
     const resultado = {
       compatible: false,
       errores: [
-        '❌ Socket incompatible: AM5 vs LGA1700',
-        '❌ Fuente insuficiente: requiere 500W, tiene 400W'
+        '�O Socket incompatible: AM5 vs LGA1700',
+        '�O Fuente insuficiente: requiere 500W, tiene 400W'
       ],
       advertencias: []
     };
@@ -68,8 +68,8 @@ describe('ValidadorCompatibilidad', () => {
       compatible: true,
       errores: [],
       advertencias: [
-        '⚠️ Margen ajustado: recomendado 600W',
-        '⚠️ Componentes a pedido: 7 días de entrega'
+        '�s�️ Margen ajustado: recomendado 600W',
+        '�s�️ Componentes a pedido: 7 días de entrega'
       ]
     };
 
@@ -89,8 +89,8 @@ describe('ValidadorCompatibilidad', () => {
   test('muestra errores y advertencias simultáneamente', () => {
     const resultado = {
       compatible: false,
-      errores: ['❌ Socket incompatible: AM5 vs LGA1700'],
-      advertencias: ['⚠️ Margen ajustado: recomendado 600W']
+      errores: ['�O Socket incompatible: AM5 vs LGA1700'],
+      advertencias: ['�s�️ Margen ajustado: recomendado 600W']
     };
 
     render(<ValidadorCompatibilidad resultadoValidacion={resultado} />);
@@ -203,3 +203,4 @@ describe('ValidadorCompatibilidad', () => {
     expect(warningDiv).toHaveClass('border-l-4', 'border-yellow-500');
   });
 });
+

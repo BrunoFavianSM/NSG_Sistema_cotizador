@@ -1,4 +1,4 @@
-# Página de Login - Documentación Completa
+﻿# Página de Login - Documentación Completa
 
 ## Descripción General
 
@@ -6,7 +6,7 @@ La página de Login (`Login.jsx`) es el punto de entrada al panel administrativo
 
 ## Características Principales
 
-### ✅ Funcionalidades Implementadas
+### �o. Funcionalidades Implementadas
 
 - **Autenticación JWT**: Integración completa con el backend para validar credenciales
 - **Validación de Formulario**: Validación en tiempo real de campos
@@ -17,7 +17,7 @@ La página de Login (`Login.jsx`) es el punto de entrada al panel administrativo
 - **Diseño Responsivo**: Adaptable a todos los tamaños de pantalla
 - **Accesibilidad**: Labels, ARIA attributes y navegación por teclado
 
-### 🎨 Diseño UI/UX
+### �YZ� Diseño UI/UX
 
 - Gradiente de fondo atractivo (azul a índigo)
 - Tarjeta de login con sombra y bordes redondeados
@@ -35,26 +35,26 @@ La página de Login (`Login.jsx`) es el punto de entrada al panel administrativo
 
 ```jsx
 Login
-├── Estado del Formulario
-│   ├── username
-│   ├── password
-│   ├── cargando
-│   ├── error
-│   ├── mostrarPassword
-│   └── erroresValidacion
-├── Validación
-│   └── validarFormulario()
-├── Manejo de Eventos
-│   ├── manejarSubmit()
-│   ├── manejarCambioUsername()
-│   └── manejarCambioPassword()
-└── Renderizado
-    ├── Encabezado
-    ├── Formulario
-    │   ├── Campo Username
-    │   ├── Campo Password
-    │   └── Botón Submit
-    └── Footer
+�"o�"?�"? Estado del Formulario
+�",   �"o�"?�"? username
+�",   �"o�"?�"? password
+�",   �"o�"?�"? cargando
+�",   �"o�"?�"? error
+�",   �"o�"?�"? mostrarPassword
+�",   �""�"?�"? erroresValidacion
+�"o�"?�"? Validación
+�",   �""�"?�"? validarFormulario()
+�"o�"?�"? Manejo de Eventos
+�",   �"o�"?�"? manejarSubmit()
+�",   �"o�"?�"? manejarCambioUsername()
+�",   �""�"?�"? manejarCambioPassword()
+�""�"?�"? Renderizado
+    �"o�"?�"? Encabezado
+    �"o�"?�"? Formulario
+    �",   �"o�"?�"? Campo Username
+    �",   �"o�"?�"? Campo Password
+    �",   �""�"?�"? Botón Submit
+    �""�"?�"? Footer
 ```
 
 ## API del Componente
@@ -95,18 +95,18 @@ import { useAppContext } from '../contexto/AppContext';
 
 ```
 1. Usuario ingresa credenciales
-   ↓
+   �?"
 2. Validación del formulario
-   ↓
-3. Si válido → Llamada a login()
-   ↓
+   �?"
+3. Si válido �?' Llamada a login()
+   �?"
 4. Backend valida credenciales
-   ↓
+   �?"
 5. Si exitoso:
    - Guarda token en localStorage
    - Actualiza contexto
    - Redirige a /admin
-   ↓
+   �?"
 6. Si falla:
    - Muestra mensaje de error
    - Mantiene al usuario en login
@@ -255,16 +255,16 @@ className="bg-blue-400 cursor-not-allowed text-white rounded-lg py-3"
 
 ### Cobertura de Tests
 
-- ✅ Renderizado correcto del formulario
-- ✅ Validación de campos vacíos
-- ✅ Validación de longitud mínima
-- ✅ Mostrar/ocultar contraseña
-- ✅ Envío de formulario con credenciales válidas
-- ✅ Manejo de errores de autenticación
-- ✅ Manejo de errores de conexión
-- ✅ Estados de carga
-- ✅ Navegación tras login exitoso
-- ✅ Accesibilidad (labels, autocomplete)
+- �o. Renderizado correcto del formulario
+- �o. Validación de campos vacíos
+- �o. Validación de longitud mínima
+- �o. Mostrar/ocultar contraseña
+- �o. Envío de formulario con credenciales válidas
+- �o. Manejo de errores de autenticación
+- �o. Manejo de errores de conexión
+- �o. Estados de carga
+- �o. Navegación tras login exitoso
+- �o. Accesibilidad (labels, autocomplete)
 
 ### Ejecutar Tests
 
@@ -348,13 +348,13 @@ const RutaProtegida = ({ children }) => {
 
 ### Características Implementadas
 
-- ✅ Labels asociados a inputs con `htmlFor`
-- ✅ Atributos `autoComplete` para autocompletado del navegador
-- ✅ Mensajes de error descriptivos
-- ✅ Estados de carga anunciados visualmente
-- ✅ Contraste de colores WCAG AA
-- ✅ Navegación por teclado funcional
-- ✅ Focus visible en todos los elementos interactivos
+- �o. Labels asociados a inputs con `htmlFor`
+- �o. Atributos `autoComplete` para autocompletado del navegador
+- �o. Mensajes de error descriptivos
+- �o. Estados de carga anunciados visualmente
+- �o. Contraste de colores WCAG AA
+- �o. Navegación por teclado funcional
+- �o. Focus visible en todos los elementos interactivos
 
 ### Atributos ARIA
 
@@ -421,10 +421,10 @@ className="text-green-600"                   // Texto
 **Solución**: Verificar que `useNavigate` esté dentro de un `BrowserRouter`
 
 ```jsx
-// ❌ Incorrecto
+// �O Incorrecto
 <Login />
 
-// ✅ Correcto
+// �o. Correcto
 <BrowserRouter>
   <Login />
 </BrowserRouter>
@@ -478,12 +478,12 @@ npm install framer-motion
 
 ### v1.0.0 (2024-01-15)
 
-- ✅ Implementación inicial del componente Login
-- ✅ Validación de formulario
-- ✅ Integración con backend
-- ✅ Animaciones con Framer Motion
-- ✅ Tests unitarios completos
-- ✅ Documentación completa
+- �o. Implementación inicial del componente Login
+- �o. Validación de formulario
+- �o. Integración con backend
+- �o. Animaciones con Framer Motion
+- �o. Tests unitarios completos
+- �o. Documentación completa
 
 ## Próximas Mejoras
 
@@ -511,6 +511,7 @@ Para preguntas o problemas, contactar al equipo de desarrollo:
 
 ---
 
-**Última actualización**: 2024-01-15  
+**�sltima actualización**: 2024-01-15  
 **Versión**: 1.0.0  
 **Autor**: Sistema de Cotización Automatizada - NSG Latinoamerica E.I.R.L.
+

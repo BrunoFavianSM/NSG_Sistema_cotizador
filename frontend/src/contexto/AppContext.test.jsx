@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tests para AppContext
  * 
  * Valida Requisitos: 14.2
@@ -320,3 +320,4 @@ describe('AppContext', () => {
     });
   });
 });
+

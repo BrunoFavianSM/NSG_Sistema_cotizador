@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ejemplo de Uso: Componente Asistente IA
  * 
  * Este archivo muestra cómo integrar el componente AsistenteIA
@@ -111,3 +111,4 @@ const EjemploUsoAsistente = () => {
 };
 
 export default EjemploUsoAsistente;
+

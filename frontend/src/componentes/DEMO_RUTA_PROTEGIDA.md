@@ -1,4 +1,4 @@
-# 🔒 Componente RutaProtegida - Guía de Uso
+﻿# �Y"' Componente RutaProtegida - Guía de Uso
 
 ## Descripción
 
@@ -6,12 +6,12 @@ El componente `RutaProtegida` es un wrapper de seguridad que protege rutas admin
 
 ## Características
 
-✅ Verificación automática de autenticación  
-✅ Validación de token JWT  
-✅ Redirección automática a login  
-✅ Estado de loading durante verificación  
-✅ Integración con AppContext  
-✅ Soporte para cualquier componente hijo  
+�o. Verificación automática de autenticación  
+�o. Validación de token JWT  
+�o. Redirección automática a login  
+�o. Estado de loading durante verificación  
+�o. Integración con AppContext  
+�o. Soporte para cualquier componente hijo  
 
 ## Requisitos Validados
 
@@ -163,42 +163,42 @@ Cuando `autenticado = true`:
 ## Flujo de Autenticación
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ Usuario intenta acceder a /admin/productos                  │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│ RutaProtegida verifica estado de autenticación              │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-        ┌────────────┴────────────┐
-        │                         │
-        ▼                         ▼
-┌──────────────┐          ┌──────────────┐
-│ cargandoAuth │          │ autenticado  │
-│   = true     │          │   = false    │
-└──────┬───────┘          └──────┬───────┘
-       │                         │
-       ▼                         ▼
-┌──────────────┐          ┌──────────────┐
-│ Mostrar      │          │ Redirigir a  │
-│ Loading      │          │ /login       │
-└──────────────┘          └──────────────┘
+�"O�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"�
+�", Usuario intenta acceder a /admin/productos                  �",
+�""�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"��"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"~
+                     �",
+                     �-�
+�"O�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"�
+�", RutaProtegida verifica estado de autenticación              �",
+�""�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"��"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"~
+                     �",
+        �"O�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"��"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"�
+        �",                         �",
+        �-�                         �-�
+�"O�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"�          �"O�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"�
+�", cargandoAuth �",          �", autenticado  �",
+�",   = true     �",          �",   = false    �",
+�""�"?�"?�"?�"?�"?�"?�"��"?�"?�"?�"?�"?�"?�"?�"~          �""�"?�"?�"?�"?�"?�"?�"��"?�"?�"?�"?�"?�"?�"?�"~
+       �",                         �",
+       �-�                         �-�
+�"O�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"�          �"O�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"�
+�", Mostrar      �",          �", Redirigir a  �",
+�", Loading      �",          �", /login       �",
+�""�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"~          �""�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"~
                                  
-        ┌─────────────────────────┘
-        │
-        ▼
-┌──────────────┐
-│ autenticado  │
-│   = true     │
-└──────┬───────┘
-       │
-       ▼
-┌──────────────┐
-│ Renderizar   │
-│ children     │
-└──────────────┘
+        �"O�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"~
+        �",
+        �-�
+�"O�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"�
+�", autenticado  �",
+�",   = true     �",
+�""�"?�"?�"?�"?�"?�"?�"��"?�"?�"?�"?�"?�"?�"?�"~
+       �",
+       �-�
+�"O�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"�
+�", Renderizar   �",
+�", children     �",
+�""�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"~
 ```
 
 ## Integración con AppContext
@@ -339,7 +339,7 @@ test('debe renderizar children cuando está autenticado', () => {
 
 ## Mejores Prácticas
 
-### ✅ DO
+### �o. DO
 
 - Envolver todas las rutas administrativas con `RutaProtegida`
 - Usar `replace` en `Navigate` para evitar loops
@@ -347,7 +347,7 @@ test('debe renderizar children cuando está autenticado', () => {
 - Mantener la lógica de autenticación en `AppContext`
 - Probar todos los estados (loading, autenticado, no autenticado)
 
-### ❌ DON'T
+### �O DON'T
 
 - No verificar autenticación manualmente en cada componente
 - No confiar solo en localStorage sin validar el token
@@ -402,7 +402,7 @@ const logout = () => {
 **Solución**: Asegúrate de que `/login` NO esté envuelto en `RutaProtegida`
 
 ```jsx
-// ❌ INCORRECTO
+// �O INCORRECTO
 <Route 
   path="/login" 
   element={
@@ -412,7 +412,7 @@ const logout = () => {
   } 
 />
 
-// ✅ CORRECTO
+// �o. CORRECTO
 <Route path="/login" element={<Login />} />
 ```
 
@@ -453,3 +453,4 @@ Para preguntas o problemas, consulta:
 - Documentación del proyecto: `README.md`
 - Ejemplos de uso: `ejemplo-uso-ruta-protegida.jsx`
 - Tests: `RutaProtegida.test.jsx`
+

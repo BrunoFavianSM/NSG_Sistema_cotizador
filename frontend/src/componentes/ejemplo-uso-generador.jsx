@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ejemplos de Uso: GeneradorPDF
  * 
  * Este archivo muestra diferentes formas de usar el componente GeneradorPDF
@@ -91,7 +91,7 @@ export function EjemploConCallbacks() {
 
       {ultimaCotizacion && (
         <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <h3 className="font-bold text-green-800 mb-2">Última Cotización:</h3>
+          <h3 className="font-bold text-green-800 mb-2">�sltima Cotización:</h3>
           <p className="text-sm text-green-700">
             Código: {ultimaCotizacion.codigo_ticket}
           </p>
@@ -332,3 +332,4 @@ export default {
   EjemploEstilosPersonalizados,
   EjemploConValidacion
 };
+

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Servicio de API
  * 
  * Cliente Axios configurado para comunicación con el backend
@@ -82,7 +82,7 @@ api.interceptors.response.use(
 );
 
 // ============================================
-// FUNCIONES DE AUTENTICACIÓN
+// FUNCIONES DE AUTENTICACI�"N
 // ============================================
 
 /**
@@ -378,3 +378,4 @@ export const verificarSalud = async () => {
 
 // Exportar instancia de axios configurada para casos especiales
 export default api;
+

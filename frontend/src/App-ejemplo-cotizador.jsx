@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ejemplo de integración del Cotizador en la aplicación principal
  * 
  * Este archivo muestra cómo integrar la página Cotizador con:
@@ -76,7 +76,7 @@ function Home() {
 
       <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="bg-white p-6 rounded-lg shadow-lg">
-          <div className="text-4xl mb-4">🖥️</div>
+          <div className="text-4xl mb-4">�Y-�️</div>
           <h3 className="text-xl font-semibold mb-2">Selección Guiada</h3>
           <p className="text-gray-600">
             Proceso paso a paso para elegir cada componente de tu PC
@@ -84,7 +84,7 @@ function Home() {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-lg">
-          <div className="text-4xl mb-4">✅</div>
+          <div className="text-4xl mb-4">�o.</div>
           <h3 className="text-xl font-semibold mb-2">Validación Automática</h3>
           <p className="text-gray-600">
             Verificamos la compatibilidad de todos los componentes en tiempo real
@@ -92,7 +92,7 @@ function Home() {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-lg">
-          <div className="text-4xl mb-4">📄</div>
+          <div className="text-4xl mb-4">�Y""</div>
           <h3 className="text-xl font-semibold mb-2">Cotización en PDF</h3>
           <p className="text-gray-600">
             Descarga tu presupuesto formal con código de validación
@@ -128,3 +128,4 @@ function ValidarCotizacion() {
 }
 
 export default App;
+

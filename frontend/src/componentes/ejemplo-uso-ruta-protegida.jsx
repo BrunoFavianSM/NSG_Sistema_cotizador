@@ -1,4 +1,4 @@
-/**
+﻿/**
  * EJEMPLO DE USO: Componente RutaProtegida
  * 
  * Este archivo muestra cómo usar el componente RutaProtegida
@@ -260,18 +260,18 @@ const EjemploCon404 = () => {
 };
 
 // ============================================
-// NOTAS DE IMPLEMENTACIÓN
+// NOTAS DE IMPLEMENTACI�"N
 // ============================================
 
 /*
 CARACTERÍSTICAS CLAVE:
 
-1. VERIFICACIÓN AUTOMÁTICA:
+1. VERIFICACI�"N AUTOMÁTICA:
    - El componente verifica automáticamente si el usuario está autenticado
    - Usa el contexto AppContext para obtener el estado de autenticación
    - Verifica la existencia de un token JWT válido
 
-2. REDIRECCIÓN AUTOMÁTICA:
+2. REDIRECCI�"N AUTOMÁTICA:
    - Si no está autenticado, redirige a /login
    - Usa replace para no agregar entrada al historial
    - Preserva la URL original para redirección post-login
@@ -286,15 +286,15 @@ CARACTERÍSTICAS CLAVE:
    - Soporta cualquier componente como children
    - Preserva props de los componentes hijos
 
-FLUJO DE AUTENTICACIÓN:
+FLUJO DE AUTENTICACI�"N:
 
 1. Usuario intenta acceder a /admin/productos
 2. RutaProtegida verifica autenticación
-3. Si cargandoAuth = true → Muestra loading
-4. Si autenticado = false → Redirige a /login
-5. Si autenticado = true → Renderiza AdminProductos
+3. Si cargandoAuth = true �?' Muestra loading
+4. Si autenticado = false �?' Redirige a /login
+5. Si autenticado = true �?' Renderiza AdminProductos
 
-INTEGRACIÓN CON APPCONTEXT:
+INTEGRACI�"N CON APPCONTEXT:
 
 El componente depende de:
 - autenticado: boolean que indica si el usuario está autenticado
@@ -341,3 +341,4 @@ export {
   EjemploConRedireccion,
   EjemploCon404
 };
+

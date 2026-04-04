@@ -1,4 +1,4 @@
-# Página Cotizador
+﻿# Página Cotizador
 
 ## Descripción
 
@@ -7,7 +7,7 @@ La página `Cotizador.jsx` implementa el flujo principal de cotización de compu
 ## Características Implementadas
 
 ### 1. Flujo Secuencial (Requisito 4.1)
-- 7 pasos ordenados: Procesador → Placa Madre → RAM → Almacenamiento → GPU → Fuente → Case
+- 7 pasos ordenados: Procesador �?' Placa Madre �?' RAM �?' Almacenamiento �?' GPU �?' Fuente �?' Case
 - Cada paso debe completarse antes de avanzar al siguiente
 
 ### 2. Habilitación Condicional (Requisito 4.2)
@@ -86,7 +86,7 @@ Permite seleccionar múltiples módulos. Cada módulo se agrega a un array.
 
 ### Estados de Paso
 - **Azul con escala**: Paso actual
-- **Verde con ✓**: Paso completado
+- **Verde con �o"**: Paso completado
 - **Gris claro**: Paso habilitado pero no completado
 - **Gris oscuro**: Paso deshabilitado
 
@@ -138,3 +138,4 @@ El componente utiliza Tailwind CSS con clases responsive:
 - [ ] Compartir configuración por URL
 - [ ] Comparar múltiples configuraciones
 - [ ] Exportar listado técnico
+

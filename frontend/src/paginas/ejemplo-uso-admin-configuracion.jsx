@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ejemplo de Uso: AdminConfiguracion
  * 
  * Este archivo demuestra cómo integrar y usar el componente AdminConfiguracion
@@ -80,19 +80,19 @@ function AdminLayout({ children }) {
               to="/admin/dashboard" 
               className="block px-4 py-2 rounded hover:bg-gray-100"
             >
-              📊 Dashboard
+              �Y"S Dashboard
             </Link>
             <Link 
               to="/admin/productos" 
               className="block px-4 py-2 rounded hover:bg-gray-100"
             >
-              📦 Productos
+              �Y"� Productos
             </Link>
             <Link 
               to="/admin/configuracion" 
               className="block px-4 py-2 rounded bg-blue-50 text-blue-600"
             >
-              ⚙️ Configuración
+              �sT️ Configuración
             </Link>
           </nav>
         </div>
@@ -330,7 +330,7 @@ function DashboardAdmin() {
             to="/admin/configuracion" 
             className="text-sm text-blue-500 hover:underline mt-2 inline-block"
           >
-            Modificar →
+            Modificar �?'
           </Link>
         </div>
 
@@ -367,13 +367,13 @@ function DashboardAdmin() {
             to="/admin/configuracion"
             className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
-            ⚙️ Configuración
+            �sT️ Configuración
           </Link>
           <Link
             to="/admin/productos"
             className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600"
           >
-            📦 Productos
+            �Y"� Productos
           </Link>
         </div>
       </div>
@@ -397,3 +397,4 @@ export {
 
 // Ejemplo por defecto
 export default EjemploBasico;
+

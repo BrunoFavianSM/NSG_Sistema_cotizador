@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Componente Asistente IA
  * 
  * Interfaz conversacional para interactuar con el asistente IA.
@@ -61,7 +61,7 @@ const AsistenteIA = ({
     if (historial.length === 0) {
       setHistorial([{
         rol: 'asistente',
-        mensaje: '¡Hola! Soy tu asistente de IA. Cuéntame qué tipo de computadora necesitas y te ayudaré a encontrar la configuración perfecta. 😊',
+        mensaje: '¡Hola! Soy tu asistente de IA. Cuéntame qué tipo de computadora necesitas y te ayudaré a encontrar la configuración perfecta. �Y~S',
         timestamp: new Date()
       }]);
     }
@@ -82,7 +82,7 @@ const AsistenteIA = ({
     setSesionId(null);
     setHistorial([{
       rol: 'asistente',
-      mensaje: '¡Hola! Soy tu asistente de IA. Cuéntame qué tipo de computadora necesitas y te ayudaré a encontrar la configuración perfecta. 😊',
+      mensaje: '¡Hola! Soy tu asistente de IA. Cuéntame qué tipo de computadora necesitas y te ayudaré a encontrar la configuración perfecta. �Y~S',
       timestamp: new Date()
     }]);
     setRecomendacionFinal(null);
@@ -258,7 +258,7 @@ const AsistenteIA = ({
         className="mt-4 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg shadow-lg"
       >
         <h4 className="text-lg font-bold text-blue-900 mb-3 flex items-center gap-2">
-          <span>✨</span>
+          <span>�o�</span>
           <span>Configuración Recomendada</span>
         </h4>
 
@@ -295,7 +295,7 @@ const AsistenteIA = ({
             <p className="text-xs font-semibold text-yellow-800 mb-1">Advertencias:</p>
             <ul className="space-y-1">
               {advertencias.map((adv, idx) => (
-                <li key={idx} className="text-xs text-yellow-700">• {adv}</li>
+                <li key={idx} className="text-xs text-yellow-700">�?� {adv}</li>
               ))}
             </ul>
           </div>
@@ -562,3 +562,4 @@ AsistenteIA.propTypes = {
 };
 
 export default AsistenteIA;
+

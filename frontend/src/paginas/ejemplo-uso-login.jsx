@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ejemplo de Uso: Login
  * 
  * Demuestra cómo integrar la página de Login en la aplicación
@@ -85,7 +85,7 @@ const PanelAdmin = () => {
 };
 
 // ============================================
-// CONFIGURACIÓN DE RUTAS
+// CONFIGURACI�"N DE RUTAS
 // ============================================
 
 const App = () => {
@@ -120,7 +120,7 @@ const App = () => {
 export default App;
 
 // ============================================
-// EJEMPLO 2: REDIRECCIÓN AUTOMÁTICA SI YA ESTÁ AUTENTICADO
+// EJEMPLO 2: REDIRECCI�"N AUTOMÁTICA SI YA ESTÁ AUTENTICADO
 // ============================================
 
 /**
@@ -179,7 +179,7 @@ const LoginConErroresPersonalizados = () => {
 };
 
 // ============================================
-// EJEMPLO 4: INTEGRACIÓN CON REACT QUERY
+// EJEMPLO 4: INTEGRACI�"N CON REACT QUERY
 // ============================================
 
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -303,7 +303,7 @@ const LoginConRecordarUsuario = () => {
 };
 
 // ============================================
-// NOTAS DE IMPLEMENTACIÓN
+// NOTAS DE IMPLEMENTACI�"N
 // ============================================
 
 /**
@@ -332,3 +332,4 @@ const LoginConRecordarUsuario = () => {
  * 4. Navegación por teclado
  * 5. Contraste de colores adecuado
  */
+

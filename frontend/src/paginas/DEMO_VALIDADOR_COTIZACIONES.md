@@ -1,4 +1,4 @@
-# Demo: Validador de Cotizaciones
+﻿# Demo: Validador de Cotizaciones
 
 ## Descripción
 
@@ -29,9 +29,9 @@ El **Validador de Cotizaciones** es una página del panel administrativo que per
 - Comparación precio histórico vs actual
 - Diferencia por componente
 - Indicador de disponibilidad:
-  - ✓ En Stock (verde)
+  - �o" En Stock (verde)
   - ⏱ A Pedido (naranja)
-  - ✗ No Disponible (rojo)
+  - �o- No Disponible (rojo)
 
 ### 5. Alertas de Cambios
 - Alerta visual cuando hay cambios de precio
@@ -93,7 +93,7 @@ El **Validador de Cotizaciones** es una página del panel administrativo que per
 ```
 1. Vendedor busca: NSG-2024-0100
 2. Sistema muestra tabla de componentes
-3. Un componente muestra: "✗ No Disponible"
+3. Un componente muestra: "�o- No Disponible"
 4. Vendedor informa al cliente
 5. Opciones:
    - Esperar restock
@@ -273,3 +273,4 @@ Para problemas o preguntas:
 - Verificar conexión con backend
 - Consultar documentación de API
 - Contactar equipo de desarrollo
+

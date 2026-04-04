@@ -1,4 +1,4 @@
-# Servicios de API
+﻿# Servicios de API
 
 Este directorio contiene los servicios para comunicación con el backend.
 
@@ -126,3 +126,4 @@ Ejecutar tests:
 ```bash
 npm test api.test.js
 ```
+

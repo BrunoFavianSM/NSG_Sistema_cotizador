@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tests para Cotizador
  * 
  * Valida:
@@ -78,13 +78,13 @@ describe('Cotizador - Navegación Secuencial', () => {
 
   test('el botón Anterior debe estar deshabilitado en el primer paso', () => {
     renderCotizador();
-    const botonAnterior = screen.getByText('← Anterior');
+    const botonAnterior = screen.getByText('�?� Anterior');
     expect(botonAnterior).toBeDisabled();
   });
 
   test('el botón Siguiente debe estar deshabilitado si no hay selección', () => {
     renderCotizador();
-    const botonSiguiente = screen.getByText('Siguiente →');
+    const botonSiguiente = screen.getByText('Siguiente �?'');
     expect(botonSiguiente).toBeDisabled();
   });
 });
@@ -142,7 +142,7 @@ describe('Cotizador - Navegación hacia Atrás', () => {
     });
 
     // Navegar al siguiente paso
-    const botonSiguiente = screen.getByText('Siguiente →');
+    const botonSiguiente = screen.getByText('Siguiente �?'');
     fireEvent.click(botonSiguiente);
 
     await waitFor(() => {
@@ -150,7 +150,7 @@ describe('Cotizador - Navegación hacia Atrás', () => {
     });
 
     // Navegar al paso anterior
-    const botonAnterior = screen.getByText('← Anterior');
+    const botonAnterior = screen.getByText('�?� Anterior');
     fireEvent.click(botonAnterior);
 
     await waitFor(() => {
@@ -192,7 +192,7 @@ describe('Cotizador - Validación de Compatibilidad', () => {
       }
     });
 
-    expect(screen.getByText('⚠️ Problemas de compatibilidad:')).toBeInTheDocument();
+    expect(screen.getByText('�s�️ Problemas de compatibilidad:')).toBeInTheDocument();
     expect(screen.getByText('Socket incompatible: AM5 vs LGA1700')).toBeInTheDocument();
   });
 
@@ -201,12 +201,12 @@ describe('Cotizador - Validación de Compatibilidad', () => {
       validacionCompatibilidad: {
         compatible: true,
         errores: [],
-        advertencias: ['⚠️ Margen ajustado: recomendado 600W']
+        advertencias: ['�s�️ Margen ajustado: recomendado 600W']
       }
     });
 
-    expect(screen.getByText('ℹ️ Advertencias:')).toBeInTheDocument();
-    expect(screen.getByText('⚠️ Margen ajustado: recomendado 600W')).toBeInTheDocument();
+    expect(screen.getByText('�"�️ Advertencias:')).toBeInTheDocument();
+    expect(screen.getByText('�s�️ Margen ajustado: recomendado 600W')).toBeInTheDocument();
   });
 
   test('debe llamar a validarCompatibilidad cuando cambia la configuración', () => {
@@ -276,7 +276,7 @@ describe('Cotizador - Selección de RAM', () => {
     });
 
     // Navegar al paso de RAM
-    const botonSiguiente = screen.getByText('Siguiente →');
+    const botonSiguiente = screen.getByText('Siguiente �?'');
     fireEvent.click(botonSiguiente);
     fireEvent.click(botonSiguiente);
 
@@ -304,7 +304,7 @@ describe('Cotizador - Selección de RAM', () => {
     });
 
     // Navegar al paso de RAM
-    const botonSiguiente = screen.getByText('Siguiente →');
+    const botonSiguiente = screen.getByText('Siguiente �?'');
     fireEvent.click(botonSiguiente);
     fireEvent.click(botonSiguiente);
 
@@ -339,3 +339,4 @@ describe('Cotizador - Botón Finalizar', () => {
     expect(screen.getByText('Generar Cotización')).toBeInTheDocument();
   });
 });
+

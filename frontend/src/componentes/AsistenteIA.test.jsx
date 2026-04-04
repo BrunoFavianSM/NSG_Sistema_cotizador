@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tests para Componente Asistente IA
  * 
  * Tests unitarios básicos para verificar el comportamiento del componente
@@ -327,3 +327,4 @@ describe('AsistenteIA', () => {
     }
   });
 });
+
