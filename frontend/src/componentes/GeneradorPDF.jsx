@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Componente Generador de PDF
  * 
  * Genera y descarga PDFs de cotización:
@@ -601,3 +601,4 @@ GeneradorPDF.propTypes = {
 };
 
 export default GeneradorPDF;
+

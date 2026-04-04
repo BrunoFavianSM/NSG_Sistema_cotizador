@@ -82,7 +82,11 @@ function validarProducto(datos) {
   }
   
   // Validar tiempo_entrega_dias (opcional)
-  if (datos.tiempo_entrega_dias !== undefined && datos.tiempo_entrega_dias !== null) {
+  if (
+    datos.tiempo_entrega_dias !== undefined &&
+    datos.tiempo_entrega_dias !== null &&
+    datos.tiempo_entrega_dias !== ''
+  ) {
     if (!Number.isInteger(datos.tiempo_entrega_dias) || datos.tiempo_entrega_dias < 0) {
       errores.push({ campo: 'tiempo_entrega_dias', mensaje: 'Debe ser un número entero no negativo' });
     }

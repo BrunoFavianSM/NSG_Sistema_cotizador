@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ejemplo de Uso del SelectorComponente
  * 
  * Este archivo demuestra cómo integrar el SelectorComponente
@@ -128,7 +128,7 @@ export const EjemploSeleccionPlacaMadre = () => {
             Seleccionada: {placaMadreSeleccionada.nombre}
           </p>
           <p className="text-sm text-green-600">
-            Socket: {placaMadreSeleccionada.socket} ✓ Compatible
+            Socket: {placaMadreSeleccionada.socket} �o" Compatible
           </p>
         </div>
       )}
@@ -214,7 +214,7 @@ export const EjemploSeleccionRAM = () => {
           </p>
           <ul className="text-sm text-green-700 space-y-1">
             {ramSeleccionada.map((ram, index) => (
-              <li key={index}>• {ram.nombre}</li>
+              <li key={index}>�?� {ram.nombre}</li>
             ))}
           </ul>
           <p className="text-green-800 font-bold mt-2">
@@ -374,3 +374,4 @@ export default {
   EjemploSeleccionRAM,
   EjemploIntegracionCompleta
 };
+

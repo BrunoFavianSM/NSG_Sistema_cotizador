@@ -36,8 +36,9 @@ function sanitizarInput(input) {
   sanitizado = sanitizado.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '');
   sanitizado = sanitizado.replace(/javascript:/gi, '');
   
-  // Remover tags HTML pero mantener contenido
-  sanitizado = sanitizado.replace(/<[^>]*>/g, '');
+  // Remover tags HTML reales pero mantener texto con símbolos "<" y ">"
+  // Ejemplo: "<>" no debe vaciarse por completo.
+  sanitizado = sanitizado.replace(/<\/?[a-z][^>]*>/gi, '');
   
   // Escapar caracteres HTML restantes
   sanitizado = validator.escape(sanitizado);

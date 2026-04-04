@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ejemplo de Uso: ValidadorCompatibilidad
  * 
  * Este archivo muestra cómo integrar el componente ValidadorCompatibilidad
@@ -182,3 +182,4 @@ const EjemploValidador = () => {
 };
 
 export default EjemploValidador;
+

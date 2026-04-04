@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Componente de Protección de Rutas
  * 
  * Wrapper que protege rutas administrativas verificando autenticación.
@@ -38,3 +38,4 @@ const RutaProtegida = ({ children }) => {
 };
 
 export default RutaProtegida;
+

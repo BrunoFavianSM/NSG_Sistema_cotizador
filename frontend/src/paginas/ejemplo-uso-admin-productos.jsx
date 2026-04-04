@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ejemplo de Uso: AdminProductos
  * 
  * Demuestra cómo integrar la página de administración de productos
@@ -188,11 +188,11 @@ function AppConNotificaciones() {
 }
 
 // ============================================
-// NOTAS DE IMPLEMENTACIÓN
+// NOTAS DE IMPLEMENTACI�"N
 // ============================================
 
 /*
-1. AUTENTICACIÓN:
+1. AUTENTICACI�"N:
    - AdminProductos verifica autenticación automáticamente
    - Usa RutaProtegida para proteger la ruta
    - Redirige a /login si no autenticado
@@ -222,7 +222,7 @@ function AppConNotificaciones() {
    - Frontend solo oculta UI
    - Nunca confiar solo en validación frontend
 
-7. ACTUALIZACIÓN EN TIEMPO REAL:
+7. ACTUALIZACI�"N EN TIEMPO REAL:
    - Productos se recargan después de cada operación
    - Stock se actualiza automáticamente
    - Tabla se refresca tras crear/editar/eliminar
@@ -232,3 +232,4 @@ function AppConNotificaciones() {
    - Validación de formulario antes de enviar
    - Feedback visual de estados de carga
 */
+

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Componente Resumen de Cotización
  * 
  * Muestra un resumen de la configuración seleccionada con:
@@ -251,7 +251,7 @@ const ResumenCotizacion = ({
                 <ul className="mt-2 space-y-1">
                   {infoEntrega.componentes.map((comp, idx) => (
                     <li key={idx} className="text-xs text-yellow-600">
-                      • {comp.categoria}: {comp.nombre} ({comp.dias}d)
+                      �?� {comp.categoria}: {comp.nombre} ({comp.dias}d)
                     </li>
                   ))}
                 </ul>
@@ -337,3 +337,4 @@ ResumenCotizacion.propTypes = {
 };
 
 export default ResumenCotizacion;
+

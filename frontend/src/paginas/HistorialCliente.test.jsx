@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tests Unitarios para HistorialCliente
  * 
  * Valida:
@@ -515,3 +515,4 @@ describe('HistorialCliente', () => {
     });
   });
 });
+

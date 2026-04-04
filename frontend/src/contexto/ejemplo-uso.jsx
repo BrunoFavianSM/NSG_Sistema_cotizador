@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ejemplos de uso del AppContext
  * 
  * Este archivo muestra cómo usar el contexto global en diferentes escenarios
@@ -267,7 +267,7 @@ function EjemploValidacionCompatibilidad() {
 
       {validacionCompatibilidad.compatible && (
         <div style={{ color: 'green' }}>
-          <p>✓ Configuración compatible</p>
+          <p>�o" Configuración compatible</p>
         </div>
       )}
     </div>
@@ -343,3 +343,4 @@ export {
   EjemploAplicarConfiguracionIA,
   EjemploLimpiarConfiguracion
 };
+

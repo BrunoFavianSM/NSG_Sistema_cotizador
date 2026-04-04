@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Contexto Global de Aplicación
  * 
  * Gestiona el estado global de la aplicación:
@@ -41,7 +41,7 @@ export const AppProvider = ({ children, value: overrideValue }) => {
 // Internal provider with all state logic
 const AppProviderInternal = ({ children }) => {
   // ============================================
-  // ESTADO DE AUTENTICACIÓN
+  // ESTADO DE AUTENTICACI�"N
   // ============================================
   const [usuario, setUsuario] = useState(null);
   const [autenticado, setAutenticado] = useState(false);
@@ -55,7 +55,7 @@ const AppProviderInternal = ({ children }) => {
   const [errorProductos, setErrorProductos] = useState(null);
 
   // ============================================
-  // ESTADO DE CONFIGURACIÓN SELECCIONADA
+  // ESTADO DE CONFIGURACI�"N SELECCIONADA
   // ============================================
   const [configuracionSeleccionada, setConfiguracionSeleccionada] = useState({
     procesador: null,
@@ -82,7 +82,7 @@ const AppProviderInternal = ({ children }) => {
   });
 
   // ============================================
-  // INICIALIZACIÓN: Verificar autenticación
+  // INICIALIZACI�"N: Verificar autenticación
   // ============================================
   useEffect(() => {
     verificarAutenticacion();
@@ -116,7 +116,7 @@ const AppProviderInternal = ({ children }) => {
   };
 
   // ============================================
-  // FUNCIONES DE AUTENTICACIÓN
+  // FUNCIONES DE AUTENTICACI�"N
   // ============================================
 
   /**
@@ -208,7 +208,7 @@ const AppProviderInternal = ({ children }) => {
   };
 
   // ============================================
-  // FUNCIONES DE CONFIGURACIÓN SELECCIONADA
+  // FUNCIONES DE CONFIGURACI�"N SELECCIONADA
   // ============================================
 
   /**
@@ -382,3 +382,4 @@ const AppProviderInternal = ({ children }) => {
 };
 
 export default AppContext;
+

@@ -1,4 +1,4 @@
-# Documentación: HistorialCliente
+﻿# Documentación: HistorialCliente
 
 ## Descripción General
 
@@ -51,23 +51,23 @@ El componente `HistorialCliente` permite a los clientes consultar todas sus coti
 
 ```
 HistorialCliente/
-├── Estado del formulario
-│   ├── email
-│   ├── emailValido
-│   └── errores de validación
-├── Estado de búsqueda
-│   ├── buscando
-│   ├── historialCargado
-│   └── error
-├── Estado del historial
-│   ├── cliente (nombre, email)
-│   └── cotizaciones[]
-└── Funciones
-    ├── validarEmail()
-    ├── manejarBusqueda()
-    ├── descargarPDF()
-    ├── formatearFecha()
-    └── nuevaBusqueda()
+�"o�"?�"? Estado del formulario
+�",   �"o�"?�"? email
+�",   �"o�"?�"? emailValido
+�",   �""�"?�"? errores de validación
+�"o�"?�"? Estado de búsqueda
+�",   �"o�"?�"? buscando
+�",   �"o�"?�"? historialCargado
+�",   �""�"?�"? error
+�"o�"?�"? Estado del historial
+�",   �"o�"?�"? cliente (nombre, email)
+�",   �""�"?�"? cotizaciones[]
+�""�"?�"? Funciones
+    �"o�"?�"? validarEmail()
+    �"o�"?�"? manejarBusqueda()
+    �"o�"?�"? descargarPDF()
+    �"o�"?�"? formatearFecha()
+    �""�"?�"? nuevaBusqueda()
 ```
 
 ## Uso Básico
@@ -492,6 +492,7 @@ Para más información o soporte:
 
 ---
 
-**Última actualización**: Enero 2024  
+**�sltima actualización**: Enero 2024  
 **Versión**: 1.0.0  
 **Autor**: Sistema de Cotización Automatizada - NSG Latinoamerica E.I.R.L.
+

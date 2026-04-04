@@ -1,4 +1,4 @@
-# Demo: Componente Asistente IA
+﻿# Demo: Componente Asistente IA
 
 ## Descripción
 
@@ -6,33 +6,33 @@ El componente `AsistenteIA` proporciona una interfaz conversacional para que los
 
 ## Características Implementadas
 
-✅ **Requisito 5.1**: Botón "Ayuda IA" visible y accesible
+�o. **Requisito 5.1**: Botón "Ayuda IA" visible y accesible
 - Botón flotante en la esquina inferior derecha
 - Diseño atractivo con gradiente purple-blue
 - Animaciones suaves al hover
 
-✅ **Requisito 5.2**: Modal/panel con interfaz de chat
+�o. **Requisito 5.2**: Modal/panel con interfaz de chat
 - Modal responsivo que se adapta a móvil y escritorio
 - Diseño moderno con header colorido
 - Opciones para reiniciar o cerrar la conversación
 
-✅ **Requisito 5.3**: Historial de conversación
+�o. **Requisito 5.3**: Historial de conversación
 - Muestra todos los mensajes del usuario y el asistente
 - Scroll automático al último mensaje
 - Formato diferenciado para mensajes de usuario, asistente y sistema
 - Timestamps en cada mensaje
 
-✅ **Requisito 5.4**: Aplicar recomendación
+�o. **Requisito 5.4**: Aplicar recomendación
 - Tarjeta especial para mostrar la configuración recomendada
 - Lista detallada de todos los componentes
 - Advertencias sobre componentes a pedido
 - Botón para aplicar la recomendación con un click
 
-✅ **Requisito 13.2**: Notificaciones con Sileo
+�o. **Requisito 13.2**: Notificaciones con Sileo
 - Notificación de éxito al aplicar recomendación
 - Notificación de error si algo falla
 
-✅ **Requisito 13.3**: Animaciones con Framer Motion
+�o. **Requisito 13.3**: Animaciones con Framer Motion
 - Animaciones suaves al abrir/cerrar modal
 - Transiciones en mensajes
 - Indicador de "escribiendo" animado
@@ -196,17 +196,17 @@ El modal usa clases de Tailwind CSS. Puedes modificar:
 
 El componente incluye tests unitarios que verifican:
 
-✅ Renderizado del botón "Ayuda IA"
-✅ Apertura del modal
-✅ Mensaje de bienvenida
-✅ Envío de mensajes
-✅ Inicio de conversación
-✅ Continuación de conversación
-✅ Mostrar recomendación
-✅ Aplicar recomendación
-✅ Manejo de errores
-✅ Reiniciar conversación
-✅ Cerrar modal
+�o. Renderizado del botón "Ayuda IA"
+�o. Apertura del modal
+�o. Mensaje de bienvenida
+�o. Envío de mensajes
+�o. Inicio de conversación
+�o. Continuación de conversación
+�o. Mostrar recomendación
+�o. Aplicar recomendación
+�o. Manejo de errores
+�o. Reiniciar conversación
+�o. Cerrar modal
 
 Ejecutar tests:
 ```bash
@@ -242,7 +242,7 @@ npm test AsistenteIA.test.jsx
 - [ ] Modo oscuro
 - [ ] Sonidos de notificación
 - [ ] Typing indicators más elaborados
-- [ ] Reacciones a mensajes (👍 👎)
+- [ ] Reacciones a mensajes (�Y'� �Y'Z)
 
 ## Soporte
 
@@ -251,3 +251,4 @@ Para problemas o preguntas sobre el componente:
 2. Revisar el código fuente con comentarios
 3. Ejecutar los tests para verificar funcionalidad
 4. Consultar la documentación del backend (README_IA.md)
+

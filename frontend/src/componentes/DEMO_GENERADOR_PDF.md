@@ -1,4 +1,4 @@
-# GeneradorPDF - Documentación Completa
+﻿# GeneradorPDF - Documentación Completa
 
 ## Descripción
 
@@ -6,16 +6,16 @@ El componente `GeneradorPDF` es responsable de generar cotizaciones formales en 
 
 ## Características
 
-✅ **Solicitud de Datos del Cliente**: Email, nombre y teléfono opcionales  
-✅ **Validación de Email**: Verifica formato válido antes de enviar  
-✅ **Generación de Cotización**: Crea cotización en el backend con código ticket único  
-✅ **Visualización de Código Ticket**: Muestra el código NSG-YYYY-NNNN generado  
-✅ **Descarga de PDFs**: Botones para descargar cotización y listado técnico  
-✅ **Manejo de Errores**: Feedback claro en caso de problemas  
-✅ **Estados de Carga**: Indicadores visuales durante el proceso  
-✅ **Diseño Responsivo**: Funciona en móvil, tablet y escritorio  
-✅ **Animaciones Suaves**: Transiciones con Framer Motion  
-✅ **Notificaciones**: Integración con Sileo para feedback
+�o. **Solicitud de Datos del Cliente**: Email, nombre y teléfono opcionales  
+�o. **Validación de Email**: Verifica formato válido antes de enviar  
+�o. **Generación de Cotización**: Crea cotización en el backend con código ticket único  
+�o. **Visualización de Código Ticket**: Muestra el código NSG-YYYY-NNNN generado  
+�o. **Descarga de PDFs**: Botones para descargar cotización y listado técnico  
+�o. **Manejo de Errores**: Feedback claro en caso de problemas  
+�o. **Estados de Carga**: Indicadores visuales durante el proceso  
+�o. **Diseño Responsivo**: Funciona en móvil, tablet y escritorio  
+�o. **Animaciones Suaves**: Transiciones con Framer Motion  
+�o. **Notificaciones**: Integración con Sileo para feedback
 
 ## Requisitos Validados
 
@@ -150,7 +150,7 @@ function MiComponente() {
 
       {ultimaCotizacion && (
         <div>
-          <p>Última cotización: {ultimaCotizacion.codigo_ticket}</p>
+          <p>�sltima cotización: {ultimaCotizacion.codigo_ticket}</p>
           <p>Total: S/ {ultimaCotizacion.precio_total.toFixed(2)}</p>
         </div>
       )}
@@ -240,7 +240,7 @@ Cuando se genera exitosamente, el objeto cotización tiene la siguiente estructu
 - Spinner visible
 - Texto "Generando..."
 
-### Estado de Éxito
+### Estado de �?xito
 - Código ticket visible
 - Información de cotización mostrada
 - Botones de descarga habilitados
@@ -317,12 +317,12 @@ Actualmente, al hacer clic en los botones de descarga, se muestra un mensaje inf
 
 ## Accesibilidad
 
-- ✅ Etiquetas descriptivas en inputs
-- ✅ Placeholders informativos
-- ✅ Estados disabled claros
-- ✅ Feedback visual en validaciones
-- ✅ Mensajes de error descriptivos
-- ✅ Botones con íconos y texto
+- �o. Etiquetas descriptivas en inputs
+- �o. Placeholders informativos
+- �o. Estados disabled claros
+- �o. Feedback visual en validaciones
+- �o. Mensajes de error descriptivos
+- �o. Botones con íconos y texto
 
 ## Manejo de Errores
 
@@ -352,15 +352,15 @@ Actualmente, al hacer clic en los botones de descarga, se muestra un mensaje inf
 
 El componente incluye tests exhaustivos:
 
-- ✅ Renderizado del botón principal
-- ✅ Apertura y cierre del modal
-- ✅ Validación de email
-- ✅ Generación de cotización
-- ✅ Manejo de errores
-- ✅ Callbacks onExito y onError
-- ✅ Estados de carga
-- ✅ Múltiples módulos RAM
-- ✅ Props personalizadas
+- �o. Renderizado del botón principal
+- �o. Apertura y cierre del modal
+- �o. Validación de email
+- �o. Generación de cotización
+- �o. Manejo de errores
+- �o. Callbacks onExito y onError
+- �o. Estados de carga
+- �o. Múltiples módulos RAM
+- �o. Props personalizadas
 
 Ejecutar tests:
 ```bash
@@ -397,3 +397,4 @@ Para reportar bugs o solicitar features, contacta al equipo de desarrollo.
 ## Licencia
 
 Este componente es parte del Sistema de Cotización Automatizada de NSG Latinoamerica E.I.R.L.
+

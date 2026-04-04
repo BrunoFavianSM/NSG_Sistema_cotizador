@@ -3,10 +3,18 @@
  * Verifica que los datos de prueba se inserten correctamente
  */
 
-const { ejecutarQuery } = require('../src/configuracion/baseDatos');
-const { hashPassword, verificarPassword } = require('../src/servicios/servicioAuth');
+const { pool, ejecutarQuery } = require('../src/configuracion/baseDatos');
+const { verificarPassword } = require('../src/servicios/servicioAuth');
+const { main: ejecutarSeed } = require('../scripts/seed-datos-prueba');
 
 describe('Seed de Datos de Prueba', () => {
+  beforeAll(async () => {
+    await ejecutarSeed({ cerrarPool: false });
+  });
+
+  afterAll(async () => {
+    await pool.end();
+  });
   
   describe('Verificación de Administrador', () => {
     test('debe existir el usuario administrador de prueba', async () => {
@@ -40,13 +48,13 @@ describe('Seed de Datos de Prueba', () => {
   describe('Verificación de Productos', () => {
     test('debe haber productos en todas las categorías requeridas', async () => {
       const categorias = [
-        'Procesador',
-        'Placa Madre',
-        'RAM',
-        'Almacenamiento',
-        'GPU',
-        'Fuente',
-        'Case'
+        'procesador',
+        'placa_madre',
+        'ram',
+        'almacenamiento',
+        'gpu',
+        'fuente',
+        'case'
       ];
       
       for (const categoria of categorias) {
@@ -68,7 +76,7 @@ describe('Seed de Datos de Prueba', () => {
     test('los procesadores deben tener socket definido', async () => {
       const resultado = await ejecutarQuery(
         'SELECT nombre, socket FROM productos WHERE categoria = $1',
-        ['Procesador']
+        ['procesador']
       );
       
       expect(resultado.rows.length).toBeGreaterThan(0);
@@ -82,7 +90,7 @@ describe('Seed de Datos de Prueba', () => {
     test('las placas madre deben tener socket y ram_type definidos', async () => {
       const resultado = await ejecutarQuery(
         'SELECT nombre, socket, ram_type FROM productos WHERE categoria = $1',
-        ['Placa Madre']
+        ['placa_madre']
       );
       
       expect(resultado.rows.length).toBeGreaterThan(0);
@@ -98,7 +106,7 @@ describe('Seed de Datos de Prueba', () => {
     test('la memoria RAM debe tener ram_type definido', async () => {
       const resultado = await ejecutarQuery(
         'SELECT nombre, ram_type FROM productos WHERE categoria = $1',
-        ['RAM']
+        ['ram']
       );
       
       expect(resultado.rows.length).toBeGreaterThan(0);
@@ -112,7 +120,7 @@ describe('Seed de Datos de Prueba', () => {
     test('las GPUs deben tener wattage definido', async () => {
       const resultado = await ejecutarQuery(
         'SELECT nombre, wattage FROM productos WHERE categoria = $1',
-        ['GPU']
+        ['gpu']
       );
       
       expect(resultado.rows.length).toBeGreaterThan(0);
@@ -126,7 +134,7 @@ describe('Seed de Datos de Prueba', () => {
     test('las fuentes deben tener wattage definido', async () => {
       const resultado = await ejecutarQuery(
         'SELECT nombre, wattage FROM productos WHERE categoria = $1',
-        ['Fuente']
+        ['fuente']
       );
       
       expect(resultado.rows.length).toBeGreaterThan(0);
@@ -140,7 +148,7 @@ describe('Seed de Datos de Prueba', () => {
     test('los gabinetes deben tener form_factor definido', async () => {
       const resultado = await ejecutarQuery(
         'SELECT nombre, form_factor FROM productos WHERE categoria = $1',
-        ['Case']
+        ['case']
       );
       
       expect(resultado.rows.length).toBeGreaterThan(0);
@@ -200,13 +208,13 @@ describe('Seed de Datos de Prueba', () => {
       // Obtener sockets de procesadores
       const procesadores = await ejecutarQuery(
         'SELECT DISTINCT socket FROM productos WHERE categoria = $1',
-        ['Procesador']
+        ['procesador']
       );
       
       // Obtener sockets de placas madre
       const placasMadre = await ejecutarQuery(
         'SELECT DISTINCT socket FROM productos WHERE categoria = $1',
-        ['Placa Madre']
+        ['placa_madre']
       );
       
       const socketsProcesadores = procesadores.rows.map(r => r.socket);
@@ -221,13 +229,13 @@ describe('Seed de Datos de Prueba', () => {
       // Obtener tipos de RAM
       const ram = await ejecutarQuery(
         'SELECT DISTINCT ram_type FROM productos WHERE categoria = $1',
-        ['RAM']
+        ['ram']
       );
       
       // Obtener tipos de RAM soportados por placas madre
       const placasMadre = await ejecutarQuery(
         'SELECT DISTINCT ram_type FROM productos WHERE categoria = $1',
-        ['Placa Madre']
+        ['placa_madre']
       );
       
       const tiposRAM = ram.rows.map(r => r.ram_type);
@@ -242,13 +250,13 @@ describe('Seed de Datos de Prueba', () => {
       // Obtener GPU con mayor consumo
       const gpuMaxima = await ejecutarQuery(
         'SELECT MAX(wattage) as max_wattage FROM productos WHERE categoria = $1',
-        ['GPU']
+        ['gpu']
       );
       
       // Obtener fuente con mayor potencia
       const fuenteMaxima = await ejecutarQuery(
         'SELECT MAX(wattage) as max_wattage FROM productos WHERE categoria = $1',
-        ['Fuente']
+        ['fuente']
       );
       
       const maxGPU = parseInt(gpuMaxima.rows[0].max_wattage);

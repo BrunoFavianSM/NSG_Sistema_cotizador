@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tests para el servicio de API
  * 
  * Valida la configuración y funciones del cliente Axios
@@ -186,3 +186,4 @@ describe('Servicio de API', () => {
     });
   });
 });
+

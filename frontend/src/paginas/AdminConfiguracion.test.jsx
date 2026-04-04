@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tests para AdminConfiguracion
  * Valida Requisitos: 6.3
  */
@@ -253,3 +253,4 @@ describe('AdminConfiguracion', () => {
     expect(preventDefaultSpy).toHaveBeenCalled();
   });
 });
+

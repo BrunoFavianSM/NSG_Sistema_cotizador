@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ejemplo de Uso: Validador de Cotizaciones
  * 
  * Este archivo muestra cómo integrar y usar el componente ValidadorCotizaciones
@@ -172,7 +172,7 @@ export async function ejemploUsoProgramatico() {
 
     // 3. Verificar cambios de precio
     if (cotizacion.hay_cambios_precio) {
-      console.log('⚠️ Hay cambios en los precios');
+      console.log('�s�️ Hay cambios en los precios');
       
       cotizacion.componentes.forEach(comp => {
         if (Math.abs(comp.diferencia_unitaria) > 0.01) {
@@ -189,7 +189,7 @@ export async function ejemploUsoProgramatico() {
     );
 
     if (noDisponibles.length > 0) {
-      console.log('⚠️ Componentes no disponibles:');
+      console.log('�s�️ Componentes no disponibles:');
       noDisponibles.forEach(comp => {
         console.log(`  - ${comp.nombre}`);
       });
@@ -199,7 +199,7 @@ export async function ejemploUsoProgramatico() {
     if (cotizacion.estado === 'Pendiente') {
       console.log('Marcando como reclamada...');
       await api.marcarComoReclamada(codigoTicket);
-      console.log('✓ Cotización reclamada exitosamente');
+      console.log('�o" Cotización reclamada exitosamente');
     }
 
   } catch (error) {
@@ -264,7 +264,7 @@ function ResumenCotizacion({ codigoTicket }) {
         <p>Precio: S/ {cotizacion.precio_total_actual.toFixed(2)}</p>
         {cotizacion.hay_cambios_precio && (
           <p className="text-orange-600">
-            ⚠️ Cambio: {cotizacion.diferencia_total > 0 ? '+' : ''}
+            �s�️ Cambio: {cotizacion.diferencia_total > 0 ? '+' : ''}
             S/ {cotizacion.diferencia_total.toFixed(2)}
           </p>
         )}
@@ -510,7 +510,7 @@ test('busca y muestra cotización', async () => {
   fireEvent.change(input, { target: { value: 'NSG-2024-0001' } });
 
   // Buscar
-  const boton = screen.getByText('🔍 Buscar');
+  const boton = screen.getByText('�Y"� Buscar');
   fireEvent.click(boton);
 
   // Verificar resultado
@@ -535,3 +535,4 @@ export default {
   EjemploConNotificaciones,
   ejemploTesting
 };
+

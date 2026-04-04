@@ -1,4 +1,4 @@
-# Demo: AdminConfiguracion
+﻿# Demo: AdminConfiguracion
 
 ## Descripción
 
@@ -33,17 +33,17 @@ La página `AdminConfiguracion` permite a los administradores gestionar la confi
 
 ```
 AdminConfiguracion/
-├── Estado de autenticación
-├── Sección: Margen de Ganancia
-│   ├── Input de porcentaje
-│   ├── Margen actual
-│   ├── Ejemplos de precios
-│   └── Botón guardar
-└── Sección: Estadísticas de IA
-    ├── Llamadas totales
-    ├── Costo estimado
-    ├── Promedio tokens
-    └── Botón actualizar
+�"o�"?�"? Estado de autenticación
+�"o�"?�"? Sección: Margen de Ganancia
+�",   �"o�"?�"? Input de porcentaje
+�",   �"o�"?�"? Margen actual
+�",   �"o�"?�"? Ejemplos de precios
+�",   �""�"?�"? Botón guardar
+�""�"?�"? Sección: Estadísticas de IA
+    �"o�"?�"? Llamadas totales
+    �"o�"?�"? Costo estimado
+    �"o�"?�"? Promedio tokens
+    �""�"?�"? Botón actualizar
 ```
 
 ## Uso del Contexto
@@ -70,11 +70,11 @@ const {
 ## Ejemplos de Precios
 
 El componente muestra 3 ejemplos con diferentes precios base:
-- S/ 1000 → Precio final con margen
-- S/ 2500 → Precio final con margen
-- S/ 5000 → Precio final con margen
+- S/ 1000 �?' Precio final con margen
+- S/ 2500 �?' Precio final con margen
+- S/ 5000 �?' Precio final con margen
 
-Fórmula: `Precio Final = Precio Base × (1 + Margen/100)`
+Fórmula: `Precio Final = Precio Base �- (1 + Margen/100)`
 
 ## Estadísticas de IA
 
@@ -87,7 +87,7 @@ Fórmula: `Precio Final = Precio Base × (1 + Margen/100)`
 ### Actualización
 
 - Se cargan automáticamente al montar el componente
-- Botón "🔄 Actualizar" para refrescar manualmente
+- Botón "�Y"" Actualizar" para refrescar manualmente
 - Manejo de errores con valores por defecto (0)
 
 ## Animaciones
@@ -119,7 +119,7 @@ Si el usuario no está autenticado:
 
 ## Mensajes de Feedback
 
-### Éxito
+### �?xito
 ```
 Margen de ganancia actualizado a X%
 ```
@@ -179,16 +179,16 @@ actualizarMargen(nuevoMargen);
 ## Testing
 
 El componente incluye tests para:
-- ✅ Protección de acceso
-- ✅ Renderizado correcto
-- ✅ Cambio de margen
-- ✅ Cálculo de ejemplos
-- ✅ Validaciones (0-100%)
-- ✅ Guardado de cambios
-- ✅ Mensajes de feedback
-- ✅ Carga de estadísticas
-- ✅ Actualización manual
-- ✅ Manejo de errores
+- �o. Protección de acceso
+- �o. Renderizado correcto
+- �o. Cambio de margen
+- �o. Cálculo de ejemplos
+- �o. Validaciones (0-100%)
+- �o. Guardado de cambios
+- �o. Mensajes de feedback
+- �o. Carga de estadísticas
+- �o. Actualización manual
+- �o. Manejo de errores
 
 ## Mejoras Futuras
 
@@ -231,3 +231,4 @@ function App() {
   );
 }
 ```
+

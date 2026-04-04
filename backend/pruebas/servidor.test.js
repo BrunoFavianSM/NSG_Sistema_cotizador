@@ -1,7 +1,12 @@
 const request = require('supertest');
 const app = require('../src/servidor');
+const { pool } = require('../src/configuracion/baseDatos');
 
 describe('Servidor Express - Tarea 2.1', () => {
+  afterAll(async () => {
+    await pool.end();
+  });
+
   describe('Health Check', () => {
     test('GET /health debe retornar estado del servidor', async () => {
       const response = await request(app).get('/health');
