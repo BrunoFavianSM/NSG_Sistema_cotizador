@@ -88,6 +88,10 @@ const AppProviderInternal = ({ children }) => {
     verificarAutenticacion();
   }, []);
 
+  useEffect(() => {
+    cargarMargenGanancia();
+  }, []);
+
   const verificarAutenticacion = async () => {
     try {
       const usuarioGuardado = api.obtenerUsuarioActual();
@@ -99,6 +103,7 @@ const AppProviderInternal = ({ children }) => {
         if (resultado.valido) {
           setUsuario(usuarioGuardado);
           setAutenticado(true);
+          await cargarMargenGanancia();
         } else {
           // Token inválido, limpiar
           api.logout();
@@ -112,6 +117,18 @@ const AppProviderInternal = ({ children }) => {
       setAutenticado(false);
     } finally {
       setCargandoAuth(false);
+    }
+  };
+
+  const cargarMargenGanancia = async () => {
+    try {
+      const respuesta = await api.obtenerMargenGanancia();
+      if (respuesta?.exito && typeof respuesta.margen_ganancia === 'number') {
+        setMargenGanancia(respuesta.margen_ganancia);
+      }
+      return respuesta;
+    } catch (error) {
+      return null;
     }
   };
 
@@ -330,8 +347,12 @@ const AppProviderInternal = ({ children }) => {
   /**
    * Actualiza el margen de ganancia
    */
-  const actualizarMargen = (nuevoMargen) => {
-    setMargenGanancia(nuevoMargen);
+  const actualizarMargen = async (nuevoMargen) => {
+    const respuesta = await api.actualizarMargenGanancia(nuevoMargen);
+    if (respuesta?.exito && typeof respuesta.margen_ganancia === 'number') {
+      setMargenGanancia(respuesta.margen_ganancia);
+    }
+    return respuesta;
   };
 
   // ============================================
@@ -371,7 +392,8 @@ const AppProviderInternal = ({ children }) => {
 
     // Margen de ganancia
     margenGanancia,
-    actualizarMargen
+    actualizarMargen,
+    cargarMargenGanancia
   };
 
   return (

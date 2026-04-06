@@ -32,7 +32,7 @@ function estadoToBadgeVariant(estado) {
   switch (estado) {
     case 'Pendiente':
       return 'warning';
-    case 'Reclamada':
+    case 'Completada':
       return 'success';
     case 'Caducada':
       return 'danger';
@@ -75,6 +75,7 @@ export default function ValidadorCotizaciones() {
   const [codigoTicket, setCodigoTicket] = useState('');
   const [buscando, setBuscando] = useState(false);
   const [reclamando, setReclamando] = useState(false);
+  const [notificando, setNotificando] = useState(false);
   const [error, setError] = useState('');
   const [cotizacion, setCotizacion] = useState(null);
   const [confirmarReclamoOpen, setConfirmarReclamoOpen] = useState(false);
@@ -198,14 +199,28 @@ export default function ValidadorCotizaciones() {
 
     try {
       await api.marcarComoReclamada(cotizacion.codigo_ticket);
-      setCotizacion((prev) => (prev ? { ...prev, estado: 'Reclamada' } : prev));
+      setCotizacion((prev) => (prev ? { ...prev, estado: 'Completada' } : prev));
       setConfirmarReclamoOpen(false);
-      toast.success('Cotización reclamada', 'Se actualizó el estado correctamente.');
+      toast.success('Cotizacion completada', 'Se actualizo el estado correctamente.');
     } catch (err) {
       setError(err?.mensaje || 'No se pudo actualizar el estado de la cotización.');
       toast.error('Error al actualizar', 'Intenta nuevamente en unos segundos.');
     } finally {
       setReclamando(false);
+    }
+  };
+
+  const notificarClienteListo = async () => {
+    if (!cotizacion?.codigo_ticket) return;
+
+    setNotificando(true);
+    try {
+      const respuesta = await api.notificarCotizacionLista(cotizacion.codigo_ticket);
+      toast.success('Notificacion enviada', respuesta?.mensaje || 'Se envio el correo al cliente.');
+    } catch (err) {
+      toast.error('No se pudo notificar', err?.mensaje || 'Intenta nuevamente.');
+    } finally {
+      setNotificando(false);
     }
   };
 
@@ -332,19 +347,27 @@ export default function ValidadorCotizaciones() {
               </p>
             )}
 
-            {cotizacion.estado === 'Reclamada' ? (
+            {cotizacion.estado === 'Completada' ? (
               <SuccessState
                 className="mt-4"
-                title="Ticket ya reclamado"
+                title="Ticket completado"
                 description="No se requieren acciones adicionales para este ticket."
               />
             ) : cotizacion.estado === 'Pendiente' ? (
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4">
                 <div>
-                  <p className="text-sm font-semibold text-[var(--color-text)]">¿Confirmar reclamación?</p>
+                  <p className="text-sm font-semibold text-[var(--color-text)]">¿Confirmar entrega/completado?</p>
                   <p className="text-sm text-[var(--color-text-muted)]">Esta acción actualizará el estado del ticket en el sistema.</p>
                 </div>
-                <Button onClick={() => setConfirmarReclamoOpen(true)}>Marcar como reclamada</Button>
+                <Button onClick={() => setConfirmarReclamoOpen(true)}>Marcar como completada</Button>
+              </div>
+            ) : null}
+
+            {(cotizacion.estado === 'Completada' || cotizacion.estado === 'Pendiente') ? (
+              <div className="mt-3 flex justify-end">
+                <Button variant="secondary" onClick={notificarClienteListo} loading={notificando}>
+                  Notificar equipo listo
+                </Button>
               </div>
             ) : null}
           </section>
@@ -372,7 +395,7 @@ export default function ValidadorCotizaciones() {
         open={confirmarReclamoOpen}
         onClose={() => setConfirmarReclamoOpen(false)}
         title="Confirmar reclamación"
-        description="Esta acción cambiará el estado del ticket a Reclamada."
+        description="Esta acción cambiara el estado del ticket a Completada."
         size="sm"
         footer={(
           <div className="flex justify-end gap-2">

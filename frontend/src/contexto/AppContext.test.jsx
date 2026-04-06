@@ -17,13 +17,23 @@ vi.mock('../servicios/api', () => ({
   obtenerUsuarioActual: vi.fn(),
   obtenerProductos: vi.fn(),
   obtenerProductoPorId: vi.fn(),
-  validarCompatibilidad: vi.fn()
+  validarCompatibilidad: vi.fn(),
+  obtenerMargenGanancia: vi.fn(),
+  actualizarMargenGanancia: vi.fn()
 }));
 
 describe('AppContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    api.obtenerMargenGanancia.mockResolvedValue({
+      exito: true,
+      margen_ganancia: 20
+    });
+    api.actualizarMargenGanancia.mockResolvedValue({
+      exito: true,
+      margen_ganancia: 25
+    });
   });
 
   describe('Autenticación', () => {
@@ -316,7 +326,9 @@ describe('AppContext', () => {
         result.current.actualizarMargen(25);
       });
 
-      expect(result.current.margenGanancia).toBe(25);
+      await waitFor(() => {
+        expect(result.current.margenGanancia).toBe(25);
+      });
     });
   });
 });

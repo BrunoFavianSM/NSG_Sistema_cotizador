@@ -12,6 +12,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import Cotizador from './Cotizador';
 import { AppProvider } from '../contexto/AppContext';
+import { ToastProvider } from '../componentes/feedback/ToastProvider';
 
 // Mock de framer-motion para evitar problemas en tests
 jest.mock('framer-motion', () => ({
@@ -51,9 +52,11 @@ const renderCotizador = (contextOverrides = {}) => {
   const contextValue = { ...mockContextValue, ...contextOverrides };
   
   return render(
-    <AppProvider value={contextValue}>
-      <Cotizador />
-    </AppProvider>
+    <ToastProvider>
+      <AppProvider value={contextValue}>
+        <Cotizador />
+      </AppProvider>
+    </ToastProvider>
   );
 };
 
@@ -247,12 +250,14 @@ describe('Cotizador - Cálculo de Precio', () => {
 
     // Simular cambio de configuración
     rerender(
-      <AppProvider value={{
-        ...mockContextValue,
-        calcularPrecioTotal: jest.fn(() => 4500)
-      }}>
-        <Cotizador />
-      </AppProvider>
+      <ToastProvider>
+        <AppProvider value={{
+          ...mockContextValue,
+          calcularPrecioTotal: jest.fn(() => 4500)
+        }}>
+          <Cotizador />
+        </AppProvider>
+      </ToastProvider>
     );
 
     expect(screen.getByText('S/ 4500.00')).toBeInTheDocument();

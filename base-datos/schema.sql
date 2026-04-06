@@ -102,6 +102,25 @@ CREATE TABLE detalle_cotizacion (
 
 CREATE INDEX idx_detalle_cotizacion ON detalle_cotizacion(id_cotizacion);
 
+-- Tabla de Notificaciones de Cotizacion
+CREATE TABLE notificaciones_cotizacion (
+  id SERIAL PRIMARY KEY,
+  id_cotizacion INTEGER NOT NULL REFERENCES cotizaciones(id) ON DELETE CASCADE,
+  tipo VARCHAR(50) NOT NULL DEFAULT 'listo_recojo',
+  email_destino VARCHAR(320) NOT NULL,
+  estado VARCHAR(20) NOT NULL DEFAULT 'pendiente',
+  payload JSONB,
+  respuesta JSONB,
+  mensaje_error TEXT,
+  fecha_intento TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  fecha_envio TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT check_notificacion_estado CHECK (estado IN ('pendiente', 'enviada', 'fallida'))
+);
+
+CREATE INDEX idx_notificaciones_cotizacion_id ON notificaciones_cotizacion(id_cotizacion);
+CREATE INDEX idx_notificaciones_estado ON notificaciones_cotizacion(estado);
+
 -- Tabla de Conversaciones con IA
 CREATE TABLE conversaciones_ia (
   id SERIAL PRIMARY KEY,

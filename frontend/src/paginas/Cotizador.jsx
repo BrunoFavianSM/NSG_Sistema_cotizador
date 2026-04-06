@@ -1,6 +1,7 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import AsistenteIA from '../componentes/AsistenteIA';
 import EmptyState from '../componentes/feedback/EmptyState';
 import ErrorState from '../componentes/feedback/ErrorState';
 import LoadingSpinner from '../componentes/feedback/LoadingSpinner';
@@ -8,8 +9,6 @@ import SuccessState from '../componentes/feedback/SuccessState';
 import { useToast } from '../componentes/feedback/ToastProvider';
 import { useAppContext } from '../contexto/AppContext';
 import * as api from '../servicios/api';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const PASOS = [
   { id: 'procesador', nombre: 'Procesador', categoria: 'procesador' },
@@ -164,6 +163,48 @@ export default function Cotizador() {
     seleccionarComponente(pasoInfo.id, producto);
   };
 
+  const resolverProducto = (entrada) => {
+    if (!entrada) return null;
+    const id = entrada.id ?? entrada.id_producto;
+    if (id) {
+      const encontradoPorId = productos.find((p) => Number(p.id) === Number(id));
+      if (encontradoPorId) return encontradoPorId;
+    }
+
+    const nombre = String(entrada.nombre || '').toLowerCase().trim();
+    if (!nombre) return null;
+    return productos.find((p) => String(p.nombre || '').toLowerCase().trim() === nombre) || null;
+  };
+
+  const aplicarRecomendacionIA = (componentesRecomendados = {}) => {
+    let cambios = 0;
+
+    Object.entries(componentesRecomendados).forEach(([categoria, valor]) => {
+      if (Array.isArray(valor) && categoria === 'ram') {
+        valor.forEach((item) => {
+          const producto = resolverProducto(item);
+          if (producto) {
+            agregarRAM(producto);
+            cambios += 1;
+          }
+        });
+        return;
+      }
+
+      const producto = resolverProducto(valor);
+      if (producto && PASOS.some((paso) => paso.id === categoria)) {
+        seleccionarComponente(categoria, producto);
+        cambios += 1;
+      }
+    });
+
+    if (cambios > 0) {
+      toast.success('Recomendacion aplicada', `Se aplicaron ${cambios} componente(s) sugeridos.`);
+    } else {
+      toast.warning('Sin coincidencias', 'No se encontraron productos del catalogo para aplicar la recomendacion.');
+    }
+  };
+
   const quitarRam = (idProducto) => {
     let ultimoIndice = -1;
     (configuracionSeleccionada.ram || []).forEach((ram, index) => {
@@ -221,7 +262,7 @@ export default function Cotizador() {
 
   const descargarPdf = () => {
     if (!cotizacionGenerada?.codigo_ticket) return;
-    const urlPdf = `${API_BASE_URL}/cotizaciones/${cotizacionGenerada.codigo_ticket}/pdf`;
+    const urlPdf = api.obtenerUrlPdfCotizacion(cotizacionGenerada.codigo_ticket);
     const ventana = window.open(urlPdf, '_blank', 'noopener,noreferrer');
     if (!ventana) {
       toast.warning('Bloqueo de ventana', 'Permite pop-ups para abrir el PDF.');
@@ -254,6 +295,7 @@ export default function Cotizador() {
 
   return (
     <div className="space-y-6">
+      
       <header className="surface-elevated p-6">
         <h1 className="text-3xl font-semibold text-[var(--color-text)]">Cotizador de PC</h1>
         <p className="mt-2 text-sm text-[var(--color-text-muted)]">Configura tu computadora paso a paso con validación y total en tiempo real.</p>
@@ -405,6 +447,14 @@ export default function Cotizador() {
         </section>
 
         <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
+          <section className="surface-elevated p-5">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Asistente IA</h3>
+            <p className="mt-2 text-sm text-[var(--color-text-muted)]">Solicita una configuracion sugerida segun tu uso y aplicala en un click.</p>
+            <div className="mt-4">
+              <AsistenteIA onAplicarRecomendacion={aplicarRecomendacionIA} className="!static !w-full !translate-x-0 !translate-y-0 !rounded-[var(--radius-md)] !justify-center" />
+            </div>
+          </section>
+
           <section className="surface-elevated p-5">
             <p className="text-xs uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Total estimado</p>
             <p className="mt-1 text-3xl font-semibold text-[var(--color-success)]">{formatearPrecio(total)}</p>

@@ -295,6 +295,91 @@ export const consultarHistorialCliente = async (email) => {
   }
 };
 
+/**
+ * Obtiene URL de descarga del PDF comercial
+ * @param {string} codigoTicket
+ * @returns {string}
+ */
+export const obtenerUrlPdfCotizacion = (codigoTicket) => {
+  return `${API_BASE_URL}/cotizaciones/${codigoTicket}/pdf`;
+};
+
+/**
+ * Obtiene URL de descarga del PDF tecnico
+ * @param {string} codigoTicket
+ * @returns {string}
+ */
+export const obtenerUrlPdfTecnico = (codigoTicket) => {
+  return `${API_BASE_URL}/cotizaciones/${codigoTicket}/pdf-tecnico`;
+};
+
+/**
+ * Notifica por email que el equipo esta listo para recojo
+ * @param {string} codigoTicket
+ * @returns {Promise<Object>}
+ */
+export const notificarCotizacionLista = async (codigoTicket) => {
+  try {
+    const response = await api.post(`/cotizaciones/${codigoTicket}/notificar-listo`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Descarga PDF comercial de cotizacion
+ * @param {string} codigoTicket
+ */
+export const descargarPdfCotizacion = async (codigoTicket) => {
+  const response = await api.get(`/cotizaciones/${codigoTicket}/pdf`, {
+    responseType: 'blob'
+  });
+  return response.data;
+};
+
+/**
+ * Descarga PDF tecnico de cotizacion
+ * @param {string} codigoTicket
+ */
+export const descargarPdfTecnico = async (codigoTicket) => {
+  const response = await api.get(`/cotizaciones/${codigoTicket}/pdf-tecnico`, {
+    responseType: 'blob'
+  });
+  return response.data;
+};
+
+// ============================================
+// FUNCIONES DE CONFIGURACION
+// ============================================
+
+/**
+ * Obtiene margen de ganancia configurado
+ * @returns {Promise<{exito:boolean,margen_ganancia:number}>}
+ */
+export const obtenerMargenGanancia = async () => {
+  try {
+    const response = await api.get('/configuracion/margen');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Actualiza margen de ganancia (admin)
+ * @param {number} margen_ganancia
+ * @returns {Promise<Object>}
+ */
+export const actualizarMargenGanancia = async (margen_ganancia) => {
+  try {
+    const response = await api.put('/configuracion/margen', { margen_ganancia });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // ============================================
 // FUNCIONES DE COMPATIBILIDAD
 // ============================================
