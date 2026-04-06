@@ -34,6 +34,7 @@ app.use('/api/cotizaciones', require('./rutas/cotizaciones'));
 app.use('/api/compatibilidad', require('./rutas/compatibilidad'));
 app.use('/api/ia', require('./rutas/ia'));
 app.use('/api/auth', require('./rutas/auth'));
+app.use('/api/configuracion', require('./rutas/configuracion'));
 
 // Health check
 app.get('/health', async (req, res) => {

@@ -9,22 +9,13 @@ import EmptyState from '../componentes/feedback/EmptyState';
 import ErrorState from '../componentes/feedback/ErrorState';
 import LoadingSpinner from '../componentes/feedback/LoadingSpinner';
 import { useToast } from '../componentes/feedback/ToastProvider';
-import { consultarHistorialCliente } from '../servicios/api';
+import {
+  consultarHistorialCliente,
+  obtenerUrlPdfCotizacion,
+  obtenerUrlPdfTecnico
+} from '../servicios/api';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const getApiUrl = () => {
-  if (typeof process !== 'undefined' && process.env?.VITE_API_URL) {
-    return process.env.VITE_API_URL;
-  }
-
-  try {
-    const getViteEnv = new Function('return import.meta.env.VITE_API_URL');
-    return getViteEnv() || 'http://localhost:3000/api';
-  } catch {
-    return 'http://localhost:3000/api';
-  }
-};
 
 function formatearFecha(fecha) {
   if (!fecha) return '-';
@@ -45,7 +36,7 @@ function estadoToBadgeVariant(estado) {
   switch (estado) {
     case 'Pendiente':
       return 'warning';
-    case 'Reclamada':
+    case 'Completada':
       return 'success';
     case 'Caducada':
       return 'danger';
@@ -80,9 +71,10 @@ export default function HistorialCliente() {
     return cotizaciones.filter((item) => item.estado === filtroEstado);
   }, [cotizaciones, filtroEstado]);
 
-  const descargarPDF = (codigoTicket) => {
-    const apiUrl = getApiUrl();
-    const pdfUrl = `${apiUrl}/cotizaciones/${codigoTicket}/pdf`;
+  const descargarPDF = (codigoTicket, tipo = 'comercial') => {
+    const pdfUrl = tipo === 'tecnico'
+      ? obtenerUrlPdfTecnico(codigoTicket)
+      : obtenerUrlPdfCotizacion(codigoTicket);
     const win = window.open(pdfUrl, '_blank', 'noopener,noreferrer');
 
     if (!win) {
@@ -100,7 +92,7 @@ export default function HistorialCliente() {
     }
 
     if (!EMAIL_REGEX.test(normalizado)) {
-      setError('Ingresa un correo válido (ejemplo@dominio.com).');
+      setError('Ingresa un correo valido (ejemplo@dominio.com).');
       return false;
     }
 
@@ -113,7 +105,7 @@ export default function HistorialCliente() {
         setHistorialCargado(false);
         setCliente(null);
         setCotizaciones([]);
-        setError(respuesta?.mensaje || 'No se encontró historial para ese correo.');
+        setError(respuesta?.mensaje || 'No se encontro historial para ese correo.');
         return false;
       }
 
@@ -170,7 +162,7 @@ export default function HistorialCliente() {
     },
     {
       key: 'fecha_validez',
-      label: 'Válida hasta',
+      label: 'Valida hasta',
       sortable: true,
       render: (row) => formatearFecha(row.fecha_validez),
     },
@@ -188,18 +180,52 @@ export default function HistorialCliente() {
       render: (row) => <span className="font-semibold text-[var(--color-accent-text)]">{formatearMoneda(row.precio_total)}</span>,
     },
     {
+      key: 'notificacion',
+      label: 'Notificacion',
+      render: (row) => {
+        if (!row.notificacion) {
+          return <span className="text-xs text-[var(--color-text-muted)]">Sin envios</span>;
+        }
+
+        const variant = row.notificacion.estado === 'enviada'
+          ? 'success'
+          : row.notificacion.estado === 'fallida'
+            ? 'danger'
+            : 'warning';
+
+        return (
+          <div className="space-y-1">
+            <Badge variant={variant}>{row.notificacion.estado}</Badge>
+            {row.notificacion.fecha_envio ? (
+              <p className="text-[11px] text-[var(--color-text-muted)]">{formatearFecha(row.notificacion.fecha_envio)}</p>
+            ) : null}
+          </div>
+        );
+      },
+    },
+    {
       key: 'acciones',
-      label: 'Acciones',
+      label: 'PDF',
       align: 'right',
       render: (row) => (
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => descargarPDF(row.codigo_ticket)}
-          aria-label={`Descargar PDF de ${row.codigo_ticket}`}
-        >
-          Descargar PDF
-        </Button>
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => descargarPDF(row.codigo_ticket, 'comercial')}
+            aria-label={`Descargar PDF comercial de ${row.codigo_ticket}`}
+          >
+            Comercial
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => descargarPDF(row.codigo_ticket, 'tecnico')}
+            aria-label={`Descargar PDF tecnico de ${row.codigo_ticket}`}
+          >
+            Tecnico
+          </Button>
+        </div>
       ),
     },
   ];
@@ -225,7 +251,7 @@ export default function HistorialCliente() {
           <h2 id="historial-busqueda-title" className="text-lg font-semibold text-[var(--color-text)]">Buscar por correo</h2>
           {historialCargado ? (
             <Button variant="ghost" size="sm" onClick={limpiarBusqueda}>
-              Nueva búsqueda
+              Nueva busqueda
             </Button>
           ) : null}
         </div>
@@ -243,7 +269,7 @@ export default function HistorialCliente() {
             }}
             placeholder="cliente@correo.com"
             error={error}
-            hint="Usa el mismo correo con el que se generó la cotización."
+            hint="Usa el mismo correo con el que se genero la cotizacion."
           />
 
           <Button type="submit" loading={buscando} className="sm:min-w-[12rem]">
@@ -271,7 +297,7 @@ export default function HistorialCliente() {
         <>
           <section className="grid gap-4 md:grid-cols-3">
             <StatCard label="Cliente" value={cliente?.nombre || 'Cliente'} helper={cliente?.email || '-'} />
-            <StatCard label="Cotizaciones" value={String(cotizaciones.length)} helper="Registros históricos" />
+            <StatCard label="Cotizaciones" value={String(cotizaciones.length)} helper="Registros historicos" />
             <StatCard
               label="Monto acumulado"
               value={formatearMoneda(cotizaciones.reduce((acc, item) => acc + Number(item.precio_total || 0), 0))}
@@ -282,11 +308,11 @@ export default function HistorialCliente() {
           {cotizaciones.length === 0 ? (
             <EmptyState
               title="Sin cotizaciones registradas"
-              description="Este correo aún no tiene tickets emitidos en el sistema."
+              description="Este correo aun no tiene tickets emitidos en el sistema."
             />
           ) : (
             <DataTable
-              caption="Tabla de cotizaciones históricas del cliente"
+              caption="Tabla de cotizaciones historicas del cliente"
               columns={columnas}
               data={cotizacionesFiltradas}
               rowKey="id"
@@ -303,7 +329,7 @@ export default function HistorialCliente() {
                   options={[
                     { value: 'todos', label: 'Todos' },
                     { value: 'Pendiente', label: 'Pendiente' },
-                    { value: 'Reclamada', label: 'Reclamada' },
+                    { value: 'Completada', label: 'Completada' },
                     { value: 'Caducada', label: 'Caducada' },
                   ]}
                 />
@@ -312,7 +338,7 @@ export default function HistorialCliente() {
               emptyState={(
                 <EmptyState
                   title="No hay resultados con ese filtro"
-                  description="Prueba con otro estado o limpia la búsqueda de la tabla."
+                  description="Prueba con otro estado o limpia la busqueda de la tabla."
                   actionLabel="Ver todos"
                   onAction={() => setFiltroEstado('todos')}
                 />
@@ -324,3 +350,4 @@ export default function HistorialCliente() {
     </div>
   );
 }
+

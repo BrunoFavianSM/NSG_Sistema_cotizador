@@ -8,6 +8,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AdminConfiguracion from './AdminConfiguracion';
 import * as api from '../servicios/api';
+import { ToastProvider } from '../componentes/feedback/ToastProvider';
 
 // Mock del contexto
 const mockActualizarMargen = jest.fn();
@@ -35,6 +36,12 @@ jest.mock('../servicios/api', () => ({
 }));
 
 describe('AdminConfiguracion', () => {
+  const renderPagina = () => render(
+    <ToastProvider>
+      <AdminConfiguracion />
+    </ToastProvider>
+  );
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockContextValue.autenticado = true;
@@ -48,12 +55,12 @@ describe('AdminConfiguracion', () => {
 
   test('muestra acceso denegado si no está autenticado', () => {
     mockContextValue.autenticado = false;
-    render(<AdminConfiguracion />);
+    renderPagina();
     expect(screen.getByText('Acceso Denegado')).toBeInTheDocument();
   });
 
   test('renderiza correctamente cuando está autenticado', async () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     expect(screen.getByText('Configuración del Sistema')).toBeInTheDocument();
     expect(screen.getByText('Margen de Ganancia')).toBeInTheDocument();
@@ -61,14 +68,14 @@ describe('AdminConfiguracion', () => {
   });
 
   test('muestra el margen actual correctamente', () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     const margenActual = screen.getByText('20%');
     expect(margenActual).toBeInTheDocument();
   });
 
   test('permite cambiar el valor del margen', () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     const input = screen.getByRole('spinbutton');
     fireEvent.change(input, { target: { value: '25' } });
@@ -77,7 +84,7 @@ describe('AdminConfiguracion', () => {
   });
 
   test('calcula ejemplos de precios correctamente', () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     // Con margen del 20%, precio base 1000 debe ser 1200
     expect(screen.getByText(/Precio Final: S\/ 1200\.00/)).toBeInTheDocument();
@@ -86,7 +93,7 @@ describe('AdminConfiguracion', () => {
   });
 
   test('actualiza ejemplos cuando cambia el margen', () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     const input = screen.getByRole('spinbutton');
     fireEvent.change(input, { target: { value: '30' } });
@@ -96,14 +103,14 @@ describe('AdminConfiguracion', () => {
   });
 
   test('deshabilita el botón guardar si el margen no cambió', () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     const botonGuardar = screen.getByRole('button', { name: /Guardar Cambios/i });
     expect(botonGuardar).toBeDisabled();
   });
 
   test('habilita el botón guardar cuando el margen cambia', () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     const input = screen.getByRole('spinbutton');
     fireEvent.change(input, { target: { value: '25' } });
@@ -113,7 +120,7 @@ describe('AdminConfiguracion', () => {
   });
 
   test('guarda el margen correctamente', async () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     const input = screen.getByRole('spinbutton');
     fireEvent.change(input, { target: { value: '25' } });
@@ -127,7 +134,7 @@ describe('AdminConfiguracion', () => {
   });
 
   test('muestra mensaje de éxito después de guardar', async () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     const input = screen.getByRole('spinbutton');
     fireEvent.change(input, { target: { value: '25' } });
@@ -141,7 +148,7 @@ describe('AdminConfiguracion', () => {
   });
 
   test('no permite valores negativos en el margen', () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     const input = screen.getByRole('spinbutton');
     fireEvent.change(input, { target: { value: '-5' } });
@@ -151,7 +158,7 @@ describe('AdminConfiguracion', () => {
   });
 
   test('no permite valores mayores a 100 en el margen', () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     const input = screen.getByRole('spinbutton');
     fireEvent.change(input, { target: { value: '150' } });
@@ -161,7 +168,7 @@ describe('AdminConfiguracion', () => {
   });
 
   test('carga estadísticas de IA al montar', async () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     await waitFor(() => {
       expect(api.obtenerEstadisticasIA).toHaveBeenCalled();
@@ -169,7 +176,7 @@ describe('AdminConfiguracion', () => {
   });
 
   test('muestra estadísticas de IA correctamente', async () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     await waitFor(() => {
       expect(screen.getByText('150')).toBeInTheDocument(); // Llamadas
@@ -179,7 +186,7 @@ describe('AdminConfiguracion', () => {
   });
 
   test('muestra indicador de carga mientras obtiene estadísticas', () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     expect(screen.getByText('Cargando estadísticas...')).toBeInTheDocument();
   });
@@ -187,7 +194,7 @@ describe('AdminConfiguracion', () => {
   test('maneja error al cargar estadísticas', async () => {
     api.obtenerEstadisticasIA.mockRejectedValue(new Error('Error de red'));
     
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     await waitFor(() => {
       // Debe mostrar valores por defecto (hay múltiples "0", verificamos que existan)
@@ -197,7 +204,7 @@ describe('AdminConfiguracion', () => {
   });
 
   test('permite actualizar estadísticas manualmente', async () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     await waitFor(() => {
       expect(api.obtenerEstadisticasIA).toHaveBeenCalledTimes(1);
@@ -212,7 +219,7 @@ describe('AdminConfiguracion', () => {
   });
 
   test('muestra información sobre las estadísticas', async () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     await waitFor(() => {
       expect(screen.getByText(/Las estadísticas se actualizan en tiempo real/)).toBeInTheDocument();
@@ -221,7 +228,7 @@ describe('AdminConfiguracion', () => {
   });
 
   test('calcula precio ejemplo con decimales correctamente', () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     const input = screen.getByRole('spinbutton');
     fireEvent.change(input, { target: { value: '15.5' } });
@@ -231,7 +238,7 @@ describe('AdminConfiguracion', () => {
   });
 
   test('muestra tres ejemplos de precios diferentes', () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     expect(screen.getByText(/Precio Base: S\/ 1000/)).toBeInTheDocument();
     expect(screen.getByText(/Precio Base: S\/ 2500/)).toBeInTheDocument();
@@ -239,7 +246,7 @@ describe('AdminConfiguracion', () => {
   });
 
   test('el formulario previene submit por defecto', async () => {
-    render(<AdminConfiguracion />);
+    renderPagina();
     
     const input = screen.getByRole('spinbutton');
     fireEvent.change(input, { target: { value: '25' } });

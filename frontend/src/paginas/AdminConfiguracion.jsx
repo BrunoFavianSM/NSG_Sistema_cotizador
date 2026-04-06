@@ -80,10 +80,11 @@ export default function AdminConfiguracion() {
 
     setGuardando(true);
     try {
-      actualizarMargen(Number(nuevoMargen));
-      toast.success('Configuración guardada', `El margen ahora es ${Number(nuevoMargen).toFixed(1)}%.`);
-    } catch {
-      toast.error('No se pudo guardar', 'Intenta nuevamente en unos segundos.');
+      const respuesta = await actualizarMargen(Number(nuevoMargen));
+      const margen = Number(respuesta?.margen_ganancia ?? nuevoMargen);
+      toast.success('Configuracion guardada', `El margen ahora es ${margen.toFixed(1)}%.`);
+    } catch (error) {
+      toast.error('No se pudo guardar', error?.mensaje || 'Intenta nuevamente en unos segundos.');
     } finally {
       setGuardando(false);
     }

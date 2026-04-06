@@ -23,6 +23,37 @@ const {
 } = require('../utilidades/validacion');
 const { sanitizarObjeto, validarEmail } = require('../utilidades/sanitizacion');
 const { encriptar, desencriptar, hashBusqueda } = require('../utilidades/encriptacion');
+const servicioPDF = require('../servicios/servicioPDF');
+const { enviarNotificacionListo } = require('../servicios/servicioNotificaciones');
+
+const ESTADO_COMPLETADA = 'Completada';
+
+function errorEstandar({ status, error, mensaje, codigo }) {
+  return {
+    status,
+    body: {
+      error,
+      mensaje,
+      codigo
+    }
+  };
+}
+
+function normalizarEstadoCotizacion(estado) {
+  if (estado === 'Reclamada') {
+    return ESTADO_COMPLETADA;
+  }
+  return estado;
+}
+
+function desencriptarSeguro(valor) {
+  if (!valor) return null;
+  try {
+    return desencriptar(valor);
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Obtiene el margen de ganancia configurado
@@ -340,56 +371,89 @@ async function crearCotizacion(req, res) {
  * @param {Object} req - Request de Express
  * @param {Object} res - Response de Express
  */
+async function obtenerCotizacionConDetallesPorTicket(codigoTicket) {
+  const cotizacion = await ejecutarQuery(
+    `SELECT 
+      c.id, c.codigo_unico, c.codigo_ticket, c.id_cliente,
+      c.fecha_emision, c.fecha_validez, c.precio_total,
+      c.margen_aplicado, c.estado, c.fecha_reclamacion,
+      uc.nombre AS cliente_nombre, uc.correo AS cliente_correo
+    FROM cotizaciones c
+    LEFT JOIN usuarios_clientes uc ON uc.id = c.id_cliente
+    WHERE c.codigo_ticket = $1`,
+    [codigoTicket]
+  );
+
+  if (cotizacion.rows.length === 0) {
+    return null;
+  }
+
+  const detalles = await ejecutarQuery(
+    `SELECT 
+      id, id_producto, nombre_producto, categoria,
+      descripcion_tecnica, precio_unitario, cantidad, disponible_stock
+    FROM detalle_cotizacion
+    WHERE id_cotizacion = $1
+    ORDER BY id`,
+    [cotizacion.rows[0].id]
+  );
+
+  const base = cotizacion.rows[0];
+  const estadoNormalizado = normalizarEstadoCotizacion(base.estado);
+  const ahora = new Date();
+  const fechaValidez = new Date(base.fecha_validez);
+  const caducada = ahora > fechaValidez && estadoNormalizado === 'Pendiente';
+
+  return {
+    ...base,
+    estado: caducada ? 'Caducada' : estadoNormalizado,
+    caducada,
+    cliente_email: desencriptarSeguro(base.cliente_correo),
+    componentes: detalles.rows.map((d) => ({
+      id: d.id,
+      id_producto: d.id_producto,
+      nombre: d.nombre_producto,
+      categoria: d.categoria,
+      descripcion_tecnica: d.descripcion_tecnica,
+      precio_unitario: parseFloat(d.precio_unitario),
+      cantidad: d.cantidad,
+      disponible_stock: d.disponible_stock
+    }))
+  };
+}
+
 async function consultarCotizacion(req, res) {
   try {
     const { codigoTicket } = req.params;
-    
-    // Validar formato de código
     const validacion = validarCodigoTicket(codigoTicket);
+
     if (!validacion.valido) {
       return res.status(400).json({
-        error: 'Código inválido',
-        mensaje: validacion.error
+        error: 'Codigo invalido',
+        mensaje: validacion.error,
+        codigo: 'CODIGO_INVALIDO'
       });
     }
-    
-    // Buscar cotización
-    const cotizacion = await ejecutarQuery(
-      `SELECT 
-        c.id, c.codigo_unico, c.codigo_ticket, c.id_cliente,
-        c.fecha_emision, c.fecha_validez, c.precio_total,
-        c.margen_aplicado, c.estado, c.fecha_reclamacion
-      FROM cotizaciones c
-      WHERE c.codigo_ticket = $1`,
-      [codigoTicket]
-    );
-    
-    if (cotizacion.rows.length === 0) {
+
+    const cotizacionData = await obtenerCotizacionConDetallesPorTicket(codigoTicket);
+
+    if (!cotizacionData) {
       return res.status(404).json({
-        error: 'Cotización no encontrada',
-        mensaje: 'No existe una cotización con ese código'
+        error: 'Cotizacion no encontrada',
+        mensaje: 'No existe una cotizacion con ese codigo',
+        codigo: 'COTIZACION_NO_ENCONTRADA'
       });
     }
-    
-    const cotizacionData = cotizacion.rows[0];
-    
-    // Obtener detalles de la cotización
-    const detalles = await ejecutarQuery(
-      `SELECT 
-        id, id_producto, nombre_producto, categoria,
-        descripcion_tecnica, precio_unitario, cantidad, disponible_stock
-      FROM detalle_cotizacion
-      WHERE id_cotizacion = $1
-      ORDER BY id`,
-      [cotizacionData.id]
-    );
-    
-    // Verificar si está caducada
-    const ahora = new Date();
-    const fechaValidez = new Date(cotizacionData.fecha_validez);
-    const caducada = ahora > fechaValidez && cotizacionData.estado === 'Pendiente';
-    
-    res.json({
+
+    if (cotizacionData.caducada) {
+      return res.status(410).json({
+        error: 'Cotizacion caducada',
+        mensaje: 'La cotizacion supero su fecha de validez',
+        codigo: 'COTIZACION_CADUCADA'
+      });
+    }
+
+    return res.json({
       exito: true,
       cotizacion: {
         id: cotizacionData.id,
@@ -399,30 +463,22 @@ async function consultarCotizacion(req, res) {
         fecha_validez: cotizacionData.fecha_validez,
         precio_total: parseFloat(cotizacionData.precio_total),
         margen_aplicado: parseFloat(cotizacionData.margen_aplicado),
-        estado: caducada ? 'Caducada' : cotizacionData.estado,
+        estado: cotizacionData.estado,
         fecha_reclamacion: cotizacionData.fecha_reclamacion,
-        caducada,
-        componentes: detalles.rows.map(d => ({
-          id: d.id,
-          id_producto: d.id_producto,
-          nombre: d.nombre_producto,
-          categoria: d.categoria,
-          descripcion_tecnica: d.descripcion_tecnica,
-          precio_unitario: parseFloat(d.precio_unitario),
-          cantidad: d.cantidad,
-          disponible_stock: d.disponible_stock
-        }))
+        caducada: false,
+        componentes: cotizacionData.componentes
       }
     });
   } catch (error) {
-    console.error('Error al consultar cotización:', error);
-    
-    res.status(500).json({
-      error: 'Error al consultar cotización',
-      mensaje: 'No se pudo recuperar la cotización'
+    console.error('Error al consultar cotizacion:', error);
+    return res.status(500).json({
+      error: 'Error al consultar cotizacion',
+      mensaje: 'No se pudo recuperar la cotizacion',
+      codigo: 'ERROR_CONSULTAR_COTIZACION'
     });
   }
 }
+
 
 /**
  * Validar cotización con comparación de precios
@@ -435,17 +491,16 @@ async function consultarCotizacion(req, res) {
 async function validarCotizacion(req, res) {
   try {
     const { codigoTicket } = req.params;
-    
-    // Validar formato de código
     const validacion = validarCodigoTicket(codigoTicket);
+
     if (!validacion.valido) {
       return res.status(400).json({
-        error: 'Código inválido',
-        mensaje: validacion.error
+        error: 'Codigo invalido',
+        mensaje: validacion.error,
+        codigo: 'CODIGO_INVALIDO'
       });
     }
-    
-    // Buscar cotización
+
     const cotizacion = await ejecutarQuery(
       `SELECT 
         c.id, c.codigo_ticket, c.fecha_emision, c.fecha_validez,
@@ -454,27 +509,29 @@ async function validarCotizacion(req, res) {
       WHERE c.codigo_ticket = $1`,
       [codigoTicket]
     );
-    
+
     if (cotizacion.rows.length === 0) {
       return res.status(404).json({
-        error: 'Cotización no encontrada',
-        mensaje: 'No existe una cotización con ese código',
-        valida: false
+        error: 'Cotizacion no encontrada',
+        mensaje: 'No existe una cotizacion con ese codigo',
+        valida: false,
+        codigo: 'COTIZACION_NO_ENCONTRADA'
       });
     }
-    
+
     const cotizacionData = cotizacion.rows[0];
-    
-    // Verificar si está caducada
+    const estadoNormalizado = normalizarEstadoCotizacion(cotizacionData.estado);
+
     const ahora = new Date();
     const fechaValidez = new Date(cotizacionData.fecha_validez);
-    const caducada = ahora > fechaValidez;
-    
-    if (caducada && cotizacionData.estado === 'Pendiente') {
-      return res.json({
+    const caducada = ahora > fechaValidez && estadoNormalizado === 'Pendiente';
+
+    if (caducada) {
+      return res.status(410).json({
         exito: true,
         valida: false,
-        mensaje: 'Cotización caducada',
+        mensaje: 'Cotizacion caducada',
+        codigo: 'COTIZACION_CADUCADA',
         cotizacion: {
           codigo_ticket: cotizacionData.codigo_ticket,
           fecha_emision: cotizacionData.fecha_emision,
@@ -483,35 +540,25 @@ async function validarCotizacion(req, res) {
         }
       });
     }
-    
-    // Obtener detalles con precios históricos
+
     const detalles = await ejecutarQuery(
-      `SELECT 
-        dc.id, dc.id_producto, dc.nombre_producto, dc.categoria,
-        dc.precio_unitario as precio_historico, dc.cantidad,
-        dc.disponible_stock as stock_historico,
-        p.precio_base as precio_actual, p.stock as stock_actual,
-        p.disponible_a_pedido
-      FROM detalle_cotizacion dc
-      LEFT JOIN productos p ON dc.id_producto = p.id
-      WHERE dc.id_cotizacion = $1
-      ORDER BY dc.id`,
+      'SELECT dc.id, dc.id_producto, dc.nombre_producto, dc.categoria, dc.precio_unitario as precio_historico, dc.cantidad, dc.disponible_stock as stock_historico, p.precio_base as precio_actual, p.stock as stock_actual, p.disponible_a_pedido FROM detalle_cotizacion dc LEFT JOIN productos p ON dc.id_producto = p.id WHERE dc.id_cotizacion = $1 ORDER BY dc.id',
       [cotizacionData.id]
     );
-    
-    // Calcular diferencias de precio
+
     let precioTotalActual = 0;
-    const componentesComparacion = detalles.rows.map(d => {
+
+    const componentesComparacion = detalles.rows.map((d) => {
       const precioHistorico = parseFloat(d.precio_historico);
       const precioActual = d.precio_actual ? parseFloat(d.precio_actual) : precioHistorico;
       const cantidad = d.cantidad;
-      
+
       const subtotalHistorico = precioHistorico * cantidad;
       const subtotalActual = precioActual * cantidad;
       const diferencia = subtotalActual - subtotalHistorico;
-      
+
       precioTotalActual += subtotalActual;
-      
+
       return {
         id_producto: d.id_producto,
         nombre: d.nombre_producto,
@@ -529,22 +576,21 @@ async function validarCotizacion(req, res) {
         disponible: (d.stock_actual > 0) || d.disponible_a_pedido
       };
     });
-    
-    // Aplicar margen al precio actual
+
     const margen = parseFloat(cotizacionData.margen_aplicado);
     precioTotalActual = precioTotalActual * (1 + margen / 100);
-    
+
     const precioTotalHistorico = parseFloat(cotizacionData.precio_total);
     const diferenciaTotalPrecio = precioTotalActual - precioTotalHistorico;
-    
-    res.json({
+
+    return res.json({
       exito: true,
       valida: true,
       cotizacion: {
         codigo_ticket: cotizacionData.codigo_ticket,
         fecha_emision: cotizacionData.fecha_emision,
         fecha_validez: cotizacionData.fecha_validez,
-        estado: cotizacionData.estado,
+        estado: estadoNormalizado,
         margen_aplicado: margen,
         precio_total_historico: precioTotalHistorico,
         precio_total_actual: precioTotalActual,
@@ -554,14 +600,15 @@ async function validarCotizacion(req, res) {
       }
     });
   } catch (error) {
-    console.error('Error al validar cotización:', error);
-    
-    res.status(500).json({
-      error: 'Error al validar cotización',
-      mensaje: 'No se pudo validar la cotización'
+    console.error('Error al validar cotizacion:', error);
+    return res.status(500).json({
+      error: 'Error al validar cotizacion',
+      mensaje: 'No se pudo validar la cotizacion',
+      codigo: 'ERROR_VALIDAR_COTIZACION'
     });
   }
 }
+
 
 /**
  * Marcar cotización como reclamada
@@ -572,80 +619,273 @@ async function validarCotizacion(req, res) {
  * @param {Object} req - Request de Express
  * @param {Object} res - Response de Express
  */
+function construirDatosPdf(cotizacionData) {
+  const componentes = (cotizacionData.componentes || []).map((comp) => ({
+    categoria: comp.categoria,
+    nombre: comp.nombre,
+    precioBase: Number(comp.precio_unitario || 0),
+    stock: comp.disponible_stock ? 1 : 0,
+    disponibleAPedido: !comp.disponible_stock,
+    tiempoEntregaDias: comp.disponible_stock ? 0 : 3
+  }));
+
+  return {
+    codigoTicket: cotizacionData.codigo_ticket,
+    codigoUnico: cotizacionData.codigo_unico,
+    fechaEmision: cotizacionData.fecha_emision,
+    fechaValidez: cotizacionData.fecha_validez,
+    componentes,
+    precioTotal: Number(cotizacionData.precio_total || 0)
+  };
+}
+
+async function obtenerPdfCotizacion(req, res) {
+  try {
+    const { codigoTicket } = req.params;
+    const validacion = validarCodigoTicket(codigoTicket);
+
+    if (!validacion.valido) {
+      return res.status(400).json({ error: 'Codigo invalido', mensaje: validacion.error, codigo: 'CODIGO_INVALIDO' });
+    }
+
+    const cotizacionData = await obtenerCotizacionConDetallesPorTicket(codigoTicket);
+    if (!cotizacionData) {
+      return res.status(404).json({
+        error: 'Cotizacion no encontrada',
+        mensaje: 'No existe una cotizacion con ese codigo',
+        codigo: 'COTIZACION_NO_ENCONTRADA'
+      });
+    }
+
+    if (cotizacionData.caducada) {
+      return res.status(410).json({
+        error: 'Cotizacion caducada',
+        mensaje: 'La cotizacion supero su fecha de validez',
+        codigo: 'COTIZACION_CADUCADA'
+      });
+    }
+
+    const buffer = await servicioPDF.generarPDFCotizacion(construirDatosPdf(cotizacionData));
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=\"cotizacion-${codigoTicket}.pdf\"`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('Error al generar PDF de cotizacion:', error);
+    res.status(500).json({
+      error: 'Error al generar PDF',
+      mensaje: 'No se pudo generar el PDF comercial',
+      codigo: 'ERROR_PDF_COTIZACION'
+    });
+  }
+}
+
+async function obtenerPdfTecnico(req, res) {
+  try {
+    const { codigoTicket } = req.params;
+    const validacion = validarCodigoTicket(codigoTicket);
+
+    if (!validacion.valido) {
+      return res.status(400).json({ error: 'Codigo invalido', mensaje: validacion.error, codigo: 'CODIGO_INVALIDO' });
+    }
+
+    const cotizacionData = await obtenerCotizacionConDetallesPorTicket(codigoTicket);
+    if (!cotizacionData) {
+      return res.status(404).json({
+        error: 'Cotizacion no encontrada',
+        mensaje: 'No existe una cotizacion con ese codigo',
+        codigo: 'COTIZACION_NO_ENCONTRADA'
+      });
+    }
+
+    const dataPdf = construirDatosPdf(cotizacionData);
+    const buffer = await servicioPDF.generarPDFListado(dataPdf.codigoTicket, dataPdf.componentes);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=\"listado-tecnico-${codigoTicket}.pdf\"`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('Error al generar PDF tecnico:', error);
+    res.status(500).json({
+      error: 'Error al generar PDF',
+      mensaje: 'No se pudo generar el PDF tecnico',
+      codigo: 'ERROR_PDF_TECNICO'
+    });
+  }
+}
+
+async function registrarIntentoNotificacion(idCotizacion, emailDestino, payload) {
+  try {
+    const r = await ejecutarQuery(
+      `INSERT INTO notificaciones_cotizacion (
+        id_cotizacion, tipo, email_destino, estado, payload, fecha_intento
+      ) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+      RETURNING id`,
+      [idCotizacion, 'listo_recojo', emailDestino, 'pendiente', JSON.stringify(payload || {})]
+    );
+    return r.rows[0]?.id || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function actualizarIntentoNotificacion(idNotificacion, estado, detalle) {
+  if (!idNotificacion) return;
+  try {
+    await ejecutarQuery(
+      `UPDATE notificaciones_cotizacion
+       SET estado = $1,
+           mensaje_error = $2,
+           respuesta = $3,
+           fecha_envio = CASE WHEN $1 = 'enviada' THEN CURRENT_TIMESTAMP ELSE fecha_envio END
+       WHERE id = $4`,
+      [
+        estado,
+        detalle?.mensaje_error || null,
+        JSON.stringify(detalle || {}),
+        idNotificacion
+      ]
+    );
+  } catch (error) {
+    // no-op
+  }
+}
+
+async function notificarCotizacionLista(req, res) {
+  try {
+    const { codigoTicket } = req.params;
+    const validacion = validarCodigoTicket(codigoTicket);
+
+    if (!validacion.valido) {
+      return res.status(400).json({ error: 'Codigo invalido', mensaje: validacion.error, codigo: 'CODIGO_INVALIDO' });
+    }
+
+    const cotizacionData = await obtenerCotizacionConDetallesPorTicket(codigoTicket);
+    if (!cotizacionData) {
+      return res.status(404).json({
+        error: 'Cotizacion no encontrada',
+        mensaje: 'No existe una cotizacion con ese codigo',
+        codigo: 'COTIZACION_NO_ENCONTRADA'
+      });
+    }
+
+    if (!cotizacionData.cliente_email) {
+      return res.status(400).json({
+        error: 'Sin email de cliente',
+        mensaje: 'La cotizacion no tiene email asociado para notificar',
+        codigo: 'EMAIL_CLIENTE_NO_DISPONIBLE'
+      });
+    }
+
+    const intentoId = await registrarIntentoNotificacion(cotizacionData.id, cotizacionData.cliente_email, {
+      codigo_ticket: cotizacionData.codigo_ticket,
+      estado: cotizacionData.estado
+    });
+
+    try {
+      const resultado = await enviarNotificacionListo({
+        para: cotizacionData.cliente_email,
+        codigoTicket: cotizacionData.codigo_ticket,
+        estado: cotizacionData.estado,
+        fechaEmision: cotizacionData.fecha_emision,
+        fechaValidez: cotizacionData.fecha_validez
+      });
+
+      await actualizarIntentoNotificacion(intentoId, 'enviada', resultado);
+
+      return res.json({
+        exito: true,
+        mensaje: 'Notificacion enviada correctamente',
+        notificacion: {
+          estado: 'enviada',
+          destino: cotizacionData.cliente_email,
+          modo: resultado.modo
+        }
+      });
+    } catch (errorEnvio) {
+      await actualizarIntentoNotificacion(intentoId, 'fallida', {
+        mensaje_error: errorEnvio.message
+      });
+
+      return res.status(500).json({
+        error: 'Error al enviar notificacion',
+        mensaje: 'No se pudo enviar la notificacion al cliente',
+        codigo: 'ERROR_NOTIFICACION_EMAIL'
+      });
+    }
+  } catch (error) {
+    console.error('Error al notificar cotizacion lista:', error);
+    return res.status(500).json({
+      error: 'Error interno',
+      mensaje: 'No se pudo procesar la notificacion',
+      codigo: 'ERROR_INTERNO_NOTIFICACION'
+    });
+  }
+}
+
 async function marcarComoReclamada(req, res) {
   try {
     const { codigoTicket } = req.params;
     const datosSanitizados = sanitizarObjeto(req.body);
-    
-    // Validar formato de código
+
     const validacion = validarCodigoTicket(codigoTicket);
     if (!validacion.valido) {
       return res.status(400).json({
-        error: 'Código inválido',
-        mensaje: validacion.error
+        error: 'Codigo invalido',
+        mensaje: validacion.error,
+        codigo: 'CODIGO_INVALIDO'
       });
     }
-    
-    // Buscar cotización
+
     const cotizacion = await ejecutarQuery(
-      `SELECT id, estado, fecha_validez
-       FROM cotizaciones
-       WHERE codigo_ticket = $1`,
+      'SELECT id, estado, fecha_validez FROM cotizaciones WHERE codigo_ticket = $1',
       [codigoTicket]
     );
-    
+
     if (cotizacion.rows.length === 0) {
       return res.status(404).json({
-        error: 'Cotización no encontrada',
-        mensaje: 'No existe una cotización con ese código'
+        error: 'Cotizacion no encontrada',
+        mensaje: 'No existe una cotizacion con ese codigo',
+        codigo: 'COTIZACION_NO_ENCONTRADA'
       });
     }
-    
+
     const cotizacionData = cotizacion.rows[0];
-    
-    // Verificar que esté en estado Pendiente
-    if (cotizacionData.estado !== 'Pendiente') {
+    const estadoActual = normalizarEstadoCotizacion(cotizacionData.estado);
+
+    if (estadoActual !== 'Pendiente') {
       return res.status(400).json({
-        error: 'Estado inválido',
-        mensaje: `La cotización ya está en estado: ${cotizacionData.estado}`
+        error: 'Estado invalido',
+        mensaje: `La cotizacion ya esta en estado: ${estadoActual}`,
+        codigo: 'ESTADO_NO_PERMITE_RECLAMO'
       });
     }
-    
-    // Actualizar estado a Reclamada
+
     const resultado = await ejecutarQuery(
-      `UPDATE cotizaciones
-       SET estado = 'Reclamada',
-           fecha_reclamacion = CURRENT_TIMESTAMP,
-           id_vendedor = $1,
-           notas_vendedor = $2
-       WHERE id = $3
-       RETURNING id, codigo_ticket, estado, fecha_reclamacion`,
-      [
-        datosSanitizados.id_vendedor || null,
-        datosSanitizados.notas_vendedor || null,
-        cotizacionData.id
-      ]
+      'UPDATE cotizaciones SET estado = $1, fecha_reclamacion = CURRENT_TIMESTAMP, id_vendedor = $2, notas_vendedor = $3 WHERE id = $4 RETURNING id, codigo_ticket, estado, fecha_reclamacion',
+      [ESTADO_COMPLETADA, datosSanitizados.id_vendedor || null, datosSanitizados.notas_vendedor || null, cotizacionData.id]
     );
-    
-    res.json({
+
+    return res.json({
       exito: true,
-      mensaje: 'Cotización marcada como reclamada',
+      mensaje: 'Cotizacion marcada como completada',
       cotizacion: {
         id: resultado.rows[0].id,
         codigo_ticket: resultado.rows[0].codigo_ticket,
-        estado: resultado.rows[0].estado,
+        estado: normalizarEstadoCotizacion(resultado.rows[0].estado),
         fecha_reclamacion: resultado.rows[0].fecha_reclamacion
       }
     });
   } catch (error) {
-    console.error('Error al marcar cotización como reclamada:', error);
-    
-    res.status(500).json({
-      error: 'Error al actualizar cotización',
-      mensaje: 'No se pudo marcar la cotización como reclamada'
+    console.error('Error al marcar cotizacion como completada:', error);
+    return res.status(500).json({
+      error: 'Error al actualizar cotizacion',
+      mensaje: 'No se pudo marcar la cotizacion como completada',
+      codigo: 'ERROR_ACTUALIZAR_ESTADO'
     });
   }
 }
+
 
 /**
  * Consultar historial de cotizaciones por cliente
@@ -658,25 +898,19 @@ async function marcarComoReclamada(req, res) {
 async function consultarHistorialCliente(req, res) {
   try {
     const { email } = req.params;
-    
-    // Validar email
+
     const validacionEmail = validarEmail(email);
     if (!validacionEmail.valido) {
       return res.status(400).json({
-        error: 'Email inválido',
+        error: 'Email invalido',
         mensaje: validacionEmail.error
       });
     }
-    
-    // Usar hash determinístico para búsqueda (AES-CBC no es determinístico)
+
     const emailHash = hashBusqueda(validacionEmail.email);
-    
-    // Buscar cliente por hash
-    const cliente = await ejecutarQuery(
-      'SELECT id, nombre FROM usuarios_clientes WHERE correo_hash = $1',
-      [emailHash]
-    );
-    
+
+    const cliente = await ejecutarQuery('SELECT id, nombre FROM usuarios_clientes WHERE correo_hash = $1', [emailHash]);
+
     if (cliente.rows.length === 0) {
       return res.json({
         exito: true,
@@ -685,32 +919,30 @@ async function consultarHistorialCliente(req, res) {
         cotizaciones: []
       });
     }
-    
+
     const clienteData = cliente.rows[0];
-    
-    // Obtener cotizaciones del cliente
-    const cotizaciones = await ejecutarQuery(
-      `SELECT 
-        c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision,
-        c.fecha_validez, c.precio_total, c.margen_aplicado,
-        c.estado, c.fecha_reclamacion,
-        COUNT(dc.id) as cantidad_componentes
-      FROM cotizaciones c
-      LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion
-      WHERE c.id_cliente = $1
-      GROUP BY c.id
-      ORDER BY c.fecha_emision DESC`,
-      [clienteData.id]
-    );
-    
-    res.json({
+
+    let cotizaciones;
+    try {
+      cotizaciones = await ejecutarQuery(
+        'SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez, c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion, COUNT(dc.id) as cantidad_componentes, n.estado as estado_notificacion, n.fecha_envio as fecha_notificacion FROM cotizaciones c LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion LEFT JOIN LATERAL (SELECT nc.estado, nc.fecha_envio FROM notificaciones_cotizacion nc WHERE nc.id_cotizacion = c.id ORDER BY nc.fecha_intento DESC LIMIT 1) n ON TRUE WHERE c.id_cliente = $1 GROUP BY c.id, n.estado, n.fecha_envio ORDER BY c.fecha_emision DESC',
+        [clienteData.id]
+      );
+    } catch (errorNotificaciones) {
+      cotizaciones = await ejecutarQuery(
+        'SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez, c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion, COUNT(dc.id) as cantidad_componentes FROM cotizaciones c LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion WHERE c.id_cliente = $1 GROUP BY c.id ORDER BY c.fecha_emision DESC',
+        [clienteData.id]
+      );
+    }
+
+    return res.json({
       exito: true,
       cliente: {
         nombre: clienteData.nombre,
         email: validacionEmail.email
       },
       cantidad: cotizaciones.rows.length,
-      cotizaciones: cotizaciones.rows.map(c => ({
+      cotizaciones: cotizaciones.rows.map((c) => ({
         id: c.id,
         codigo_unico: c.codigo_unico,
         codigo_ticket: c.codigo_ticket,
@@ -718,25 +950,31 @@ async function consultarHistorialCliente(req, res) {
         fecha_validez: c.fecha_validez,
         precio_total: parseFloat(c.precio_total),
         margen_aplicado: parseFloat(c.margen_aplicado),
-        estado: c.estado,
+        estado: normalizarEstadoCotizacion(c.estado),
         fecha_reclamacion: c.fecha_reclamacion,
-        cantidad_componentes: parseInt(c.cantidad_componentes)
+        cantidad_componentes: parseInt(c.cantidad_componentes, 10),
+        notificacion: c.estado_notificacion
+          ? { estado: c.estado_notificacion, fecha_envio: c.fecha_notificacion || null }
+          : null
       }))
     });
   } catch (error) {
     console.error('Error al consultar historial:', error);
-    
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Error al consultar historial',
       mensaje: 'No se pudo recuperar el historial de cotizaciones'
     });
   }
 }
 
+
 module.exports = {
   crearCotizacion,
   consultarCotizacion,
   validarCotizacion,
+  obtenerPdfCotizacion,
+  obtenerPdfTecnico,
+  notificarCotizacionLista,
   marcarComoReclamada,
   consultarHistorialCliente,
   // Exportar funciones auxiliares para testing

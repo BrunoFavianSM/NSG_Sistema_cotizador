@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../contexto/AppContext';
+import { THEME_STORAGE_KEY, applyThemeClass, resolveTheme } from '../../theme';
 
 const NAV_ITEMS = [
   {
@@ -174,6 +175,19 @@ function NavIcon({ name, className }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 4H7a3 3 0 00-3 3v10a3 3 0 003 3h5" />
         </svg>
       );
+    case 'sun':
+      return (
+        <svg className={iconClass(className)} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" strokeWidth={1.8} />
+          <path strokeLinecap="round" strokeWidth={1.8} d="M12 2.5v2.3M12 19.2v2.3M21.5 12h-2.3M4.8 12H2.5M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6M18.7 18.7l-1.6-1.6M6.9 6.9 5.3 5.3" />
+        </svg>
+      );
+    case 'moon':
+      return (
+        <svg className={iconClass(className)} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M20 14.6A8.5 8.5 0 119.4 4a7 7 0 0010.6 10.6z" />
+        </svg>
+      );
     default:
       return null;
   }
@@ -297,7 +311,7 @@ function DesktopSidebar({ navItems, usuario, autenticado, onLogout }) {
   const adminItems = navItems.filter((item) => item.group === 'admin');
 
   return (
-    <aside className="surface-glass hidden h-screen flex-col border-r border-[var(--color-border)] px-4 pb-6 pt-5 lg:flex" aria-label="Navegación lateral">
+    <aside className="surface-glass sticky top-0 hidden h-screen flex-col overflow-y-auto border-r border-[var(--color-border)] px-4 pb-6 pt-5 lg:flex" aria-label="Navegación lateral">
       <div className="mb-6 px-2">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">Sistema</p>
         <p className="mt-1 text-xl font-semibold text-[var(--color-text)]">Cotizador</p>
@@ -381,6 +395,7 @@ export default function AppShell() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [themePreference, setThemePreference] = useState(() => localStorage.getItem(THEME_STORAGE_KEY) || 'system');
 
   const navItems = useMemo(() => buildNavigationItems(autenticado), [autenticado]);
   const mobileTabItems = useMemo(
@@ -408,6 +423,15 @@ export default function AppShell() {
     logout();
     setMobileDrawerOpen(false);
     navigate('/login');
+  };
+
+  const isDarkMode = resolveTheme(themePreference) === 'dark';
+
+  const handleToggleDarkMode = () => {
+    const nextPreference = isDarkMode ? 'light' : 'dark';
+    setThemePreference(nextPreference);
+    applyThemeClass(nextPreference);
+    localStorage.setItem(THEME_STORAGE_KEY, nextPreference);
   };
 
   return (
@@ -444,23 +468,38 @@ export default function AppShell() {
               </div>
 
               {autenticado ? (
-                <div className="hidden items-center gap-3 sm:flex">
-                  <span className="text-sm text-[var(--color-text-muted)]">{usuario?.username || 'Administrador'}</span>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className="hidden text-sm text-[var(--color-text-muted)] md:inline">{usuario?.username || 'Administrador'}</span>
                   <button
                     type="button"
-                    onClick={handleLogout}
-                    className="min-h-11 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-4 text-sm font-medium text-[var(--color-danger)] transition-colors duration-higNormal ease-hig hover:bg-[color:rgba(255,59,48,0.10)]"
+                    onClick={handleToggleDarkMode}
+                    aria-pressed={isDarkMode}
+                    aria-label={isDarkMode ? 'Desactivar modo oscuro' : 'Activar modo oscuro'}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-4 text-sm font-medium text-[var(--color-text)] transition-colors duration-higNormal ease-hig hover:bg-[var(--color-surface-soft)]"
                   >
-                    Cerrar sesión
+                    <NavIcon name={isDarkMode ? 'sun' : 'moon'} className="h-4 w-4" />
+                    {isDarkMode ? 'Modo claro' : 'Modo oscuro'}
                   </button>
                 </div>
               ) : (
-                <NavLink
-                  to="/login"
-                  className="hidden min-h-11 items-center rounded-[var(--radius-sm)] border border-[var(--color-border)] px-4 text-sm font-medium text-[var(--color-text)] transition-colors duration-higNormal ease-hig hover:bg-[var(--color-surface-soft)] sm:inline-flex"
-                >
-                  Login admin
-                </NavLink>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={handleToggleDarkMode}
+                    aria-pressed={isDarkMode}
+                    aria-label={isDarkMode ? 'Desactivar modo oscuro' : 'Activar modo oscuro'}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-4 text-sm font-medium text-[var(--color-text)] transition-colors duration-higNormal ease-hig hover:bg-[var(--color-surface-soft)]"
+                  >
+                    <NavIcon name={isDarkMode ? 'sun' : 'moon'} className="h-4 w-4" />
+                    {isDarkMode ? 'Modo claro' : 'Modo oscuro'}
+                  </button>
+                  <NavLink
+                    to="/login"
+                    className="hidden min-h-11 items-center rounded-[var(--radius-sm)] border border-[var(--color-border)] px-4 text-sm font-medium text-[var(--color-text)] transition-colors duration-higNormal ease-hig hover:bg-[var(--color-surface-soft)] sm:inline-flex"
+                  >
+                    Login admin
+                  </NavLink>
+                </div>
               )}
             </div>
           </header>
