@@ -20,6 +20,7 @@ const NAV_ITEMS = [
     description: 'Consulta cotizaciones previas',
     icon: 'history',
     group: 'primary',
+    requiresAuth: true,
     showInMobileTab: true,
   },
   {
@@ -188,6 +189,12 @@ function NavIcon({ name, className }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M20 14.6A8.5 8.5 0 119.4 4a7 7 0 0010.6 10.6z" />
         </svg>
       );
+    case 'currency':
+      return (
+        <svg className={iconClass(className)} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 7h13M4 17h13M14 4l3 3-3 3M14 14l3 3-3 3" />
+        </svg>
+      );
     default:
       return null;
   }
@@ -321,7 +328,7 @@ function DesktopSidebar({ navItems, usuario, autenticado, onLogout }) {
       <div className="surface-card mb-6 rounded-[var(--radius-lg)] p-4">
         <p className="text-sm font-semibold text-[var(--color-text)]">{autenticado ? (usuario?.username || 'Administrador') : 'Modo visitante'}</p>
         <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-          {autenticado ? 'Sesión activa con permisos administrativos.' : 'Acceso público para cotización e historial.'}
+          {autenticado ? 'Sesión activa con permisos administrativos.' : 'Acceso público para cotización.'}
         </p>
       </div>
 
@@ -391,7 +398,7 @@ function BottomNavigation({ navItems }) {
 }
 
 export default function AppShell() {
-  const { autenticado, usuario, logout } = useAppContext();
+  const { autenticado, usuario, logout, monedaVista, alternarMonedaVista } = useAppContext();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -472,6 +479,16 @@ export default function AppShell() {
                   <span className="hidden text-sm text-[var(--color-text-muted)] md:inline">{usuario?.username || 'Administrador'}</span>
                   <button
                     type="button"
+                    onClick={alternarMonedaVista}
+                    aria-pressed={monedaVista === 'PEN'}
+                    aria-label={`Cambiar moneda de visualizacion. Actual: ${monedaVista}`}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-4 text-sm font-medium text-[var(--color-text)] transition-colors duration-higNormal ease-hig hover:bg-[var(--color-surface-soft)]"
+                  >
+                    <NavIcon name="currency" className="h-4 w-4" />
+                    {monedaVista}
+                  </button>
+                  <button
+                    type="button"
                     onClick={handleToggleDarkMode}
                     aria-pressed={isDarkMode}
                     aria-label={isDarkMode ? 'Desactivar modo oscuro' : 'Activar modo oscuro'}
@@ -483,6 +500,16 @@ export default function AppShell() {
                 </div>
               ) : (
                 <div className="flex items-center gap-2 sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={alternarMonedaVista}
+                    aria-pressed={monedaVista === 'PEN'}
+                    aria-label={`Cambiar moneda de visualizacion. Actual: ${monedaVista}`}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-4 text-sm font-medium text-[var(--color-text)] transition-colors duration-higNormal ease-hig hover:bg-[var(--color-surface-soft)]"
+                  >
+                    <NavIcon name="currency" className="h-4 w-4" />
+                    {monedaVista}
+                  </button>
                   <button
                     type="button"
                     onClick={handleToggleDarkMode}

@@ -35,7 +35,7 @@ function AppRoutes() {
           <Route path="/" element={<Navigate to="/cotizador" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/cotizador" element={<Cotizador />} />
-          <Route path="/historial" element={<HistorialCliente />} />
+          <Route path="/historial" element={<RutaProtegida><HistorialCliente /></RutaProtegida>} />
           <Route path="/validar" element={<RutaProtegida><ValidadorCotizaciones /></RutaProtegida>} />
           <Route path="/admin" element={<Navigate to="/admin/productos" replace />} />
           <Route path="/admin/productos" element={<RutaProtegida><AdminProductos /></RutaProtegida>} />

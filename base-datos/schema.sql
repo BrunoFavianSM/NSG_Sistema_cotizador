@@ -61,6 +61,13 @@ CREATE TABLE configuracion (
 INSERT INTO configuracion (clave, valor, descripcion) 
 VALUES ('margen_ganancia', '20', 'Porcentaje de margen de ganancia');
 
+INSERT INTO configuracion (clave, valor, descripcion)
+VALUES
+  ('margen_ganancia_default', '20', 'Porcentaje de margen por defecto para cotizaciones'),
+  ('tasa_igv', '18', 'Porcentaje de IGV aplicado al precio neto'),
+  ('tipo_cambio_usd_pen', '3.75', 'Tipo de cambio referencial USD a PEN')
+ON CONFLICT (clave) DO NOTHING;
+
 -- Tabla de Cotizaciones
 CREATE TABLE cotizaciones (
   id SERIAL PRIMARY KEY,
@@ -69,6 +76,15 @@ CREATE TABLE cotizaciones (
   id_cliente INTEGER REFERENCES usuarios_clientes(id) ON DELETE SET NULL,
   fecha_emision TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   fecha_validez TIMESTAMP NOT NULL,
+  moneda_base VARCHAR(3) NOT NULL DEFAULT 'USD',
+  subtotal_neto DECIMAL(12, 2) NOT NULL DEFAULT 0,
+  igv_porcentaje DECIMAL(5, 2) NOT NULL DEFAULT 18,
+  igv_monto DECIMAL(12, 2) NOT NULL DEFAULT 0,
+  total_con_igv DECIMAL(12, 2) NOT NULL DEFAULT 0,
+  tipo_cambio_referencia DECIMAL(10, 4) NOT NULL DEFAULT 1,
+  subtotal_neto_pen DECIMAL(12, 2) NOT NULL DEFAULT 0,
+  igv_monto_pen DECIMAL(12, 2) NOT NULL DEFAULT 0,
+  total_con_igv_pen DECIMAL(12, 2) NOT NULL DEFAULT 0,
   precio_total DECIMAL(10, 2) NOT NULL,
   margen_aplicado DECIMAL(5, 2) NOT NULL,
   estado VARCHAR(20) NOT NULL DEFAULT 'Pendiente',
@@ -92,6 +108,11 @@ CREATE TABLE detalle_cotizacion (
   nombre_producto VARCHAR(200) NOT NULL,
   categoria VARCHAR(50) NOT NULL,
   descripcion_tecnica TEXT,
+  costo_unitario_neto_usd DECIMAL(12, 2) NOT NULL DEFAULT 0,
+  margen_aplicado DECIMAL(5, 2) NOT NULL DEFAULT 0,
+  precio_unitario_neto_usd DECIMAL(12, 2) NOT NULL DEFAULT 0,
+  igv_unitario_usd DECIMAL(12, 2) NOT NULL DEFAULT 0,
+  precio_unitario_total_usd DECIMAL(12, 2) NOT NULL DEFAULT 0,
   precio_unitario DECIMAL(10, 2) NOT NULL,
   cantidad INTEGER NOT NULL DEFAULT 1,
   disponible_stock BOOLEAN NOT NULL,

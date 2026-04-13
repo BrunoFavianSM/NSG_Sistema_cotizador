@@ -9,11 +9,13 @@ import EmptyState from '../componentes/feedback/EmptyState';
 import ErrorState from '../componentes/feedback/ErrorState';
 import LoadingSpinner from '../componentes/feedback/LoadingSpinner';
 import { useToast } from '../componentes/feedback/ToastProvider';
+import { useAppContext } from '../contexto/AppContext';
 import {
   consultarHistorialCliente,
   obtenerUrlPdfCotizacion,
   obtenerUrlPdfTecnico
 } from '../servicios/api';
+import { formatearMoneda as formatoMoneda } from '../utilidades/moneda';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -28,8 +30,8 @@ function formatearFecha(fecha) {
   });
 }
 
-function formatearMoneda(monto) {
-  return `S/ ${Number(monto || 0).toFixed(2)}`;
+function formatearMoneda(monto, moneda = 'USD') {
+  return formatoMoneda(monto, moneda);
 }
 
 function estadoToBadgeVariant(estado) {
@@ -57,6 +59,7 @@ function StatCard({ label, value, helper }) {
 
 export default function HistorialCliente() {
   const toast = useToast();
+  const { monedaVista, formatearMontoSegunMonedaVista } = useAppContext();
 
   const [email, setEmail] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
@@ -73,8 +76,8 @@ export default function HistorialCliente() {
 
   const descargarPDF = (codigoTicket, tipo = 'comercial') => {
     const pdfUrl = tipo === 'tecnico'
-      ? obtenerUrlPdfTecnico(codigoTicket)
-      : obtenerUrlPdfCotizacion(codigoTicket);
+      ? obtenerUrlPdfTecnico(codigoTicket, monedaVista)
+      : obtenerUrlPdfCotizacion(codigoTicket, monedaVista);
     const win = window.open(pdfUrl, '_blank', 'noopener,noreferrer');
 
     if (!win) {
@@ -177,7 +180,21 @@ export default function HistorialCliente() {
       label: 'Total',
       sortable: true,
       align: 'right',
-      render: (row) => <span className="font-semibold text-[var(--color-accent-text)]">{formatearMoneda(row.precio_total)}</span>,
+      render: (row) => (
+        <div className="text-right">
+          <span className="font-semibold text-[var(--color-accent-text)]">
+            {formatearMontoSegunMonedaVista({
+              montoUsd: row?.finanzas?.total?.usd ?? row.precio_total,
+              montoPen: row?.finanzas?.total?.pen
+            })}
+          </span>
+          <p className="text-[11px] text-[var(--color-text-muted)]">
+            {monedaVista === 'USD'
+              ? formatearMoneda(row?.finanzas?.total?.pen, 'PEN')
+              : formatearMoneda(row?.finanzas?.total?.usd ?? row.precio_total, 'USD')}
+          </p>
+        </div>
+      ),
     },
     {
       key: 'notificacion',
@@ -300,8 +317,13 @@ export default function HistorialCliente() {
             <StatCard label="Cotizaciones" value={String(cotizaciones.length)} helper="Registros historicos" />
             <StatCard
               label="Monto acumulado"
-              value={formatearMoneda(cotizaciones.reduce((acc, item) => acc + Number(item.precio_total || 0), 0))}
-              helper="Suma referencial de tickets"
+              value={formatearMontoSegunMonedaVista({
+                montoUsd: cotizaciones.reduce((acc, item) => acc + Number((item?.finanzas?.total?.usd ?? item?.precio_total) || 0), 0),
+                montoPen: cotizaciones.reduce((acc, item) => acc + Number(item?.finanzas?.total?.pen || 0), 0)
+              })}
+              helper={monedaVista === 'USD'
+                ? `Ref PEN ${formatearMoneda(cotizaciones.reduce((acc, item) => acc + Number(item?.finanzas?.total?.pen || 0), 0), 'PEN')}`
+                : `Ref USD ${formatearMoneda(cotizaciones.reduce((acc, item) => acc + Number((item?.finanzas?.total?.usd ?? item?.precio_total) || 0), 0), 'USD')}`}
             />
           </section>
 

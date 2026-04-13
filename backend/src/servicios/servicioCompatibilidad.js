@@ -9,7 +9,7 @@ class ServicioCompatibilidad {
     const texto = String(valor).toLowerCase().replace(/\s+/g, '').replace('_', '-');
 
     if (texto.includes('mini-itx') || texto === 'itx') return 'Mini-ITX';
-    if (texto.includes('micro-atx') || texto.includes('matx')) return 'mATX';
+    if (texto.includes('micro-atx') || texto.includes('matx')) return 'Micro-ATX';
     if (texto === 'atx' || texto.includes('/atx') || texto.includes('atx/')) return 'ATX';
 
     return valor;
@@ -62,7 +62,7 @@ class ServicioCompatibilidad {
     const aPedido = this.identificarComponentesAPedido(componentes);
     if (aPedido.length > 0) {
       const tiempoMax = Math.max(...aPedido.map((c) => c.tiempo_entrega_dias || 0));
-      advertencias.push(`! Componentes a pedido: ${tiempoMax} dias de entrega`);
+      advertencias.push(`! Componentes a pedido: ${tiempoMax} días de entrega`);
     }
 
     return { compatible: errores.length === 0, errores, advertencias };
@@ -100,17 +100,17 @@ class ServicioCompatibilidad {
     const desc = String(descripcion || '').toLowerCase();
 
     if (desc.includes('mini-itx')) ff.push('Mini-ITX');
-    if (desc.includes('micro-atx') || desc.includes('matx')) ff.push('mATX');
+    if (desc.includes('micro-atx') || desc.includes('matx')) ff.push('Micro-ATX');
 
     const atxMatch = desc.match(/(?:^|\s|case\s)atx(?:\s|$|,|\/)/);
     if (atxMatch) ff.push('ATX');
 
     if (ff.includes('ATX')) {
-      if (!ff.includes('mATX')) ff.push('mATX');
+      if (!ff.includes('Micro-ATX')) ff.push('Micro-ATX');
       if (!ff.includes('Mini-ITX')) ff.push('Mini-ITX');
     }
 
-    return ff.length > 0 ? ff : ['ATX', 'mATX', 'Mini-ITX'];
+    return ff.length > 0 ? ff : ['ATX', 'Micro-ATX', 'Mini-ITX'];
   }
 
   filtrarPlacasPorSocket(placasMadre, socketProcesador) {

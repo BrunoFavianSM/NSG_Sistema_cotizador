@@ -12,6 +12,7 @@ import SuccessState from '../componentes/feedback/SuccessState';
 import { useToast } from '../componentes/feedback/ToastProvider';
 import { useAppContext } from '../contexto/AppContext';
 import * as api from '../servicios/api';
+import { formatearMoneda as formatoMoneda } from '../utilidades/moneda';
 
 function formatearFecha(fecha) {
   if (!fecha) return '-';
@@ -24,8 +25,8 @@ function formatearFecha(fecha) {
   });
 }
 
-function formatearMoneda(monto) {
-  return `S/ ${Number(monto || 0).toFixed(2)}`;
+function formatearMoneda(monto, moneda = 'USD') {
+  return formatoMoneda(monto, moneda);
 }
 
 function estadoToBadgeVariant(estado) {
@@ -69,7 +70,7 @@ function StatCard({ label, value, helper, tone = 'neutral' }) {
 }
 
 export default function ValidadorCotizaciones() {
-  const { autenticado } = useAppContext();
+  const { autenticado, monedaVista, formatearMontoSegunMonedaVista } = useAppContext();
   const toast = useToast();
 
   const [codigoTicket, setCodigoTicket] = useState('');
@@ -111,14 +112,14 @@ export default function ValidadorCotizaciones() {
       label: 'Original',
       sortable: true,
       align: 'right',
-      render: (row) => formatearMoneda(row.precio_historico),
+      render: (row) => formatearMontoSegunMonedaVista({ montoUsd: row.precio_historico }),
     },
     {
       key: 'precio_actual',
       label: 'Actual',
       sortable: true,
       align: 'right',
-      render: (row) => formatearMoneda(row.precio_actual),
+      render: (row) => formatearMontoSegunMonedaVista({ montoUsd: row.precio_actual }),
     },
     {
       key: 'diferencia_unitaria',
@@ -134,7 +135,7 @@ export default function ValidadorCotizaciones() {
         return (
           <span className={`font-semibold ${delta > 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-success)]'}`}>
             {delta > 0 ? '+' : ''}
-            {formatearMoneda(delta)}
+            {formatearMontoSegunMonedaVista({ montoUsd: delta })}
           </span>
         );
       },
@@ -303,7 +304,7 @@ export default function ValidadorCotizaciones() {
 
       {cotizacion ? (
         <>
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
             <StatCard
               label="Ticket"
               value={cotizacion.codigo_ticket || '-'}
@@ -312,18 +313,44 @@ export default function ValidadorCotizaciones() {
             />
             <StatCard
               label="Precio original"
-              value={formatearMoneda(cotizacion.precio_total_historico)}
-              helper={`Emitida: ${formatearFecha(cotizacion.fecha_emision)}`}
+              value={formatearMontoSegunMonedaVista({
+                montoUsd: cotizacion?.finanzas?.historico?.total?.usd ?? cotizacion.precio_total_historico,
+                montoPen: cotizacion?.finanzas?.historico?.total?.pen
+              })}
+              helper={monedaVista === 'USD'
+                ? `Emitida: ${formatearFecha(cotizacion.fecha_emision)} • Ref PEN ${formatearMoneda(cotizacion?.finanzas?.historico?.total?.pen, 'PEN')}`
+                : `Emitida: ${formatearFecha(cotizacion.fecha_emision)} • Ref USD ${formatearMoneda(cotizacion?.finanzas?.historico?.total?.usd ?? cotizacion.precio_total_historico, 'USD')}`}
+            />
+            <StatCard
+              label="Subtotal neto"
+              value={formatearMontoSegunMonedaVista({
+                montoUsd: cotizacion?.finanzas?.historico?.subtotal_neto?.usd,
+                montoPen: cotizacion?.finanzas?.historico?.subtotal_neto?.pen
+              })}
+              helper={`IGV ${Number(cotizacion?.finanzas?.historico?.igv?.porcentaje || 0).toFixed(2)}%: ${formatearMontoSegunMonedaVista({
+                montoUsd: cotizacion?.finanzas?.historico?.igv?.usd,
+                montoPen: cotizacion?.finanzas?.historico?.igv?.pen
+              })}`}
             />
             <StatCard
               label="Precio actual"
-              value={formatearMoneda(cotizacion.precio_total_actual)}
-              helper={`Válida hasta: ${formatearFecha(cotizacion.fecha_validez)}`}
+              value={formatearMontoSegunMonedaVista({
+                montoUsd: cotizacion?.finanzas?.actual?.total?.usd ?? cotizacion.precio_total_actual,
+                montoPen: cotizacion?.finanzas?.actual?.total?.pen
+              })}
+              helper={monedaVista === 'USD'
+                ? `Válida hasta: ${formatearFecha(cotizacion.fecha_validez)} • Ref PEN ${formatearMoneda(cotizacion?.finanzas?.actual?.total?.pen, 'PEN')}`
+                : `Válida hasta: ${formatearFecha(cotizacion.fecha_validez)} • Ref USD ${formatearMoneda(cotizacion?.finanzas?.actual?.total?.usd ?? cotizacion.precio_total_actual, 'USD')}`}
             />
             <StatCard
               label="Diferencia total"
-              value={`${Number(cotizacion.diferencia_total || 0) > 0 ? '+' : ''}${formatearMoneda(cotizacion.diferencia_total)}`}
-              helper="Comparación contra emisión"
+              value={`${Number(cotizacion.diferencia_total || 0) > 0 ? '+' : ''}${formatearMontoSegunMonedaVista({
+                montoUsd: cotizacion.diferencia_total,
+                montoPen: (cotizacion?.finanzas?.actual?.total?.pen || 0) - (cotizacion?.finanzas?.historico?.total?.pen || 0)
+              })}`}
+              helper={monedaVista === 'USD'
+                ? `Válida hasta: ${formatearFecha(cotizacion.fecha_validez)} • Ref PEN ${formatearMoneda((cotizacion?.finanzas?.actual?.total?.pen || 0) - (cotizacion?.finanzas?.historico?.total?.pen || 0), 'PEN')}`
+                : `Válida hasta: ${formatearFecha(cotizacion.fecha_validez)} • Ref USD ${formatearMoneda(cotizacion.diferencia_total, 'USD')}`}
               tone={Number(cotizacion.diferencia_total || 0) > 0 ? 'warning' : 'success'}
             />
           </section>

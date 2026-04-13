@@ -11,6 +11,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.4.0",
     "axios": "1.14.0",
     "framer-motion": "^10.12.0",
     "prop-types": "^15.8.1",

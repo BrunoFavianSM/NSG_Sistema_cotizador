@@ -4,27 +4,27 @@
  * Valida Requisitos: 14.2
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { AppProvider, useAppContext } from './AppContext';
 import * as api from '../servicios/api';
 
 // Mock del módulo de API
-vi.mock('../servicios/api', () => ({
-  login: vi.fn(),
-  logout: vi.fn(),
-  verificarToken: vi.fn(),
-  obtenerUsuarioActual: vi.fn(),
-  obtenerProductos: vi.fn(),
-  obtenerProductoPorId: vi.fn(),
-  validarCompatibilidad: vi.fn(),
-  obtenerMargenGanancia: vi.fn(),
-  actualizarMargenGanancia: vi.fn()
+jest.mock('../servicios/api', () => ({
+  login: jest.fn(),
+  logout: jest.fn(),
+  verificarToken: jest.fn(),
+  obtenerUsuarioActual: jest.fn(),
+  obtenerProductos: jest.fn(),
+  obtenerProductoPorId: jest.fn(),
+  validarCompatibilidad: jest.fn(),
+  obtenerMargenGanancia: jest.fn(),
+  actualizarMargenGanancia: jest.fn()
 }));
 
 describe('AppContext', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
     localStorage.clear();
     api.obtenerMargenGanancia.mockResolvedValue({
       exito: true,
@@ -250,8 +250,9 @@ describe('AppContext', () => {
       const precioTotal = result.current.calcularPrecioTotal();
       
       // Total base: 500 + 300 + 100 + 100 = 1000
-      // Con margen 20%: 1000 * 1.20 = 1200
-      expect(precioTotal).toBe(1200);
+      // Neto con margen 20%: 1000 * 1.20 = 1200
+      // Total con IGV 18%: 1200 * 1.18 = 1416
+      expect(precioTotal).toBe(1416);
     });
 
     it('debe verificar si configuración está completa', async () => {
