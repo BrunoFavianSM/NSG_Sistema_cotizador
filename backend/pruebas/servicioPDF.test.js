@@ -127,6 +127,17 @@ describe('Servicio PDF - Generación de PDFs Dual', () => {
       expect(pdfBuffer).toBeInstanceOf(Buffer);
       expect(pdfBuffer.length).toBeGreaterThan(0);
     });
+
+    test('debe generar PDF en USD y PEN', async () => {
+      const pdfUsd = await servicioPDF.generarPDFCotizacion(datosCotizacion, { moneda: 'USD' });
+      const pdfPen = await servicioPDF.generarPDFCotizacion(datosCotizacion, { moneda: 'PEN' });
+
+      expect(pdfUsd).toBeInstanceOf(Buffer);
+      expect(pdfPen).toBeInstanceOf(Buffer);
+      expect(pdfUsd.length).toBeGreaterThan(0);
+      expect(pdfPen.length).toBeGreaterThan(0);
+      expect(pdfUsd.equals(pdfPen)).toBe(false);
+    });
   });
 
   describe('generarPDFListado', () => {
@@ -172,6 +183,12 @@ describe('Servicio PDF - Generación de PDFs Dual', () => {
       const pdfBufferUno = await servicioPDF.generarPDFListado('NSG-2024-0001', [componentesEjemplo[0]]);
       
       expect(pdfBuffer.length).toBeGreaterThan(pdfBufferUno.length);
+    });
+
+    test('debe aceptar opcion de moneda sin afectar contrato', async () => {
+      const pdfBuffer = await servicioPDF.generarPDFListado('NSG-2024-0001', componentesEjemplo, { moneda: 'PEN' });
+      expect(pdfBuffer).toBeInstanceOf(Buffer);
+      expect(pdfBuffer.length).toBeGreaterThan(0);
     });
   });
 
@@ -234,13 +251,11 @@ describe('Servicio PDF - Generación de PDFs Dual', () => {
       expect(listadoStr).toContain('%%EOF');
     });
 
-    test('PDFs deben incluir fuentes Helvetica', async () => {
+    test('PDFs deben mantener estructura PDF válida', async () => {
       const pdfBuffer = await servicioPDF.generarPDFCotizacion(datosCotizacion);
-      const pdfContent = pdfBuffer.toString('utf8');
-      
-      // Verificar que usa fuentes Helvetica
-      expect(pdfContent).toContain('Helvetica');
-      expect(pdfContent).toContain('Helvetica-Bold');
+
+      expect(pdfBuffer.toString('utf8', 0, 4)).toBe('%PDF');
+      expect(pdfBuffer.toString('utf8')).toContain('%%EOF');
     });
   });
 

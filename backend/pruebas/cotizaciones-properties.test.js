@@ -158,7 +158,8 @@ function crearMockReqRes(body = {}, params = {}, query = {}) {
   const req = {
     body,
     params,
-    query
+    query,
+    usuario: { id: 1, username: 'admin-test' }
   };
   
   const res = {
@@ -906,7 +907,7 @@ describe('Property 22: Marcar como reclamada actualiza estado', () => {
     await limpiarCotizaciones();
   });
 
-  test('Cotización Pendiente cambia a Reclamada', async () => {
+  test('Cotización Pendiente cambia a Completada', async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.integer({ min: 1, max: 3 }),
@@ -940,11 +941,11 @@ describe('Property 22: Marcar como reclamada actualiza estado', () => {
           
           expect(resReclamar.statusCode).toBe(200);
           expect(resReclamar.data.exito).toBe(true);
-          expect(resReclamar.data.cotizacion.estado).toBe('Reclamada');
+          expect(resReclamar.data.cotizacion.estado).toBe('Completada');
           
           // Verificar en base de datos
           cotizacion = await obtenerCotizacionPorTicket(codigoTicket);
-          expect(cotizacion.estado).toBe('Reclamada');
+          expect(cotizacion.estado).toBe('Completada');
           expect(cotizacion.fecha_reclamacion).not.toBeNull();
         }
       ),

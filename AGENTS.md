@@ -72,3 +72,20 @@ Un cambio se considera terminado solo si:
 - Explicar brevemente qué se cambió y por qué.
 - Indicar archivos modificados y validación ejecutada (build/tests si aplica).
 - Reportar riesgos pendientes y próximos pasos si corresponde.
+
+## 12) Approach
+- Think before acting. Read existing files before writing code.
+- Be concise in output but thorough in reasoning.
+- Prefer editing over rewriting whole files.
+- Do not re-read files you have already read unless the file may have changed.
+- Test your code before declaring done.
+- No sycophantic openers or closing fluff.
+- Keep solutions simple and direct.
+- User instructions always override this file.
+
+---
+
+## 13) Protocolo de ejecución de Tasks (Kiro Spec)
+
+- La fuente de verdad para ejecutar tasks de Kiro es el **spec activo** indicado en `.kiro/specs/ACTIVO.md`.
+- Protocolo completo: `documentacion-tareas/protocolo-kiro-spec.md`.

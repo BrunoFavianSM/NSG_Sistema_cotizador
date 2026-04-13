@@ -300,8 +300,9 @@ export const consultarHistorialCliente = async (email) => {
  * @param {string} codigoTicket
  * @returns {string}
  */
-export const obtenerUrlPdfCotizacion = (codigoTicket) => {
-  return `${API_BASE_URL}/cotizaciones/${codigoTicket}/pdf`;
+export const obtenerUrlPdfCotizacion = (codigoTicket, moneda = 'USD') => {
+  const params = new URLSearchParams({ moneda: String(moneda || 'USD').toUpperCase() });
+  return `${API_BASE_URL}/cotizaciones/${codigoTicket}/pdf?${params.toString()}`;
 };
 
 /**
@@ -309,8 +310,9 @@ export const obtenerUrlPdfCotizacion = (codigoTicket) => {
  * @param {string} codigoTicket
  * @returns {string}
  */
-export const obtenerUrlPdfTecnico = (codigoTicket) => {
-  return `${API_BASE_URL}/cotizaciones/${codigoTicket}/pdf-tecnico`;
+export const obtenerUrlPdfTecnico = (codigoTicket, moneda = 'USD') => {
+  const params = new URLSearchParams({ moneda: String(moneda || 'USD').toUpperCase() });
+  return `${API_BASE_URL}/cotizaciones/${codigoTicket}/pdf-tecnico?${params.toString()}`;
 };
 
 /**
@@ -331,8 +333,9 @@ export const notificarCotizacionLista = async (codigoTicket) => {
  * Descarga PDF comercial de cotizacion
  * @param {string} codigoTicket
  */
-export const descargarPdfCotizacion = async (codigoTicket) => {
+export const descargarPdfCotizacion = async (codigoTicket, moneda = 'USD') => {
   const response = await api.get(`/cotizaciones/${codigoTicket}/pdf`, {
+    params: { moneda: String(moneda || 'USD').toUpperCase() },
     responseType: 'blob'
   });
   return response.data;
@@ -342,8 +345,9 @@ export const descargarPdfCotizacion = async (codigoTicket) => {
  * Descarga PDF tecnico de cotizacion
  * @param {string} codigoTicket
  */
-export const descargarPdfTecnico = async (codigoTicket) => {
+export const descargarPdfTecnico = async (codigoTicket, moneda = 'USD') => {
   const response = await api.get(`/cotizaciones/${codigoTicket}/pdf-tecnico`, {
+    params: { moneda: String(moneda || 'USD').toUpperCase() },
     responseType: 'blob'
   });
   return response.data;
@@ -369,11 +373,16 @@ export const obtenerMargenGanancia = async () => {
 /**
  * Actualiza margen de ganancia (admin)
  * @param {number} margen_ganancia
+ * @param {number} tasa_igv
+ * @param {number} tipo_cambio_usd_pen
  * @returns {Promise<Object>}
  */
-export const actualizarMargenGanancia = async (margen_ganancia) => {
+export const actualizarMargenGanancia = async (margen_ganancia, tasa_igv, tipo_cambio_usd_pen) => {
   try {
-    const response = await api.put('/configuracion/margen', { margen_ganancia });
+    const payload = { margen_ganancia_default: margen_ganancia };
+    if (typeof tasa_igv === 'number') payload.tasa_igv = tasa_igv;
+    if (typeof tipo_cambio_usd_pen === 'number') payload.tipo_cambio_usd_pen = tipo_cambio_usd_pen;
+    const response = await api.put('/configuracion/margen', payload);
     return response.data;
   } catch (error) {
     throw error;

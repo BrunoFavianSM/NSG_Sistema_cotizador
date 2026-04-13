@@ -12,9 +12,11 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import * as api from '../servicios/api';
+import { formatearMoneda, normalizarMoneda, resolverMontoPorMoneda } from '../utilidades/moneda';
 
 // Crear contexto
 const AppContext = createContext();
+const MONEDA_VISTA_STORAGE_KEY = 'nsg_moneda_vista';
 
 // Hook personalizado para usar el contexto
 export const useAppContext = () => {
@@ -71,6 +73,12 @@ const AppProviderInternal = ({ children }) => {
   // ESTADO DE MARGEN DE GANANCIA
   // ============================================
   const [margenGanancia, setMargenGanancia] = useState(20);
+  const [tasaIgv, setTasaIgv] = useState(18);
+  const [tipoCambioUsdPen, setTipoCambioUsdPen] = useState(3.75);
+  const [monedaVista, setMonedaVista] = useState(() => {
+    const guardada = localStorage.getItem(MONEDA_VISTA_STORAGE_KEY);
+    return normalizarMoneda(guardada || 'USD');
+  });
 
   // ============================================
   // ESTADO DE COMPATIBILIDAD
@@ -123,8 +131,20 @@ const AppProviderInternal = ({ children }) => {
   const cargarMargenGanancia = async () => {
     try {
       const respuesta = await api.obtenerMargenGanancia();
-      if (respuesta?.exito && typeof respuesta.margen_ganancia === 'number') {
-        setMargenGanancia(respuesta.margen_ganancia);
+      if (respuesta?.exito) {
+        if (typeof respuesta.margen_ganancia_default === 'number') {
+          setMargenGanancia(respuesta.margen_ganancia_default);
+        } else if (typeof respuesta.margen_ganancia === 'number') {
+          setMargenGanancia(respuesta.margen_ganancia);
+        }
+
+        if (typeof respuesta.tasa_igv === 'number') {
+          setTasaIgv(respuesta.tasa_igv);
+        }
+
+        if (typeof respuesta.tipo_cambio_usd_pen === 'number') {
+          setTipoCambioUsdPen(respuesta.tipo_cambio_usd_pen);
+        }
       }
       return respuesta;
     } catch (error) {
@@ -297,6 +317,13 @@ const AppProviderInternal = ({ children }) => {
    * Calcula el precio total de la configuración
    */
   const calcularPrecioTotal = () => {
+    const subtotalNeto = calcularSubtotalNeto();
+    const subtotalConMargen = subtotalNeto * (1 + margenGanancia / 100);
+    const igvMonto = subtotalConMargen * (tasaIgv / 100);
+    return subtotalConMargen + igvMonto;
+  };
+
+  const calcularSubtotalNeto = () => {
     let total = 0;
     
     // Sumar componentes individuales
@@ -312,10 +339,56 @@ const AppProviderInternal = ({ children }) => {
       total += parseFloat(ram.precio_base);
     });
 
-    // Aplicar margen de ganancia
-    const totalConMargen = total * (1 + margenGanancia / 100);
-    
-    return totalConMargen;
+    return total;
+  };
+
+  const calcularResumenFinanciero = () => {
+    const costoNetoUsd = calcularSubtotalNeto();
+    const subtotalNeto = costoNetoUsd * (1 + margenGanancia / 100);
+    const igvMonto = subtotalNeto * (tasaIgv / 100);
+    const totalConIgv = subtotalNeto + igvMonto;
+
+    return {
+      moneda_base: 'USD',
+      tipo_cambio: tipoCambioUsdPen,
+      subtotal_neto: {
+        usd: subtotalNeto,
+        pen: subtotalNeto * tipoCambioUsdPen
+      },
+      igv: {
+        porcentaje: tasaIgv,
+        usd: igvMonto,
+        pen: igvMonto * tipoCambioUsdPen
+      },
+      total: {
+        usd: totalConIgv,
+        pen: totalConIgv * tipoCambioUsdPen
+      }
+    };
+  };
+
+  const cambiarMonedaVista = (siguienteMoneda) => {
+    const monedaNormalizada = normalizarMoneda(siguienteMoneda);
+    setMonedaVista(monedaNormalizada);
+    localStorage.setItem(MONEDA_VISTA_STORAGE_KEY, monedaNormalizada);
+  };
+
+  const alternarMonedaVista = () => {
+    cambiarMonedaVista(monedaVista === 'USD' ? 'PEN' : 'USD');
+  };
+
+  const obtenerMontoSegunMonedaVista = ({ montoUsd = 0, montoPen }) => {
+    return resolverMontoPorMoneda({
+      montoUsd,
+      montoPen,
+      monedaVista,
+      tipoCambioUsdPen
+    });
+  };
+
+  const formatearMontoSegunMonedaVista = ({ montoUsd = 0, montoPen }) => {
+    const monto = obtenerMontoSegunMonedaVista({ montoUsd, montoPen });
+    return formatearMoneda(monto, monedaVista);
   };
 
   // ============================================
@@ -348,9 +421,43 @@ const AppProviderInternal = ({ children }) => {
    * Actualiza el margen de ganancia
    */
   const actualizarMargen = async (nuevoMargen) => {
-    const respuesta = await api.actualizarMargenGanancia(nuevoMargen);
-    if (respuesta?.exito && typeof respuesta.margen_ganancia === 'number') {
-      setMargenGanancia(respuesta.margen_ganancia);
+    const respuesta = await api.actualizarMargenGanancia(
+      nuevoMargen,
+      tasaIgv,
+      tipoCambioUsdPen
+    );
+    if (respuesta?.exito) {
+      if (typeof respuesta.margen_ganancia_default === 'number') {
+        setMargenGanancia(respuesta.margen_ganancia_default);
+      } else if (typeof respuesta.margen_ganancia === 'number') {
+        setMargenGanancia(respuesta.margen_ganancia);
+      }
+      if (typeof respuesta.tasa_igv === 'number') {
+        setTasaIgv(respuesta.tasa_igv);
+      }
+      if (typeof respuesta.tipo_cambio_usd_pen === 'number') {
+        setTipoCambioUsdPen(respuesta.tipo_cambio_usd_pen);
+      }
+    }
+    return respuesta;
+  };
+
+  const actualizarConfiguracionFinanciera = async ({ margen_ganancia_default, tasa_igv, tipo_cambio_usd_pen }) => {
+    const respuesta = await api.actualizarMargenGanancia(
+      margen_ganancia_default,
+      tasa_igv,
+      tipo_cambio_usd_pen
+    );
+    if (respuesta?.exito) {
+      if (typeof respuesta.margen_ganancia_default === 'number') {
+        setMargenGanancia(respuesta.margen_ganancia_default);
+      }
+      if (typeof respuesta.tasa_igv === 'number') {
+        setTasaIgv(respuesta.tasa_igv);
+      }
+      if (typeof respuesta.tipo_cambio_usd_pen === 'number') {
+        setTipoCambioUsdPen(respuesta.tipo_cambio_usd_pen);
+      }
     }
     return respuesta;
   };
@@ -392,7 +499,16 @@ const AppProviderInternal = ({ children }) => {
 
     // Margen de ganancia
     margenGanancia,
+    tasaIgv,
+    tipoCambioUsdPen,
+    monedaVista,
+    cambiarMonedaVista,
+    alternarMonedaVista,
+    obtenerMontoSegunMonedaVista,
+    formatearMontoSegunMonedaVista,
     actualizarMargen,
+    actualizarConfiguracionFinanciera,
+    calcularResumenFinanciero,
     cargarMargenGanancia
   };
 

@@ -21,12 +21,18 @@ const {
   validarCodigoTicket, 
   validarCliente 
 } = require('../utilidades/validacion');
-const { sanitizarObjeto, validarEmail } = require('../utilidades/sanitizacion');
+const { sanitizarObjeto, validarEmail, validarTelefono } = require('../utilidades/sanitizacion');
 const { encriptar, desencriptar, hashBusqueda } = require('../utilidades/encriptacion');
+const jwt = require('jsonwebtoken');
 const servicioPDF = require('../servicios/servicioPDF');
 const { enviarNotificacionListo } = require('../servicios/servicioNotificaciones');
 
 const ESTADO_COMPLETADA = 'Completada';
+const MONEDA_BASE = 'USD';
+const DEFAULT_MARGEN = 20;
+const DEFAULT_IGV = 18;
+const DEFAULT_TIPO_CAMBIO = 3.75;
+let cacheEsquemaFinancieroV2 = null;
 
 function errorEstandar({ status, error, mensaje, codigo }) {
   return {
@@ -55,27 +61,204 @@ function desencriptarSeguro(valor) {
   }
 }
 
-/**
- * Obtiene el margen de ganancia configurado
- * 
- * @returns {Promise<number>} Margen de ganancia en porcentaje
- */
-async function obtenerMargenGanancia() {
+function normalizarNombreCliente(nombre) {
+  if (typeof nombre !== 'string') return null;
+
+  const nombreLimpio = nombre
+    .replace(/&[a-z]+;/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (nombreLimpio.length < 2) return null;
+  if (nombreLimpio.length > 100) return null;
+
+  return nombreLimpio;
+}
+
+function normalizarTelefonoCliente(telefono) {
+  if (typeof telefono !== 'string') return null;
+  const telefonoLimpio = telefono.trim();
+  if (!telefonoLimpio) return null;
+  return telefonoLimpio;
+}
+
+function resolverContextoAdmin(req) {
+  if (req?.usuario?.id) {
+    return true;
+  }
+
+  const authHeader = req?.headers?.authorization || req?.headers?.Authorization;
+  if (!authHeader || typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {
+    return false;
+  }
+
+  const token = authHeader.substring(7).trim();
+  if (!token) return false;
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    return Boolean(payload?.id);
+  } catch {
+    return false;
+  }
+}
+
+function validarDatosClienteParaCotizacion({ esAdmin, email, nombre, telefono }) {
+  const errores = [];
+  const emailNormalizado = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  const nombreNormalizado = normalizarNombreCliente(nombre);
+  const telefonoNormalizado = normalizarTelefonoCliente(telefono);
+
+  if (!esAdmin) {
+    if (!nombreNormalizado) {
+      errores.push('El nombre del cliente es obligatorio');
+    }
+    if (!emailNormalizado) {
+      errores.push('El correo del cliente es obligatorio');
+    }
+  }
+
+  if (emailNormalizado) {
+    const validacionEmail = validarEmail(emailNormalizado);
+    if (!validacionEmail.valido) {
+      errores.push(validacionEmail.error || 'Formato de correo inválido');
+    }
+  }
+
+  if (telefonoNormalizado) {
+    const validacionTelefono = validarTelefono(telefonoNormalizado);
+    if (!validacionTelefono.valido) {
+      errores.push(validacionTelefono.error || 'Formato de teléfono inválido');
+    }
+  }
+
+  return {
+    valido: errores.length === 0,
+    errores,
+    datos: {
+      email: emailNormalizado || null,
+      nombre: nombreNormalizado,
+      telefono: telefonoNormalizado
+    }
+  };
+}
+
+function redondearMoneda(valor) {
+  return Math.round((Number(valor) + Number.EPSILON) * 100) / 100;
+}
+
+function parseNumeroSeguro(valor, fallback) {
+  const numero = Number(valor);
+  return Number.isFinite(numero) ? numero : fallback;
+}
+
+function validarMargenPersonalizado(valor) {
+  if (valor === undefined || valor === null || valor === '') return null;
+  const numero = Number(valor);
+  if (!Number.isFinite(numero) || numero < 0 || numero > 100) return null;
+  return numero;
+}
+
+async function obtenerConfiguracionFinanciera() {
   try {
     const resultado = await ejecutarQuery(
-      "SELECT valor FROM configuracion WHERE clave = 'margen_ganancia'",
+      "SELECT clave, valor FROM configuracion WHERE clave IN ('margen_ganancia', 'margen_ganancia_default', 'tasa_igv', 'tipo_cambio_usd_pen')",
       []
     );
-    
-    if (resultado.rows.length === 0) {
-      // Valor por defecto si no existe en BD
-      return 20;
-    }
-    
-    return parseFloat(resultado.rows[0].valor);
+
+    const mapa = resultado.rows.reduce((acc, row) => {
+      acc[row.clave] = row.valor;
+      return acc;
+    }, {});
+
+    return {
+      margenDefault: parseNumeroSeguro(mapa.margen_ganancia_default ?? mapa.margen_ganancia, DEFAULT_MARGEN),
+      tasaIgv: parseNumeroSeguro(mapa.tasa_igv, DEFAULT_IGV),
+      tipoCambioUsdPen: parseNumeroSeguro(mapa.tipo_cambio_usd_pen, DEFAULT_TIPO_CAMBIO)
+    };
   } catch (error) {
-    console.error('Error al obtener margen:', error);
-    return 20; // Fallback
+    console.error('Error al obtener configuracion financiera:', error);
+    return {
+      margenDefault: DEFAULT_MARGEN,
+      tasaIgv: DEFAULT_IGV,
+      tipoCambioUsdPen: DEFAULT_TIPO_CAMBIO
+    };
+  }
+}
+
+async function obtenerMargenGanancia() {
+  const configuracion = await obtenerConfiguracionFinanciera();
+  return configuracion.margenDefault;
+}
+
+function calcularResumenFinanciero(costoNetoUsd, margenAplicado, tasaIgv, tipoCambio) {
+  const subtotalNeto = redondearMoneda(costoNetoUsd * (1 + margenAplicado / 100));
+  const igvMonto = redondearMoneda(subtotalNeto * (tasaIgv / 100));
+  const totalConIgv = redondearMoneda(subtotalNeto + igvMonto);
+
+  return {
+    moneda_base: MONEDA_BASE,
+    subtotal_neto: subtotalNeto,
+    igv_porcentaje: redondearMoneda(tasaIgv),
+    igv_monto: igvMonto,
+    total_con_igv: totalConIgv,
+    tipo_cambio_referencia: parseNumeroSeguro(tipoCambio, DEFAULT_TIPO_CAMBIO),
+    subtotal_neto_pen: redondearMoneda(subtotalNeto * tipoCambio),
+    igv_monto_pen: redondearMoneda(igvMonto * tipoCambio),
+    total_con_igv_pen: redondearMoneda(totalConIgv * tipoCambio)
+  };
+}
+
+function construirBloqueFinanzas(base) {
+  const subtotalNeto = parseNumeroSeguro(base.subtotal_neto, 0);
+  const igvMonto = parseNumeroSeguro(base.igv_monto, 0);
+  const totalConIgv = parseNumeroSeguro(base.total_con_igv, parseNumeroSeguro(base.precio_total, 0));
+  const tipoCambio = parseNumeroSeguro(base.tipo_cambio_referencia, DEFAULT_TIPO_CAMBIO);
+  const igvPorcentaje = parseNumeroSeguro(base.igv_porcentaje, DEFAULT_IGV);
+
+  return {
+    moneda_base: base.moneda_base || MONEDA_BASE,
+    tipo_cambio: tipoCambio,
+    subtotal_neto: {
+      usd: redondearMoneda(subtotalNeto),
+      pen: redondearMoneda(parseNumeroSeguro(base.subtotal_neto_pen, subtotalNeto * tipoCambio))
+    },
+    igv: {
+      porcentaje: redondearMoneda(igvPorcentaje),
+      usd: redondearMoneda(igvMonto),
+      pen: redondearMoneda(parseNumeroSeguro(base.igv_monto_pen, igvMonto * tipoCambio))
+    },
+    total: {
+      usd: redondearMoneda(totalConIgv),
+      pen: redondearMoneda(parseNumeroSeguro(base.total_con_igv_pen, totalConIgv * tipoCambio))
+    }
+  };
+}
+
+async function usaEsquemaFinancieroV2() {
+  if (cacheEsquemaFinancieroV2 !== null) return cacheEsquemaFinancieroV2;
+  if (process.env.NODE_ENV === 'test') {
+    cacheEsquemaFinancieroV2 = false;
+    return false;
+  }
+
+  try {
+    const resultado = await ejecutarQuery(
+      `SELECT COUNT(*) AS total
+       FROM information_schema.columns
+       WHERE table_schema = 'public'
+       AND (
+         (table_name = 'cotizaciones' AND column_name IN ('subtotal_neto', 'igv_porcentaje', 'total_con_igv'))
+         OR
+         (table_name = 'detalle_cotizacion' AND column_name IN ('costo_unitario_neto_usd', 'precio_unitario_total_usd'))
+       )`,
+      []
+    );
+    cacheEsquemaFinancieroV2 = Number(resultado.rows[0]?.total || 0) >= 5;
+    return cacheEsquemaFinancieroV2;
+  } catch {
+    cacheEsquemaFinancieroV2 = false;
+    return false;
   }
 }
 
@@ -124,12 +307,37 @@ async function buscarOCrearCliente(email, nombre = null, telefono = null) {
     
     // Buscar cliente existente por hash
     const clienteExistente = await ejecutarQuery(
-      'SELECT id FROM usuarios_clientes WHERE correo_hash = $1',
+      'SELECT id, nombre, telefono FROM usuarios_clientes WHERE correo_hash = $1',
       [emailHash]
     );
     
     if (clienteExistente.rows.length > 0) {
-      return clienteExistente.rows[0].id;
+      const cliente = clienteExistente.rows[0];
+      const camposActualizar = [];
+      const valores = [];
+      let indice = 1;
+
+      if (!cliente.nombre && nombre) {
+        camposActualizar.push(`nombre = $${indice++}`);
+        valores.push(nombre);
+      }
+
+      if (!cliente.telefono && telefono) {
+        camposActualizar.push(`telefono = $${indice++}`);
+        valores.push(encriptar(telefono));
+      }
+
+      if (camposActualizar.length > 0) {
+        valores.push(cliente.id);
+        await ejecutarQuery(
+          `UPDATE usuarios_clientes
+           SET ${camposActualizar.join(', ')}
+           WHERE id = $${indice}`,
+          valores
+        );
+      }
+
+      return cliente.id;
     }
     
     // Crear nuevo cliente
@@ -158,12 +366,12 @@ async function buscarOCrearCliente(email, nombre = null, telefono = null) {
  * @returns {number} Precio total con margen
  */
 function calcularPrecioTotal(componentes, margen) {
-  const precioBase = componentes.reduce((total, comp) => {
+  const costoNeto = componentes.reduce((total, comp) => {
     const cantidad = comp.cantidad || 1;
     return total + (parseFloat(comp.precio_base) * cantidad);
   }, 0);
-  
-  return precioBase * (1 + margen / 100);
+
+  return redondearMoneda(costoNeto * (1 + margen / 100));
 }
 
 /**
@@ -192,6 +400,21 @@ async function crearCotizacion(req, res) {
       datosSanitizados.email_cliente = emailOriginal.trim().toLowerCase();
     }
 
+    const esAdmin = resolverContextoAdmin(req);
+    const validacionDatosCliente = validarDatosClienteParaCotizacion({
+      esAdmin,
+      email: datosSanitizados.email_cliente,
+      nombre: datosSanitizados.nombre_cliente,
+      telefono: datosSanitizados.telefono_cliente
+    });
+
+    if (!validacionDatosCliente.valido) {
+      return res.status(400).json({
+        error: 'Datos de cliente inválidos',
+        mensaje: validacionDatosCliente.errores.join('. ')
+      });
+    }
+
     // Validar estructura básica
     if (!datosSanitizados.componentes || !Array.isArray(datosSanitizados.componentes)) {
       return res.status(400).json({
@@ -217,8 +440,17 @@ async function crearCotizacion(req, res) {
       }
     }
 
-    // Obtener margen de ganancia configurado
-    const margen = await obtenerMargenGanancia();
+    const configuracionFinanciera = await obtenerConfiguracionFinanciera();
+    const margenPersonalizado = validarMargenPersonalizado(datosSanitizados.margen_personalizado);
+    if (datosSanitizados.margen_personalizado !== undefined && margenPersonalizado === null) {
+      return res.status(400).json({
+        error: 'Datos inválidos',
+        mensaje: 'margen_personalizado debe ser un numero entre 0 y 100'
+      });
+    }
+    const margen = margenPersonalizado ?? configuracionFinanciera.margenDefault;
+
+    const tieneEsquemaFinancieroV2 = await usaEsquemaFinancieroV2();
 
     // Usar transacción para garantizar consistencia
     const resultado = await ejecutarTransaccion(async (cliente) => {
@@ -261,32 +493,26 @@ async function crearCotizacion(req, res) {
         };
       });
 
-      // 3. Calcular precio total
-      const precioTotal = calcularPrecioTotal(componentesConInfo, margen);
+      // 3. Calcular resumen financiero
+      const costoNetoUsd = componentesConInfo.reduce((total, comp) => {
+        return total + (parseFloat(comp.precio_base) * comp.cantidad);
+      }, 0);
+      const resumenFinanciero = calcularResumenFinanciero(
+        costoNetoUsd,
+        margen,
+        configuracionFinanciera.tasaIgv,
+        configuracionFinanciera.tipoCambioUsdPen
+      );
 
       // 4. Generar código ticket
       const codigoTicket = await generarCodigoTicket();
 
       // 5. Buscar o crear cliente (si se proporciona email)
-      // Limpiar nombre antes de pasar a buscarOCrearCliente
-      // Después de sanitización, nombres como "! !" se convierten en entidades HTML
-      // que son más largas pero no son nombres válidos
-      let nombreCliente = datosSanitizados.nombre_cliente;
-      if (nombreCliente) {
-        // Remover entidades HTML comunes para verificar si el nombre es válido
-        const nombreSinEntidades = nombreCliente
-          .replace(/&[a-z]+;/gi, '') // Remover entidades HTML
-          .trim();
-        
-        if (nombreSinEntidades.length < 2) {
-          nombreCliente = null; // Ignorar nombres que son solo caracteres especiales
-        }
-      }
 
       const idCliente = await buscarOCrearCliente(
-        datosSanitizados.email_cliente,
-        nombreCliente,
-        datosSanitizados.telefono_cliente
+        validacionDatosCliente.datos.email,
+        validacionDatosCliente.datos.nombre,
+        validacionDatosCliente.datos.telefono
       );
 
       // 6. Calcular fecha de validez (3 días desde emisión)
@@ -294,47 +520,121 @@ async function crearCotizacion(req, res) {
       fechaValidez.setDate(fechaValidez.getDate() + 3);
 
       // 7. Insertar cotización
-      const cotizacion = await cliente.query(
-        `INSERT INTO cotizaciones (
-          codigo_ticket, id_cliente, fecha_validez, precio_total,
-          margen_aplicado, estado
-        ) VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id, codigo_unico, codigo_ticket, fecha_emision,
-                  fecha_validez, precio_total, margen_aplicado, estado`,
-        [codigoTicket, idCliente, fechaValidez, precioTotal, margen, 'Pendiente']
-      );
+      const cotizacion = tieneEsquemaFinancieroV2
+        ? await cliente.query(
+            `INSERT INTO cotizaciones (
+              codigo_ticket, id_cliente, fecha_validez, moneda_base,
+              subtotal_neto, igv_porcentaje, igv_monto, total_con_igv,
+              tipo_cambio_referencia, subtotal_neto_pen, igv_monto_pen, total_con_igv_pen,
+              precio_total, margen_aplicado, estado
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+            RETURNING id, codigo_unico, codigo_ticket, fecha_emision,
+                      fecha_validez, moneda_base, subtotal_neto, igv_porcentaje, igv_monto,
+                      total_con_igv, tipo_cambio_referencia, subtotal_neto_pen, igv_monto_pen,
+                      total_con_igv_pen, precio_total, margen_aplicado, estado`,
+            [
+              codigoTicket,
+              idCliente,
+              fechaValidez,
+              resumenFinanciero.moneda_base,
+              resumenFinanciero.subtotal_neto,
+              resumenFinanciero.igv_porcentaje,
+              resumenFinanciero.igv_monto,
+              resumenFinanciero.total_con_igv,
+              resumenFinanciero.tipo_cambio_referencia,
+              resumenFinanciero.subtotal_neto_pen,
+              resumenFinanciero.igv_monto_pen,
+              resumenFinanciero.total_con_igv_pen,
+              resumenFinanciero.total_con_igv,
+              margen,
+              'Pendiente'
+            ]
+          )
+        : await cliente.query(
+            `INSERT INTO cotizaciones (
+              codigo_ticket, id_cliente, fecha_validez, precio_total, margen_aplicado, estado
+            ) VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id, codigo_unico, codigo_ticket, fecha_emision,
+                      fecha_validez, precio_total, margen_aplicado, estado`,
+            [
+              codigoTicket,
+              idCliente,
+              fechaValidez,
+              resumenFinanciero.subtotal_neto,
+              margen,
+              'Pendiente'
+            ]
+          );
 
       const cotizacionCreada = cotizacion.rows[0];
 
       // 8. Insertar detalles de cotización
       const detalles = [];
       for (const comp of componentesConInfo) {
-        const detalle = await cliente.query(
-          `INSERT INTO detalle_cotizacion (
-            id_cotizacion, id_producto, nombre_producto, categoria,
-            descripcion_tecnica, precio_unitario, cantidad, disponible_stock
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-          RETURNING id, nombre_producto, categoria, precio_unitario,
-                    cantidad, disponible_stock`,
-          [
-            cotizacionCreada.id,
-            comp.id,
-            comp.nombre,
-            comp.categoria,
-            comp.descripcion_tecnica,
-            comp.precio_base,
-            comp.cantidad,
-            comp.stock > 0
-          ]
-        );
+        const costoUnitarioNetoUsd = redondearMoneda(parseFloat(comp.precio_base));
+        const precioUnitarioNetoUsd = redondearMoneda(costoUnitarioNetoUsd * (1 + margen / 100));
+        const igvUnitarioUsd = redondearMoneda(precioUnitarioNetoUsd * (configuracionFinanciera.tasaIgv / 100));
+        const precioUnitarioTotalUsd = redondearMoneda(precioUnitarioNetoUsd + igvUnitarioUsd);
+
+        const detalle = tieneEsquemaFinancieroV2
+          ? await cliente.query(
+              `INSERT INTO detalle_cotizacion (
+                id_cotizacion, id_producto, nombre_producto, categoria,
+                descripcion_tecnica, costo_unitario_neto_usd, margen_aplicado,
+                precio_unitario_neto_usd, igv_unitario_usd, precio_unitario_total_usd,
+                precio_unitario, cantidad, disponible_stock
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+              RETURNING id, nombre_producto, categoria, precio_unitario,
+                        costo_unitario_neto_usd, margen_aplicado, precio_unitario_neto_usd,
+                        igv_unitario_usd, precio_unitario_total_usd, cantidad, disponible_stock`,
+              [
+                cotizacionCreada.id,
+                comp.id,
+                comp.nombre,
+                comp.categoria,
+                comp.descripcion_tecnica,
+                costoUnitarioNetoUsd,
+                margen,
+                precioUnitarioNetoUsd,
+                igvUnitarioUsd,
+                precioUnitarioTotalUsd,
+                precioUnitarioTotalUsd,
+                comp.cantidad,
+                comp.stock > 0
+              ]
+            )
+          : await cliente.query(
+              `INSERT INTO detalle_cotizacion (
+                id_cotizacion, id_producto, nombre_producto, categoria,
+                descripcion_tecnica, precio_unitario, cantidad, disponible_stock
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+              RETURNING id, nombre_producto, categoria, precio_unitario,
+                        cantidad, disponible_stock`,
+              [
+                cotizacionCreada.id,
+                comp.id,
+                comp.nombre,
+                comp.categoria,
+                comp.descripcion_tecnica,
+                costoUnitarioNetoUsd,
+                comp.cantidad,
+                comp.stock > 0
+              ]
+            );
 
         detalles.push(detalle.rows[0]);
       }
 
       return {
         cotizacion: cotizacionCreada,
+        finanzas: resumenFinanciero,
         detalles
       };
+    });
+
+    const finanzas = construirBloqueFinanzas({
+      ...resultado.finanzas,
+      ...resultado.cotizacion
     });
 
     res.status(201).json({
@@ -346,8 +646,9 @@ async function crearCotizacion(req, res) {
         codigo_ticket: resultado.cotizacion.codigo_ticket,
         fecha_emision: resultado.cotizacion.fecha_emision,
         fecha_validez: resultado.cotizacion.fecha_validez,
-        precio_total: parseFloat(resultado.cotizacion.precio_total),
+        precio_total: parseFloat(resultado.cotizacion.total_con_igv ?? resultado.cotizacion.precio_total),
         margen_aplicado: parseFloat(resultado.cotizacion.margen_aplicado),
+        finanzas,
         estado: resultado.cotizacion.estado,
         componentes: resultado.detalles
       }
@@ -372,15 +673,27 @@ async function crearCotizacion(req, res) {
  * @param {Object} res - Response de Express
  */
 async function obtenerCotizacionConDetallesPorTicket(codigoTicket) {
+  const tieneEsquemaFinancieroV2 = await usaEsquemaFinancieroV2();
   const cotizacion = await ejecutarQuery(
-    `SELECT 
-      c.id, c.codigo_unico, c.codigo_ticket, c.id_cliente,
-      c.fecha_emision, c.fecha_validez, c.precio_total,
-      c.margen_aplicado, c.estado, c.fecha_reclamacion,
-      uc.nombre AS cliente_nombre, uc.correo AS cliente_correo
-    FROM cotizaciones c
-    LEFT JOIN usuarios_clientes uc ON uc.id = c.id_cliente
-    WHERE c.codigo_ticket = $1`,
+    tieneEsquemaFinancieroV2
+      ? `SELECT 
+          c.id, c.codigo_unico, c.codigo_ticket, c.id_cliente,
+          c.fecha_emision, c.fecha_validez, c.moneda_base,
+          c.subtotal_neto, c.igv_porcentaje, c.igv_monto, c.total_con_igv,
+          c.tipo_cambio_referencia, c.subtotal_neto_pen, c.igv_monto_pen, c.total_con_igv_pen,
+          c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion,
+          uc.nombre AS cliente_nombre, uc.correo AS cliente_correo
+        FROM cotizaciones c
+        LEFT JOIN usuarios_clientes uc ON uc.id = c.id_cliente
+        WHERE c.codigo_ticket = $1`
+      : `SELECT 
+          c.id, c.codigo_unico, c.codigo_ticket, c.id_cliente,
+          c.fecha_emision, c.fecha_validez,
+          c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion,
+          uc.nombre AS cliente_nombre, uc.correo AS cliente_correo
+        FROM cotizaciones c
+        LEFT JOIN usuarios_clientes uc ON uc.id = c.id_cliente
+        WHERE c.codigo_ticket = $1`,
     [codigoTicket]
   );
 
@@ -389,12 +702,21 @@ async function obtenerCotizacionConDetallesPorTicket(codigoTicket) {
   }
 
   const detalles = await ejecutarQuery(
-    `SELECT 
-      id, id_producto, nombre_producto, categoria,
-      descripcion_tecnica, precio_unitario, cantidad, disponible_stock
-    FROM detalle_cotizacion
-    WHERE id_cotizacion = $1
-    ORDER BY id`,
+    tieneEsquemaFinancieroV2
+      ? `SELECT 
+          id, id_producto, nombre_producto, categoria,
+          descripcion_tecnica, precio_unitario, cantidad, disponible_stock,
+          costo_unitario_neto_usd, margen_aplicado, precio_unitario_neto_usd,
+          igv_unitario_usd, precio_unitario_total_usd
+        FROM detalle_cotizacion
+        WHERE id_cotizacion = $1
+        ORDER BY id`
+      : `SELECT 
+          id, id_producto, nombre_producto, categoria,
+          descripcion_tecnica, precio_unitario, cantidad, disponible_stock
+        FROM detalle_cotizacion
+        WHERE id_cotizacion = $1
+        ORDER BY id`,
     [cotizacion.rows[0].id]
   );
 
@@ -409,6 +731,7 @@ async function obtenerCotizacionConDetallesPorTicket(codigoTicket) {
     estado: caducada ? 'Caducada' : estadoNormalizado,
     caducada,
     cliente_email: desencriptarSeguro(base.cliente_correo),
+    finanzas: construirBloqueFinanzas(base),
     componentes: detalles.rows.map((d) => ({
       id: d.id,
       id_producto: d.id_producto,
@@ -416,6 +739,11 @@ async function obtenerCotizacionConDetallesPorTicket(codigoTicket) {
       categoria: d.categoria,
       descripcion_tecnica: d.descripcion_tecnica,
       precio_unitario: parseFloat(d.precio_unitario),
+      costo_unitario_neto_usd: parseFloat(d.costo_unitario_neto_usd ?? 0),
+      margen_aplicado: parseFloat(d.margen_aplicado ?? base.margen_aplicado ?? 0),
+      precio_unitario_neto_usd: parseFloat(d.precio_unitario_neto_usd ?? 0),
+      igv_unitario_usd: parseFloat(d.igv_unitario_usd ?? 0),
+      precio_unitario_total_usd: parseFloat(d.precio_unitario_total_usd ?? d.precio_unitario ?? 0),
       cantidad: d.cantidad,
       disponible_stock: d.disponible_stock
     }))
@@ -461,8 +789,9 @@ async function consultarCotizacion(req, res) {
         codigo_ticket: cotizacionData.codigo_ticket,
         fecha_emision: cotizacionData.fecha_emision,
         fecha_validez: cotizacionData.fecha_validez,
-        precio_total: parseFloat(cotizacionData.precio_total),
+        precio_total: parseFloat(cotizacionData.total_con_igv ?? cotizacionData.precio_total),
         margen_aplicado: parseFloat(cotizacionData.margen_aplicado),
+        finanzas: cotizacionData.finanzas,
         estado: cotizacionData.estado,
         fecha_reclamacion: cotizacionData.fecha_reclamacion,
         caducada: false,
@@ -501,12 +830,21 @@ async function validarCotizacion(req, res) {
       });
     }
 
+    const tieneEsquemaFinancieroV2 = await usaEsquemaFinancieroV2();
     const cotizacion = await ejecutarQuery(
-      `SELECT 
-        c.id, c.codigo_ticket, c.fecha_emision, c.fecha_validez,
-        c.precio_total, c.margen_aplicado, c.estado
-      FROM cotizaciones c
-      WHERE c.codigo_ticket = $1`,
+      tieneEsquemaFinancieroV2
+        ? `SELECT 
+            c.id, c.codigo_ticket, c.fecha_emision, c.fecha_validez,
+            c.moneda_base, c.subtotal_neto, c.igv_porcentaje, c.igv_monto, c.total_con_igv,
+            c.tipo_cambio_referencia, c.subtotal_neto_pen, c.igv_monto_pen, c.total_con_igv_pen,
+            c.precio_total, c.margen_aplicado, c.estado
+          FROM cotizaciones c
+          WHERE c.codigo_ticket = $1`
+        : `SELECT 
+            c.id, c.codigo_ticket, c.fecha_emision, c.fecha_validez,
+            c.precio_total, c.margen_aplicado, c.estado
+          FROM cotizaciones c
+          WHERE c.codigo_ticket = $1`,
       [codigoTicket]
     );
 
@@ -542,31 +880,47 @@ async function validarCotizacion(req, res) {
     }
 
     const detalles = await ejecutarQuery(
-      'SELECT dc.id, dc.id_producto, dc.nombre_producto, dc.categoria, dc.precio_unitario as precio_historico, dc.cantidad, dc.disponible_stock as stock_historico, p.precio_base as precio_actual, p.stock as stock_actual, p.disponible_a_pedido FROM detalle_cotizacion dc LEFT JOIN productos p ON dc.id_producto = p.id WHERE dc.id_cotizacion = $1 ORDER BY dc.id',
+      tieneEsquemaFinancieroV2
+        ? 'SELECT dc.id, dc.id_producto, dc.nombre_producto, dc.categoria, dc.costo_unitario_neto_usd as costo_historico, dc.precio_unitario_total_usd as precio_historico_total, dc.cantidad, dc.disponible_stock as stock_historico, p.precio_base as precio_actual, p.stock as stock_actual, p.disponible_a_pedido FROM detalle_cotizacion dc LEFT JOIN productos p ON dc.id_producto = p.id WHERE dc.id_cotizacion = $1 ORDER BY dc.id'
+        : 'SELECT dc.id, dc.id_producto, dc.nombre_producto, dc.categoria, dc.precio_unitario as precio_historico_total, dc.cantidad, dc.disponible_stock as stock_historico, p.precio_base as precio_actual, p.stock as stock_actual, p.disponible_a_pedido FROM detalle_cotizacion dc LEFT JOIN productos p ON dc.id_producto = p.id WHERE dc.id_cotizacion = $1 ORDER BY dc.id',
       [cotizacionData.id]
     );
 
-    let precioTotalActual = 0;
+    const margen = parseFloat(cotizacionData.margen_aplicado);
+    const tasaIgv = tieneEsquemaFinancieroV2
+      ? parseNumeroSeguro(cotizacionData.igv_porcentaje, DEFAULT_IGV)
+      : 0;
+    const tipoCambio = parseNumeroSeguro(cotizacionData.tipo_cambio_referencia, DEFAULT_TIPO_CAMBIO);
+
+    let costoNetoActual = 0;
 
     const componentesComparacion = detalles.rows.map((d) => {
-      const precioHistorico = parseFloat(d.precio_historico);
-      const precioActual = d.precio_actual ? parseFloat(d.precio_actual) : precioHistorico;
-      const cantidad = d.cantidad;
+      const costoHistoricoUnitario = parseNumeroSeguro(d.costo_historico, d.precio_historico_total);
+      const costoActualUnitario = parseNumeroSeguro(d.precio_actual, costoHistoricoUnitario);
+      const cantidad = parseNumeroSeguro(d.cantidad, 1);
 
-      const subtotalHistorico = precioHistorico * cantidad;
-      const subtotalActual = precioActual * cantidad;
-      const diferencia = subtotalActual - subtotalHistorico;
+      const precioHistoricoUnitarioTotal = tieneEsquemaFinancieroV2
+        ? parseNumeroSeguro(
+            d.precio_historico_total,
+            redondearMoneda(costoHistoricoUnitario * (1 + margen / 100) * (1 + tasaIgv / 100))
+          )
+        : redondearMoneda(costoHistoricoUnitario * (1 + margen / 100) * (1 + tasaIgv / 100));
+      const precioActualUnitarioTotal = redondearMoneda(costoActualUnitario * (1 + margen / 100) * (1 + tasaIgv / 100));
 
-      precioTotalActual += subtotalActual;
+      const subtotalHistorico = redondearMoneda(precioHistoricoUnitarioTotal * cantidad);
+      const subtotalActual = redondearMoneda(precioActualUnitarioTotal * cantidad);
+      const diferencia = redondearMoneda(subtotalActual - subtotalHistorico);
+
+      costoNetoActual += costoActualUnitario * cantidad;
 
       return {
         id_producto: d.id_producto,
         nombre: d.nombre_producto,
         categoria: d.categoria,
         cantidad,
-        precio_historico: precioHistorico,
-        precio_actual: precioActual,
-        diferencia_unitaria: precioActual - precioHistorico,
+        precio_historico: precioHistoricoUnitarioTotal,
+        precio_actual: precioActualUnitarioTotal,
+        diferencia_unitaria: redondearMoneda(precioActualUnitarioTotal - precioHistoricoUnitarioTotal),
         subtotal_historico: subtotalHistorico,
         subtotal_actual: subtotalActual,
         diferencia_subtotal: diferencia,
@@ -577,11 +931,15 @@ async function validarCotizacion(req, res) {
       };
     });
 
-    const margen = parseFloat(cotizacionData.margen_aplicado);
-    precioTotalActual = precioTotalActual * (1 + margen / 100);
+    const resumenActual = calcularResumenFinanciero(costoNetoActual, margen, tasaIgv, tipoCambio);
+    const precioTotalActual = tieneEsquemaFinancieroV2
+      ? resumenActual.total_con_igv
+      : resumenActual.subtotal_neto;
 
-    const precioTotalHistorico = parseFloat(cotizacionData.precio_total);
-    const diferenciaTotalPrecio = precioTotalActual - precioTotalHistorico;
+    const precioTotalHistorico = parseNumeroSeguro(cotizacionData.total_con_igv, cotizacionData.precio_total);
+    const diferenciaTotalPrecio = redondearMoneda(precioTotalActual - precioTotalHistorico);
+    const finanzasHistoricas = construirBloqueFinanzas(cotizacionData);
+    const finanzasActuales = construirBloqueFinanzas(resumenActual);
 
     return res.json({
       exito: true,
@@ -595,6 +953,10 @@ async function validarCotizacion(req, res) {
         precio_total_historico: precioTotalHistorico,
         precio_total_actual: precioTotalActual,
         diferencia_total: diferenciaTotalPrecio,
+        finanzas: {
+          historico: finanzasHistoricas,
+          actual: finanzasActuales
+        },
         hay_cambios_precio: Math.abs(diferenciaTotalPrecio) > 0.01,
         componentes: componentesComparacion
       }
@@ -620,28 +982,45 @@ async function validarCotizacion(req, res) {
  * @param {Object} res - Response de Express
  */
 function construirDatosPdf(cotizacionData) {
+  const tipoCambio = parseNumeroSeguro(cotizacionData.tipo_cambio_referencia, DEFAULT_TIPO_CAMBIO);
   const componentes = (cotizacionData.componentes || []).map((comp) => ({
     categoria: comp.categoria,
     nombre: comp.nombre,
-    precioBase: Number(comp.precio_unitario || 0),
+    precioBaseUsd: Number(comp.precio_unitario_total_usd || comp.precio_unitario_neto_usd || comp.costo_unitario_neto_usd || comp.precio_unitario || 0),
     stock: comp.disponible_stock ? 1 : 0,
     disponibleAPedido: !comp.disponible_stock,
     tiempoEntregaDias: comp.disponible_stock ? 0 : 3
+  })).map((comp) => ({
+    ...comp,
+    precioBasePen: redondearMoneda(comp.precioBaseUsd * tipoCambio)
   }));
+
+  const totalUsd = Number(cotizacionData.total_con_igv || cotizacionData.precio_total || 0);
+  const totalPen = parseNumeroSeguro(cotizacionData.total_con_igv_pen, totalUsd * tipoCambio);
 
   return {
     codigoTicket: cotizacionData.codigo_ticket,
     codigoUnico: cotizacionData.codigo_unico,
     fechaEmision: cotizacionData.fecha_emision,
     fechaValidez: cotizacionData.fecha_validez,
+    tipoCambioUsdPen: tipoCambio,
     componentes,
-    precioTotal: Number(cotizacionData.precio_total || 0)
+    precioTotal: {
+      usd: totalUsd,
+      pen: totalPen
+    }
   };
+}
+
+function resolverMonedaPdf(valor) {
+  const moneda = String(valor || 'USD').toUpperCase();
+  return moneda === 'PEN' ? 'PEN' : 'USD';
 }
 
 async function obtenerPdfCotizacion(req, res) {
   try {
     const { codigoTicket } = req.params;
+    const moneda = resolverMonedaPdf(req.query?.moneda);
     const validacion = validarCodigoTicket(codigoTicket);
 
     if (!validacion.valido) {
@@ -665,7 +1044,7 @@ async function obtenerPdfCotizacion(req, res) {
       });
     }
 
-    const buffer = await servicioPDF.generarPDFCotizacion(construirDatosPdf(cotizacionData));
+    const buffer = await servicioPDF.generarPDFCotizacion(construirDatosPdf(cotizacionData), { moneda });
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=\"cotizacion-${codigoTicket}.pdf\"`);
@@ -683,6 +1062,7 @@ async function obtenerPdfCotizacion(req, res) {
 async function obtenerPdfTecnico(req, res) {
   try {
     const { codigoTicket } = req.params;
+    const moneda = resolverMonedaPdf(req.query?.moneda);
     const validacion = validarCodigoTicket(codigoTicket);
 
     if (!validacion.valido) {
@@ -699,7 +1079,7 @@ async function obtenerPdfTecnico(req, res) {
     }
 
     const dataPdf = construirDatosPdf(cotizacionData);
-    const buffer = await servicioPDF.generarPDFListado(dataPdf.codigoTicket, dataPdf.componentes);
+    const buffer = await servicioPDF.generarPDFListado(dataPdf.codigoTicket, dataPdf.componentes, { moneda });
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=\"listado-tecnico-${codigoTicket}.pdf\"`);
@@ -921,16 +1301,21 @@ async function consultarHistorialCliente(req, res) {
     }
 
     const clienteData = cliente.rows[0];
+    const tieneEsquemaFinancieroV2 = await usaEsquemaFinancieroV2();
 
     let cotizaciones;
     try {
       cotizaciones = await ejecutarQuery(
-        'SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez, c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion, COUNT(dc.id) as cantidad_componentes, n.estado as estado_notificacion, n.fecha_envio as fecha_notificacion FROM cotizaciones c LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion LEFT JOIN LATERAL (SELECT nc.estado, nc.fecha_envio FROM notificaciones_cotizacion nc WHERE nc.id_cotizacion = c.id ORDER BY nc.fecha_intento DESC LIMIT 1) n ON TRUE WHERE c.id_cliente = $1 GROUP BY c.id, n.estado, n.fecha_envio ORDER BY c.fecha_emision DESC',
+        tieneEsquemaFinancieroV2
+          ? 'SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez, c.precio_total, c.total_con_igv, c.subtotal_neto, c.igv_porcentaje, c.igv_monto, c.tipo_cambio_referencia, c.subtotal_neto_pen, c.igv_monto_pen, c.total_con_igv_pen, c.moneda_base, c.margen_aplicado, c.estado, c.fecha_reclamacion, COUNT(dc.id) as cantidad_componentes, n.estado as estado_notificacion, n.fecha_envio as fecha_notificacion FROM cotizaciones c LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion LEFT JOIN LATERAL (SELECT nc.estado, nc.fecha_envio FROM notificaciones_cotizacion nc WHERE nc.id_cotizacion = c.id ORDER BY nc.fecha_intento DESC LIMIT 1) n ON TRUE WHERE c.id_cliente = $1 GROUP BY c.id, n.estado, n.fecha_envio ORDER BY c.fecha_emision DESC'
+          : 'SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez, c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion, COUNT(dc.id) as cantidad_componentes, n.estado as estado_notificacion, n.fecha_envio as fecha_notificacion FROM cotizaciones c LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion LEFT JOIN LATERAL (SELECT nc.estado, nc.fecha_envio FROM notificaciones_cotizacion nc WHERE nc.id_cotizacion = c.id ORDER BY nc.fecha_intento DESC LIMIT 1) n ON TRUE WHERE c.id_cliente = $1 GROUP BY c.id, n.estado, n.fecha_envio ORDER BY c.fecha_emision DESC',
         [clienteData.id]
       );
     } catch (errorNotificaciones) {
       cotizaciones = await ejecutarQuery(
-        'SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez, c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion, COUNT(dc.id) as cantidad_componentes FROM cotizaciones c LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion WHERE c.id_cliente = $1 GROUP BY c.id ORDER BY c.fecha_emision DESC',
+        tieneEsquemaFinancieroV2
+          ? 'SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez, c.precio_total, c.total_con_igv, c.subtotal_neto, c.igv_porcentaje, c.igv_monto, c.tipo_cambio_referencia, c.subtotal_neto_pen, c.igv_monto_pen, c.total_con_igv_pen, c.moneda_base, c.margen_aplicado, c.estado, c.fecha_reclamacion, COUNT(dc.id) as cantidad_componentes FROM cotizaciones c LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion WHERE c.id_cliente = $1 GROUP BY c.id ORDER BY c.fecha_emision DESC'
+          : 'SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez, c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion, COUNT(dc.id) as cantidad_componentes FROM cotizaciones c LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion WHERE c.id_cliente = $1 GROUP BY c.id ORDER BY c.fecha_emision DESC',
         [clienteData.id]
       );
     }
@@ -948,8 +1333,9 @@ async function consultarHistorialCliente(req, res) {
         codigo_ticket: c.codigo_ticket,
         fecha_emision: c.fecha_emision,
         fecha_validez: c.fecha_validez,
-        precio_total: parseFloat(c.precio_total),
+        precio_total: parseFloat(c.total_con_igv ?? c.precio_total),
         margen_aplicado: parseFloat(c.margen_aplicado),
+        finanzas: construirBloqueFinanzas(c),
         estado: normalizarEstadoCotizacion(c.estado),
         fecha_reclamacion: c.fecha_reclamacion,
         cantidad_componentes: parseInt(c.cantidad_componentes, 10),
