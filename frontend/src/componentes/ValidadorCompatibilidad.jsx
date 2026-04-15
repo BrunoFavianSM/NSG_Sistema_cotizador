@@ -17,8 +17,12 @@ import PropTypes from 'prop-types';
 const ValidadorCompatibilidad = ({
   resultadoValidacion,
   mostrar = true,
+  validando = false,
   className = ''
 }) => {
+  const reducedMotion = typeof window !== 'undefined'
+    && typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // Si no hay resultado o no se debe mostrar, no renderizar nada
   if (!mostrar || !resultadoValidacion) {
     return null;
@@ -38,14 +42,14 @@ const ValidadorCompatibilidad = ({
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.3,
+        duration: reducedMotion ? 0 : 0.3,
         staggerChildren: 0.1
       }
     },
     exit: {
       opacity: 0,
       y: -20,
-      transition: { duration: 0.2 }
+      transition: { duration: reducedMotion ? 0 : 0.2 }
     }
   };
 
@@ -54,7 +58,7 @@ const ValidadorCompatibilidad = ({
     visible: {
       opacity: 1,
       x: 0,
-      transition: { duration: 0.3 }
+      transition: { duration: reducedMotion ? 0 : 0.3 }
     }
   };
 
@@ -67,6 +71,18 @@ const ValidadorCompatibilidad = ({
         exit="exit"
         className={`validador-compatibilidad ${className}`}
       >
+        {validando && (
+          <motion.div
+            variants={variantesItem}
+            className="mb-3 flex min-h-11 items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-3 py-2 text-sm text-[var(--color-text-muted)]"
+            role="status"
+            aria-live="polite"
+          >
+            <span className="inline-block h-3 w-3 animate-pulse rounded-full bg-[var(--color-accent)]" aria-hidden="true" />
+            Validando compatibilidad de componentes...
+          </motion.div>
+        )}
+
         {/* Errores de incompatibilidad */}
         {errores.length > 0 && (
           <motion.div
@@ -92,6 +108,7 @@ const ValidadorCompatibilidad = ({
               <div className="ml-3 flex-1">
                 <h3 className="text-sm font-semibold text-red-800 mb-2">
                   Incompatibilidades Detectadas
+                  <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-red-700">Critico</span>
                 </h3>
                 <ul className="space-y-2">
                   {errores.map((error, index) => (
@@ -100,7 +117,7 @@ const ValidadorCompatibilidad = ({
                       variants={variantesItem}
                       className="text-sm text-red-700 flex items-start"
                     >
-                      <span className="mr-2 flex-shrink-0">�?�</span>
+                      <span className="mr-2 flex-shrink-0">•</span>
                       <span className="flex-1">{error}</span>
                     </motion.li>
                   ))}
@@ -138,6 +155,7 @@ const ValidadorCompatibilidad = ({
               <div className="ml-3 flex-1">
                 <h3 className="text-sm font-semibold text-yellow-800 mb-2">
                   Advertencias
+                  <span className="ml-2 rounded-full bg-yellow-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-yellow-700">Advertencia</span>
                 </h3>
                 <ul className="space-y-2">
                   {advertencias.map((advertencia, index) => (
@@ -146,7 +164,7 @@ const ValidadorCompatibilidad = ({
                       variants={variantesItem}
                       className="text-sm text-yellow-700 flex items-start"
                     >
-                      <span className="mr-2 flex-shrink-0">�?�</span>
+                      <span className="mr-2 flex-shrink-0">•</span>
                       <span className="flex-1">{advertencia}</span>
                     </motion.li>
                   ))}
@@ -204,6 +222,7 @@ ValidadorCompatibilidad.propTypes = {
     advertencias: PropTypes.arrayOf(PropTypes.string)
   }),
   mostrar: PropTypes.bool,
+  validando: PropTypes.bool,
   className: PropTypes.string
 };
 

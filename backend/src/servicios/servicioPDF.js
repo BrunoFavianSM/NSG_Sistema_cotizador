@@ -47,13 +47,31 @@ function formatearFecha(fecha) {
 
 function formatearCategoria(categoria) {
   const mapa = {
+    // Armado PC
     procesador: 'Procesador',
     placa_madre: 'Placa Madre',
     ram: 'RAM',
     almacenamiento: 'Almacenamiento',
     gpu: 'GPU',
     fuente: 'Fuente',
-    case: 'Case'
+    case: 'Case',
+    // Extras
+    mouse: 'Mouse',
+    teclado: 'Teclado',
+    webcam: 'Webcam',
+    auricular: 'Auricular',
+    parlante: 'Parlante',
+    software_windows: 'Windows',
+    software_office: 'Office',
+    software_antivirus: 'Antivirus',
+    almacenamiento_externo: 'Almac. Externo',
+    ups: 'UPS',
+    estabilizador: 'Estabilizador',
+    monitor: 'Monitor',
+    cooler_aire: 'Cooler Aire',
+    cooler_liquido: 'Cooler Líquido',
+    conectividad: 'Conectividad',
+    mousepad: 'Mousepad',
   };
   return mapa[categoria] || categoria;
 }

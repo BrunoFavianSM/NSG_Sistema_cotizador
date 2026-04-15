@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Servicio de API
  * 
  * Cliente Axios configurado para comunicación con el backend
@@ -169,9 +169,12 @@ export const obtenerProductos = async (filtros = {}) => {
  * @param {number} id - ID del producto
  * @returns {Promise<Object>}
  */
-export const obtenerProductoPorId = async (id) => {
+export const obtenerProductoPorId = async (categoria, id) => {
   try {
-    const response = await api.get(`/productos/${id}`);
+    if (id === undefined) {
+      throw new Error('Debe enviar categoria e id para obtenerProductoPorId');
+    }
+    const response = await api.get(`/productos/${categoria}/${id}`);
     return response.data;
   } catch (error) {
     throw error;
@@ -198,9 +201,12 @@ export const crearProducto = async (producto) => {
  * @param {Object} producto - Datos actualizados del producto
  * @returns {Promise<Object>}
  */
-export const actualizarProducto = async (id, producto) => {
+export const actualizarProducto = async (categoria, id, producto) => {
   try {
-    const response = await api.put(`/productos/${id}`, producto);
+    if (producto === undefined) {
+      throw new Error('Debe enviar categoria, id y producto para actualizarProducto');
+    }
+    const response = await api.put(`/productos/${categoria}/${id}`, producto);
     return response.data;
   } catch (error) {
     throw error;
@@ -212,9 +218,87 @@ export const actualizarProducto = async (id, producto) => {
  * @param {number} id - ID del producto
  * @returns {Promise<Object>}
  */
-export const eliminarProducto = async (id) => {
+export const eliminarProducto = async (categoria, id) => {
   try {
-    const response = await api.delete(`/productos/${id}`);
+    if (id === undefined) {
+      throw new Error('Debe enviar categoria e id para eliminarProducto');
+    }
+    const response = await api.delete(`/productos/${categoria}/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// ============================================
+// FUNCIONES DE PRODUCTOS — MULTI-TABLA
+// ============================================
+
+/**
+ * Obtiene productos de una categoría específica (tabla nueva)
+ * @param {string} categoria - Categoría normalizada (e.g. 'procesador', 'mouse')
+ * @param {Object} filtros - Filtros adicionales (socket, marca, etc.)
+ * @returns {Promise<{exito:boolean, cantidad:number, productos:Array}>}
+ */
+export const obtenerProductosPorCategoria = async (categoria, filtros = {}) => {
+  try {
+    const response = await api.get('/productos', {
+      params: { categoria, ...filtros }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Sube imagen de producto (requiere autenticación)
+ * @param {string} categoria - Categoría del producto
+ * @param {number} id - ID del producto
+ * @param {File} archivo - Archivo de imagen (JPEG, PNG, WebP)
+ * @returns {Promise<Object>}
+ */
+export const subirImagenProducto = async (categoria, id, archivo) => {
+  try {
+    const formData = new FormData();
+    formData.append('imagen', archivo);
+    const response = await api.post(`/productos/${categoria}/${id}/imagen`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Limpia todo el catálogo de productos (requiere autenticación)
+ * Elimina todos los registros de las 23 tablas de productos.
+ * @returns {Promise<Object>}
+ */
+export const limpiarCatalogo = async () => {
+  try {
+    const response = await api.delete('/productos/limpiar');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+
+/**
+ * Importa catálogo de productos desde archivo CSV
+ * @param {File} archivo - Archivo .csv
+ * @returns {Promise<{exito:boolean, insertados:number, actualizados:number, omitidos:number, errores:number, detalle_errores:Array}>}
+ */
+export const importarCSV = async (archivo) => {
+  try {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+    const response = await api.post('/importacion/csv', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120000 // 2 minutos para archivos grandes
+    });
     return response.data;
   } catch (error) {
     throw error;

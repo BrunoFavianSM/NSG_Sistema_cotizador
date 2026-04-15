@@ -1,4 +1,4 @@
-﻿import { useEffect } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppProvider, useAppContext } from './contexto/AppContext';
 import { AccessibilityProvider } from './componentes/accesibilidad/AccessibilityProvider';
@@ -11,6 +11,7 @@ import ValidadorCotizaciones from './paginas/ValidadorCotizaciones';
 import HistorialCliente from './paginas/HistorialCliente';
 import AdminProductos from './paginas/AdminProductos';
 import AdminConfiguracion from './paginas/AdminConfiguracion';
+import ImportarCSV from './paginas/ImportarCSV';
 import { THEME_STORAGE_KEY, applyThemeClass } from './theme';
 
 function RutaProtegida({ children }) {
@@ -40,6 +41,7 @@ function AppRoutes() {
           <Route path="/admin" element={<Navigate to="/admin/productos" replace />} />
           <Route path="/admin/productos" element={<RutaProtegida><AdminProductos /></RutaProtegida>} />
           <Route path="/admin/configuracion" element={<RutaProtegida><AdminConfiguracion /></RutaProtegida>} />
+          <Route path="/admin/importar-csv" element={<RutaProtegida><ImportarCSV /></RutaProtegida>} />
           <Route path="*" element={<Navigate to="/cotizador" replace />} />
         </Route>
       </Routes>

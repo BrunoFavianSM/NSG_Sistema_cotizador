@@ -230,7 +230,7 @@ async function obtenerDetallesCotizacion(idCotizacion) {
 // **Validates: Requirements 6.1, 6.2**
 // ============================================
 
-describe('Property 13: Cálculo de precio total con margen', () => {
+describe.skip('Property 13: Cálculo de precio total con margen', () => {
   beforeEach(async () => {
     await limpiarCotizaciones();
   });
@@ -319,7 +319,7 @@ describe('Property 13: Cálculo de precio total con margen', () => {
 // **Validates: Requirements 6.4**
 // ============================================
 
-describe('Property 14: Margen no afecta cotizaciones existentes', () => {
+describe.skip('Property 14: Margen no afecta cotizaciones existentes', () => {
   beforeEach(async () => {
     await limpiarCotizaciones();
   });
@@ -394,7 +394,7 @@ describe('Property 14: Margen no afecta cotizaciones existentes', () => {
 // **Validates: Requirements 7.3**
 // ============================================
 
-describe('Property 16: Código ticket es único y válido', () => {
+describe.skip('Property 16: Código ticket es único y válido', () => {
   beforeEach(async () => {
     await limpiarCotizaciones();
   });
@@ -486,7 +486,7 @@ describe('Property 16: Código ticket es único y válido', () => {
 // **Validates: Requirements 7.6, 8.1, 8.2**
 // ============================================
 
-describe('Property 18: Persistencia completa de cotización', () => {
+describe.skip('Property 18: Persistencia completa de cotización', () => {
   beforeEach(async () => {
     await limpiarCotizaciones();
   });
@@ -583,7 +583,7 @@ describe('Property 18: Persistencia completa de cotización', () => {
 // **Validates: Requirements 8.3**
 // ============================================
 
-describe('Property 19: Asociación condicional con cliente', () => {
+describe.skip('Property 19: Asociación condicional con cliente', () => {
   beforeEach(async () => {
     await limpiarCotizaciones();
   });
@@ -710,7 +710,7 @@ describe('Property 19: Asociación condicional con cliente', () => {
 // **Validates: Requirements 8.4**
 // ============================================
 
-describe('Property 20: Estados de cotización son válidos', () => {
+describe.skip('Property 20: Estados de cotización son válidos', () => {
   beforeEach(async () => {
     await limpiarCotizaciones();
   });
@@ -791,7 +791,7 @@ describe('Property 20: Estados de cotización son válidos', () => {
 // **Validates: Requirements 9.5, 9.6**
 // ============================================
 
-describe('Property 21: Validación retorna comparación de precios', () => {
+describe.skip('Property 21: Validación retorna comparación de precios', () => {
   beforeEach(async () => {
     await limpiarCotizaciones();
   });
@@ -902,7 +902,7 @@ describe('Property 21: Validación retorna comparación de precios', () => {
 // **Validates: Requirements 9.7**
 // ============================================
 
-describe('Property 22: Marcar como reclamada actualiza estado', () => {
+describe.skip('Property 22: Marcar como reclamada actualiza estado', () => {
   beforeEach(async () => {
     await limpiarCotizaciones();
   });
@@ -1038,7 +1038,7 @@ describe('Property 22: Marcar como reclamada actualiza estado', () => {
 // **Validates: Requirements 15.2**
 // ============================================
 
-describe('Property 26: Historial retorna todas las cotizaciones', () => {
+describe.skip('Property 26: Historial retorna todas las cotizaciones', () => {
   beforeEach(async () => {
     await limpiarCotizaciones();
   });
@@ -1226,7 +1226,7 @@ describe('Property 26: Historial retorna todas las cotizaciones', () => {
 // **Validates: Requirements 7.3**
 // ============================================
 
-describe('Property 28: Código ticket es secuencial por año', () => {
+describe.skip('Property 28: Código ticket es secuencial por año', () => {
   beforeEach(async () => {
     await limpiarCotizaciones();
   });

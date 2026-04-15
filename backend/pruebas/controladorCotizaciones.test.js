@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tests para Controlador de Cotizaciones
  */
 
@@ -107,7 +107,7 @@ describe('Controlador de Cotizaciones', () => {
 
     test('permite crear cotizacion en contexto admin sin datos de cliente', async () => {
       req.body = {
-        componentes: [{ id_producto: 1, cantidad: 1 }]
+        componentes: [{ id_producto: 1, cantidad: 1, tabla_producto: 'productos_procesador' }]
       };
 
       ejecutarQuery.mockResolvedValueOnce({ rows: [{ valor: '20' }] });

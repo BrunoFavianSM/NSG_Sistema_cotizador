@@ -1,14 +1,14 @@
-/**
+﻿/**
  * Controlador de Cotizaciones
  * 
  * Maneja todas las operaciones relacionadas con cotizaciones:
- * - Creación de cotizaciones con código ticket secuencial
- * - Cálculo de precio total con margen configurable
+ * - CreaciÃ³n de cotizaciones con cÃ³digo ticket secuencial
+ * - CÃ¡lculo de precio total con margen configurable
  * - Persistencia en tablas cotizaciones y detalle_cotizacion
- * - Asociación condicional con cliente (por email)
- * - Consulta por código ticket
- * - Validación de cotización con comparación de precios
- * - Marcar cotización como reclamada
+ * - AsociaciÃ³n condicional con cliente (por email)
+ * - Consulta por cÃ³digo ticket
+ * - ValidaciÃ³n de cotizaciÃ³n con comparaciÃ³n de precios
+ * - Marcar cotizaciÃ³n como reclamada
  * - Consulta de historial por cliente
  * 
  * Requisitos: 6.1, 6.2, 6.3, 6.4, 7.3, 7.6, 8.1, 8.2, 8.3, 8.4, 
@@ -26,6 +26,7 @@ const { encriptar, desencriptar, hashBusqueda } = require('../utilidades/encript
 const jwt = require('jsonwebtoken');
 const servicioPDF = require('../servicios/servicioPDF');
 const { enviarNotificacionListo } = require('../servicios/servicioNotificaciones');
+const { TABLAS_VALIDAS, resolverDestinoOperacion } = require('./controladorProductos');
 
 const ESTADO_COMPLETADA = 'Completada';
 const MONEDA_BASE = 'USD';
@@ -121,14 +122,14 @@ function validarDatosClienteParaCotizacion({ esAdmin, email, nombre, telefono })
   if (emailNormalizado) {
     const validacionEmail = validarEmail(emailNormalizado);
     if (!validacionEmail.valido) {
-      errores.push(validacionEmail.error || 'Formato de correo inválido');
+      errores.push(validacionEmail.error || 'Formato de correo invÃ¡lido');
     }
   }
 
   if (telefonoNormalizado) {
     const validacionTelefono = validarTelefono(telefonoNormalizado);
     if (!validacionTelefono.valido) {
-      errores.push(validacionTelefono.error || 'Formato de teléfono inválido');
+      errores.push(validacionTelefono.error || 'Formato de telÃ©fono invÃ¡lido');
     }
   }
 
@@ -263,10 +264,10 @@ async function usaEsquemaFinancieroV2() {
 }
 
 /**
- * Genera un código ticket secuencial (NSG-YYYY-NNNN)
- * Usa la función de PostgreSQL para garantizar secuencialidad
+ * Genera un cÃ³digo ticket secuencial (NSG-YYYY-NNNN)
+ * Usa la funciÃ³n de PostgreSQL para garantizar secuencialidad
  * 
- * @returns {Promise<string>} Código ticket generado
+ * @returns {Promise<string>} CÃ³digo ticket generado
  */
 async function generarCodigoTicket() {
   try {
@@ -277,8 +278,8 @@ async function generarCodigoTicket() {
     
     return resultado.rows[0].codigo;
   } catch (error) {
-    console.error('Error al generar código ticket:', error);
-    throw new Error('No se pudo generar código ticket');
+    console.error('Error al generar cÃ³digo ticket:', error);
+    throw new Error('No se pudo generar cÃ³digo ticket');
   }
 }
 
@@ -287,7 +288,7 @@ async function generarCodigoTicket() {
  * 
  * @param {string} email - Email del cliente
  * @param {string} nombre - Nombre del cliente (opcional)
- * @param {string} telefono - Teléfono del cliente (opcional)
+ * @param {string} telefono - TelÃ©fono del cliente (opcional)
  * @returns {Promise<number|null>} ID del cliente o null si no hay email
  */
 async function buscarOCrearCliente(email, nombre = null, telefono = null) {
@@ -298,11 +299,11 @@ async function buscarOCrearCliente(email, nombre = null, telefono = null) {
   // Validar email
   const validacionEmail = validarEmail(email);
   if (!validacionEmail.valido) {
-    throw new Error(`Email inválido: ${validacionEmail.error}`);
+    throw new Error(`Email invÃ¡lido: ${validacionEmail.error}`);
   }
   
   try {
-    // Usar hash determinístico para búsqueda (AES-CBC no es determinístico)
+    // Usar hash determinÃ­stico para bÃºsqueda (AES-CBC no es determinÃ­stico)
     const emailHash = hashBusqueda(validacionEmail.email);
     
     // Buscar cliente existente por hash
@@ -354,7 +355,7 @@ async function buscarOCrearCliente(email, nombre = null, telefono = null) {
     return nuevoCliente.rows[0].id;
   } catch (error) {
     console.error('Error al buscar/crear cliente:', error);
-    throw new Error('Error al procesar información del cliente');
+    throw new Error('Error al procesar informaciÃ³n del cliente');
   }
 }
 
@@ -375,7 +376,7 @@ function calcularPrecioTotal(componentes, margen) {
 }
 
 /**
- * Crear una nueva cotización
+ * Crear una nueva cotizaciÃ³n
  * 
  * POST /api/cotizaciones
  * Body: {
@@ -395,7 +396,7 @@ async function crearCotizacion(req, res) {
     
     // Sanitizar datos de entrada (excepto email que se maneja por separado)
     const datosSanitizados = sanitizarObjeto(req.body);
-    // Restaurar email original para que no sea alterado por la sanitización HTML
+    // Restaurar email original para que no sea alterado por la sanitizaciÃ³n HTML
     if (emailOriginal) {
       datosSanitizados.email_cliente = emailOriginal.trim().toLowerCase();
     }
@@ -415,7 +416,7 @@ async function crearCotizacion(req, res) {
       });
     }
 
-    // Validar estructura básica
+    // Validar estructura bÃ¡sica
     if (!datosSanitizados.componentes || !Array.isArray(datosSanitizados.componentes)) {
       return res.status(400).json({
         error: 'Datos inválidos',
@@ -430,12 +431,25 @@ async function crearCotizacion(req, res) {
       });
     }
 
-    // Validar que cada componente tenga id_producto
+    // Validar que cada componente tenga id_producto y tabla_producto
     for (const comp of datosSanitizados.componentes) {
       if (!comp.id_producto || isNaN(comp.id_producto)) {
         return res.status(400).json({
           error: 'Datos inválidos',
-          mensaje: 'Cada componente debe tener un id_producto válido'
+          mensaje: 'Cada componente debe tener un id_producto vÃ¡lido'
+        });
+      }
+      if (!comp.tabla_producto || typeof comp.tabla_producto !== 'string') {
+        return res.status(400).json({
+          error: 'Datos inválidos',
+          mensaje: 'Cada componente debe incluir tabla_producto'
+        });
+      }
+      const cat = comp.tabla_producto.replace(/^productos_/, '');
+      if (!TABLAS_VALIDAS.has(cat)) {
+        return res.status(400).json({
+          error: 'Datos inválidos',
+          mensaje: `tabla_producto invÃ¡lida: "${comp.tabla_producto}"`
         });
       }
     }
@@ -444,7 +458,7 @@ async function crearCotizacion(req, res) {
     const margenPersonalizado = validarMargenPersonalizado(datosSanitizados.margen_personalizado);
     if (datosSanitizados.margen_personalizado !== undefined && margenPersonalizado === null) {
       return res.status(400).json({
-        error: 'Datos inválidos',
+        error: 'Datos invÃ¡lidos',
         mensaje: 'margen_personalizado debe ser un numero entre 0 y 100'
       });
     }
@@ -452,36 +466,69 @@ async function crearCotizacion(req, res) {
 
     const tieneEsquemaFinancieroV2 = await usaEsquemaFinancieroV2();
 
-    // Usar transacción para garantizar consistencia
+    // Usar transacciÃ³n para garantizar consistencia
     const resultado = await ejecutarTransaccion(async (cliente) => {
-      // 1. Obtener información de productos
+      // 1. Obtener información de productos (multi-tabla canónica)
+      const gruposPorTabla = new Map();
+      for (const comp of datosSanitizados.componentes) {
+        const categoriaEntrada = comp.tabla_producto.replace(/^productos_/, '');
+        const destino = resolverDestinoOperacion(categoriaEntrada);
+        const tablaCanonica = destino.tabla;
+        const subcategoriaCanonica = destino.subcategoria;
+
+        if (!gruposPorTabla.has(tablaCanonica)) {
+          gruposPorTabla.set(tablaCanonica, []);
+        }
+        gruposPorTabla.get(tablaCanonica).push({
+          id: comp.id_producto,
+          subcategoria: subcategoriaCanonica
+        });
+      }
+
+      const mapaProductos = new Map();
+      for (const [tabla, items] of gruposPorTabla) {
+        const ids = items.map((item) => item.id);
+        const subcategorias = [...new Set(items.map((item) => item.subcategoria).filter(Boolean))];
+        let filtroSubcategoria = '';
+
+        if (subcategorias.length === 1) {
+          filtroSubcategoria = ` AND subcategoria = $${ids.length + 1}`;
+        } else if (subcategorias.length > 1) {
+          throw new Error(`No se permiten múltiples subcategorías para la misma tabla en una cotización (${tabla})`);
+        }
+
+        const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
+        const resultado = await cliente.query(
+          `SELECT id, nombre, categoria, precio_base, stock, disponible_a_pedido,
+                  descripcion_tecnica
+           FROM ${tabla}
+           WHERE id IN (${placeholders})${filtroSubcategoria}`,
+          subcategorias.length === 1 ? [...ids, subcategorias[0]] : ids
+        );
+
+        for (const row of resultado.rows) {
+          row._tabla_producto = tabla;
+          mapaProductos.set(`${tabla}:${row.id}`, row);
+        }
+      }
+
       const idsProductos = datosSanitizados.componentes.map(c => c.id_producto);
-      const placeholders = idsProductos.map((_, i) => `$${i + 1}`).join(',');
-
-      const productos = await cliente.query(
-        `SELECT id, nombre, categoria, precio_base, stock, disponible_a_pedido,
-                descripcion_tecnica
-         FROM productos
-         WHERE id IN (${placeholders})`,
-        idsProductos
-      );
-
-      if (productos.rows.length !== idsProductos.length) {
+      if (mapaProductos.size !== idsProductos.length) {
         throw new Error('Uno o más productos no existen');
       }
 
-      // Crear mapa de productos para acceso rápido
-      const mapaProductos = new Map(productos.rows.map(p => [p.id, p]));
-
       // 2. Validar disponibilidad y preparar componentes
       const componentesConInfo = datosSanitizados.componentes.map(comp => {
-        const producto = mapaProductos.get(comp.id_producto);
+        const categoriaEntrada = comp.tabla_producto.replace(/^productos_/, '');
+        const destino = resolverDestinoOperacion(categoriaEntrada);
+        const tablaProducto = destino.tabla;
+        const clave = `${tablaProducto}:${comp.id_producto}`;
+        const producto = mapaProductos.get(clave);
 
         if (!producto) {
-          throw new Error(`Producto ${comp.id_producto} no encontrado`);
+          throw new Error(`Producto ${comp.id_producto} no encontrado en ${tablaProducto}`);
         }
 
-        // Validar disponibilidad
         if (producto.stock === 0 && !producto.disponible_a_pedido) {
           throw new Error(`Producto "${producto.nombre}" no está disponible`);
         }
@@ -489,6 +536,7 @@ async function crearCotizacion(req, res) {
         return {
           ...comp,
           ...producto,
+          tabla_producto: tablaProducto,
           cantidad: comp.cantidad || 1
         };
       });
@@ -504,7 +552,7 @@ async function crearCotizacion(req, res) {
         configuracionFinanciera.tipoCambioUsdPen
       );
 
-      // 4. Generar código ticket
+      // 4. Generar cÃ³digo ticket
       const codigoTicket = await generarCodigoTicket();
 
       // 5. Buscar o crear cliente (si se proporciona email)
@@ -515,11 +563,11 @@ async function crearCotizacion(req, res) {
         validacionDatosCliente.datos.telefono
       );
 
-      // 6. Calcular fecha de validez (3 días desde emisión)
+      // 6. Calcular fecha de validez (3 dÃ­as desde emisiÃ³n)
       const fechaValidez = new Date();
       fechaValidez.setDate(fechaValidez.getDate() + 3);
 
-      // 7. Insertar cotización
+      // 7. Insertar cotizaciÃ³n
       const cotizacion = tieneEsquemaFinancieroV2
         ? await cliente.query(
             `INSERT INTO cotizaciones (
@@ -568,7 +616,7 @@ async function crearCotizacion(req, res) {
 
       const cotizacionCreada = cotizacion.rows[0];
 
-      // 8. Insertar detalles de cotización
+      // 8. Insertar detalles de cotizaciÃ³n
       const detalles = [];
       for (const comp of componentesConInfo) {
         const costoUnitarioNetoUsd = redondearMoneda(parseFloat(comp.precio_base));
@@ -579,17 +627,18 @@ async function crearCotizacion(req, res) {
         const detalle = tieneEsquemaFinancieroV2
           ? await cliente.query(
               `INSERT INTO detalle_cotizacion (
-                id_cotizacion, id_producto, nombre_producto, categoria,
+                id_cotizacion, id_producto, tabla_producto, nombre_producto, categoria,
                 descripcion_tecnica, costo_unitario_neto_usd, margen_aplicado,
                 precio_unitario_neto_usd, igv_unitario_usd, precio_unitario_total_usd,
                 precio_unitario, cantidad, disponible_stock
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-              RETURNING id, nombre_producto, categoria, precio_unitario,
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+              RETURNING id, nombre_producto, categoria, tabla_producto, precio_unitario,
                         costo_unitario_neto_usd, margen_aplicado, precio_unitario_neto_usd,
                         igv_unitario_usd, precio_unitario_total_usd, cantidad, disponible_stock`,
               [
                 cotizacionCreada.id,
                 comp.id,
+                comp.tabla_producto,
                 comp.nombre,
                 comp.categoria,
                 comp.descripcion_tecnica,
@@ -605,14 +654,15 @@ async function crearCotizacion(req, res) {
             )
           : await cliente.query(
               `INSERT INTO detalle_cotizacion (
-                id_cotizacion, id_producto, nombre_producto, categoria,
+                id_cotizacion, id_producto, tabla_producto, nombre_producto, categoria,
                 descripcion_tecnica, precio_unitario, cantidad, disponible_stock
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-              RETURNING id, nombre_producto, categoria, precio_unitario,
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+              RETURNING id, nombre_producto, categoria, tabla_producto, precio_unitario,
                         cantidad, disponible_stock`,
               [
                 cotizacionCreada.id,
                 comp.id,
+                comp.tabla_producto,
                 comp.nombre,
                 comp.categoria,
                 comp.descripcion_tecnica,
@@ -639,7 +689,7 @@ async function crearCotizacion(req, res) {
 
     res.status(201).json({
       exito: true,
-      mensaje: 'Cotización creada exitosamente',
+      mensaje: 'CotizaciÃ³n creada exitosamente',
       cotizacion: {
         id: resultado.cotizacion.id,
         codigo_unico: resultado.cotizacion.codigo_unico,
@@ -654,18 +704,18 @@ async function crearCotizacion(req, res) {
       }
     });
   } catch (error) {
-    console.error('Error al crear cotización:', error);
+    console.error('Error al crear cotizaciÃ³n:', error);
 
     res.status(500).json({
-      error: 'Error al crear cotización',
-      mensaje: error.message || 'No se pudo crear la cotización'
+      error: 'Error al crear cotizaciÃ³n',
+      mensaje: error.message || 'No se pudo crear la cotizaciÃ³n'
     });
   }
 }
 
 
 /**
- * Consultar cotización por código ticket
+ * Consultar cotizaciÃ³n por cÃ³digo ticket
  * 
  * GET /api/cotizaciones/:codigoTicket
  * 
@@ -810,7 +860,7 @@ async function consultarCotizacion(req, res) {
 
 
 /**
- * Validar cotización con comparación de precios
+ * Validar cotizaciÃ³n con comparaciÃ³n de precios
  * 
  * GET /api/cotizaciones/:codigoTicket/validar
  * 
@@ -973,7 +1023,7 @@ async function validarCotizacion(req, res) {
 
 
 /**
- * Marcar cotización como reclamada
+ * Marcar cotizaciÃ³n como reclamada
  * 
  * PUT /api/cotizaciones/:codigoTicket/reclamar
  * Body: { id_vendedor?: number, notas_vendedor?: string }
@@ -1369,3 +1419,4 @@ module.exports = {
   buscarOCrearCliente,
   calcularPrecioTotal
 };
+

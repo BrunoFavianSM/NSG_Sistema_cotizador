@@ -1,6 +1,6 @@
-﻿/**
+/**
  * Servicio de Compatibilidad de Componentes
- * Valida compatibilidad tecnica entre componentes.
+ * Reglas basadas en tablas specs_* (fuente de verdad en BD)
  */
 
 class ServicioCompatibilidad {
@@ -8,91 +8,18 @@ class ServicioCompatibilidad {
     if (!valor) return null;
     const texto = String(valor).toLowerCase().replace(/\s+/g, '').replace('_', '-');
 
-    if (texto.includes('mini-itx') || texto === 'itx') return 'Mini-ITX';
-    if (texto.includes('micro-atx') || texto.includes('matx')) return 'Micro-ATX';
-    if (texto === 'atx' || texto.includes('/atx') || texto.includes('atx/')) return 'ATX';
+    if (texto.includes('mini-itx') || texto === 'itx') return 'MINI-ITX';
+    if (texto.includes('micro-atx') || texto.includes('matx')) return 'MICRO-ATX';
+    if (texto.includes('e-atx') || texto.includes('eatx')) return 'E-ATX';
+    if (texto.includes('atx')) return 'ATX';
 
-    return valor;
+    return String(valor).toUpperCase();
   }
 
-  /**
-   * @param {Object} componentes
-   * @returns {{compatible:boolean, errores:string[], advertencias:string[]}}
-   */
-  validarConfiguracion(componentes) {
-    const errores = [];
-    const advertencias = [];
-
-    // 1. Socket: Procesador <-> Placa Madre
-    if (componentes.procesador && componentes.placa_madre) {
-      if (componentes.procesador.socket !== componentes.placa_madre.socket) {
-        errores.push(`X Socket incompatible: ${componentes.procesador.socket} vs ${componentes.placa_madre.socket}`);
-      }
-    }
-
-    // 2. Tipo RAM: RAM <-> Placa Madre
-    if (componentes.placa_madre && componentes.ram?.length > 0) {
-      const tipoRAM = componentes.ram[0].ram_type;
-      if (componentes.placa_madre.ram_type !== tipoRAM) {
-        errores.push(`X RAM incompatible: Placa soporta ${componentes.placa_madre.ram_type}, seleccionado ${tipoRAM}`);
-      }
-    }
-
-    // 3. Form Factor: Placa <-> Case
-    if (componentes.placa_madre && componentes.case) {
-      const soportados = this.parsearFormFactors(componentes.case.descripcion_tecnica);
-      const formFactorPlaca = this.normalizarFormFactor(componentes.placa_madre.form_factor);
-
-      if (!soportados.includes(formFactorPlaca)) {
-        errores.push(`X Case no soporta ${formFactorPlaca}`);
-      }
-    }
-
-    // 4. Potencia: Consumo <-> Fuente
-    if (componentes.fuente) {
-      const consumoTotal = this.calcularConsumoTotal(componentes);
-      if (componentes.fuente.wattage < consumoTotal) {
-        errores.push(`X Fuente insuficiente: requiere ${consumoTotal}W, tiene ${componentes.fuente.wattage}W`);
-      } else if (componentes.fuente.wattage < consumoTotal * 1.2) {
-        advertencias.push(`! Margen ajustado: recomendado ${Math.ceil(consumoTotal * 1.2)}W`);
-      }
-    }
-
-    // 5. Componentes a pedido
-    const aPedido = this.identificarComponentesAPedido(componentes);
-    if (aPedido.length > 0) {
-      const tiempoMax = Math.max(...aPedido.map((c) => c.tiempo_entrega_dias || 0));
-      advertencias.push(`! Componentes a pedido: ${tiempoMax} días de entrega`);
-    }
-
-    return { compatible: errores.length === 0, errores, advertencias };
-  }
-
-  calcularConsumoTotal(componentes) {
-    let total = 0;
-
-    if (componentes.procesador?.tdp) total += componentes.procesador.tdp;
-    if (componentes.gpu?.tdp) total += componentes.gpu.tdp;
-    if (componentes.placa_madre) total += 50;
-    if (componentes.ram) total += componentes.ram.length * 5;
-    if (componentes.almacenamiento) total += 10;
-
-    total += 20;
-    return Math.ceil(total * 1.2);
-  }
-
-  identificarComponentesAPedido(componentes) {
-    const aPedido = [];
-
-    for (const comp of Object.values(componentes)) {
-      if (Array.isArray(comp)) {
-        aPedido.push(...comp.filter((c) => c.stock === 0 && c.disponible_a_pedido));
-      } else if (comp?.stock === 0 && comp?.disponible_a_pedido) {
-        aPedido.push(comp);
-      }
-    }
-
-    return aPedido;
+  parsearListaFormFactor(valor) {
+    if (!valor) return [];
+    const texto = String(valor).split(/[;,/|]/).map((x) => this.normalizarFormFactor(x)).filter(Boolean);
+    return [...new Set(texto)];
   }
 
   parsearFormFactors(descripcion) {
@@ -101,9 +28,8 @@ class ServicioCompatibilidad {
 
     if (desc.includes('mini-itx')) ff.push('Mini-ITX');
     if (desc.includes('micro-atx') || desc.includes('matx')) ff.push('Micro-ATX');
-
-    const atxMatch = desc.match(/(?:^|\s|case\s)atx(?:\s|$|,|\/)/);
-    if (atxMatch) ff.push('ATX');
+    if (desc.includes('e-atx') || desc.includes('eatx')) ff.push('E-ATX');
+    if (/(?:^|\s|case\s)atx(?:\s|$|,|\/)/.test(desc)) ff.push('ATX');
 
     if (ff.includes('ATX')) {
       if (!ff.includes('Micro-ATX')) ff.push('Micro-ATX');
@@ -125,29 +51,355 @@ class ServicioCompatibilidad {
 
   validarTipoRAM(placaMadre, modulosRAM) {
     if (!placaMadre || !modulosRAM || modulosRAM.length === 0) return true;
-    const tipoRAM = modulosRAM[0].ram_type;
-    return placaMadre.ram_type === tipoRAM;
+    const tipoRAM = modulosRAM[0].ram_type || modulosRAM[0].ram_tipo;
+    return (placaMadre.ram_type || placaMadre.ram_tipo) === tipoRAM;
   }
 
   validarFormFactor(placaMadre, caseGabinete) {
     if (!placaMadre || !caseGabinete) return true;
-    const soportados = this.parsearFormFactors(caseGabinete.descripcion_tecnica);
+    const soportados = this
+      .parsearFormFactors(caseGabinete.descripcion_tecnica || caseGabinete.compatibilidad_placa)
+      .map((ff) => this.normalizarFormFactor(ff));
     return soportados.includes(this.normalizarFormFactor(placaMadre.form_factor));
+  }
+
+  extraerPotenciaFuente(fuente) {
+    if (!fuente) return 0;
+    if (typeof fuente.wattage === 'number' && fuente.wattage > 0) return fuente.wattage;
+
+    const texto = String((fuente.nombre || '') + ' ' + (fuente.descripcion_tecnica || '')).toLowerCase();
+    const match = texto.match(/(\d{3,4})\s*w/);
+    if (match) return parseInt(match[1], 10);
+    return 0;
+  }
+
+  calcularConsumoTotal(componentes) {
+    const cpuTdp = Number(componentes.procesador?.tdp_w ?? componentes.procesador?.tdp ?? 0) || 0;
+    const gpuTdp = Number(componentes.gpu?.tdp_w ?? componentes.gpu?.tdp ?? 0) || 0;
+
+    const placaReal = Number(componentes.placa_madre?.tdp_w ?? 0);
+    const placaEstimado = placaReal > 0 ? placaReal : 35;
+
+    const ramModulos = Array.isArray(componentes.ram) ? componentes.ram.length : 0;
+    const ramTotal = ramModulos * 4;
+
+    const storage = Array.isArray(componentes.almacenamiento)
+      ? componentes.almacenamiento.length * 6
+      : (componentes.almacenamiento ? 6 : 0);
+
+    const baseSistema = 20;
+    const subtotal = cpuTdp + gpuTdp + placaEstimado + ramTotal + storage + baseSistema;
+    return Math.ceil(subtotal * 1.25);
   }
 
   validarPotencia(componentes) {
     if (!componentes.fuente) {
-      return { suficiente: true, consumoTotal: 0, wattajeFuente: 0 };
+      return { suficiente: true, consumoTotal: this.calcularConsumoTotal(componentes), wattajeFuente: 0 };
     }
 
     const consumoTotal = this.calcularConsumoTotal(componentes);
-    const wattajeFuente = componentes.fuente.wattage;
+    let wattajeFuente = Number(componentes.fuente.wattage || 0);
+
+    if (!wattajeFuente || wattajeFuente <= 0) {
+      wattajeFuente = this.extraerPotenciaFuente(componentes.fuente);
+    }
 
     return {
-      suficiente: wattajeFuente >= consumoTotal,
+      suficiente: wattajeFuente >= consumoTotal || wattajeFuente === 0,
       consumoTotal,
-      wattajeFuente
+      wattajeFuente,
     };
+  }
+
+  identificarComponentesAPedido(componentes) {
+    const aPedido = [];
+
+    for (const comp of Object.values(componentes)) {
+      if (Array.isArray(comp)) {
+        aPedido.push(...comp.filter((c) => c.stock === 0 && c.disponible_a_pedido));
+      } else if (comp?.stock === 0 && comp?.disponible_a_pedido) {
+        aPedido.push(comp);
+      }
+    }
+
+    return aPedido;
+  }
+
+  verificarEspacioFisico(gpu, caseGabinete) {
+    if (!gpu || !caseGabinete) return { ok: true };
+    const largoGpu = Number(gpu.longitud_mm || 0);
+    const maxCase = Number(caseGabinete.max_gpu_mm || 0);
+    if (largoGpu > 0 && maxCase > 0 && largoGpu > maxCase) {
+      return {
+        ok: false,
+        mensaje: `Espacio fisico insuficiente: GPU ${largoGpu}mm excede maximo del case ${maxCase}mm`,
+      };
+    }
+    return { ok: true };
+  }
+
+  verificarGraficosIntegrados(cpu, gpu) {
+    if (gpu) return { ok: true };
+    if (!cpu) return { ok: true };
+
+    if (cpu.graficos_integrados === null || cpu.graficos_integrados === undefined || cpu.graficos_integrados === '') {
+      return { ok: true };
+    }
+    const tieneGraficos = cpu.graficos_integrados === true || cpu.graficos_integrados === 'true';
+    if (!tieneGraficos) {
+      return {
+        ok: false,
+        mensaje: 'El sistema requiere una tarjeta de video dedicada o un procesador con graficos integrados.',
+      };
+    }
+    return { ok: true };
+  }
+
+  validarConfiguracion(componentes) {
+    const errores = [];
+    const advertencias = [];
+
+    if (componentes.procesador && componentes.placa_madre) {
+      if ((componentes.procesador.socket || null) !== (componentes.placa_madre.socket || null)) {
+        errores.push(`Socket incompatible: ${componentes.procesador.socket} vs ${componentes.placa_madre.socket}`);
+      }
+    }
+
+    if (componentes.placa_madre && componentes.ram?.length > 0) {
+      const tipoRAM = componentes.ram[0].ram_type || componentes.ram[0].ram_tipo;
+      const tipoPlaca = componentes.placa_madre.ram_type || componentes.placa_madre.ram_tipo;
+      if (tipoPlaca && tipoRAM && tipoPlaca !== tipoRAM) {
+        errores.push(`RAM incompatible: Placa soporta ${tipoPlaca}, seleccionado ${tipoRAM}`);
+      }
+    }
+
+    if (componentes.placa_madre && componentes.case) {
+      const soportados = this
+        .parsearFormFactors(componentes.case.descripcion_tecnica || componentes.case.compatibilidad_placa)
+        .map((ff) => this.normalizarFormFactor(ff));
+      const formFactorPlaca = this.normalizarFormFactor(componentes.placa_madre.form_factor);
+      if (formFactorPlaca && !soportados.includes(formFactorPlaca)) {
+        errores.push(`Case no soporta el factor de forma ${formFactorPlaca}`);
+      }
+    }
+
+    const espacio = this.verificarEspacioFisico(componentes.gpu, componentes.case);
+    if (!espacio.ok) errores.push(espacio.mensaje);
+
+    const video = this.verificarGraficosIntegrados(componentes.procesador, componentes.gpu);
+    if (!video.ok) errores.push(video.mensaje);
+
+    const potencia = this.validarPotencia(componentes);
+    if (potencia.wattajeFuente > 0) {
+      if (!potencia.suficiente) {
+        errores.push(`Fuente insuficiente: requiere ${potencia.consumoTotal}W, tiene ${potencia.wattajeFuente}W`);
+      } else if (potencia.wattajeFuente < Math.ceil(potencia.consumoTotal * 1.1)) {
+        advertencias.push(`La fuente esta muy justa, se recomienda una mayor (recomendado: ${Math.ceil(potencia.consumoTotal * 1.1)}W).`);
+      }
+    } else {
+      advertencias.push(`No se detecto la potencia exacta de la fuente. Consumo estimado: ${potencia.consumoTotal}W.`);
+    }
+
+    const aPedido = this.identificarComponentesAPedido(componentes);
+    if (aPedido.length > 0) {
+      advertencias.push(`Componentes a pedido detectados: ${aPedido.length}.`);
+    }
+
+    return { compatible: errores.length === 0, errores, advertencias };
+  }
+
+  async obtenerMapaComponentesDesdeBD(componentes, ejecutarQuery) {
+    const ids = [];
+    const pushId = (comp) => {
+      if (comp && Number.isInteger(Number(comp.id))) ids.push(Number(comp.id));
+    };
+
+    pushId(componentes.procesador);
+    pushId(componentes.placa_madre);
+    (componentes.ram || []).forEach(pushId);
+    if (Array.isArray(componentes.almacenamiento)) componentes.almacenamiento.forEach(pushId);
+    else pushId(componentes.almacenamiento);
+    pushId(componentes.gpu);
+    pushId(componentes.fuente);
+    pushId(componentes.case);
+
+    const idsUnicos = [...new Set(ids)];
+    if (idsUnicos.length === 0) return new Map();
+
+    const resultado = await ejecutarQuery(
+      `SELECT
+         p.id,
+         c.nombre AS categoria,
+         p.subcategoria,
+         p.nombre,
+         p.stock,
+         p.disponible_a_pedido,
+         sp.socket AS cpu_socket,
+         sp.tdp_w AS cpu_tdp_w,
+         sp.graficos_integrados,
+         sm.socket AS mb_socket,
+         sm.ram_tipo AS mb_ram_tipo,
+         sm.form_factor AS mb_form_factor,
+         sm.m2_slots,
+         sm.pcie_version,
+         sr.ram_tipo,
+         sa.tipo_almacenamiento,
+         sg.tdp_w AS gpu_tdp_w,
+         sg.longitud_mm,
+         sg.fuente_recomendada_w,
+         sf.wattage,
+         sc.max_gpu_mm,
+         sc.compatibilidad_placa,
+         sc.form_factor AS case_form_factor
+       FROM productos p
+       INNER JOIN categorias c ON c.id = p.id_categoria
+       LEFT JOIN specs_procesador sp ON sp.id_producto = p.id
+       LEFT JOIN specs_placa_madre sm ON sm.id_producto = p.id
+       LEFT JOIN specs_ram sr ON sr.id_producto = p.id
+       LEFT JOIN specs_almacenamiento sa ON sa.id_producto = p.id
+       LEFT JOIN specs_gpu sg ON sg.id_producto = p.id
+       LEFT JOIN specs_fuente sf ON sf.id_producto = p.id
+       LEFT JOIN specs_case sc ON sc.id_producto = p.id
+       WHERE p.id = ANY($1::int[])`,
+      [idsUnicos]
+    );
+
+    return new Map(resultado.rows.map((r) => [r.id, r]));
+  }
+
+  convertirComponenteBD(comp, mapa) {
+    if (!comp || !comp.id) return null;
+    const row = mapa.get(Number(comp.id));
+    if (!row) return null;
+
+    const base = {
+      id: row.id,
+      nombre: row.nombre,
+      categoria: row.categoria,
+      stock: row.stock,
+      disponible_a_pedido: row.disponible_a_pedido,
+    };
+
+    if (row.categoria === 'procesador') {
+      return { ...base, socket: row.cpu_socket, tdp_w: row.cpu_tdp_w, graficos_integrados: row.graficos_integrados };
+    }
+    if (row.categoria === 'placa_madre') {
+      return {
+        ...base,
+        socket: row.mb_socket,
+        ram_tipo: row.mb_ram_tipo,
+        form_factor: row.mb_form_factor,
+        m2_slots: row.m2_slots,
+        pcie_version: row.pcie_version,
+      };
+    }
+    if (row.categoria === 'ram') {
+      return { ...base, ram_tipo: row.ram_tipo };
+    }
+    if (row.categoria === 'almacenamiento') {
+      return { ...base, tipo_almacenamiento: row.tipo_almacenamiento };
+    }
+    if (row.categoria === 'gpu') {
+      return {
+        ...base,
+        tdp_w: row.gpu_tdp_w,
+        longitud_mm: row.longitud_mm,
+        fuente_recomendada_w: row.fuente_recomendada_w,
+      };
+    }
+    if (row.categoria === 'fuente') {
+      return { ...base, wattage: row.wattage };
+    }
+    if (row.categoria === 'case') {
+      return {
+        ...base,
+        max_gpu_mm: row.max_gpu_mm,
+        compatibilidad_placa: row.compatibilidad_placa,
+        form_factor: row.case_form_factor,
+      };
+    }
+
+    return base;
+  }
+
+  async validarConfiguracionConBD(componentes, ejecutarQuery) {
+    const errores = [];
+    const advertencias = [];
+
+    const mapa = await this.obtenerMapaComponentesDesdeBD(componentes, ejecutarQuery);
+    if (mapa.size === 0) {
+      return this.validarConfiguracion(componentes);
+    }
+    const normalizados = {
+      procesador: this.convertirComponenteBD(componentes.procesador, mapa),
+      placa_madre: this.convertirComponenteBD(componentes.placa_madre, mapa),
+      ram: (componentes.ram || []).map((r) => this.convertirComponenteBD(r, mapa)).filter(Boolean),
+      almacenamiento: Array.isArray(componentes.almacenamiento)
+        ? componentes.almacenamiento.map((a) => this.convertirComponenteBD(a, mapa)).filter(Boolean)
+        : this.convertirComponenteBD(componentes.almacenamiento, mapa),
+      gpu: this.convertirComponenteBD(componentes.gpu, mapa),
+      fuente: this.convertirComponenteBD(componentes.fuente, mapa),
+      case: this.convertirComponenteBD(componentes.case, mapa),
+    };
+
+    if (normalizados.procesador && normalizados.placa_madre) {
+      if ((normalizados.procesador.socket || '') !== (normalizados.placa_madre.socket || '')) {
+        errores.push(`Socket incompatible: ${normalizados.procesador.socket || 'N/D'} vs ${normalizados.placa_madre.socket || 'N/D'}`);
+      }
+    }
+
+    if (normalizados.placa_madre && normalizados.ram.length > 0) {
+      const tipoPlaca = normalizados.placa_madre.ram_tipo;
+      const incompatibles = normalizados.ram.filter((r) => r.ram_tipo && tipoPlaca && r.ram_tipo !== tipoPlaca);
+      if (incompatibles.length > 0) {
+        errores.push(`RAM incompatible: Placa soporta ${tipoPlaca}, seleccionado ${incompatibles[0].ram_tipo}`);
+      }
+    }
+
+    const almacenamiento = Array.isArray(normalizados.almacenamiento)
+      ? normalizados.almacenamiento
+      : (normalizados.almacenamiento ? [normalizados.almacenamiento] : []);
+
+    const tieneM2 = almacenamiento.some((a) => /m\.2|nvme/i.test(String(a.tipo_almacenamiento || '')));
+    if (tieneM2 && normalizados.placa_madre && Number(normalizados.placa_madre.m2_slots || 0) <= 0) {
+      errores.push('Almacenamiento M.2 incompatible: la placa madre no tiene slots M.2 disponibles.');
+    }
+
+    if (normalizados.gpu && normalizados.placa_madre) {
+      const pcie = String(normalizados.placa_madre.pcie_version || '').trim();
+      if (pcie) {
+        advertencias.push(`Compatibilidad PCIe: validar que GPU y placa operen en la mejor version disponible (${pcie}).`);
+      }
+    }
+
+    const video = this.verificarGraficosIntegrados(normalizados.procesador, normalizados.gpu);
+    if (!video.ok) errores.push(video.mensaje);
+
+    if (normalizados.fuente) {
+      const consumo = this.calcularConsumoTotal(normalizados);
+      const wattage = Number(normalizados.fuente.wattage || 0);
+      if (wattage > 0 && wattage < consumo) {
+        errores.push(`Fuente insuficiente: requiere ${consumo}W, tiene ${wattage}W`);
+      } else if (wattage > 0 && wattage < Math.ceil(consumo * 1.1)) {
+        advertencias.push(`La fuente esta muy justa, se recomienda una mayor (recomendado: ${Math.ceil(consumo * 1.1)}W).`);
+      }
+    }
+
+    if (normalizados.gpu && normalizados.case) {
+      const espacio = this.verificarEspacioFisico(normalizados.gpu, normalizados.case);
+      if (!espacio.ok) errores.push(espacio.mensaje);
+
+      const ffPlaca = this.normalizarFormFactor(normalizados.placa_madre?.form_factor);
+      const compatCase = this.parsearListaFormFactor(normalizados.case.compatibilidad_placa);
+      if (ffPlaca && compatCase.length > 0 && !compatCase.includes(ffPlaca)) {
+        errores.push(`Case no soporta el factor de forma ${ffPlaca}`);
+      }
+    }
+
+    const aPedido = this.identificarComponentesAPedido(normalizados);
+    if (aPedido.length > 0) advertencias.push(`Componentes a pedido detectados: ${aPedido.length}.`);
+
+    return { compatible: errores.length === 0, errores, advertencias };
   }
 }
 

@@ -135,9 +135,10 @@ export default function AdminProductos() {
 
     try {
       const payload = serializarFormulario(formulario);
+      const categoriaRuta = modalFormulario.producto?.subcategoria || modalFormulario.producto?.categoria || formulario.categoria;
 
       if (modalFormulario.mode === 'edit' && modalFormulario.producto) {
-        await api.actualizarProducto(modalFormulario.producto.id, payload);
+        await api.actualizarProducto(categoriaRuta, modalFormulario.producto.id, payload);
         toast.success('Producto actualizado', 'Los cambios se guardaron correctamente.');
       } else {
         await api.crearProducto(payload);
@@ -167,7 +168,8 @@ export default function AdminProductos() {
 
     setGuardando(true);
     try {
-      await api.eliminarProducto(modalEliminar.producto.id);
+      const categoriaRuta = modalEliminar.producto.subcategoria || modalEliminar.producto.categoria;
+      await api.eliminarProducto(categoriaRuta, modalEliminar.producto.id);
       toast.success('Producto eliminado', 'El producto se retiró del catálogo.');
       setModalEliminar({ open: false, producto: null });
       await cargarProductos();
