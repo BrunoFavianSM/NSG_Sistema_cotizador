@@ -19,6 +19,20 @@ const PASOS = [
   { id: 'gpu', nombre: 'Tarjeta grafica', categoria: 'gpu' },
   { id: 'fuente', nombre: 'Fuente de poder', categoria: 'fuente' },
   { id: 'case', nombre: 'Case', categoria: 'case' },
+  { id: 'extras', nombre: 'Otros', categoria: null },
+];
+
+const PASOS_COMPONENTES = PASOS.slice(0, 7);
+
+const SUBSECCIONES_EXTRAS = [
+  { titulo: 'Perifericos', categorias: ['mouse', 'teclado', 'mousepad', 'webcam'] },
+  { titulo: 'Audio', categorias: ['auricular', 'parlante'] },
+  { titulo: 'Software', categorias: ['software_windows', 'software_office', 'software_antivirus'] },
+  { titulo: 'Almacenamiento externo', categorias: ['almacenamiento_externo'] },
+  { titulo: 'Energia', categorias: ['ups', 'estabilizador'] },
+  { titulo: 'Monitor', categorias: ['monitor'] },
+  { titulo: 'Refrigeracion', categorias: ['cooler_aire', 'cooler_liquido'] },
+  { titulo: 'Conectividad', categorias: ['conectividad'] },
 ];
 
 function esEmailValido(email) {
@@ -66,7 +80,18 @@ function obtenerTextoProducto(producto) {
   return `${producto?.nombre || ''} ${producto?.descripcion_tecnica || ''}`;
 }
 
+function capitalizarPrimeraLetra(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 function extraerMarca(producto) {
+  if (producto?.marca && producto.marca.trim()) {
+    const marcaBd = producto.marca.trim();
+    if (marcaBd.toLowerCase() === 'wd' || marcaBd.toLowerCase() === 'western digital') return 'WD';
+    return capitalizarPrimeraLetra(marcaBd);
+  }
+
   const nombre = String(producto?.nombre || '').trim();
   if (!nombre) return 'Otros';
 
@@ -167,6 +192,34 @@ function placaSoportaAlmacenamiento(placaMadre, productoAlmacenamiento) {
 
   return true;
 }
+
+function normalizarFormFactor(valor) {
+  if (!valor) return null;
+  const texto = String(valor).toLowerCase().replace(/\s+/g, '').replace('_', '-');
+  if (texto.includes('mini-itx') || texto === 'itx') return 'Mini-ITX';
+  if (texto.includes('micro-atx') || texto.includes('matx')) return 'Micro-ATX';
+  if (texto === 'atx' || texto.includes('/atx') || texto.includes('atx/')) return 'ATX';
+  return valor;
+}
+
+function parsearFormFactors(descripcion) {
+  const ff = [];
+  const desc = String(descripcion || '').toLowerCase();
+  
+  if (desc.includes('mini-itx')) ff.push('Mini-ITX');
+  if (desc.includes('micro-atx') || desc.includes('matx')) ff.push('Micro-ATX');
+  
+  const atxMatch = desc.match(/(?:^|\s|case\s)atx(?:\s|$|,|\/)/);
+  if (atxMatch) ff.push('ATX');
+  
+  if (ff.includes('ATX')) {
+    if (!ff.includes('Micro-ATX')) ff.push('Micro-ATX');
+    if (!ff.includes('Mini-ITX')) ff.push('Mini-ITX');
+  }
+  
+  return ff.length > 0 ? ff : ['ATX', 'Micro-ATX', 'Mini-ITX'];
+}
+
 
 function extraerSerieGPU(producto) {
   const texto = normalizarTexto(obtenerTextoProducto(producto));
@@ -270,9 +323,156 @@ function StepIcon({ pasoId, className = 'h-4 w-4' }) {
           <path d="M10 6h4M12 18v.01" />
         </svg>
       );
+    case 'extras':
+      return (
+        <svg {...baseProps}>
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <line x1="12" y1="8" x2="12" y2="16" />
+          <line x1="8" y1="12" x2="16" y2="12" />
+        </svg>
+      );
     default:
       return null;
   }
+}
+
+const NOMBRE_CATEGORIA = {
+  mouse: 'Mouse',
+  teclado: 'Teclado',
+  mousepad: 'Mousepad',
+  webcam: 'Webcam',
+  auricular: 'Auricular',
+  parlante: 'Parlante',
+  software_windows: 'Windows',
+  software_office: 'Office',
+  software_antivirus: 'Antivirus',
+  almacenamiento_externo: 'Almac. externo',
+  ups: 'UPS',
+  estabilizador: 'Estabilizador',
+  monitor: 'Monitor',
+  cooler_aire: 'Cooler aire',
+  cooler_liquido: 'Cooler líquido',
+  conectividad: 'Conectividad',
+};
+
+function ExtrasAccordion({ subseccion, extras, cargarExtras, cargandoExtras, agregarExtra, quitarExtra, formatearMontoSegunMonedaVista }) {
+  const [abierta, setAbierta] = useState(false);
+  const [productosLocales, setProductosLocales] = useState({});
+
+  const totalExtrasSubseccion = subseccion.categorias.reduce((sum, cat) => {
+    const items = extras[cat] || [];
+    return sum + items.reduce((s, { producto, cantidad }) => s + parseFloat(producto.precio_base) * cantidad, 0);
+  }, 0);
+
+  const cantidadTotalItems = subseccion.categorias.reduce((sum, cat) => {
+    const items = extras[cat] || [];
+    return sum + items.reduce((s, { cantidad }) => s + cantidad, 0);
+  }, 0);
+
+  const toggleAbrir = async () => {
+    const nuevoEstado = !abierta;
+    setAbierta(nuevoEstado);
+    if (nuevoEstado) {
+      const faltantes = subseccion.categorias.filter(c => !productosLocales[c]);
+      if (faltantes.length > 0) {
+        const resultado = await cargarExtras(faltantes);
+        if (resultado) {
+          setProductosLocales(prev => ({ ...prev, ...resultado }));
+        }
+      }
+    }
+  };
+
+  return (
+    <div className="surface-card overflow-hidden">
+      <button
+        type="button"
+        onClick={toggleAbrir}
+        aria-expanded={abierta}
+        className="flex min-h-12 w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors duration-higNormal hover:bg-[var(--color-surface-hover)]"
+      >
+        <div className="flex items-center gap-3">
+          <svg className={`h-4 w-4 shrink-0 text-[var(--color-text-muted)] transition-transform duration-higNormal ${abierta ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+          <span className="text-sm font-semibold text-[var(--color-text)]">{subseccion.titulo}</span>
+          {cantidadTotalItems > 0 && (
+            <span className="inline-flex rounded-full bg-[var(--color-accent)] px-2 py-0.5 text-xs font-bold text-white">{cantidadTotalItems}</span>
+          )}
+        </div>
+        {totalExtrasSubseccion > 0 && (
+          <span className="text-sm font-medium text-[var(--color-accent)]">
+            +{formatearMontoSegunMonedaVista({ montoUsd: totalExtrasSubseccion })}
+          </span>
+        )}
+      </button>
+
+      {abierta && (
+        <div className="border-t border-[var(--color-border)] px-4 py-3 space-y-4">
+          {subseccion.categorias.map(cat => {
+            const productosCat = productosLocales[cat] || [];
+            const cargando = cargandoExtras[cat] && productosCat.length === 0;
+            const itemsSeleccionados = extras[cat] || [];
+
+            return (
+              <div key={cat}>
+                <h4 className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">{NOMBRE_CATEGORIA[cat] || cat}</h4>
+                {cargando ? (
+                  <p className="text-xs text-[var(--color-text-muted)] animate-pulse">Cargando...</p>
+                ) : productosCat.length === 0 ? (
+                  <p className="text-xs text-[var(--color-text-muted)]">Sin productos disponibles</p>
+                ) : (
+                  <div className="space-y-2">
+                    {productosCat.map(producto => {
+                      const seleccionado = itemsSeleccionados.find(i => i.producto.id === producto.id);
+                      const cantidad = seleccionado?.cantidad || 0;
+                      const stockInfo = obtenerEstadoStock(producto);
+
+                      return (
+                        <div key={producto.id} className={`flex items-center justify-between gap-3 rounded-[var(--radius-sm)] border p-3 transition-all duration-higNormal ${cantidad > 0 ? 'border-[var(--color-accent)] bg-[color:rgba(0,122,255,0.04)]' : 'border-[var(--color-border)]'}`}>
+                          <div className="py-2.5">
+                            <p className="line-clamp-3 text-sm font-medium leading-relaxed text-[var(--color-text)]">
+                              {capitalizarPrimeraLetra(producto.nombre)}
+                            </p>
+                            <div className="mt-0.5 flex items-center gap-2">
+                              <span className="text-xs font-semibold text-[var(--color-accent)]">
+                                {formatearMontoSegunMonedaVista({ montoUsd: producto.precio_base })}
+                              </span>
+                              <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${stockInfo.className}`}>{stockInfo.label}</span>
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => quitarExtra(cat, producto.id)}
+                              disabled={cantidad === 0}
+                              aria-label={`Quitar ${producto.nombre}`}
+                              className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--color-border)] text-sm font-bold transition-colors duration-higFast hover:bg-[var(--color-surface-hover)] disabled:opacity-30"
+                            >
+                              −
+                            </button>
+                            <span className="w-8 text-center text-sm font-semibold tabular-nums text-[var(--color-text)]">{cantidad}</span>
+                            <button
+                              type="button"
+                              onClick={() => agregarExtra(cat, producto)}
+                              aria-label={`Agregar ${producto.nombre}`}
+                              className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--color-border)] text-sm font-bold transition-colors duration-higFast hover:bg-[var(--color-surface-hover)]"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function Cotizador() {
@@ -293,7 +493,13 @@ export default function Cotizador() {
     margenGanancia,
     calcularResumenFinanciero,
     monedaVista,
-    formatearMontoSegunMonedaVista
+    formatearMontoSegunMonedaVista,
+    extras,
+    cargandoExtras,
+    agregarExtra,
+    quitarExtra,
+    cargarExtras,
+    limpiarExtras,
   } = useAppContext();
 
   const navigate = useNavigate();
@@ -325,6 +531,7 @@ export default function Cotizador() {
   const [intentoGenerar, setIntentoGenerar] = useState(false);
 
   const pasoInfo = PASOS[pasoActual];
+  const esPasoExtras = pasoInfo.id === 'extras';
   const total = calcularPrecioTotal();
   const resumenFinanciero = calcularResumenFinanciero();
   const esAdmin = autenticado === true;
@@ -379,6 +586,7 @@ export default function Cotizador() {
 
   const pasoCompleto = (indicePaso) => {
     const paso = PASOS[indicePaso];
+    if (paso.id === 'extras') return true; // Extras siempre opcional
     const valor = configuracionSeleccionada[paso.id];
     if (paso.id === 'ram') return Array.isArray(valor) && valor.length > 0;
     if (paso.id === 'gpu' && procesadorTieneGraficosIntegrados) return true;
@@ -390,8 +598,8 @@ export default function Cotizador() {
     return pasoCompleto(indicePaso - 1);
   };
 
-  const pasosCompletos = PASOS.filter((_, i) => pasoCompleto(i)).length;
-  const configuracionCompleta = pasosCompletos === PASOS.length;
+  const pasosCompletos = PASOS_COMPONENTES.filter((_, i) => pasoCompleto(i)).length;
+  const configuracionCompleta = pasosCompletos === PASOS_COMPONENTES.length;
 
   const primerPasoPendiente = useMemo(
     () => PASOS.findIndex((_, indice) => !pasoCompleto(indice)),
@@ -421,6 +629,17 @@ export default function Cotizador() {
     if (pasoInfo.id === 'almacenamiento' && configuracionSeleccionada.placa_madre) {
       const compatibles = lista.filter((p) => placaSoportaAlmacenamiento(configuracionSeleccionada.placa_madre, p));
       if (compatibles.length > 0) lista = compatibles;
+    }
+
+    if (pasoInfo.id === 'case' && configuracionSeleccionada.placa_madre?.form_factor) {
+      const ffPlaca = normalizarFormFactor(configuracionSeleccionada.placa_madre.form_factor);
+      if (ffPlaca) {
+        const compatibles = lista.filter((p) => {
+          const soportados = parsearFormFactors(p.descripcion_tecnica);
+          return soportados.includes(ffPlaca);
+        });
+        if (compatibles.length > 0) lista = compatibles;
+      }
     }
 
     if (filtro === 'disponibles') {
@@ -545,6 +764,30 @@ export default function Cotizador() {
         .map(([titulo, items]) => ({ titulo, items }));
     }
 
+    if (pasoInfo.id === 'placa_madre') {
+      const grupos = productosFiltrados.reduce((acc, producto) => {
+        const socket = producto.socket ? `Socket ${producto.socket}` : 'Otros sockets';
+        if (!acc[socket]) acc[socket] = [];
+        acc[socket].push(producto);
+        return acc;
+      }, {});
+      return Object.entries(grupos)
+        .sort(([a], [b]) => a.localeCompare(b, 'es', { sensitivity: 'base' }))
+        .map(([titulo, items]) => ({ titulo, items }));
+    }
+
+    if (pasoInfo.id === 'ram') {
+      const grupos = productosFiltrados.reduce((acc, producto) => {
+        const tipo = producto.ram_type || 'Otros';
+        if (!acc[tipo]) acc[tipo] = [];
+        acc[tipo].push(producto);
+        return acc;
+      }, {});
+      return Object.entries(grupos)
+        .sort(([a], [b]) => a.localeCompare(b, 'es', { sensitivity: 'base' }))
+        .map(([titulo, items]) => ({ titulo, items }));
+    }
+
     if (pasoInfo.id === 'almacenamiento') {
       const orden = ['M.2 / NVMe', 'SSD', 'HDD', 'Otros'];
       const grupos = productosFiltrados.reduce((acc, producto) => {
@@ -554,6 +797,26 @@ export default function Cotizador() {
         return acc;
       }, {});
       return orden
+        .filter((titulo) => Array.isArray(grupos[titulo]) && grupos[titulo].length > 0)
+        .map((titulo) => ({ titulo, items: grupos[titulo] }));
+    }
+    
+    if (pasoInfo.id === 'fuente') {
+      const grupos = productosFiltrados.reduce((acc, producto) => {
+        const t = normalizarTexto(producto.descripcion_tecnica);
+        let cert = 'Otras';
+        if (t.includes('80 plus titanium') || t.includes('80+ titanium')) cert = '80+ Titanium';
+        else if (t.includes('80 plus platinum') || t.includes('80+ platinum')) cert = '80+ Platinum';
+        else if (t.includes('80 plus gold') || t.includes('80+ gold')) cert = '80+ Gold';
+        else if (t.includes('80 plus bronze') || t.includes('80+ bronze')) cert = '80+ Bronze';
+        else if (t.includes('80 plus white') || t.includes('80+ white') || t.includes('80 plus standard')) cert = '80+ White / Standard';
+        
+        if (!acc[cert]) acc[cert] = [];
+        acc[cert].push(producto);
+        return acc;
+      }, {});
+      const certOrden = ['80+ Titanium', '80+ Platinum', '80+ Gold', '80+ Bronze', '80+ White / Standard', 'Otras'];
+      return certOrden
         .filter((titulo) => Array.isArray(grupos[titulo]) && grupos[titulo].length > 0)
         .map((titulo) => ({ titulo, items: grupos[titulo] }));
     }
@@ -591,7 +854,13 @@ export default function Cotizador() {
       agregarRAM(producto);
       return;
     }
-    seleccionarComponente(pasoInfo.id, producto);
+    
+    // Si ya es el componente seleccionado, se deselecciona.
+    if (seleccionActual?.id === producto.id) {
+      seleccionarComponente(pasoInfo.id, null);
+    } else {
+      seleccionarComponente(pasoInfo.id, producto);
+    }
   };
 
   const resolverProducto = (entrada) => {
@@ -646,9 +915,14 @@ export default function Cotizador() {
 
   const construirPayloadCotizacion = () => {
     const componentes = [];
-    const pushComponente = (producto, cantidad = 1) => {
+    const pushComponente = (producto, cantidad = 1, categoria = null) => {
       if (!producto) return;
-      componentes.push({ id_producto: producto.id, cantidad });
+      const cat = categoria || producto.categoria;
+      componentes.push({
+        id_producto: producto.id,
+        cantidad,
+        tabla_producto: `productos_${cat}`,
+      });
     };
 
     pushComponente(configuracionSeleccionada.procesador);
@@ -659,6 +933,13 @@ export default function Cotizador() {
     pushComponente(configuracionSeleccionada.case);
 
     Object.values(ramAgrupada).forEach((item) => pushComponente(item.producto, item.cantidad));
+
+    // Agregar extras
+    Object.entries(extras).forEach(([categoria, items]) => {
+      items.forEach(({ producto, cantidad }) => {
+        pushComponente(producto, cantidad, categoria);
+      });
+    });
 
     const payload = { componentes };
     payload.margen_personalizado = Number(margenGanancia);
@@ -736,6 +1017,7 @@ export default function Cotizador() {
 
   const nuevaCotizacion = () => {
     limpiarConfiguracion();
+    limpiarExtras();
     setPasoActual(0);
     setCotizacionGenerada(null);
     setErrorGenerar('');
@@ -920,7 +1202,7 @@ export default function Cotizador() {
       </header>
 
       <section className="surface-card space-y-3 p-4" aria-label="Pasos del cotizador">
-        <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-7">
+        <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-8">
           {PASOS.map((paso, indice) => {
             const activo = indice === pasoActual;
             const completo = pasoCompleto(indice);
@@ -940,7 +1222,7 @@ export default function Cotizador() {
                       : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-soft)]'
                     } ${!habilitado ? 'cursor-not-allowed opacity-60' : ''}`}
                 >
-                  <span className="inline-flex items-center gap-2">
+                  <span className="flex min-w-0 items-center gap-2">
                     {completo ? (
                       <svg
                         className="h-4 w-4 shrink-0"
@@ -958,7 +1240,7 @@ export default function Cotizador() {
                     ) : (
                       <StepIcon pasoId={paso.id} className="h-4 w-4 shrink-0" />
                     )}
-                    <span>{paso.nombre}</span>
+                    <span className="truncate">{paso.nombre}</span>
                   </span>
                 </button>
               </li>
@@ -1026,43 +1308,65 @@ export default function Cotizador() {
             </div>
           ) : null}
 
-          <section className="surface-card p-3" aria-label="Filtros de productos">
-            {renderFiltrosPaso()}
-          </section>
-
-          {cargandoProductos ? (
-            <div className="surface-card py-16">
-              <LoadingSpinner label="Cargando productos..." />
+          {esPasoExtras ? (
+            /* ======== PASO EXTRAS — Acordeones por subsección ======== */
+            <div className="space-y-3">
+              <p className="text-sm text-[var(--color-text-muted)]">
+                Agrega accesorios y perifericos opcionales. Puedes omitir esta seccion.
+              </p>
+              {SUBSECCIONES_EXTRAS.map((subseccion) => (
+                  <ExtrasAccordion
+                    key={subseccion.titulo}
+                    subseccion={subseccion}
+                    extras={extras}
+                    cargarExtras={cargarExtras}
+                    cargandoExtras={cargandoExtras}
+                    agregarExtra={agregarExtra}
+                    quitarExtra={quitarExtra}
+                    formatearMontoSegunMonedaVista={formatearMontoSegunMonedaVista}
+                  />
+              ))}
             </div>
-          ) : errorProductos ? (
-            <ErrorState title="No se cargaron productos" description={errorProductos} onRetry={cargarProductos} />
-          ) : productosFiltrados.length === 0 ? (
-            <EmptyState
-              title="Sin productos para este paso"
-              description="Prueba con el filtro Todos o revisa el stock disponible."
-              actionLabel="Ver todos"
-              onAction={() => setFiltro('todos')}
-            />
           ) : (
-            <div className="space-y-5">
-              {gruposProductos.map((grupo) => (
-                <div key={grupo.titulo || 'grupo-unico'} className="space-y-3">
-                  {grupo.titulo ? (
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">{grupo.titulo}</h3>
-                  ) : null}
-                  <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-                    {grupo.items.map((producto) => {
-                      const esRam = pasoInfo.id === 'ram';
-                      const seleccionado = esRam ? Boolean(ramAgrupada[producto.id]) : seleccionActual?.id === producto.id;
-                      const estadoStock = obtenerEstadoStock(producto);
-                      const cantidadRam = ramAgrupada[producto.id]?.cantidad || 0;
-                      const maxRam = producto.stock > 0 ? producto.stock : 8;
+            /* ======== PASOS DE COMPONENTES — Grid original ======== */
+            <>
+              <section className="surface-card p-3" aria-label="Filtros de productos">
+                {renderFiltrosPaso()}
+              </section>
 
-                      return (
-                        <motion.article key={producto.id} layout className={`surface-card flex h-full flex-col p-4 ${seleccionado ? 'ring-2 ring-[var(--color-accent)] ring-offset-1 ring-offset-[var(--color-bg)]' : ''}`}>
-                          <div className="flex items-start justify-between gap-3">
-                            <h3 className="text-base font-semibold text-[var(--color-text)]">{producto.nombre}</h3>
-                            <span className={`inline-flex shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${estadoStock.className}`}>{estadoStock.label}</span>
+              {cargandoProductos ? (
+                <div className="surface-card py-16">
+                  <LoadingSpinner label="Cargando productos..." />
+                </div>
+              ) : errorProductos ? (
+                <ErrorState title="No se cargaron productos" description={errorProductos} onRetry={cargarProductos} />
+              ) : productosFiltrados.length === 0 ? (
+                <EmptyState
+                  title="Sin productos para este paso"
+                  description="Prueba con el filtro Todos o revisa el stock disponible."
+                  actionLabel="Ver todos"
+                  onAction={() => setFiltro('todos')}
+                />
+              ) : (
+                <div className="space-y-5">
+                  {gruposProductos.map((grupo) => (
+                    <div key={grupo.titulo || 'grupo-unico'} className="space-y-3">
+                      {grupo.titulo ? (
+                        <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">{grupo.titulo}</h3>
+                      ) : null}
+                      <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                        {grupo.items.map((producto) => {
+                          const esRam = pasoInfo.id === 'ram';
+                          const seleccionado = esRam ? Boolean(ramAgrupada[producto.id]) : seleccionActual?.id === producto.id;
+                          const estadoStock = obtenerEstadoStock(producto);
+                          const cantidadRam = ramAgrupada[producto.id]?.cantidad || 0;
+                          const maxRam = producto.stock > 0 ? producto.stock : 8;
+
+                          return (
+                            <motion.article key={producto.id} layout className={`surface-card flex h-full flex-col p-4 ${seleccionado ? 'ring-2 ring-[var(--color-accent)] ring-offset-1 ring-offset-[var(--color-bg)]' : ''}`}>
+                              <div className="flex items-start justify-between gap-3">
+                                <h3 className="text-base font-semibold text-[var(--color-text)]">{capitalizarPrimeraLetra(producto.nombre)}</h3>
+                                <span className={`inline-flex shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${estadoStock.className}`}>{estadoStock.label}</span>
                           </div>
                           <p className="mt-2 text-sm text-[var(--color-text-muted)]">{producto.descripcion_tecnica ? `${producto.descripcion_tecnica.slice(0, 110)}...` : 'Sin descripcion tecnica.'}</p>
 
@@ -1076,9 +1380,9 @@ export default function Cotizador() {
                                 type="button"
                                 onClick={() => seleccionarProducto(producto)}
                                 className={`min-h-11 rounded-[var(--radius-sm)] px-4 text-sm font-medium ${seleccionado ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]' : 'bg-[var(--color-surface-soft)] text-[var(--color-text)] hover:bg-[var(--color-accent-soft)]'}`}
-                                aria-label={`${seleccionado ? 'Producto seleccionado' : 'Seleccionar'}: ${producto.nombre}`}
+                                aria-label={`${seleccionado ? 'Deseleccionar producto' : 'Seleccionar'}: ${producto.nombre}`}
                               >
-                                {seleccionado ? 'Seleccionado' : 'Seleccionar'}
+                                {seleccionado ? 'Deseleccionar' : 'Seleccionar'}
                               </button>
                             ) : (
                               <div className="inline-flex max-w-full items-center gap-2 self-start rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-1">
@@ -1112,6 +1416,8 @@ export default function Cotizador() {
               ))}
             </div>
           )}
+          </>
+          )}
 
           <footer className="flex flex-col gap-3 border-t border-[var(--color-border)] pt-5 sm:flex-row sm:items-center sm:justify-between">
             <button type="button" onClick={irAnterior} disabled={pasoActual === 0} className="min-h-11 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-4 text-sm font-medium disabled:opacity-50">Anterior</button>
@@ -1126,7 +1432,8 @@ export default function Cotizador() {
           </footer>
         </section>
 
-        <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
+        <div className="relative">
+          <aside className="space-y-4 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto pb-4 pr-1 scrollbar-thin">
           <section className="surface-elevated p-5">
             <h3 className="text-sm font-semibold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Asistente IA</h3>
             <p className="mt-2 text-sm text-[var(--color-text-muted)]">Solicita una configuracion sugerida segun tu uso y aplicala en un click.</p>
@@ -1171,6 +1478,23 @@ export default function Cotizador() {
               </p>
             </div>
           </section>
+
+          {/* Extras seleccionados */}
+          {Object.keys(extras).length > 0 && (
+            <section className="surface-elevated p-5">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Extras</h3>
+              <ul className="mt-3 space-y-1.5">
+                {Object.entries(extras).map(([cat, items]) =>
+                  items.map(({ producto, cantidad }) => (
+                    <li key={`${cat}-${producto.id}`} className="flex items-center justify-between text-sm">
+                      <span className="truncate text-[var(--color-text)]">{capitalizarPrimeraLetra(producto.nombre)}</span>
+                      <span className="ml-2 shrink-0 text-xs font-medium text-[var(--color-text-muted)]">×{cantidad}</span>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </section>
+          )}
 
           <section className="surface-elevated p-5">
             <h3 className="text-sm font-semibold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Compatibilidad</h3>
@@ -1316,6 +1640,7 @@ export default function Cotizador() {
             ) : null}
           </section>
         </aside>
+        </div>
       </div>
     </div>
   );

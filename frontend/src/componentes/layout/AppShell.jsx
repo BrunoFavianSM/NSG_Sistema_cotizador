@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../contexto/AppContext';
 import { THEME_STORAGE_KEY, applyThemeClass, resolveTheme } from '../../theme';
@@ -64,6 +64,16 @@ const NAV_ITEMS = [
     requiresAuth: true,
     showInMobileTab: false,
   },
+  {
+    key: 'admin-importar-csv',
+    to: '/admin/importar-csv',
+    label: 'Importar CSV',
+    description: 'Carga masiva de productos',
+    icon: 'upload',
+    group: 'admin',
+    requiresAuth: true,
+    showInMobileTab: false,
+  },
 ];
 
 const ROUTE_METADATA = [
@@ -89,8 +99,13 @@ const ROUTE_METADATA = [
   },
   {
     match: (pathname) => pathname === '/admin/configuracion',
-    title: 'Configuración del Sistema',
-    subtitle: 'Ajusta parámetros globales y controles operativos.',
+    title: 'Configuracion del Sistema',
+    subtitle: 'Ajusta parametros globales y controles operativos.',
+  },
+  {
+    match: (pathname) => pathname === '/admin/importar-csv',
+    title: 'Importacion Masiva',
+    subtitle: 'Sincroniza el catalogo mediante archivos CSV de Deltron.',
   },
   {
     match: (pathname) => pathname === '/login',
@@ -193,6 +208,12 @@ function NavIcon({ name, className }) {
       return (
         <svg className={iconClass(className)} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 7h13M4 17h13M14 4l3 3-3 3M14 14l3 3-3 3" />
+        </svg>
+      );
+    case 'upload':
+      return (
+        <svg className={iconClass(className)} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
         </svg>
       );
     default:

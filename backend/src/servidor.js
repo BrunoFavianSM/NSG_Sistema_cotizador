@@ -35,6 +35,10 @@ app.use('/api/compatibilidad', require('./rutas/compatibilidad'));
 app.use('/api/ia', require('./rutas/ia'));
 app.use('/api/auth', require('./rutas/auth'));
 app.use('/api/configuracion', require('./rutas/configuracion'));
+app.use('/api/importacion', require('./rutas/importacion'));
+
+// Servir imágenes subidas
+app.use('/uploads', express.static('uploads'));
 
 // Health check
 app.get('/health', async (req, res) => {

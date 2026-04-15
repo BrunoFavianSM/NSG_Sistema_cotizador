@@ -54,10 +54,15 @@ GRANT ALL PRIVILEGES ON DATABASE nsg_cotizaciones TO nsg_user;
 
 ### 3. Ejecutar Schema SQL
 
+El archivo `schema.sql` ha sido unificado y contiene toda la estructura necesaria (usuarios, catálogo híbrido normalizado, cotizaciones, etc.).
+
 ```bash
 # Desde la raíz del proyecto
 psql -U nsg_user -d nsg_cotizaciones -f base-datos/schema.sql
 ```
+
+> [!IMPORTANT]
+> Si tenías una versión anterior de la base de datos, se recomienda eliminarla y crearla de nuevo (`DROP DATABASE` / `CREATE DATABASE`) para asegurar que el nuevo esquema unificado se aplique correctamente sin conflictos.
 
 Si solicita contraseña, ingresa la que configuraste en el paso anterior.
 

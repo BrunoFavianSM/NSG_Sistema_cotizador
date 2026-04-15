@@ -104,9 +104,9 @@ describe('Servicio de Compatibilidad', () => {
       
       const consumo = servicioCompatibilidad.calcularConsumoTotal(componentes);
       
-      // 65 + 250 + 50 + 10 + 10 + 20 = 405W
-      // Con margen 20%: 405 * 1.2 = 486W
-      expect(consumo).toBe(486);
+      // 65 + 250 + 35 + 8 + 6 + 20 = 384W
+      // Con margen 25%: 384 * 1.25 = 480W
+      expect(consumo).toBe(480);
     });
 
     test('Fuente insuficiente detectada', () => {

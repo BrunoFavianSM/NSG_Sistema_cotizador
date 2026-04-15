@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Contexto Global de Aplicación
  * 
  * Gestiona el estado global de la aplicación:
@@ -88,6 +88,12 @@ const AppProviderInternal = ({ children }) => {
     errores: [],
     advertencias: []
   });
+
+  // ============================================
+  // ESTADO DE EXTRAS (productos adicionales por categoría)
+  // ============================================
+  const [extras, setExtras] = useState({});
+  const [cargandoExtras, setCargandoExtras] = useState({});
 
   // ============================================
   // INICIALIZACI�"N: Verificar autenticación
@@ -233,7 +239,11 @@ const AppProviderInternal = ({ children }) => {
    */
   const refrescarProducto = async (id) => {
     try {
-      const producto = await api.obtenerProductoPorId(id);
+      const existente = productos.find((p) => p.id === id);
+      if (!existente) return null;
+      const categoriaRuta = existente.subcategoria || existente.categoria;
+      const respuesta = await api.obtenerProductoPorId(categoriaRuta, id);
+      const producto = respuesta?.producto || respuesta;
       setProductos(prev => 
         prev.map(p => p.id === id ? producto : p)
       );
@@ -339,6 +349,13 @@ const AppProviderInternal = ({ children }) => {
       total += parseFloat(ram.precio_base);
     });
 
+    // Sumar extras
+    Object.values(extras).forEach(catItems => {
+      catItems.forEach(({ producto, cantidad }) => {
+        total += parseFloat(producto.precio_base) * cantidad;
+      });
+    });
+
     return total;
   };
 
@@ -411,6 +428,73 @@ const AppProviderInternal = ({ children }) => {
         advertencias: []
       };
     }
+  };
+
+  // ============================================
+  // FUNCIONES DE EXTRAS
+  // ============================================
+
+  /**
+   * Agrega un extra o incrementa su cantidad si ya existe
+   */
+  const agregarExtra = (categoria, producto) => {
+    setExtras(prev => {
+      const catItems = prev[categoria] || [];
+      const existente = catItems.findIndex(item => item.producto.id === producto.id);
+      if (existente >= 0) {
+        const actualizado = [...catItems];
+        actualizado[existente] = { ...actualizado[existente], cantidad: actualizado[existente].cantidad + 1 };
+        return { ...prev, [categoria]: actualizado };
+      }
+      return { ...prev, [categoria]: [...catItems, { producto, cantidad: 1 }] };
+    });
+  };
+
+  /**
+   * Decrementa cantidad de un extra; si llega a 0, lo elimina
+   */
+  const quitarExtra = (categoria, idProducto) => {
+    setExtras(prev => {
+      const catItems = prev[categoria] || [];
+      const actualizado = catItems
+        .map(item => item.producto.id === idProducto ? { ...item, cantidad: item.cantidad - 1 } : item)
+        .filter(item => item.cantidad > 0);
+      const resultado = { ...prev, [categoria]: actualizado };
+      if (actualizado.length === 0) delete resultado[categoria];
+      return resultado;
+    });
+  };
+
+  /**
+   * Carga productos de múltiples categorías extras desde la API
+   */
+  const cargarExtras = async (categorias = []) => {
+    const faltantes = categorias.filter(c => !(c in cargandoExtras) || !cargandoExtras[c]);
+    if (faltantes.length === 0) return;
+
+    const marcas = {};
+    faltantes.forEach(c => { marcas[c] = true; });
+    setCargandoExtras(prev => ({ ...prev, ...marcas }));
+
+    try {
+      const resultados = await Promise.all(
+        faltantes.map(c => api.obtenerProductosPorCategoria(c))
+      );
+      return resultados.reduce((acc, res, i) => {
+        acc[faltantes[i]] = res.productos || [];
+        return acc;
+      }, {});
+    } catch (error) {
+      console.error('Error al cargar extras:', error);
+      return {};
+    }
+  };
+
+  /**
+   * Limpia todos los extras seleccionados
+   */
+  const limpiarExtras = () => {
+    setExtras({});
   };
 
   // ============================================
@@ -509,7 +593,15 @@ const AppProviderInternal = ({ children }) => {
     actualizarMargen,
     actualizarConfiguracionFinanciera,
     calcularResumenFinanciero,
-    cargarMargenGanancia
+    cargarMargenGanancia,
+
+    // Extras
+    extras,
+    cargandoExtras,
+    agregarExtra,
+    quitarExtra,
+    cargarExtras,
+    limpiarExtras,
   };
 
   return (

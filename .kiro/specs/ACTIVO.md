@@ -21,6 +21,7 @@ sistema-cotizacion-automatizada
 Ruta actual:
 
 ```text
-<!-- TODO: definir-spec-activo -->
-reestructuracion-catalogo-productos
+TODO: definir-spec-activo
 ```
+<!-- TODO: definir-spec-activo -->
+<!-- reestructuracion-catalogo-productos -->

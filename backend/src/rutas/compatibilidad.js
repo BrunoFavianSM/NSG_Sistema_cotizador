@@ -9,6 +9,7 @@
 const express = require('express');
 const router = express.Router();
 const servicioCompatibilidad = require('../servicios/servicioCompatibilidad');
+const { ejecutarQuery } = require('../configuracion/baseDatos');
 
 /**
  * POST /api/compatibilidad/validar
@@ -27,7 +28,7 @@ router.post('/validar', async (req, res) => {
       });
     }
 
-    const resultado = servicioCompatibilidad.validarConfiguracion(componentes);
+    const resultado = await servicioCompatibilidad.validarConfiguracionConBD(componentes, ejecutarQuery);
 
     res.json(resultado);
   } catch (error) {

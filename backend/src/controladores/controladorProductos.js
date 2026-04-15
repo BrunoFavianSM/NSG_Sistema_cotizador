@@ -1,406 +1,500 @@
 /**
- * Controlador de Productos
- * 
- * Maneja todas las operaciones CRUD de productos con validación,
- * sanitización y control de acceso.
- * 
- * Requisitos: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.2, 2.3
+ * Controlador de Productos - Modelo hibrido normalizado.
+ * Tabla maestra: productos
+ * Diccionarios: categorias, marcas
+ * Especificaciones 1:1: specs_*
  */
 
 const { ejecutarQuery } = require('../configuracion/baseDatos');
-const { validarProducto, validarId } = require('../utilidades/validacion');
+const { validarId } = require('../utilidades/validacion');
 const { sanitizarObjeto } = require('../utilidades/sanitizacion');
+const {
+  CATEGORIAS_PUBLICAS_VALIDAS,
+  resolverCategoria,
+  resolverTablaPorCategoria,
+  requiereSubcategoria,
+  subcategoriaValida,
+  esCategoriaPrincipal,
+} = require('../configuracion/catalogoProductos');
 
-/**
- * Obtener todos los productos disponibles
- * Filtra por stock > 0 O disponible_a_pedido = true
- * Soporta filtrado por categoría y socket
- * 
- * GET /api/productos
- * Query params: categoria, socket
- * 
- * @param {Object} req - Request de Express
- * @param {Object} res - Response de Express
- */
+const TABLAS_VALIDAS = CATEGORIAS_PUBLICAS_VALIDAS;
+
+const SELECT_PRODUCTO_NORMALIZADO = `
+  SELECT
+    p.id,
+    p.nombre,
+    c.nombre AS categoria,
+    COALESCE(p.subcategoria, '') AS subcategoria,
+    p.categoria_proveedor,
+    p.codigo_proveedor,
+    COALESCE(m.nombre, '') AS marca,
+    COALESCE(sp.socket, sm.socket) AS socket,
+    COALESCE(sm.ram_tipo, sr.ram_tipo) AS ram_type,
+    COALESCE(sm.form_factor, sc.form_factor, sf.form_factor) AS form_factor,
+    sf.wattage,
+    COALESCE(sp.tdp_w, sg.tdp_w) AS tdp,
+    p.precio_base,
+    p.stock,
+    p.disponible_a_pedido,
+    NULL::INTEGER AS tiempo_entrega_dias,
+    p.descripcion_general AS descripcion_tecnica,
+    p.imagen_url,
+    p.imagen_path,
+    p.garantia,
+    p.flete,
+    p.created_at,
+    p.updated_at
+  FROM productos p
+  INNER JOIN categorias c ON c.id = p.id_categoria
+  LEFT JOIN marcas m ON m.id = p.id_marca
+  LEFT JOIN specs_procesador sp ON sp.id_producto = p.id
+  LEFT JOIN specs_placa_madre sm ON sm.id_producto = p.id
+  LEFT JOIN specs_ram sr ON sr.id_producto = p.id
+  LEFT JOIN specs_almacenamiento sa ON sa.id_producto = p.id
+  LEFT JOIN specs_gpu sg ON sg.id_producto = p.id
+  LEFT JOIN specs_fuente sf ON sf.id_producto = p.id
+  LEFT JOIN specs_case sc ON sc.id_producto = p.id
+`;
+
+const MAPA_SPECS_POR_CATEGORIA = {
+  procesador: { tabla: 'specs_procesador', campos: { socket: 'socket', tdp_w: 'tdp' } },
+  placa_madre: { tabla: 'specs_placa_madre', campos: { socket: 'socket', ram_tipo: 'ram_type', form_factor: 'form_factor' } },
+  ram: { tabla: 'specs_ram', campos: { ram_tipo: 'ram_type' } },
+  almacenamiento: { tabla: 'specs_almacenamiento', campos: {} },
+  gpu: { tabla: 'specs_gpu', campos: { tdp_w: 'tdp' } },
+  fuente: { tabla: 'specs_fuente', campos: { wattage: 'wattage', form_factor: 'form_factor' } },
+  case: { tabla: 'specs_case', campos: { form_factor: 'form_factor' } },
+};
+
+function resolverTabla(categoriaEntrada) {
+  const tabla = resolverTablaPorCategoria(categoriaEntrada);
+  if (!tabla) throw new Error(`Categoria invalida: "${categoriaEntrada}"`);
+  return tabla;
+}
+
+function resolverDestinoOperacion(categoriaEntrada, subcategoriaEntrada = null) {
+  const destino = resolverCategoria(categoriaEntrada);
+  if (!destino) throw new Error(`Categoria invalida: "${categoriaEntrada}"`);
+
+  let subcategoriaFinal = destino.subcategoria;
+  if (requiereSubcategoria(destino.categoria) && !subcategoriaFinal) {
+    subcategoriaFinal = String(subcategoriaEntrada || '').trim().toLowerCase() || null;
+  }
+
+  if (requiereSubcategoria(destino.categoria) && !subcategoriaFinal) {
+    throw new Error(`Subcategoria requerida para categoria "${destino.categoria}"`);
+  }
+
+  if (!subcategoriaValida(destino.categoria, subcategoriaFinal)) {
+    throw new Error(`Subcategoria invalida para categoria "${destino.categoria}"`);
+  }
+
+  return {
+    categoriaCanonica: destino.categoria,
+    subcategoria: subcategoriaFinal,
+    tabla: 'productos',
+  };
+}
+
+async function obtenerIdCategoriaPorNombre(nombreCategoria) {
+  const r = await ejecutarQuery('SELECT id FROM categorias WHERE nombre = $1', [nombreCategoria]);
+  if (r.rows.length > 0) return r.rows[0].id;
+  const creado = await ejecutarQuery(
+    'INSERT INTO categorias (nombre, es_componente_principal) VALUES ($1, $2) RETURNING id',
+    [nombreCategoria, esCategoriaPrincipal(nombreCategoria)]
+  );
+  return creado.rows[0].id;
+}
+
+async function obtenerIdMarcaSiExiste(marca) {
+  const nombre = String(marca || '').trim();
+  if (!nombre) return null;
+  const r = await ejecutarQuery(
+    'INSERT INTO marcas (nombre) VALUES ($1) ON CONFLICT (nombre) DO UPDATE SET nombre = EXCLUDED.nombre RETURNING id',
+    [nombre]
+  );
+  return r.rows[0].id;
+}
+
+async function upsertSpecsProducto(idProducto, categoria, datosSanitizados) {
+  const def = MAPA_SPECS_POR_CATEGORIA[categoria];
+  if (!def) return;
+
+  const columnas = Object.keys(def.campos);
+  if (columnas.length === 0) {
+    await ejecutarQuery(
+      `INSERT INTO ${def.tabla} (id_producto) VALUES ($1)
+       ON CONFLICT (id_producto) DO NOTHING`,
+      [idProducto]
+    );
+    return;
+  }
+
+  const columnasConValor = columnas.filter((col) => Object.prototype.hasOwnProperty.call(datosSanitizados, def.campos[col]));
+  if (columnasConValor.length === 0) {
+    await ejecutarQuery(
+      `INSERT INTO ${def.tabla} (id_producto) VALUES ($1)
+       ON CONFLICT (id_producto) DO NOTHING`,
+      [idProducto]
+    );
+    return;
+  }
+
+  const valores = columnasConValor.map((col) => datosSanitizados[def.campos[col]] ?? null);
+  const placeholders = columnasConValor.map((_, i) => `$${i + 2}`).join(', ');
+  const updates = columnasConValor.map((col) => `${col} = EXCLUDED.${col}`).join(', ');
+
+  await ejecutarQuery(
+    `INSERT INTO ${def.tabla} (id_producto, ${columnasConValor.join(', ')})
+     VALUES ($1, ${placeholders})
+     ON CONFLICT (id_producto) DO UPDATE SET ${updates}`,
+    [idProducto, ...valores]
+  );
+}
+
+function construirWhereDestino(destino, params, indiceInicial = 1) {
+  let i = indiceInicial;
+  let where = ' WHERE c.nombre = $' + i++;
+  params.push(destino.categoriaCanonica);
+
+  if (requiereSubcategoria(destino.categoriaCanonica)) {
+    if (destino.subcategoria) {
+      where += ` AND p.subcategoria = $${i++}`;
+      params.push(destino.subcategoria);
+    }
+  }
+
+  return { where, nextIndex: i };
+}
+
 async function obtenerProductos(req, res) {
   try {
-    const { categoria, socket } = req.query;
-    
-    // Query base: solo productos disponibles
-    let query = `
-      SELECT 
-        id, nombre, categoria, socket, ram_type, form_factor,
-        wattage, tdp, precio_base, stock, disponible_a_pedido,
-        tiempo_entrega_dias, descripcion_tecnica, imagen_url,
-        created_at, updated_at
-      FROM productos
-      WHERE (stock > 0 OR disponible_a_pedido = true)
-    `;
-    
-    const parametros = [];
-    let contadorParam = 1;
-    
-    // Filtrar por categoría si se proporciona
+    const { categoria, socket, marca, busqueda, subcategoria } = req.query;
+    const params = [];
+    let i = 1;
+    let where = ' WHERE (p.stock > 0 OR p.disponible_a_pedido = true)';
+
     if (categoria) {
-      query += ` AND categoria = $${contadorParam}`;
-      parametros.push(categoria);
-      contadorParam++;
+      const destino = resolverDestinoOperacion(categoria, subcategoria);
+      const base = construirWhereDestino(destino, params, i);
+      where += base.where.replace(' WHERE', ' AND');
+      i = base.nextIndex;
     }
-    
-    // Filtrar por socket si se proporciona
+
     if (socket) {
-      query += ` AND socket = $${contadorParam}`;
-      parametros.push(socket);
-      contadorParam++;
+      where += ` AND COALESCE(sp.socket, sm.socket) = $${i++}`;
+      params.push(socket);
     }
-    
-    query += ' ORDER BY categoria, nombre';
-    
-    const resultado = await ejecutarQuery(query, parametros);
-    
-    res.json({
-      exito: true,
-      cantidad: resultado.rows.length,
-      productos: resultado.rows
-    });
+    if (marca) {
+      where += ` AND LOWER(COALESCE(m.nombre, '')) = LOWER($${i++})`;
+      params.push(marca);
+    }
+    if (busqueda) {
+      where += ` AND (p.nombre ILIKE $${i} OR COALESCE(p.descripcion_general, '') ILIKE $${i})`;
+      params.push(`%${busqueda}%`);
+    }
+
+    const resultado = await ejecutarQuery(
+      `${SELECT_PRODUCTO_NORMALIZADO}
+       ${where}
+       ORDER BY c.nombre, p.subcategoria, p.nombre`,
+      params
+    );
+
+    return res.json({ exito: true, cantidad: resultado.rows.length, productos: resultado.rows });
   } catch (error) {
+    if (error.message.includes('Categoria') || error.message.includes('Subcategoria')) {
+      return res.status(400).json({ error: 'Categoria invalida', mensaje: error.message });
+    }
     console.error('Error al obtener productos:', error);
-    res.status(500).json({ 
-      error: 'Error al obtener productos',
-      mensaje: 'No se pudieron recuperar los productos' 
-    });
+    return res.status(500).json({ error: 'Error al obtener productos', mensaje: 'No se pudieron recuperar los productos' });
   }
 }
 
-/**
- * Obtener un producto por ID
- * 
- * GET /api/productos/:id
- * 
- * @param {Object} req - Request de Express
- * @param {Object} res - Response de Express
- */
 async function obtenerProductoPorId(req, res) {
   try {
+    const destino = resolverDestinoOperacion(req.params.categoria, req.query.subcategoria);
     const validacionId = validarId(req.params.id);
-    
-    if (!validacionId.valido) {
-      return res.status(400).json({ 
-        error: 'ID inválido',
-        mensaje: validacionId.error 
-      });
-    }
-    
+    if (!validacionId.valido) return res.status(400).json({ error: 'ID invalido', mensaje: validacionId.error });
+
+    const params = [validacionId.id];
+    const whereDestino = construirWhereDestino(destino, params, 2);
+
     const resultado = await ejecutarQuery(
-      `SELECT 
-        id, nombre, categoria, socket, ram_type, form_factor,
-        wattage, tdp, precio_base, stock, disponible_a_pedido,
-        tiempo_entrega_dias, descripcion_tecnica, imagen_url,
-        created_at, updated_at
-      FROM productos 
-      WHERE id = $1`,
-      [validacionId.id]
+      `${SELECT_PRODUCTO_NORMALIZADO}
+       WHERE p.id = $1 ${whereDestino.where.replace(' WHERE', ' AND')}
+       LIMIT 1`,
+      params
     );
-    
+
     if (resultado.rows.length === 0) {
-      return res.status(404).json({ 
-        error: 'Producto no encontrado',
-        mensaje: `No existe un producto con ID ${validacionId.id}` 
-      });
+      return res.status(404).json({ error: 'Producto no encontrado', mensaje: `No existe un producto con ID ${validacionId.id}` });
     }
-    
-    res.json({
-      exito: true,
-      producto: resultado.rows[0]
-    });
+
+    return res.json({ exito: true, producto: resultado.rows[0] });
   } catch (error) {
+    if (error.message.includes('Categoria') || error.message.includes('Subcategoria')) {
+      return res.status(400).json({ error: 'Categoria invalida', mensaje: error.message });
+    }
     console.error('Error al obtener producto:', error);
-    res.status(500).json({ 
-      error: 'Error al obtener producto',
-      mensaje: 'No se pudo recuperar el producto' 
-    });
+    return res.status(500).json({ error: 'Error al obtener producto', mensaje: 'No se pudo recuperar el producto' });
   }
 }
 
-/**
- * Crear un nuevo producto (requiere autenticación)
- * 
- * POST /api/productos
- * Body: { nombre, categoria, socket?, ram_type?, form_factor?, wattage?, 
- *         tdp?, precio_base, stock, disponible_a_pedido?, tiempo_entrega_dias?,
- *         descripcion_tecnica?, imagen_url? }
- * 
- * @param {Object} req - Request de Express
- * @param {Object} res - Response de Express
- */
 async function crearProducto(req, res) {
   try {
-    // Sanitizar datos de entrada
     const datosSanitizados = sanitizarObjeto(req.body);
-    
-    // Validar datos
-    const validacion = validarProducto(datosSanitizados);
-    
-    if (!validacion.valido) {
-      return res.status(400).json({ 
-        error: 'Datos inválidos',
-        errores: validacion.errores 
-      });
+    const destino = resolverDestinoOperacion(datosSanitizados.categoria, datosSanitizados.subcategoria);
+
+    if (!datosSanitizados.nombre || !datosSanitizados.codigo_proveedor) {
+      return res.status(400).json({ error: 'Datos invalidos', mensaje: 'nombre y codigo_proveedor son obligatorios' });
     }
-    
-    // Preparar datos para inserción
-    const {
-      nombre,
-      categoria,
-      socket = null,
-      ram_type = null,
-      form_factor = null,
-      wattage = null,
-      tdp = null,
-      precio_base,
-      stock,
-      disponible_a_pedido = false,
-      tiempo_entrega_dias = null,
-      descripcion_tecnica = null,
-      imagen_url = null
-    } = datosSanitizados;
-    
-    // Insertar producto
-    const resultado = await ejecutarQuery(
+
+    const precio = Number(datosSanitizados.precio_base);
+    const stock = Number(datosSanitizados.stock);
+    if (!Number.isFinite(precio) || precio <= 0 || precio > 100000) {
+      return res.status(400).json({ error: 'Datos invalidos', mensaje: 'precio_base invalido' });
+    }
+    if (!Number.isInteger(stock) || stock < 0) {
+      return res.status(400).json({ error: 'Datos invalidos', mensaje: 'stock invalido' });
+    }
+
+    const idCategoria = await obtenerIdCategoriaPorNombre(destino.categoriaCanonica);
+    const idMarca = await obtenerIdMarcaSiExiste(datosSanitizados.marca);
+
+    const insert = await ejecutarQuery(
       `INSERT INTO productos (
-        nombre, categoria, socket, ram_type, form_factor,
-        wattage, tdp, precio_base, stock, disponible_a_pedido,
-        tiempo_entrega_dias, descripcion_tecnica, imagen_url
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-      RETURNING 
-        id, nombre, categoria, socket, ram_type, form_factor,
-        wattage, tdp, precio_base, stock, disponible_a_pedido,
-        tiempo_entrega_dias, descripcion_tecnica, imagen_url,
-        created_at, updated_at`,
+         id_categoria, id_marca, subcategoria, categoria_proveedor, codigo_proveedor,
+         nombre, descripcion_general, precio_base, stock, disponible_a_pedido, garantia, flete, imagen_url
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+       RETURNING id`,
       [
-        nombre, categoria, socket, ram_type, form_factor,
-        wattage, tdp, precio_base, stock, disponible_a_pedido,
-        tiempo_entrega_dias, descripcion_tecnica, imagen_url
+        idCategoria,
+        idMarca,
+        destino.subcategoria || null,
+        datosSanitizados.categoria_proveedor || null,
+        datosSanitizados.codigo_proveedor,
+        datosSanitizados.nombre,
+        datosSanitizados.descripcion_tecnica || null,
+        precio,
+        stock,
+        Boolean(datosSanitizados.disponible_a_pedido),
+        datosSanitizados.garantia || null,
+        null,
+        datosSanitizados.imagen_url || null,
       ]
     );
-    
-    res.status(201).json({
-      exito: true,
-      mensaje: 'Producto creado exitosamente',
-      producto: resultado.rows[0]
-    });
+
+    const id = insert.rows[0].id;
+    if (esCategoriaPrincipal(destino.categoriaCanonica)) {
+      await upsertSpecsProducto(id, destino.categoriaCanonica, datosSanitizados);
+    }
+
+    req.params.id = String(id);
+    req.params.categoria = destino.categoriaCanonica;
+    req.query.subcategoria = destino.subcategoria || '';
+    return obtenerProductoPorId(req, res);
   } catch (error) {
+    if (error.message.includes('Categoria') || error.message.includes('Subcategoria')) {
+      return res.status(400).json({ error: 'Categoria invalida', mensaje: error.message });
+    }
+    if (error.code === '23505') return res.status(409).json({ error: 'Producto duplicado', mensaje: 'Ya existe un producto con ese codigo' });
+    if (error.code === '23514') return res.status(400).json({ error: 'Constraint violado', mensaje: 'Los datos no cumplen las restricciones de base de datos' });
     console.error('Error al crear producto:', error);
-    
-    // Manejar errores específicos de base de datos
-    if (error.code === '23505') {
-      return res.status(409).json({ 
-        error: 'Producto duplicado',
-        mensaje: 'Ya existe un producto con ese nombre' 
-      });
-    }
-    
-    if (error.code === '23514') {
-      return res.status(400).json({ 
-        error: 'Constraint violado',
-        mensaje: 'Los datos no cumplen con las restricciones de la base de datos' 
-      });
-    }
-    
-    res.status(500).json({ 
-      error: 'Error al crear producto',
-      mensaje: 'No se pudo crear el producto' 
-    });
+    return res.status(500).json({ error: 'Error al crear producto', mensaje: 'No se pudo crear el producto' });
   }
 }
 
-/**
- * Actualizar un producto existente (requiere autenticación)
- * 
- * PUT /api/productos/:id
- * Body: { nombre?, categoria?, socket?, ram_type?, form_factor?, wattage?, 
- *         tdp?, precio_base?, stock?, disponible_a_pedido?, tiempo_entrega_dias?,
- *         descripcion_tecnica?, imagen_url? }
- * 
- * @param {Object} req - Request de Express
- * @param {Object} res - Response de Express
- */
 async function actualizarProducto(req, res) {
   try {
-    // Validar ID
+    const destino = resolverDestinoOperacion(req.params.categoria, req.body?.subcategoria || req.query.subcategoria);
     const validacionId = validarId(req.params.id);
-    
-    if (!validacionId.valido) {
-      return res.status(400).json({ 
-        error: 'ID inválido',
-        mensaje: validacionId.error 
-      });
-    }
-    
-    // Verificar que el producto existe
-    const productoExistente = await ejecutarQuery(
-      'SELECT id FROM productos WHERE id = $1',
-      [validacionId.id]
-    );
-    
-    if (productoExistente.rows.length === 0) {
-      return res.status(404).json({ 
-        error: 'Producto no encontrado',
-        mensaje: `No existe un producto con ID ${validacionId.id}` 
-      });
-    }
-    
-    // Sanitizar datos de entrada
+    if (!validacionId.valido) return res.status(400).json({ error: 'ID invalido', mensaje: validacionId.error });
+
     const datosSanitizados = sanitizarObjeto(req.body);
-    
-    // Construir query de actualización dinámica
-    const camposActualizables = [
-      'nombre', 'categoria', 'socket', 'ram_type', 'form_factor',
-      'wattage', 'tdp', 'precio_base', 'stock', 'disponible_a_pedido',
-      'tiempo_entrega_dias', 'descripcion_tecnica', 'imagen_url'
-    ];
-    
+
+    const check = await ejecutarQuery(
+      `SELECT p.id
+       FROM productos p
+       INNER JOIN categorias c ON c.id = p.id_categoria
+       WHERE p.id = $1 AND c.nombre = $2
+       ${destino.subcategoria ? 'AND p.subcategoria = $3' : ''}`,
+      destino.subcategoria ? [validacionId.id, destino.categoriaCanonica, destino.subcategoria] : [validacionId.id, destino.categoriaCanonica]
+    );
+    if (check.rows.length === 0) {
+      return res.status(404).json({ error: 'Producto no encontrado', mensaje: `No existe un producto con ID ${validacionId.id}` });
+    }
+
     const actualizaciones = [];
     const valores = [];
-    let contadorParam = 1;
-    
-    for (const campo of camposActualizables) {
-      if (datosSanitizados.hasOwnProperty(campo)) {
-        actualizaciones.push(`${campo} = $${contadorParam}`);
-        valores.push(datosSanitizados[campo]);
-        contadorParam++;
-      }
+    let i = 1;
+
+    if (Object.prototype.hasOwnProperty.call(datosSanitizados, 'nombre')) {
+      actualizaciones.push(`nombre = $${i++}`);
+      valores.push(datosSanitizados.nombre);
     }
-    
-    if (actualizaciones.length === 0) {
-      return res.status(400).json({ 
-        error: 'Sin datos para actualizar',
-        mensaje: 'No se proporcionaron campos para actualizar' 
-      });
+    if (Object.prototype.hasOwnProperty.call(datosSanitizados, 'categoria_proveedor')) {
+      actualizaciones.push(`categoria_proveedor = $${i++}`);
+      valores.push(datosSanitizados.categoria_proveedor || null);
     }
-    
-    // Agregar ID al final de los valores
-    valores.push(validacionId.id);
-    
-    // Ejecutar actualización
-    const query = `
-      UPDATE productos 
-      SET ${actualizaciones.join(', ')}
-      WHERE id = $${contadorParam}
-      RETURNING 
-        id, nombre, categoria, socket, ram_type, form_factor,
-        wattage, tdp, precio_base, stock, disponible_a_pedido,
-        tiempo_entrega_dias, descripcion_tecnica, imagen_url,
-        created_at, updated_at
-    `;
-    
-    const resultado = await ejecutarQuery(query, valores);
-    
-    res.json({
-      exito: true,
-      mensaje: 'Producto actualizado exitosamente',
-      producto: resultado.rows[0]
-    });
+    if (Object.prototype.hasOwnProperty.call(datosSanitizados, 'codigo_proveedor')) {
+      actualizaciones.push(`codigo_proveedor = $${i++}`);
+      valores.push(datosSanitizados.codigo_proveedor);
+    }
+    if (Object.prototype.hasOwnProperty.call(datosSanitizados, 'descripcion_tecnica')) {
+      actualizaciones.push(`descripcion_general = $${i++}`);
+      valores.push(datosSanitizados.descripcion_tecnica || null);
+    }
+    if (Object.prototype.hasOwnProperty.call(datosSanitizados, 'precio_base')) {
+      actualizaciones.push(`precio_base = $${i++}`);
+      valores.push(Number(datosSanitizados.precio_base));
+    }
+    if (Object.prototype.hasOwnProperty.call(datosSanitizados, 'stock')) {
+      actualizaciones.push(`stock = $${i++}`);
+      valores.push(Number(datosSanitizados.stock));
+    }
+    if (Object.prototype.hasOwnProperty.call(datosSanitizados, 'disponible_a_pedido')) {
+      actualizaciones.push(`disponible_a_pedido = $${i++}`);
+      valores.push(Boolean(datosSanitizados.disponible_a_pedido));
+    }
+    if (Object.prototype.hasOwnProperty.call(datosSanitizados, 'garantia')) {
+      actualizaciones.push(`garantia = $${i++}`);
+      valores.push(datosSanitizados.garantia || null);
+    }
+    if (Object.prototype.hasOwnProperty.call(datosSanitizados, 'imagen_url')) {
+      actualizaciones.push(`imagen_url = $${i++}`);
+      valores.push(datosSanitizados.imagen_url || null);
+    }
+    if (Object.prototype.hasOwnProperty.call(datosSanitizados, 'imagen_path')) {
+      actualizaciones.push(`imagen_path = $${i++}`);
+      valores.push(datosSanitizados.imagen_path || null);
+    }
+    if (Object.prototype.hasOwnProperty.call(datosSanitizados, 'marca')) {
+      const idMarca = await obtenerIdMarcaSiExiste(datosSanitizados.marca);
+      actualizaciones.push(`id_marca = $${i++}`);
+      valores.push(idMarca);
+    }
+
+    if (actualizaciones.length > 0) {
+      valores.push(validacionId.id);
+      await ejecutarQuery(`UPDATE productos SET ${actualizaciones.join(', ')} WHERE id = $${i}`, valores);
+    }
+
+    if (esCategoriaPrincipal(destino.categoriaCanonica)) {
+      await upsertSpecsProducto(validacionId.id, destino.categoriaCanonica, datosSanitizados);
+    }
+
+    req.params.id = String(validacionId.id);
+    req.params.categoria = destino.categoriaCanonica;
+    req.query.subcategoria = destino.subcategoria || '';
+    return obtenerProductoPorId(req, res);
   } catch (error) {
-    console.error('Error al actualizar producto:', error);
-    
-    // Manejar errores específicos de base de datos
-    if (error.code === '23514') {
-      return res.status(400).json({ 
-        error: 'Constraint violado',
-        mensaje: 'Los datos no cumplen con las restricciones de la base de datos' 
-      });
+    if (error.message.includes('Categoria') || error.message.includes('Subcategoria')) {
+      return res.status(400).json({ error: 'Categoria invalida', mensaje: error.message });
     }
-    
-    res.status(500).json({ 
-      error: 'Error al actualizar producto',
-      mensaje: 'No se pudo actualizar el producto' 
-    });
+    console.error('Error al actualizar producto:', error);
+    return res.status(500).json({ error: 'Error al actualizar producto', mensaje: 'No se pudo actualizar el producto' });
   }
 }
 
-/**
- * Eliminar un producto (requiere autenticación)
- * 
- * DELETE /api/productos/:id
- * 
- * @param {Object} req - Request de Express
- * @param {Object} res - Response de Express
- */
 async function eliminarProducto(req, res) {
   try {
-    // Validar ID
+    const destino = resolverDestinoOperacion(req.params.categoria, req.query.subcategoria);
     const validacionId = validarId(req.params.id);
-    
-    if (!validacionId.valido) {
-      return res.status(400).json({ 
-        error: 'ID inválido',
-        mensaje: validacionId.error 
-      });
-    }
-    
-    // Verificar que el producto existe
-    const productoExistente = await ejecutarQuery(
-      'SELECT id, nombre FROM productos WHERE id = $1',
-      [validacionId.id]
+    if (!validacionId.valido) return res.status(400).json({ error: 'ID invalido', mensaje: validacionId.error });
+
+    const existente = await ejecutarQuery(
+      `SELECT p.id, p.nombre
+       FROM productos p
+       INNER JOIN categorias c ON c.id = p.id_categoria
+       WHERE p.id = $1 AND c.nombre = $2
+       ${destino.subcategoria ? 'AND p.subcategoria = $3' : ''}`,
+      destino.subcategoria ? [validacionId.id, destino.categoriaCanonica, destino.subcategoria] : [validacionId.id, destino.categoriaCanonica]
     );
-    
-    if (productoExistente.rows.length === 0) {
-      return res.status(404).json({ 
-        error: 'Producto no encontrado',
-        mensaje: `No existe un producto con ID ${validacionId.id}` 
-      });
+
+    if (existente.rows.length === 0) {
+      return res.status(404).json({ error: 'Producto no encontrado', mensaje: `No existe un producto con ID ${validacionId.id}` });
     }
-    
-    // Verificar si el producto está en cotizaciones
+
     const enCotizaciones = await ejecutarQuery(
       'SELECT COUNT(*) as cantidad FROM detalle_cotizacion WHERE id_producto = $1',
       [validacionId.id]
     );
-    
-    if (parseInt(enCotizaciones.rows[0].cantidad) > 0) {
-      return res.status(409).json({ 
+
+    if (parseInt(enCotizaciones.rows[0].cantidad, 10) > 0) {
+      return res.status(409).json({
         error: 'Producto en uso',
-        mensaje: 'No se puede eliminar el producto porque está incluido en cotizaciones existentes' 
+        mensaje: 'No se puede eliminar el producto porque esta incluido en cotizaciones existentes',
       });
     }
-    
-    // Eliminar producto
-    await ejecutarQuery(
-      'DELETE FROM productos WHERE id = $1',
-      [validacionId.id]
-    );
-    
-    res.json({
+
+    await ejecutarQuery('DELETE FROM productos WHERE id = $1', [validacionId.id]);
+    return res.json({
       exito: true,
       mensaje: 'Producto eliminado exitosamente',
-      producto: {
-        id: validacionId.id,
-        nombre: productoExistente.rows[0].nombre
-      }
+      producto: { id: validacionId.id, nombre: existente.rows[0].nombre },
     });
   } catch (error) {
-    console.error('Error al eliminar producto:', error);
-    
-    // Manejar errores de integridad referencial
-    if (error.code === '23503') {
-      return res.status(409).json({ 
-        error: 'Producto en uso',
-        mensaje: 'No se puede eliminar el producto porque está referenciado en otras tablas' 
-      });
+    if (error.message.includes('Categoria') || error.message.includes('Subcategoria')) {
+      return res.status(400).json({ error: 'Categoria invalida', mensaje: error.message });
     }
-    
-    res.status(500).json({ 
-      error: 'Error al eliminar producto',
-      mensaje: 'No se pudo eliminar el producto' 
-    });
+    console.error('Error al eliminar producto:', error);
+    return res.status(500).json({ error: 'Error al eliminar producto', mensaje: 'No se pudo eliminar el producto' });
+  }
+}
+
+async function subirImagenProducto(req, res) {
+  try {
+    const destino = resolverDestinoOperacion(req.params.categoria, req.query.subcategoria);
+    const validacionId = validarId(req.params.id);
+    if (!validacionId.valido) return res.status(400).json({ error: 'ID invalido', mensaje: validacionId.error });
+    if (!req.file) return res.status(400).json({ error: 'Imagen no recibida', mensaje: 'Debe enviar una imagen en el campo "imagen"' });
+
+    const imagenPath = `/uploads/${req.file.filename}`;
+    const resultado = await ejecutarQuery(
+      `UPDATE productos p
+       SET imagen_path = $1
+       FROM categorias c
+       WHERE p.id = $2 AND c.id = p.id_categoria AND c.nombre = $3
+       ${destino.subcategoria ? 'AND p.subcategoria = $4' : ''}
+       RETURNING p.id, p.nombre, p.imagen_path`,
+      destino.subcategoria
+        ? [imagenPath, validacionId.id, destino.categoriaCanonica, destino.subcategoria]
+        : [imagenPath, validacionId.id, destino.categoriaCanonica]
+    );
+
+    if (resultado.rows.length === 0) {
+      return res.status(404).json({ error: 'Producto no encontrado', mensaje: `No existe un producto con ID ${validacionId.id}` });
+    }
+    return res.json({ exito: true, mensaje: 'Imagen subida exitosamente', producto: resultado.rows[0] });
+  } catch (error) {
+    if (error.message.includes('Categoria') || error.message.includes('Subcategoria')) {
+      return res.status(400).json({ error: 'Categoria invalida', mensaje: error.message });
+    }
+    console.error('Error al subir imagen:', error);
+    return res.status(500).json({ error: 'Error al subir imagen', mensaje: 'No se pudo subir la imagen del producto' });
+  }
+}
+
+async function limpiarCatalogo(req, res) {
+  try {
+    await ejecutarQuery('TRUNCATE TABLE specs_case, specs_fuente, specs_gpu, specs_almacenamiento, specs_ram, specs_placa_madre, specs_procesador, productos, marcas RESTART IDENTITY CASCADE');
+    return res.json({ exito: true, mensaje: 'Catalogo limpiado (productos + specs)' });
+  } catch (error) {
+    console.error('Error al limpiar catalogo:', error);
+    return res.status(500).json({ error: 'Error al limpiar catalogo', mensaje: error.message });
   }
 }
 
 module.exports = {
+  TABLAS_VALIDAS,
+  resolverTabla,
+  resolverDestinoOperacion,
   obtenerProductos,
   obtenerProductoPorId,
   crearProducto,
   actualizarProducto,
-  eliminarProducto
+  eliminarProducto,
+  subirImagenProducto,
+  limpiarCatalogo,
 };
