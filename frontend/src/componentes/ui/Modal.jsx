@@ -12,8 +12,13 @@ export default function Modal({
   size = 'md',
 }) {
   const dialogRef = useRef(null);
+  const onCloseRef = useRef(onClose);
   const titleId = useId();
   const descriptionId = useId();
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -34,7 +39,10 @@ export default function Modal({
     requestAnimationFrame(() => {
       const focusables = getFocusable();
       if (focusables.length > 0) {
-        focusables[0].focus();
+        const prioridad = focusables.find((item) => item.matches('[data-autofocus="true"]'));
+        const sinCerrar = focusables.find((item) => !item.matches('[data-modal-close="true"]'));
+        const objetivo = prioridad || sinCerrar || focusables[0];
+        objetivo.focus();
       } else if (dialogRef.current) {
         dialogRef.current.focus();
       }
@@ -43,7 +51,7 @@ export default function Modal({
     const onKeyDown = (event) => {
       if (event.key === 'Escape') {
         event.stopPropagation();
-        onClose();
+        onCloseRef.current?.();
         return;
       }
 
@@ -77,7 +85,7 @@ export default function Modal({
         previousActiveElement.focus();
       }
     };
-  }, [open, onClose]);
+  }, [open]);
 
   const widthClass = {
     sm: 'max-w-lg',
@@ -127,6 +135,7 @@ export default function Modal({
               <button
                 type="button"
                 onClick={onClose}
+                data-modal-close="true"
                 className="min-h-11 min-w-11 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors duration-higNormal ease-hig hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-text)]"
                 aria-label="Cerrar diálogo"
               >

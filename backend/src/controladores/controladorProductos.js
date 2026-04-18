@@ -28,11 +28,6 @@ const SELECT_PRODUCTO_NORMALIZADO = `
     p.categoria_proveedor,
     p.codigo_proveedor,
     COALESCE(m.nombre, '') AS marca,
-    COALESCE(sp.socket, sm.socket) AS socket,
-    COALESCE(sm.ram_tipo, sr.ram_tipo) AS ram_type,
-    COALESCE(sm.form_factor, sc.form_factor, sf.form_factor) AS form_factor,
-    sf.wattage,
-    COALESCE(sp.tdp_w, sg.tdp_w) AS tdp,
     p.precio_base,
     p.stock,
     p.disponible_a_pedido,
@@ -43,7 +38,58 @@ const SELECT_PRODUCTO_NORMALIZADO = `
     p.garantia,
     p.flete,
     p.created_at,
-    p.updated_at
+    p.updated_at,
+    -- specs_procesador
+    COALESCE(sp.socket, sm.socket) AS socket,
+    sp.arquitectura,
+    sp.nucleos,
+    sp.hilos,
+    sp.frecuencia_base_ghz,
+    sp.frecuencia_boost_ghz,
+    COALESCE(sp.tdp_w, sg.tdp_w) AS tdp,
+    sp.graficos_integrados,
+    -- specs_placa_madre
+    sm.chipset,
+    COALESCE(sm.ram_tipo, sr.ram_tipo) AS ram_type,
+    COALESCE(sm.form_factor, sc.form_factor, sf.form_factor, sa.form_factor) AS form_factor,
+    sm.max_ram_gb,
+    sm.slots_ram,
+    sm.pcie_version,
+    sm.m2_slots,
+    -- specs_ram
+    sr.capacidad_gb,
+    sr.velocidad_mhz,
+    sr.latencia,
+    sr.modulos,
+    sr.cantidad_modulos,
+    sr.rgb,
+    -- specs_almacenamiento
+    sa.tipo_almacenamiento,
+    sa.interfaz,
+    sa.velocidad_lectura_mbps,
+    sa.velocidad_escritura_mbps,
+    sa.nvme_gen,
+    -- specs_gpu
+    sg.chipset AS chipset_gpu,
+    sg.vram_gb,
+    sg.vram_tipo,
+    sg.bus_bits,
+    sg.boost_mhz,
+    sg.longitud_mm,
+    sg.fuente_recomendada_w,
+    -- specs_fuente
+    sf.wattage,
+    sf.certificacion,
+    sf.modular,
+    sf.pcie_conectores,
+    sf.sata_conectores,
+    -- specs_case
+    sc.compatibilidad_placa,
+    sc.max_gpu_mm,
+    sc.max_cooler_mm,
+    sc.ventiladores_incluidos,
+    sc.color,
+    sc.panel_lateral
   FROM productos p
   INNER JOIN categorias c ON c.id = p.id_categoria
   LEFT JOIN marcas m ON m.id = p.id_marca
@@ -57,13 +103,92 @@ const SELECT_PRODUCTO_NORMALIZADO = `
 `;
 
 const MAPA_SPECS_POR_CATEGORIA = {
-  procesador: { tabla: 'specs_procesador', campos: { socket: 'socket', tdp_w: 'tdp' } },
-  placa_madre: { tabla: 'specs_placa_madre', campos: { socket: 'socket', ram_tipo: 'ram_type', form_factor: 'form_factor' } },
-  ram: { tabla: 'specs_ram', campos: { ram_tipo: 'ram_type' } },
-  almacenamiento: { tabla: 'specs_almacenamiento', campos: {} },
-  gpu: { tabla: 'specs_gpu', campos: { tdp_w: 'tdp' } },
-  fuente: { tabla: 'specs_fuente', campos: { wattage: 'wattage', form_factor: 'form_factor' } },
-  case: { tabla: 'specs_case', campos: { form_factor: 'form_factor' } },
+  procesador: {
+    tabla: 'specs_procesador',
+    campos: {
+      socket: 'socket',
+      arquitectura: 'arquitectura',
+      nucleos: 'nucleos',
+      hilos: 'hilos',
+      frecuencia_base_ghz: 'frecuencia_base_ghz',
+      frecuencia_boost_ghz: 'frecuencia_boost_ghz',
+      tdp_w: 'tdp',
+      graficos_integrados: 'graficos_integrados',
+    },
+  },
+  placa_madre: {
+    tabla: 'specs_placa_madre',
+    campos: {
+      socket: 'socket',
+      chipset: 'chipset',
+      form_factor: 'form_factor',
+      ram_tipo: 'ram_type',
+      max_ram_gb: 'max_ram_gb',
+      slots_ram: 'slots_ram',
+      pcie_version: 'pcie_version',
+      m2_slots: 'm2_slots',
+    },
+  },
+  ram: {
+    tabla: 'specs_ram',
+    campos: {
+      ram_tipo: 'ram_type',
+      capacidad_gb: 'capacidad_gb',
+      velocidad_mhz: 'velocidad_mhz',
+      latencia: 'latencia',
+      modulos: 'modulos',
+      cantidad_modulos: 'cantidad_modulos',
+      rgb: 'rgb',
+    },
+  },
+  almacenamiento: {
+    tabla: 'specs_almacenamiento',
+    campos: {
+      tipo_almacenamiento: 'tipo_almacenamiento',
+      capacidad_gb: 'capacidad_gb',
+      interfaz: 'interfaz',
+      form_factor: 'form_factor',
+      velocidad_lectura_mbps: 'velocidad_lectura_mbps',
+      velocidad_escritura_mbps: 'velocidad_escritura_mbps',
+      nvme_gen: 'nvme_gen',
+    },
+  },
+  gpu: {
+    tabla: 'specs_gpu',
+    campos: {
+      chipset: 'chipset',
+      vram_gb: 'vram_gb',
+      vram_tipo: 'vram_tipo',
+      bus_bits: 'bus_bits',
+      boost_mhz: 'boost_mhz',
+      tdp_w: 'tdp',
+      longitud_mm: 'longitud_mm',
+      fuente_recomendada_w: 'fuente_recomendada_w',
+    },
+  },
+  fuente: {
+    tabla: 'specs_fuente',
+    campos: {
+      wattage: 'wattage',
+      certificacion: 'certificacion',
+      modular: 'modular',
+      form_factor: 'form_factor',
+      pcie_conectores: 'pcie_conectores',
+      sata_conectores: 'sata_conectores',
+    },
+  },
+  case: {
+    tabla: 'specs_case',
+    campos: {
+      form_factor: 'form_factor',
+      compatibilidad_placa: 'compatibilidad_placa',
+      max_gpu_mm: 'max_gpu_mm',
+      max_cooler_mm: 'max_cooler_mm',
+      ventiladores_incluidos: 'ventiladores_incluidos',
+      color: 'color',
+      panel_lateral: 'panel_lateral',
+    },
+  },
 };
 
 function resolverTabla(categoriaEntrada) {

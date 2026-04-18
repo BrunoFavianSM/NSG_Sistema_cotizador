@@ -40,8 +40,10 @@ function sanitizarInput(input) {
   // Ejemplo: "<>" no debe vaciarse por completo.
   sanitizado = sanitizado.replace(/<\/?[a-z][^>]*>/gi, '');
   
-  // Escapar caracteres HTML restantes
-  sanitizado = validator.escape(sanitizado);
+  // NO usar validator.escape() aquí: convertiría / en &#x2F;, " en &quot;, etc.
+  // El texto se almacena en BD y se renderiza como texto plano en React (no como HTML),
+  // por lo que escapar entidades HTML corrompe la visualización.
+  // La protección XSS ya está garantizada por los pasos anteriores y por consultas parametrizadas.
   
   // Trim espacios
   return sanitizado.trim();

@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminPageHeader from '../componentes/admin/AdminPageHeader';
 import ProductForm, { CATEGORIAS, PRODUCTO_INICIAL } from '../componentes/admin/ProductForm';
 import EmptyState from '../componentes/feedback/EmptyState';
@@ -16,18 +16,63 @@ import * as api from '../servicios/api';
 function parseProducto(producto) {
   return {
     nombre: producto.nombre || '',
-    categoria: producto.categoria || 'procesador',
-    socket: producto.socket || '',
-    ram_type: producto.ram_type || '',
-    form_factor: producto.form_factor || '',
-    wattage: producto.wattage ? String(producto.wattage) : '',
-    tdp: producto.tdp ? String(producto.tdp) : '',
+    categoria: producto.subcategoria || producto.categoria || 'procesador',
     precio_base: producto.precio_base ? String(producto.precio_base) : '',
     stock: producto.stock !== null && producto.stock !== undefined ? String(producto.stock) : '',
     disponible_a_pedido: Boolean(producto.disponible_a_pedido),
     tiempo_entrega_dias: producto.tiempo_entrega_dias ? String(producto.tiempo_entrega_dias) : '',
     descripcion_tecnica: producto.descripcion_tecnica || '',
     imagen_url: producto.imagen_url || '',
+    // Procesador
+    socket: producto.socket || '',
+    arquitectura: producto.arquitectura || '',
+    nucleos: producto.nucleos ? String(producto.nucleos) : '',
+    hilos: producto.hilos ? String(producto.hilos) : '',
+    frecuencia_base_ghz: producto.frecuencia_base_ghz ? String(producto.frecuencia_base_ghz) : '',
+    frecuencia_boost_ghz: producto.frecuencia_boost_ghz ? String(producto.frecuencia_boost_ghz) : '',
+    tdp: producto.tdp ? String(producto.tdp) : '',
+    graficos_integrados: Boolean(producto.graficos_integrados),
+    // Placa madre / GPU (chipset compartido)
+    chipset: producto.chipset || producto.chipset_gpu || '',
+    ram_type: producto.ram_type || '',
+    form_factor: producto.form_factor || '',
+    max_ram_gb: producto.max_ram_gb ? String(producto.max_ram_gb) : '',
+    slots_ram: producto.slots_ram ? String(producto.slots_ram) : '',
+    pcie_version: producto.pcie_version || '',
+    m2_slots: producto.m2_slots ? String(producto.m2_slots) : '',
+    // RAM
+    capacidad_gb: producto.capacidad_gb ? String(producto.capacidad_gb) : '',
+    velocidad_mhz: producto.velocidad_mhz ? String(producto.velocidad_mhz) : '',
+    latencia: producto.latencia || '',
+    modulos: producto.modulos || '',
+    cantidad_modulos: producto.cantidad_modulos ? String(producto.cantidad_modulos) : '',
+    rgb: Boolean(producto.rgb),
+    // Almacenamiento
+    tipo_almacenamiento: producto.tipo_almacenamiento || '',
+    interfaz: producto.interfaz || '',
+    velocidad_lectura_mbps: producto.velocidad_lectura_mbps ? String(producto.velocidad_lectura_mbps) : '',
+    velocidad_escritura_mbps: producto.velocidad_escritura_mbps ? String(producto.velocidad_escritura_mbps) : '',
+    nvme_gen: producto.nvme_gen || '',
+    // GPU
+    vram_gb: producto.vram_gb ? String(producto.vram_gb) : '',
+    vram_tipo: producto.vram_tipo || '',
+    bus_bits: producto.bus_bits ? String(producto.bus_bits) : '',
+    boost_mhz: producto.boost_mhz ? String(producto.boost_mhz) : '',
+    longitud_mm: producto.longitud_mm ? String(producto.longitud_mm) : '',
+    fuente_recomendada_w: producto.fuente_recomendada_w ? String(producto.fuente_recomendada_w) : '',
+    // Fuente
+    wattage: producto.wattage ? String(producto.wattage) : '',
+    certificacion: producto.certificacion || '',
+    modular: producto.modular || '',
+    pcie_conectores: producto.pcie_conectores ? String(producto.pcie_conectores) : '',
+    sata_conectores: producto.sata_conectores ? String(producto.sata_conectores) : '',
+    // Case
+    compatibilidad_placa: producto.compatibilidad_placa || '',
+    max_gpu_mm: producto.max_gpu_mm ? String(producto.max_gpu_mm) : '',
+    max_cooler_mm: producto.max_cooler_mm ? String(producto.max_cooler_mm) : '',
+    ventiladores_incluidos: producto.ventiladores_incluidos ? String(producto.ventiladores_incluidos) : '',
+    color: producto.color || '',
+    panel_lateral: producto.panel_lateral || '',
   };
 }
 
@@ -51,20 +96,68 @@ function validarFormulario(formulario) {
 }
 
 function serializarFormulario(formulario) {
+  const n = (v) => (v === '' || v === null || v === undefined ? null : Number(v));
+  const s = (v) => (v === '' || v === null || v === undefined ? null : String(v).trim());
+
   return {
     nombre: formulario.nombre.trim(),
     categoria: formulario.categoria,
     precio_base: Number(formulario.precio_base),
     stock: Number(formulario.stock),
     disponible_a_pedido: Boolean(formulario.disponible_a_pedido),
-    tiempo_entrega_dias: formulario.disponible_a_pedido ? Number(formulario.tiempo_entrega_dias || 0) : null,
-    socket: formulario.socket.trim() || null,
-    ram_type: formulario.ram_type.trim() || null,
-    form_factor: formulario.form_factor.trim() || null,
-    wattage: formulario.wattage === '' ? null : Number(formulario.wattage),
-    tdp: formulario.tdp === '' ? null : Number(formulario.tdp),
-    descripcion_tecnica: formulario.descripcion_tecnica.trim() || null,
-    imagen_url: formulario.imagen_url.trim() || null,
+    tiempo_entrega_dias: formulario.disponible_a_pedido ? n(formulario.tiempo_entrega_dias) : null,
+    descripcion_tecnica: s(formulario.descripcion_tecnica),
+    imagen_url: s(formulario.imagen_url),
+    // Procesador
+    socket: s(formulario.socket),
+    arquitectura: s(formulario.arquitectura),
+    nucleos: n(formulario.nucleos),
+    hilos: n(formulario.hilos),
+    frecuencia_base_ghz: n(formulario.frecuencia_base_ghz),
+    frecuencia_boost_ghz: n(formulario.frecuencia_boost_ghz),
+    tdp: n(formulario.tdp),
+    graficos_integrados: Boolean(formulario.graficos_integrados),
+    // Placa madre
+    chipset: s(formulario.chipset),
+    ram_type: s(formulario.ram_type),
+    form_factor: s(formulario.form_factor),
+    max_ram_gb: n(formulario.max_ram_gb),
+    slots_ram: n(formulario.slots_ram),
+    pcie_version: s(formulario.pcie_version),
+    m2_slots: n(formulario.m2_slots),
+    // RAM
+    capacidad_gb: n(formulario.capacidad_gb),
+    velocidad_mhz: n(formulario.velocidad_mhz),
+    latencia: s(formulario.latencia),
+    modulos: s(formulario.modulos),
+    cantidad_modulos: n(formulario.cantidad_modulos),
+    rgb: Boolean(formulario.rgb),
+    // Almacenamiento
+    tipo_almacenamiento: s(formulario.tipo_almacenamiento),
+    interfaz: s(formulario.interfaz),
+    velocidad_lectura_mbps: n(formulario.velocidad_lectura_mbps),
+    velocidad_escritura_mbps: n(formulario.velocidad_escritura_mbps),
+    nvme_gen: s(formulario.nvme_gen),
+    // GPU
+    vram_gb: n(formulario.vram_gb),
+    vram_tipo: s(formulario.vram_tipo),
+    bus_bits: n(formulario.bus_bits),
+    boost_mhz: n(formulario.boost_mhz),
+    longitud_mm: n(formulario.longitud_mm),
+    fuente_recomendada_w: n(formulario.fuente_recomendada_w),
+    // Fuente
+    wattage: n(formulario.wattage),
+    certificacion: s(formulario.certificacion),
+    modular: s(formulario.modular),
+    pcie_conectores: n(formulario.pcie_conectores),
+    sata_conectores: n(formulario.sata_conectores),
+    // Case
+    compatibilidad_placa: s(formulario.compatibilidad_placa),
+    max_gpu_mm: n(formulario.max_gpu_mm),
+    max_cooler_mm: n(formulario.max_cooler_mm),
+    ventiladores_incluidos: n(formulario.ventiladores_incluidos),
+    color: s(formulario.color),
+    panel_lateral: s(formulario.panel_lateral),
   };
 }
 
@@ -84,13 +177,7 @@ export default function AdminProductos() {
 
   const [modalEliminar, setModalEliminar] = useState({ open: false, producto: null });
 
-  useEffect(() => {
-    if (autenticado) {
-      cargarProductos();
-    }
-  }, [autenticado]);
-
-  const cargarProductos = async () => {
+  const cargarProductos = useCallback(async () => {
     setCargando(true);
     setErrorPantalla('');
     try {
@@ -101,7 +188,21 @@ export default function AdminProductos() {
     } finally {
       setCargando(false);
     }
-  };
+  }, []);
+
+  const categoriasDisponibles = useMemo(() => {
+    const categoriasCatalogo = productos
+      .map((producto) => producto.subcategoria || producto.categoria)
+      .filter(Boolean);
+
+    return Array.from(new Set([...CATEGORIAS, ...categoriasCatalogo]));
+  }, [productos]);
+
+  useEffect(() => {
+    if (autenticado) {
+      cargarProductos();
+    }
+  }, [autenticado, cargarProductos]);
 
   const abrirCrear = () => {
     setFormulario(PRODUCTO_INICIAL);
@@ -183,7 +284,7 @@ export default function AdminProductos() {
 
   const productosFiltrados = useMemo(() => {
     if (!filtroCategoria) return productos;
-    return productos.filter((producto) => producto.categoria === filtroCategoria);
+    return productos.filter((producto) => (producto.subcategoria || producto.categoria) === filtroCategoria);
   }, [productos, filtroCategoria]);
 
   const columnas = [
@@ -299,7 +400,7 @@ export default function AdminProductos() {
             className="sm:max-w-[15rem]"
             options={[
               { value: '', label: 'Todas' },
-              ...CATEGORIAS.map((categoria) => ({
+              ...categoriasDisponibles.map((categoria) => ({
                 value: categoria,
                 label: categoria.replace('_', ' '),
               })),
@@ -333,6 +434,7 @@ export default function AdminProductos() {
           loading={guardando}
           mode={modalFormulario.mode}
           error={errorFormulario}
+          categorias={categoriasDisponibles}
         />
       </Modal>
 

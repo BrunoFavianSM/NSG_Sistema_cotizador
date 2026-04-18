@@ -56,6 +56,14 @@ GRANT ALL PRIVILEGES ON DATABASE nsg_cotizaciones TO nsg_user;
 
 El archivo `schema.sql` ha sido unificado y contiene toda la estructura necesaria (usuarios, catálogo híbrido normalizado, cotizaciones, etc.).
 
+Permisos
+```bash
+# Desde la raíz del proyecto
+psql -U postgres -d nsg_cotizaciones -c "GRANT ALL ON SCHEMA public TO nsg_user;"
+
+psql -U postgres -d nsg_cotizaciones -c "GRANT CREATE ON SCHEMA public TO nsg_user;"
+```
+
 ```bash
 # Desde la raíz del proyecto
 psql -U nsg_user -d nsg_cotizaciones -f base-datos/schema.sql
@@ -224,7 +232,7 @@ crearAdmin();
 Ejecutar:
 ```bash
 cd backend
-node crear-admin.js
+node scripts/crear-admin.js
 ```
 
 ## Datos de Prueba (Opcional)
