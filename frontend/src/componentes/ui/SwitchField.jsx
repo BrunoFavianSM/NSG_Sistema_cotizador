@@ -35,17 +35,23 @@ export default function SwitchField({
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={cn(
-          'relative mt-0.5 inline-flex min-h-11 min-w-[52px] shrink-0 items-center rounded-full px-1 transition-colors duration-higNormal ease-hig',
-          checked ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]',
+          'relative mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-sm)] transition-colors duration-higNormal ease-hig',
           disabled && 'cursor-not-allowed opacity-50'
         )}
       >
         <span
           className={cn(
-            'inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-higNormal ease-hig',
-            checked ? 'translate-x-5' : 'translate-x-0'
+            'pointer-events-none relative inline-flex h-6 w-10 items-center rounded-full transition-colors duration-higNormal ease-hig',
+            checked ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]'
           )}
-        />
+        >
+          <span
+            className={cn(
+              'absolute left-0.5 h-5 w-5 transform rounded-full bg-white transition-transform duration-higNormal ease-hig',
+              checked ? 'translate-x-4' : 'translate-x-0'
+            )}
+          />
+        </span>
       </button>
     </div>
   );
