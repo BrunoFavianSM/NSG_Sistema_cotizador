@@ -1,5 +1,10 @@
 require('dotenv').config();
 
+// Advertencia de inicio: modo automático de tipo de cambio
+if (!process.env.APIS_NET_TOKEN) {
+  console.warn('[ADVERTENCIA] APIS_NET_TOKEN no está definido. El modo automático de tipo de cambio no estará disponible.');
+}
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -35,7 +40,9 @@ app.use('/api/compatibilidad', require('./rutas/compatibilidad'));
 app.use('/api/ia', require('./rutas/ia'));
 app.use('/api/auth', require('./rutas/auth'));
 app.use('/api/configuracion', require('./rutas/configuracion'));
+app.use('/api/tipo-cambio', require('./rutas/tipoCambio'));
 app.use('/api/importacion', require('./rutas/importacion'));
+app.use('/api/asistente', require('./rutas/rutasAsistente'));
 
 // Servir imágenes subidas
 app.use('/uploads', express.static('uploads'));

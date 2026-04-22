@@ -229,7 +229,8 @@ export const eliminarProducto = async (categoria, id) => {
     throw error;
   }
 };
-
+
+
 // ============================================
 // FUNCIONES DE PRODUCTOS — MULTI-TABLA
 // ============================================
@@ -380,6 +381,19 @@ export const consultarHistorialCliente = async (email) => {
 };
 
 /**
+ * Lista todos los clientes registrados con cotizaciones (requiere auth)
+ * @returns {Promise<{exito: boolean, clientes: Array}>}
+ */
+export const listarClientesRegistrados = async () => {
+  try {
+    const response = await api.get('/cotizaciones/clientes');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
  * Obtiene URL de descarga del PDF comercial
  * @param {string} codigoTicket
  * @returns {string}
@@ -470,6 +484,75 @@ export const actualizarMargenGanancia = async (margen_ganancia, tasa_igv, tipo_c
     return response.data;
   } catch (error) {
     throw error;
+  }
+};
+
+/**
+ * Obtiene la configuración completa del sistema en una sola petición.
+ * Incluye margen de ganancia, tasa IGV, tipo de cambio manual y modo activo.
+ * Requisitos: 9.2
+ *
+ * @returns {Promise<{
+ *   exito: boolean,
+ *   margen_ganancia: number,
+ *   margen_ganancia_default: number,
+ *   tasa_igv: number,
+ *   tipo_cambio_usd_pen: number,
+ *   modo_tipo_cambio: "manual" | "automatico",
+ *   updated_at: string | null
+ * }>}
+ */
+export const obtenerConfiguracion = async () => {
+  try {
+    const response = await api.get('/configuracion/margen');
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudo obtener la configuración del sistema.';
+    throw { mensaje };
+  }
+};
+
+/**
+ * Obtiene el tipo de cambio USD/PEN automático desde el proxy backend.
+ * Requiere token JWT. El token de la API externa nunca se expone al cliente.
+ * Requisitos: 9.1
+ *
+ * @returns {Promise<{ exito: boolean, tipo_cambio: number, fuente: string, fecha: string }>}
+ */
+export const obtenerTipoCambioAutomatico = async () => {
+  try {
+    const response = await api.get('/tipo-cambio/automatico');
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudo obtener el tipo de cambio automático.';
+    throw { mensaje };
+  }
+};
+
+/**
+ * Actualiza el modo de tipo de cambio activo (manual o automático).
+ * Requiere token JWT de administrador.
+ * Requisitos: 9.3
+ *
+ * @param {"manual" | "automatico"} modo
+ * @returns {Promise<{ exito: boolean, modo_tipo_cambio: string, mensaje: string }>}
+ */
+export const actualizarModoTipoCambio = async (modo) => {
+  try {
+    const response = await api.put('/configuracion/tipo-cambio', { modo });
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudo actualizar el modo de tipo de cambio.';
+    throw { mensaje };
   }
 };
 

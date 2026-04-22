@@ -21,7 +21,7 @@
   "author": "NSG Latinoamerica E.I.R.L.",
   "license": "ISC",
   "dependencies": {
-    "@google/generative-ai": "^0.1.0",
+    "@google/generative-ai": "^0.24.1",
     "@react-pdf/renderer": "^4.4.0",
     "bcrypt": "^5.1.0",
     "cors": "^2.8.5",

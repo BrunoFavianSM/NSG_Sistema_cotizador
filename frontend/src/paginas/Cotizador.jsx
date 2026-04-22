@@ -7,9 +7,13 @@ import ErrorState from '../componentes/feedback/ErrorState';
 import LoadingSpinner from '../componentes/feedback/LoadingSpinner';
 import SuccessState from '../componentes/feedback/SuccessState';
 import { useToast } from '../componentes/feedback/ToastProvider';
+import SeccionEmbalaje from '../componentes/cotizador/SeccionEmbalaje';
+import SeccionFlete from '../componentes/cotizador/SeccionFlete';
+import ResumenFinancieroAdmin from '../componentes/cotizador/ResumenFinancieroAdmin';
 import { useAppContext } from '../contexto/AppContext';
 import * as api from '../servicios/api';
 import { etiquetaMonedaBase, formatearMoneda } from '../utilidades/moneda';
+import { calcularResumenFinancieroAdmin } from '../utilidades/calcularResumenFinancieroAdmin';
 
 const PASOS = [
   { id: 'procesador', nombre: 'Procesador', categoria: 'procesador' },
@@ -491,6 +495,9 @@ export default function Cotizador() {
     limpiarConfiguracion,
     autenticado,
     margenGanancia,
+    tasaIgv,
+    tipoCambioUsdPen,
+    cargandoTipoCambio,
     calcularResumenFinanciero,
     monedaVista,
     formatearMontoSegunMonedaVista,
@@ -530,11 +537,46 @@ export default function Cotizador() {
   const [telefonoCliente, setTelefonoCliente] = useState('');
   const [intentoGenerar, setIntentoGenerar] = useState(false);
 
+  // ── Estados de embalaje y flete (Requisitos 5.3, 6.3) ────────────────────
+  const [embalaje, setEmbalaje] = useState({
+    activo: false,
+    opcion: 'basico',
+    precioBasico: 20,
+    precioAvanzado: 30,
+  });
+  const [flete, setFlete] = useState({ activo: false, precio: 20 });
+
   const pasoInfo = PASOS[pasoActual];
   const esPasoExtras = pasoInfo.id === 'extras';
   const total = calcularPrecioTotal();
   const resumenFinanciero = calcularResumenFinanciero();
   const esAdmin = autenticado === true;
+
+  // ── Resumen financiero admin (Requisitos 7.1–7.11, 4.4) ──────────────────
+  // Calculado localmente con useMemo; se recalcula solo cuando cambian sus dependencias.
+  const resumenAdmin = useMemo(
+    () =>
+      calcularResumenFinancieroAdmin({
+        configuracionSeleccionada,
+        extras,
+        embalaje,
+        flete,
+        margenGanancia,
+        tasaIgv,
+        tipoCambioUsdPen,
+      }),
+    [configuracionSeleccionada, extras, embalaje, flete, margenGanancia, tasaIgv, tipoCambioUsdPen]
+  );
+
+  // ── Handlers de embalaje ──────────────────────────────────────────────────
+  const handleEmbalajeToggle = (activo) => setEmbalaje((prev) => ({ ...prev, activo }));
+  const handleEmbalajeCambiarOpcion = (opcion) => setEmbalaje((prev) => ({ ...prev, opcion }));
+  const handleEmbalajeCambiarPrecio = (campo, valor) =>
+    setEmbalaje((prev) => ({ ...prev, [campo]: valor }));
+
+  // ── Handlers de flete ─────────────────────────────────────────────────────
+  const handleFleteToggle = (activo) => setFlete((prev) => ({ ...prev, activo }));
+  const handleFleteCambiarPrecio = (valor) => setFlete((prev) => ({ ...prev, precio: valor }));
   const nombreClienteLimpio = nombreCliente.trim();
   const emailClienteLimpio = emailCliente.trim().toLowerCase();
   const telefonoClienteLimpio = telefonoCliente.trim();
@@ -1025,6 +1067,8 @@ export default function Cotizador() {
     setNombreCliente('');
     setEmailCliente('');
     setTelefonoCliente('');
+    setEmbalaje({ activo: false, opcion: 'basico', precioBasico: 20, precioAvanzado: 30 });
+    setFlete({ activo: false, precio: 20 });
     toast.info('Nuevo flujo', 'Empezaste una cotizacion nueva.');
   };
 
@@ -1268,7 +1312,7 @@ export default function Cotizador() {
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <section className="surface-elevated space-y-5 p-5 sm:p-6">
+        <section className="surface-elevated space-y-5 p-5 sm:p-6 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto scrollbar-thin">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Paso {pasoActual + 1} de {PASOS.length}</p>
@@ -1441,6 +1485,40 @@ export default function Cotizador() {
               <AsistenteIA onAplicarRecomendacion={aplicarRecomendacionIA} className="!static !w-full !translate-x-0 !translate-y-0 !rounded-[var(--radius-md)] !justify-center" />
             </div>
           </section>
+
+          {/* Embalaje — solo admin (Requisitos 5.1, 5.8) */}
+          {esAdmin && (
+            <SeccionEmbalaje
+              activo={embalaje.activo}
+              opcion={embalaje.opcion}
+              precioBasico={embalaje.precioBasico}
+              precioAvanzado={embalaje.precioAvanzado}
+              onToggle={handleEmbalajeToggle}
+              onCambiarOpcion={handleEmbalajeCambiarOpcion}
+              onCambiarPrecio={handleEmbalajeCambiarPrecio}
+            />
+          )}
+
+          {/* Flete — solo admin (Requisitos 6.1, 6.8) */}
+          {esAdmin && (
+            <SeccionFlete
+              activo={flete.activo}
+              precio={flete.precio}
+              onToggle={handleFleteToggle}
+              onCambiarPrecio={handleFleteCambiarPrecio}
+            />
+          )}
+
+          {/* Resumen financiero admin — solo admin (Requisitos 7.1, 7.11, 11.6) */}
+          {esAdmin && (
+            cargandoTipoCambio ? (
+              <section className="surface-card p-4" aria-label="Cargando tipo de cambio">
+                <LoadingSpinner label="Obteniendo tipo de cambio..." />
+              </section>
+            ) : (
+              <ResumenFinancieroAdmin resumen={resumenAdmin} tipoCambio={tipoCambioUsdPen} />
+            )
+          )}
 
           <section className="surface-elevated p-5">
             <p className="text-xs uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Total estimado</p>

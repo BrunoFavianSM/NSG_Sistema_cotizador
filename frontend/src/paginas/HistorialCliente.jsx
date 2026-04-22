@@ -1,4 +1,5 @@
-﻿import { useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Badge from '../componentes/ui/Badge';
 import Button from '../componentes/ui/Button';
@@ -12,6 +13,7 @@ import { useToast } from '../componentes/feedback/ToastProvider';
 import { useAppContext } from '../contexto/AppContext';
 import {
   consultarHistorialCliente,
+  listarClientesRegistrados,
   obtenerUrlPdfCotizacion,
   obtenerUrlPdfTecnico
 } from '../servicios/api';
@@ -59,6 +61,7 @@ function StatCard({ label, value, helper }) {
 
 export default function HistorialCliente() {
   const toast = useToast();
+  const navigate = useNavigate();
   const { monedaVista, formatearMontoSegunMonedaVista } = useAppContext();
 
   const [email, setEmail] = useState('');
@@ -68,6 +71,22 @@ export default function HistorialCliente() {
   const [historialCargado, setHistorialCargado] = useState(false);
   const [cliente, setCliente] = useState(null);
   const [cotizaciones, setCotizaciones] = useState([]);
+
+  // Lista de clientes registrados
+  const [clientesRegistrados, setClientesRegistrados] = useState([]);
+  const [cargandoClientes, setCargandoClientes] = useState(true);
+
+  useEffect(() => {
+    setCargandoClientes(true);
+    listarClientesRegistrados()
+      .then((res) => {
+        if (res?.exito) setClientesRegistrados(res.clientes || []);
+      })
+      .catch(() => {
+        // Silencioso: la lista es un complemento, no bloquea el flujo
+      })
+      .finally(() => setCargandoClientes(false));
+  }, []);
 
   const cotizacionesFiltradas = useMemo(() => {
     if (filtroEstado === 'todos') return cotizaciones;
@@ -150,6 +169,45 @@ export default function HistorialCliente() {
     setCotizaciones([]);
   };
 
+  const seleccionarCliente = async (clienteItem) => {
+    if (!clienteItem.email) {
+      toast.warning('Sin correo', 'Este cliente no tiene correo disponible para consultar.');
+      return;
+    }
+    setEmail(clienteItem.email);
+    setError('');
+    await consultarHistorialDesdeEmail(clienteItem.email);
+  };
+
+  const consultarHistorialDesdeEmail = async (emailParam) => {
+    setBuscando(true);
+    try {
+      const respuesta = await consultarHistorialCliente(emailParam);
+      if (!respuesta?.exito) {
+        setHistorialCargado(false);
+        setCliente(null);
+        setCotizaciones([]);
+        setError(respuesta?.mensaje || 'No se encontro historial para ese correo.');
+        return;
+      }
+      const lista = Array.isArray(respuesta?.cotizaciones) ? respuesta.cotizaciones : [];
+      setCliente(respuesta?.cliente || { email: emailParam, nombre: 'Cliente' });
+      setCotizaciones(lista);
+      setHistorialCargado(true);
+      setFiltroEstado('todos');
+      if (lista.length === 0) {
+        toast.info('Sin resultados', 'No hay cotizaciones registradas para este correo.');
+      }
+    } catch (err) {
+      setHistorialCargado(false);
+      setCliente(null);
+      setCotizaciones([]);
+      setError(err?.mensaje || 'No se pudo consultar el historial. Intenta nuevamente.');
+    } finally {
+      setBuscando(false);
+    }
+  };
+
   const columnas = [
     {
       key: 'codigo_ticket',
@@ -226,6 +284,15 @@ export default function HistorialCliente() {
       align: 'right',
       render: (row) => (
         <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(`/validar?ticket=${row.codigo_ticket}`)}
+            aria-label={`Validar ticket ${row.codigo_ticket}`}
+            title="Ir al validador con este ticket"
+          >
+            Validar
+          </Button>
           <Button
             variant="secondary"
             size="sm"
@@ -308,6 +375,74 @@ export default function HistorialCliente() {
           onRetry={email.trim() ? consultarHistorial : null}
           retryLabel="Reintentar"
         />
+      ) : null}
+
+      {/* Lista de clientes registrados — visible solo cuando no hay historial cargado */}
+      {!buscando && !historialCargado && !error ? (
+        <motion.section
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="surface-elevated p-6"
+          aria-labelledby="clientes-registrados-title"
+        >
+          <h2 id="clientes-registrados-title" className="mb-4 text-base font-semibold text-[var(--color-text)]">
+            Clientes registrados
+          </h2>
+
+          {cargandoClientes ? (
+            <div className="flex items-center justify-center py-8">
+              <LoadingSpinner label="Cargando clientes..." />
+            </div>
+          ) : clientesRegistrados.length === 0 ? (
+            <EmptyState
+              title="Sin clientes registrados"
+              description="Aun no hay clientes con cotizaciones en el sistema."
+            />
+          ) : (
+            <ul className="divide-y divide-[var(--color-border)]" role="list">
+              {clientesRegistrados.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    onClick={() => seleccionarCliente(item)}
+                    className="flex w-full items-center justify-between gap-4 rounded-[var(--radius-sm)] px-2 py-3 text-left transition-colors hover:bg-[var(--color-surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] min-h-[44px]"
+                    aria-label={`Ver historial de ${item.nombre || item.email || 'cliente'}`}
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-[var(--color-text)]">
+                        {item.nombre || 'Sin nombre'}
+                      </p>
+                      <p className="truncate text-xs text-[var(--color-text-muted)]">
+                        {item.email || 'Correo no disponible'}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-3">
+                      <span className="text-xs text-[var(--color-text-muted)]">
+                        {item.total_cotizaciones} {item.total_cotizaciones === 1 ? 'cotización' : 'cotizaciones'}
+                      </span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-[var(--color-text-muted)]"
+                        aria-hidden="true"
+                      >
+                        <path d="m9 18 6-6-6-6" />
+                      </svg>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </motion.section>
       ) : null}
 
       {!buscando && historialCargado ? (

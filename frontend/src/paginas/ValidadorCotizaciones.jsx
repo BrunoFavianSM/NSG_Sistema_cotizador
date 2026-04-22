@@ -1,4 +1,5 @@
-﻿import { useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Badge from '../componentes/ui/Badge';
 import Button from '../componentes/ui/Button';
@@ -72,6 +73,7 @@ function StatCard({ label, value, helper, tone = 'neutral' }) {
 export default function ValidadorCotizaciones() {
   const { autenticado, monedaVista, formatearMontoSegunMonedaVista } = useAppContext();
   const toast = useToast();
+  const [searchParams] = useSearchParams();
 
   const [codigoTicket, setCodigoTicket] = useState('');
   const [buscando, setBuscando] = useState(false);
@@ -80,6 +82,14 @@ export default function ValidadorCotizaciones() {
   const [error, setError] = useState('');
   const [cotizacion, setCotizacion] = useState(null);
   const [confirmarReclamoOpen, setConfirmarReclamoOpen] = useState(false);
+
+  // Auto-cargar ticket si viene por query param (?ticket=NSG-2026-XXXX)
+  useEffect(() => {
+    const ticketParam = searchParams.get('ticket');
+    if (ticketParam) {
+      setCodigoTicket(ticketParam.trim().toUpperCase());
+    }
+  }, [searchParams]);
 
   const componentes = useMemo(() => {
     if (!Array.isArray(cotizacion?.componentes)) return [];

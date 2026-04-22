@@ -1,6 +1,7 @@
 ﻿/**
  * Tests para AdminConfiguracion
- * Valida Requisitos: 6.3
+ * Actualizado para reflejar la nueva UI con selector de modo de tipo de cambio.
+ * Valida Requisitos: 1.2, 1.3, 1.4, 1.5, 11.1, 11.2, 11.3, 11.4
  */
 
 import React from 'react';
@@ -10,166 +11,181 @@ import AdminConfiguracion from './AdminConfiguracion';
 import * as api from '../servicios/api';
 import { ToastProvider } from '../componentes/feedback/ToastProvider';
 
-// Mock del contexto
-const mockActualizarMargen = jest.fn();
+// Mock del contexto con todos los valores que usa el componente refactorizado
+const mockForzarActualizacionTC = jest.fn();
+const mockActualizarConfiguracionFinanciera = jest.fn();
+
 const mockContextValue = {
   autenticado: true,
   margenGanancia: 20,
-  actualizarMargen: mockActualizarMargen
+  tasaIgv: 18,
+  tipoCambioUsdPen: 3.75,
+  actualizarMargen: jest.fn(),
+  actualizarConfiguracionFinanciera: mockActualizarConfiguracionFinanciera,
+  modoTipoCambio: 'manual',
+  cargandoTipoCambio: false,
+  advertenciaTipoCambio: null,
+  ultimaActualizacionTC: null,
+  forzarActualizacionTC: mockForzarActualizacionTC,
 };
 
 jest.mock('../contexto/AppContext', () => ({
-  useAppContext: () => mockContextValue
+  useAppContext: () => mockContextValue,
 }));
 
-// Mock de framer-motion
 jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }) => <button {...props}>{children}</button>
-  }
+    button: ({ children, ...props }) => <button {...props}>{children}</button>,
+  },
 }));
 
-// Mock de la API
 jest.mock('../servicios/api', () => ({
-  obtenerEstadisticasIA: jest.fn()
+  obtenerEstadisticasIA: jest.fn(),
+  actualizarModoTipoCambio: jest.fn(),
+  limpiarCatalogo: jest.fn(),
 }));
 
 describe('AdminConfiguracion', () => {
-  const renderPagina = () => render(
-    <ToastProvider>
-      <AdminConfiguracion />
-    </ToastProvider>
-  );
+  const renderPagina = () =>
+    render(
+      <ToastProvider>
+        <AdminConfiguracion />
+      </ToastProvider>
+    );
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockContextValue.autenticado = true;
     mockContextValue.margenGanancia = 20;
+    mockContextValue.tasaIgv = 18;
+    mockContextValue.tipoCambioUsdPen = 3.75;
+    mockContextValue.modoTipoCambio = 'manual';
+    mockContextValue.cargandoTipoCambio = false;
+    mockContextValue.advertenciaTipoCambio = null;
+    mockContextValue.ultimaActualizacionTC = null;
     api.obtenerEstadisticasIA.mockResolvedValue({
       llamadas: 150,
       costoEstimado: '0.75',
-      promedioTokens: 500
+      promedioTokens: 500,
+    });
+    api.actualizarModoTipoCambio.mockResolvedValue({ exito: true, modo_tipo_cambio: 'manual' });
+    mockActualizarConfiguracionFinanciera.mockResolvedValue({
+      exito: true,
+      margen_ganancia: 20,
+      tasa_igv: 18,
+      tipo_cambio_usd_pen: 3.75,
     });
   });
 
-  test('muestra acceso denegado si no está autenticado', () => {
+  // ── Acceso ────────────────────────────────────────────────────────────────
+
+  test('muestra acceso restringido si no está autenticado', () => {
     mockContextValue.autenticado = false;
     renderPagina();
-    expect(screen.getByText('Acceso Denegado')).toBeInTheDocument();
+    expect(screen.getByText('Acceso restringido')).toBeInTheDocument();
   });
 
   test('renderiza correctamente cuando está autenticado', async () => {
     renderPagina();
-    
     expect(screen.getByText('Configuración del Sistema')).toBeInTheDocument();
-    expect(screen.getByText('Margen de Ganancia')).toBeInTheDocument();
-    expect(screen.getByText('Estadísticas de Uso de IA')).toBeInTheDocument();
+    expect(screen.getByText('Parámetros financieros')).toBeInTheDocument();
   });
 
-  test('muestra el margen actual correctamente', () => {
+  // ── Selector de modo de tipo de cambio (Requisito 1.2) ───────────────────
+
+  test('muestra el selector de modo de tipo de cambio', () => {
     renderPagina();
-    
-    const margenActual = screen.getByText('20%');
-    expect(margenActual).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup', { name: /modo de tipo de cambio/i })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /manual/i })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /autom/i })).toBeInTheDocument();
   });
 
-  test('permite cambiar el valor del margen', () => {
+  test('el modo manual está seleccionado por defecto', () => {
     renderPagina();
-    
-    const input = screen.getByRole('spinbutton');
-    fireEvent.change(input, { target: { value: '25' } });
-    
-    expect(input.value).toBe('25');
+    const botonManual = screen.getByRole('radio', { name: /manual/i });
+    expect(botonManual).toHaveAttribute('aria-checked', 'true');
   });
 
-  test('calcula ejemplos de precios correctamente', () => {
+  test('el campo de tipo de cambio es visible en modo manual (Requisito 1.3)', () => {
     renderPagina();
-    
-    // Con margen del 20%, precio base 1000 debe ser 1200
-    expect(screen.getByText(/Precio Final: S\/ 1200\.00/)).toBeInTheDocument();
-    expect(screen.getByText(/Precio Final: S\/ 3000\.00/)).toBeInTheDocument();
-    expect(screen.getByText(/Precio Final: S\/ 6000\.00/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/tipo cambio/i)).toBeInTheDocument();
   });
 
-  test('actualiza ejemplos cuando cambia el margen', () => {
+  test('el campo de tipo de cambio se oculta en modo automático (Requisito 1.4)', () => {
+    mockContextValue.modoTipoCambio = 'automatico';
     renderPagina();
-    
-    const input = screen.getByRole('spinbutton');
-    fireEvent.change(input, { target: { value: '30' } });
-    
-    // Con margen del 30%, precio base 1000 debe ser 1300
-    expect(screen.getByText(/Precio Final: S\/ 1300\.00/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/tipo cambio/i)).not.toBeInTheDocument();
   });
 
-  test('deshabilita el botón guardar si el margen no cambió', () => {
+  // ── Modo automático: indicadores de UI (Requisitos 11.1, 11.2, 11.3) ─────
+
+  test('muestra indicador de carga en modo automático cuando está cargando (Requisito 11.1)', () => {
+    mockContextValue.modoTipoCambio = 'automatico';
+    mockContextValue.cargandoTipoCambio = true;
     renderPagina();
-    
-    const botonGuardar = screen.getByRole('button', { name: /Guardar Cambios/i });
-    expect(botonGuardar).toBeDisabled();
+    expect(screen.getByText(/obteniendo tipo de cambio/i)).toBeInTheDocument();
   });
 
-  test('habilita el botón guardar cuando el margen cambia', () => {
+  test('muestra advertencia de respaldo cuando hay advertencia (Requisito 11.3)', () => {
+    mockContextValue.modoTipoCambio = 'automatico';
+    mockContextValue.advertenciaTipoCambio = 'Usando valor en caché desactualizado.';
     renderPagina();
-    
-    const input = screen.getByRole('spinbutton');
-    fireEvent.change(input, { target: { value: '25' } });
-    
-    const botonGuardar = screen.getByRole('button', { name: /Guardar Cambios/i });
-    expect(botonGuardar).not.toBeDisabled();
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.getByText(/usando valor en caché desactualizado/i)).toBeInTheDocument();
   });
 
-  test('guarda el margen correctamente', async () => {
+  test('muestra botón de actualizar tipo de cambio en modo automático (Requisito 2.9)', () => {
+    mockContextValue.modoTipoCambio = 'automatico';
     renderPagina();
-    
-    const input = screen.getByRole('spinbutton');
-    fireEvent.change(input, { target: { value: '25' } });
-    
-    const botonGuardar = screen.getByRole('button', { name: /Guardar Cambios/i });
-    fireEvent.click(botonGuardar);
-    
+    expect(screen.getByRole('button', { name: /actualizar tipo de cambio/i })).toBeInTheDocument();
+  });
+
+  test('llama a forzarActualizacionTC al hacer clic en actualizar', () => {
+    mockContextValue.modoTipoCambio = 'automatico';
+    renderPagina();
+    const boton = screen.getByRole('button', { name: /actualizar tipo de cambio/i });
+    fireEvent.click(boton);
+    expect(mockForzarActualizacionTC).toHaveBeenCalled();
+  });
+
+  // ── Guardar modo (Requisito 1.5) ──────────────────────────────────────────
+
+  test('el botón guardar modo está deshabilitado si el modo no cambió', () => {
+    renderPagina();
+    const botonGuardarModo = screen.getByRole('button', { name: /guardar modo/i });
+    expect(botonGuardarModo).toBeDisabled();
+  });
+
+  test('el botón guardar modo se habilita al cambiar el modo', () => {
+    renderPagina();
+    const botonAutomatico = screen.getByRole('radio', { name: /autom/i });
+    fireEvent.click(botonAutomatico);
+    const botonGuardarModo = screen.getByRole('button', { name: /guardar modo/i });
+    expect(botonGuardarModo).not.toBeDisabled();
+  });
+
+  test('llama a api.actualizarModoTipoCambio al guardar modo (Requisito 1.5)', async () => {
+    renderPagina();
+    const botonAutomatico = screen.getByRole('radio', { name: /autom/i });
+    fireEvent.click(botonAutomatico);
+    const botonGuardarModo = screen.getByRole('button', { name: /guardar modo/i });
+    fireEvent.click(botonGuardarModo);
     await waitFor(() => {
-      expect(mockActualizarMargen).toHaveBeenCalledWith(25);
+      expect(api.actualizarModoTipoCambio).toHaveBeenCalledWith('automatico');
     });
   });
 
-  test('muestra mensaje de éxito después de guardar', async () => {
-    renderPagina();
-    
-    const input = screen.getByRole('spinbutton');
-    fireEvent.change(input, { target: { value: '25' } });
-    
-    const botonGuardar = screen.getByRole('button', { name: /Guardar Cambios/i });
-    fireEvent.click(botonGuardar);
-    
-    await waitFor(() => {
-      expect(screen.getByText(/Margen de ganancia actualizado a 25%/)).toBeInTheDocument();
-    });
-  });
+  // ── Campos financieros ────────────────────────────────────────────────────
 
-  test('no permite valores negativos en el margen', () => {
+  test('muestra los campos de margen e IGV', () => {
     renderPagina();
-    
-    const input = screen.getByRole('spinbutton');
-    fireEvent.change(input, { target: { value: '-5' } });
-    
-    // El valor no debe cambiar
-    expect(input.value).toBe('20');
-  });
-
-  test('no permite valores mayores a 100 en el margen', () => {
-    renderPagina();
-    
-    const input = screen.getByRole('spinbutton');
-    fireEvent.change(input, { target: { value: '150' } });
-    
-    // El valor no debe cambiar
-    expect(input.value).toBe('20');
+    expect(screen.getByLabelText(/margen/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/igv/i)).toBeInTheDocument();
   });
 
   test('carga estadísticas de IA al montar', async () => {
     renderPagina();
-    
     await waitFor(() => {
       expect(api.obtenerEstadisticasIA).toHaveBeenCalled();
     });
@@ -177,87 +193,8 @@ describe('AdminConfiguracion', () => {
 
   test('muestra estadísticas de IA correctamente', async () => {
     renderPagina();
-    
     await waitFor(() => {
-      expect(screen.getByText('150')).toBeInTheDocument(); // Llamadas
-      expect(screen.getByText('$0.75')).toBeInTheDocument(); // Costo
-      expect(screen.getByText('500')).toBeInTheDocument(); // Tokens
+      expect(screen.getByText('150')).toBeInTheDocument();
     });
-  });
-
-  test('muestra indicador de carga mientras obtiene estadísticas', () => {
-    renderPagina();
-    
-    expect(screen.getByText('Cargando estadísticas...')).toBeInTheDocument();
-  });
-
-  test('maneja error al cargar estadísticas', async () => {
-    api.obtenerEstadisticasIA.mockRejectedValue(new Error('Error de red'));
-    
-    renderPagina();
-    
-    await waitFor(() => {
-      // Debe mostrar valores por defecto (hay múltiples "0", verificamos que existan)
-      const zeros = screen.getAllByText('0');
-      expect(zeros.length).toBeGreaterThan(0);
-    });
-  });
-
-  test('permite actualizar estadísticas manualmente', async () => {
-    renderPagina();
-    
-    await waitFor(() => {
-      expect(api.obtenerEstadisticasIA).toHaveBeenCalledTimes(1);
-    });
-    
-    const botonActualizar = screen.getByRole('button', { name: /Actualizar/i });
-    fireEvent.click(botonActualizar);
-    
-    await waitFor(() => {
-      expect(api.obtenerEstadisticasIA).toHaveBeenCalledTimes(2);
-    });
-  });
-
-  test('muestra información sobre las estadísticas', async () => {
-    renderPagina();
-    
-    await waitFor(() => {
-      expect(screen.getByText(/Las estadísticas se actualizan en tiempo real/)).toBeInTheDocument();
-      expect(screen.getByText(/El costo es estimado basado en el uso de Gemini 1.5 Flash/)).toBeInTheDocument();
-    });
-  });
-
-  test('calcula precio ejemplo con decimales correctamente', () => {
-    renderPagina();
-    
-    const input = screen.getByRole('spinbutton');
-    fireEvent.change(input, { target: { value: '15.5' } });
-    
-    // Con margen del 15.5%, precio base 1000 debe ser 1155.00
-    expect(screen.getByText(/Precio Final: S\/ 1155\.00/)).toBeInTheDocument();
-  });
-
-  test('muestra tres ejemplos de precios diferentes', () => {
-    renderPagina();
-    
-    expect(screen.getByText(/Precio Base: S\/ 1000/)).toBeInTheDocument();
-    expect(screen.getByText(/Precio Base: S\/ 2500/)).toBeInTheDocument();
-    expect(screen.getByText(/Precio Base: S\/ 5000/)).toBeInTheDocument();
-  });
-
-  test('el formulario previene submit por defecto', async () => {
-    renderPagina();
-    
-    const input = screen.getByRole('spinbutton');
-    fireEvent.change(input, { target: { value: '25' } });
-    
-    const form = screen.getByRole('button', { name: /Guardar Cambios/i }).closest('form');
-    const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
-    const preventDefaultSpy = jest.spyOn(submitEvent, 'preventDefault');
-    
-    form.dispatchEvent(submitEvent);
-    
-    expect(preventDefaultSpy).toHaveBeenCalled();
   });
 });
-

@@ -23,7 +23,7 @@ function parseTipoCambio(valor) {
 
 async function obtenerMapaConfiguracion() {
   const resultado = await ejecutarQuery(
-    "SELECT clave, valor, updated_at FROM configuracion WHERE clave IN ('margen_ganancia', 'margen_ganancia_default', 'tasa_igv', 'tipo_cambio_usd_pen')",
+    "SELECT clave, valor, updated_at FROM configuracion WHERE clave IN ('margen_ganancia', 'margen_ganancia_default', 'tasa_igv', 'tipo_cambio_usd_pen', 'modo_tipo_cambio')",
     []
   );
 
@@ -61,6 +61,10 @@ function construirPayloadConfiguracion(mapa) {
   const tasaIgv = parsePorcentaje(mapa.tasa_igv?.valor);
   const tipoCambio = parseTipoCambio(mapa.tipo_cambio_usd_pen?.valor);
 
+  // Validar que el modo almacenado sea uno de los valores permitidos
+  const modoRaw = mapa.modo_tipo_cambio?.valor;
+  const modoCambio = (modoRaw === 'manual' || modoRaw === 'automatico') ? modoRaw : 'manual';
+
   const updatedAt = [
     mapa.margen_ganancia_default?.updated_at,
     mapa.margen_ganancia?.updated_at,
@@ -74,6 +78,7 @@ function construirPayloadConfiguracion(mapa) {
     margen_ganancia_default: margenPorDefecto ?? 20,
     tasa_igv: tasaIgv ?? 18,
     tipo_cambio_usd_pen: tipoCambio ?? 3.75,
+    modo_tipo_cambio: modoCambio,
     updated_at: updatedAt ?? null
   };
 }
@@ -136,7 +141,45 @@ async function actualizarMargen(req, res) {
   }
 }
 
+/**
+ * PUT /configuracion/tipo-cambio
+ * Actualiza el modo de obtención del tipo de cambio USD/PEN.
+ * Body: { modo: "manual" | "automatico" }
+ * Requiere: verificarToken
+ */
+async function actualizarModoTipoCambio(req, res) {
+  try {
+    const { modo } = req.body ?? {};
+
+    if (modo !== 'manual' && modo !== 'automatico') {
+      return res.status(400).json({
+        error: 'Dato inválido',
+        mensaje: "El modo debe ser 'manual' o 'automatico'"
+      });
+    }
+
+    await guardarConfiguracion(
+      'modo_tipo_cambio',
+      modo,
+      'Modo de obtención del tipo de cambio USD/PEN: manual o automatico'
+    );
+
+    return res.json({
+      exito: true,
+      modo_tipo_cambio: modo,
+      mensaje: 'Modo de tipo de cambio actualizado correctamente'
+    });
+  } catch (error) {
+    console.error('Error al actualizar modo de tipo de cambio:', error);
+    return res.status(500).json({
+      error: 'Error interno',
+      mensaje: 'No se pudo actualizar el modo de tipo de cambio'
+    });
+  }
+}
+
 module.exports = {
   obtenerMargen,
-  actualizarMargen
+  actualizarMargen,
+  actualizarModoTipoCambio
 };

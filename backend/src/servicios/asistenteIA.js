@@ -24,9 +24,9 @@ class AsistenteIA {
   constructor() {
     // Inicializar cliente de Gemini
     this.genAI = new GoogleGenerativeAI(process.env.AI_API_KEY || '');
-    
+
     // Usar gemini-1.5-flash para menor costo y mayor velocidad
-    this.modelo = this.genAI.getGenerativeModel({ 
+    this.modelo = this.genAI.getGenerativeModel({
       model: 'gemini-1.5-flash',
       generationConfig: {
         temperature: 0.7,
@@ -76,8 +76,8 @@ Pregunta UNA cosa: presupuesto, uso o preferencia. Max 20 palabras. Español.`;
         `INSERT INTO conversaciones_ia (sesion_id, contexto_cliente, historial_mensajes, estado)
          VALUES ($1, $2, $3, $4)`,
         [
-          sesionId, 
-          JSON.stringify(contexto), 
+          sesionId,
+          JSON.stringify(contexto),
           JSON.stringify([
             { rol: 'cliente', mensaje: mensajeInicial },
             { rol: 'asistente', mensaje: pregunta }
@@ -89,16 +89,16 @@ Pregunta UNA cosa: presupuesto, uso o preferencia. Max 20 palabras. Español.`;
       return { sesionId, pregunta, contexto };
     } catch (error) {
       console.error('Error al iniciar conversación con IA:', error);
-      
+
       // Fallback sin IA
       const preguntaFallback = '¿Cuál es tu presupuesto aproximado para la computadora?';
-      
+
       await ejecutarQuery(
         `INSERT INTO conversaciones_ia (sesion_id, contexto_cliente, historial_mensajes, estado)
          VALUES ($1, $2, $3, $4)`,
         [
-          sesionId, 
-          JSON.stringify(contexto), 
+          sesionId,
+          JSON.stringify(contexto),
           JSON.stringify([
             { rol: 'cliente', mensaje: mensajeInicial },
             { rol: 'asistente', mensaje: preguntaFallback }
@@ -176,7 +176,7 @@ Pregunta UNA cosa: presupuesto, uso o preferencia. Max 20 palabras. Español.`;
    */
   actualizarContexto(contexto, respuesta) {
     const lower = respuesta.toLowerCase();
-    
+
     // Detectar presupuesto (números de 3-5 dígitos)
     const numeros = respuesta.match(/(\d{3,5})/g);
     if (numeros && !contexto.presupuesto) {
@@ -216,8 +216,8 @@ Pregunta UNA cosa: presupuesto, uso o preferencia. Max 20 palabras. Español.`;
    * @returns {boolean}
    */
   tieneInformacionSuficiente(contexto) {
-    return (contexto.presupuesto && contexto.usosPrincipales.length > 0) || 
-           contexto.preguntasRealizadas >= 5;
+    return (contexto.presupuesto && contexto.usosPrincipales.length > 0) ||
+      contexto.preguntasRealizadas >= 5;
   }
 
   /**
@@ -231,18 +231,18 @@ Pregunta UNA cosa: presupuesto, uso o preferencia. Max 20 palabras. Español.`;
       // Solo últimos 3 mensajes para reducir tokens
       const ultimosMensajes = historial.slice(-3);
       const hist = ultimosMensajes.map(m => `${m.rol}: ${m.mensaje}`).join('\n');
-      
+
       const faltante = [];
       if (!contexto.presupuesto) faltante.push('presupuesto');
       if (contexto.usosPrincipales.length === 0) faltante.push('uso');
-      
+
       const prompt = `Conversación:
 ${hist}
 
 Falta: ${faltante.join(', ')}. Pregunta UNA cosa. Max 20 palabras. Español.`;
 
       const resultado = await this.modelo.generateContent(prompt);
-      
+
       // Incrementar contadores
       this.contadorLlamadas++;
       this.costoEstimado += 0.00001;
@@ -250,7 +250,7 @@ Falta: ${faltante.join(', ')}. Pregunta UNA cosa. Max 20 palabras. Español.`;
       return resultado.response.text();
     } catch (error) {
       console.error('Error al generar siguiente pregunta:', error);
-      
+
       // Fallback sin IA
       if (!contexto.presupuesto) {
         return '¿Cuál es tu presupuesto aproximado?';
@@ -268,7 +268,7 @@ Falta: ${faltante.join(', ')}. Pregunta UNA cosa. Max 20 palabras. Español.`;
    */
   async obtenerProductosDisponibles() {
     const res = await ejecutarQuery(
-      'SELECT * FROM productos WHERE stock > 0 OR disponible_a_pedido = true ORDER BY categoria, precio_base'
+      'SELECT * FROM productos WHERE stock > 0 OR disponible_a_pedido = true ORDER BY id_categoria, precio_base'
     );
     return res.rows;
   }
@@ -316,7 +316,7 @@ Falta: ${faltante.join(', ')}. Pregunta UNA cosa. Max 20 palabras. Español.`;
     // Verificar cache primero
     const cacheKey = `rec_${contexto.presupuesto?.min}_${contexto.presupuesto?.max}_${contexto.usosPrincipales.sort().join('_')}`;
     const cached = this.cacheRecomendaciones.get(cacheKey);
-    
+
     if (cached) {
       console.log('✓ Recomendación desde cache (sin costo IA)');
       return cached;
@@ -325,10 +325,10 @@ Falta: ${faltante.join(', ')}. Pregunta UNA cosa. Max 20 palabras. Español.`;
     try {
       // Filtrar solo productos relevantes para reducir tokens
       const productosRelevantes = this.filtrarProductosRelevantes(productos, contexto);
-      
+
       // Lista compacta (reducir tokens)
-      const listaCompacta = productosRelevantes.map(p => 
-        `${p.id}|${p.nombre}|${p.categoria}|${p.precio_base}|${p.socket||''}|${p.ram_type||''}|${p.stock>0?'S':'P'}`
+      const listaCompacta = productosRelevantes.map(p =>
+        `${p.id}|${p.nombre}|${p.categoria}|${p.precio_base}|${p.socket || ''}|${p.ram_type || ''}|${p.stock > 0 ? 'S' : 'P'}`
       ).join('\n');
 
       // Prompt optimizado (corto para reducir costo)
@@ -341,7 +341,7 @@ JSON config compatible (socket y RAM deben coincidir):
 {"procesador":ID,"placa_madre":ID,"ram":[ID],"almacenamiento":ID,"gpu":ID,"fuente":ID,"case":ID,"explicacion":"breve"}`;
 
       const resultado = await this.modelo.generateContent(prompt);
-      
+
       // Incrementar contadores
       this.contadorLlamadas++;
       this.costoEstimado += 0.00001;
@@ -349,23 +349,23 @@ JSON config compatible (socket y RAM deben coincidir):
       // Extraer JSON de la respuesta
       const textoRespuesta = resultado.response.text();
       const jsonMatch = textoRespuesta.match(/\{[\s\S]*\}/);
-      
+
       if (!jsonMatch) {
         throw new Error('No se pudo extraer JSON de la respuesta de IA');
       }
 
       const recomendacion = JSON.parse(jsonMatch[0]);
-      
+
       // Validar recomendación
       const recomendacionValidada = await this.validarRecomendacion(recomendacion, productos);
-      
+
       // Guardar en cache
       this.cacheRecomendaciones.set(cacheKey, recomendacionValidada);
-      
+
       return recomendacionValidada;
     } catch (error) {
       console.error('Error al generar recomendación con IA:', error);
-      
+
       // Fallback: recomendación básica sin IA
       return this.generarRecomendacionBasica(contexto, productos);
     }
@@ -379,20 +379,20 @@ JSON config compatible (socket y RAM deben coincidir):
    */
   async validarRecomendacion(rec, productos) {
     const mapa = new Map(productos.map(p => [p.id, p]));
-    const validada = { 
-      componentes: {}, 
-      explicacion: rec.explicacion || 'Configuración recomendada', 
-      advertencias: [] 
+    const validada = {
+      componentes: {},
+      explicacion: rec.explicacion || 'Configuración recomendada',
+      advertencias: []
     };
 
     for (const [cat, id] of Object.entries(rec)) {
       if (['explicacion', 'advertencias'].includes(cat)) continue;
-      
+
       if (Array.isArray(id)) {
         // Para arrays (ej: RAM)
         const productosValidos = id.filter(i => mapa.has(i)).map(i => mapa.get(i));
         validada.componentes[cat] = productosValidos;
-        
+
         // Verificar advertencias para cada producto en el array
         productosValidos.forEach(prod => {
           if (prod.stock === 0 && prod.disponible_a_pedido) {
@@ -402,7 +402,7 @@ JSON config compatible (socket y RAM deben coincidir):
       } else if (id && mapa.has(id)) {
         const prod = mapa.get(id);
         validada.componentes[cat] = prod;
-        
+
         // Advertir si es a pedido
         if (prod.stock === 0 && prod.disponible_a_pedido) {
           validada.advertencias.push(`${prod.nombre}: A pedido (${prod.tiempo_entrega_dias} días)`);
@@ -423,7 +423,7 @@ JSON config compatible (socket y RAM deben coincidir):
     const presupuesto = contexto.presupuesto?.max || 5000;
     const esGaming = contexto.usosPrincipales.includes('gaming');
     const esDiseño = contexto.usosPrincipales.includes('diseño');
-    
+
     // Lógica simple basada en reglas
     const config = {
       componentes: {},
@@ -439,8 +439,8 @@ JSON config compatible (socket y RAM deben coincidir):
 
     // Seleccionar placa madre compatible
     if (config.componentes.procesador) {
-      const placas = productos.filter(p => 
-        p.categoria === 'placa_madre' && 
+      const placas = productos.filter(p =>
+        p.categoria === 'placa_madre' &&
         p.socket === config.componentes.procesador.socket &&
         p.precio_base < presupuesto * 0.15
       );
@@ -451,8 +451,8 @@ JSON config compatible (socket y RAM deben coincidir):
 
     // Seleccionar RAM compatible
     if (config.componentes.placa_madre) {
-      const rams = productos.filter(p => 
-        p.categoria === 'ram' && 
+      const rams = productos.filter(p =>
+        p.categoria === 'ram' &&
         p.ram_type === config.componentes.placa_madre.ram_type &&
         p.precio_base < presupuesto * 0.15
       );
