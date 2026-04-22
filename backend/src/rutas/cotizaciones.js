@@ -9,11 +9,15 @@ const {
   obtenerPdfTecnico,
   notificarCotizacionLista,
   marcarComoReclamada,
-  consultarHistorialCliente
+  consultarHistorialCliente,
+  listarClientesRegistrados
 } = require('../controladores/controladorCotizaciones');
 
 // Crear nueva cotizacion
 router.post('/', crearCotizacion);
+
+// Listar todos los clientes registrados (solo admin)
+router.get('/clientes', verificarToken, listarClientesRegistrados);
 
 // Historial por cliente (debe ir antes de /:codigoTicket)
 router.get('/cliente/:email', consultarHistorialCliente);

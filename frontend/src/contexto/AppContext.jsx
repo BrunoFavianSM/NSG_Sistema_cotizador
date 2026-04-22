@@ -1,17 +1,18 @@
 /**
  * Contexto Global de Aplicación
- * 
+ *
  * Gestiona el estado global de la aplicación:
  * - Autenticación (usuario, token, login/logout)
  * - Productos disponibles
  * - Configuración seleccionada (componentes del cotizador)
- * - Margen de ganancia
- * 
- * Valida Requisitos: 14.2
+ * - Margen de ganancia y tipo de cambio USD/PEN (manual o automático)
+ *
+ * Valida Requisitos: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 4.4, 14.2
  */
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import * as api from '../servicios/api';
+import { useExchangeRate } from '../hooks/useExchangeRate';
 import { formatearMoneda, normalizarMoneda, resolverMontoPorMoneda } from '../utilidades/moneda';
 
 // Crear contexto
@@ -70,14 +71,31 @@ const AppProviderInternal = ({ children }) => {
   });
 
   // ============================================
-  // ESTADO DE MARGEN DE GANANCIA
+  // ESTADO DE MARGEN DE GANANCIA Y TIPO DE CAMBIO
   // ============================================
   const [margenGanancia, setMargenGanancia] = useState(20);
   const [tasaIgv, setTasaIgv] = useState(18);
   const [tipoCambioUsdPen, setTipoCambioUsdPen] = useState(3.75);
+
+  // Modo de tipo de cambio: "manual" (valor de BD) | "automatico" (API externa)
+  const [modoTipoCambio, setModoTipoCambio] = useState('manual');
+  // Valor manual almacenado en BD (respaldo para modo automático)
+  const [tipoCambioManualBD, setTipoCambioManualBD] = useState(3.75);
+
+  // Hook de tipo de cambio — gestiona caché, petición al proxy y estados de UI
+  const {
+    tipoCambio: tipoCambioHook,
+    cargando: cargandoTipoCambio,
+    error: errorTipoCambio,
+    advertencia: advertenciaTipoCambio,
+    ultimaActualizacion: ultimaActualizacionTC,
+    forzarActualizacion: forzarActualizacionTC,
+  } = useExchangeRate({ modo: modoTipoCambio, valorManual: tipoCambioManualBD });
+
   const [monedaVista, setMonedaVista] = useState(() => {
+    // Solo admin puede ver USD; visitantes siempre en PEN
     const guardada = localStorage.getItem(MONEDA_VISTA_STORAGE_KEY);
-    return normalizarMoneda(guardada || 'USD');
+    return normalizarMoneda(guardada || 'PEN');
   });
 
   // ============================================
@@ -103,8 +121,20 @@ const AppProviderInternal = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    cargarMargenGanancia();
+    cargarConfiguracion();
   }, []);
+
+  // Sincronizar tipoCambioUsdPen con el hook según el modo activo
+  // Requisito 3.1, 3.3, 3.4
+  useEffect(() => {
+    if (modoTipoCambio === 'automatico') {
+      if (tipoCambioHook && tipoCambioHook > 0) {
+        setTipoCambioUsdPen(tipoCambioHook);
+      }
+    } else {
+      setTipoCambioUsdPen(tipoCambioManualBD);
+    }
+  }, [modoTipoCambio, tipoCambioHook, tipoCambioManualBD]);
 
   const verificarAutenticacion = async () => {
     try {
@@ -117,7 +147,7 @@ const AppProviderInternal = ({ children }) => {
         if (resultado.valido) {
           setUsuario(usuarioGuardado);
           setAutenticado(true);
-          await cargarMargenGanancia();
+          await cargarConfiguracion();
         } else {
           // Token inválido, limpiar
           api.logout();
@@ -148,8 +178,49 @@ const AppProviderInternal = ({ children }) => {
           setTasaIgv(respuesta.tasa_igv);
         }
 
+        // Actualizar solo el valor manual de BD; el useEffect de sincronización
+        // se encarga de reflejar el valor correcto según el modo activo.
         if (typeof respuesta.tipo_cambio_usd_pen === 'number') {
-          setTipoCambioUsdPen(respuesta.tipo_cambio_usd_pen);
+          setTipoCambioManualBD(respuesta.tipo_cambio_usd_pen);
+        }
+      }
+      return respuesta;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  /**
+   * Carga configuración completa desde backend en una sola petición.
+   * Actualiza modo de tipo de cambio, valor manual de BD, margen e IGV.
+   * Reemplaza a cargarMargenGanancia() para el flujo de inicialización.
+   * Mantiene cargarMargenGanancia() por retrocompatibilidad.
+   * Requisitos: 3.5
+   */
+  const cargarConfiguracion = async () => {
+    try {
+      const respuesta = await api.obtenerConfiguracion();
+      if (respuesta?.exito) {
+        if (typeof respuesta.margen_ganancia_default === 'number') {
+          setMargenGanancia(respuesta.margen_ganancia_default);
+        } else if (typeof respuesta.margen_ganancia === 'number') {
+          setMargenGanancia(respuesta.margen_ganancia);
+        }
+
+        if (typeof respuesta.tasa_igv === 'number') {
+          setTasaIgv(respuesta.tasa_igv);
+        }
+
+        if (typeof respuesta.tipo_cambio_usd_pen === 'number') {
+          setTipoCambioManualBD(respuesta.tipo_cambio_usd_pen);
+          // En modo manual, sincronizar tipoCambioUsdPen directamente
+          if (respuesta.modo_tipo_cambio !== 'automatico') {
+            setTipoCambioUsdPen(respuesta.tipo_cambio_usd_pen);
+          }
+        }
+
+        if (respuesta.modo_tipo_cambio === 'manual' || respuesta.modo_tipo_cambio === 'automatico') {
+          setModoTipoCambio(respuesta.modo_tipo_cambio);
         }
       }
       return respuesta;
@@ -192,6 +263,9 @@ const AppProviderInternal = ({ children }) => {
     api.logout();
     setUsuario(null);
     setAutenticado(false);
+    // Visitantes siempre en PEN
+    setMonedaVista('PEN');
+    localStorage.setItem(MONEDA_VISTA_STORAGE_KEY, 'PEN');
   };
 
   // ============================================
@@ -333,7 +407,10 @@ const AppProviderInternal = ({ children }) => {
     return subtotalConMargen + igvMonto;
   };
 
-  const calcularSubtotalNeto = () => {
+  const calcularSubtotalNeto = ({
+    embalaje = { activo: false, precio: 0 },
+    flete = { activo: false, precio: 0 },
+  } = {}) => {
     let total = 0;
     
     // Sumar componentes individuales
@@ -355,6 +432,16 @@ const AppProviderInternal = ({ children }) => {
         total += parseFloat(producto.precio_base) * cantidad;
       });
     });
+
+    // Sumar embalaje si está activo (Requisito 5.4, 5.5)
+    if (embalaje.activo && typeof embalaje.precio === 'number' && embalaje.precio > 0) {
+      total += embalaje.precio;
+    }
+
+    // Sumar flete si está activo (Requisito 6.4, 6.5)
+    if (flete.activo && typeof flete.precio === 'number' && flete.precio > 0) {
+      total += flete.precio;
+    }
 
     return total;
   };
@@ -385,6 +472,8 @@ const AppProviderInternal = ({ children }) => {
   };
 
   const cambiarMonedaVista = (siguienteMoneda) => {
+    // Solo admin puede cambiar a USD
+    if (!autenticado && normalizarMoneda(siguienteMoneda) === 'USD') return;
     const monedaNormalizada = normalizarMoneda(siguienteMoneda);
     setMonedaVista(monedaNormalizada);
     localStorage.setItem(MONEDA_VISTA_STORAGE_KEY, monedaNormalizada);
@@ -519,8 +608,10 @@ const AppProviderInternal = ({ children }) => {
       if (typeof respuesta.tasa_igv === 'number') {
         setTasaIgv(respuesta.tasa_igv);
       }
+      // Actualizar solo el valor manual de BD; el useEffect de sincronización
+      // se encarga de reflejar el valor correcto según el modo activo.
       if (typeof respuesta.tipo_cambio_usd_pen === 'number') {
-        setTipoCambioUsdPen(respuesta.tipo_cambio_usd_pen);
+        setTipoCambioManualBD(respuesta.tipo_cambio_usd_pen);
       }
     }
     return respuesta;
@@ -539,8 +630,10 @@ const AppProviderInternal = ({ children }) => {
       if (typeof respuesta.tasa_igv === 'number') {
         setTasaIgv(respuesta.tasa_igv);
       }
+      // Actualizar solo el valor manual de BD; el useEffect de sincronización
+      // se encarga de reflejar el valor correcto según el modo activo.
       if (typeof respuesta.tipo_cambio_usd_pen === 'number') {
-        setTipoCambioUsdPen(respuesta.tipo_cambio_usd_pen);
+        setTipoCambioManualBD(respuesta.tipo_cambio_usd_pen);
       }
     }
     return respuesta;
@@ -581,10 +674,17 @@ const AppProviderInternal = ({ children }) => {
     validacionCompatibilidad,
     validarCompatibilidad,
 
-    // Margen de ganancia
+    // Margen de ganancia y tipo de cambio
     margenGanancia,
     tasaIgv,
     tipoCambioUsdPen,
+    // Tipo de cambio — modo y estados del hook (Requisitos 3.1–3.6)
+    modoTipoCambio,
+    cargandoTipoCambio,
+    errorTipoCambio,
+    advertenciaTipoCambio,
+    ultimaActualizacionTC,
+    forzarActualizacionTC,
     monedaVista,
     cambiarMonedaVista,
     alternarMonedaVista,
@@ -594,6 +694,7 @@ const AppProviderInternal = ({ children }) => {
     actualizarConfiguracionFinanciera,
     calcularResumenFinanciero,
     cargarMargenGanancia,
+    cargarConfiguracion,
 
     // Extras
     extras,

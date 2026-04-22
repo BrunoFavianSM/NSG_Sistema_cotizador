@@ -523,16 +523,6 @@ export default function AppShell() {
                 <div className="flex items-center gap-2 sm:gap-3">
                   <button
                     type="button"
-                    onClick={alternarMonedaVista}
-                    aria-pressed={monedaVista === 'PEN'}
-                    aria-label={`Cambiar moneda de visualizacion. Actual: ${monedaVista}`}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-4 text-sm font-medium text-[var(--color-text)] transition-colors duration-higNormal ease-hig hover:bg-[var(--color-surface-soft)]"
-                  >
-                    <NavIcon name="currency" className="h-4 w-4" />
-                    {monedaVista}
-                  </button>
-                  <button
-                    type="button"
                     onClick={handleToggleDarkMode}
                     aria-pressed={isDarkMode}
                     aria-label={isDarkMode ? 'Desactivar modo oscuro' : 'Activar modo oscuro'}

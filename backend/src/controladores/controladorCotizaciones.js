@@ -499,8 +499,8 @@ async function crearCotizacion(req, res) {
 
         const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
         const resultado = await cliente.query(
-          `SELECT id, nombre, categoria, precio_base, stock, disponible_a_pedido,
-                  descripcion_tecnica
+          `SELECT id, nombre, subcategoria, precio_base, stock, disponible_a_pedido,
+                  descripcion_general AS descripcion_tecnica
            FROM ${tabla}
            WHERE id IN (${placeholders})${filtroSubcategoria}`,
           subcategorias.length === 1 ? [...ids, subcategorias[0]] : ids
@@ -537,6 +537,7 @@ async function crearCotizacion(req, res) {
           ...comp,
           ...producto,
           tabla_producto: tablaProducto,
+          categoria: categoriaEntrada,
           cantidad: comp.cantidad || 1
         };
       });
@@ -1404,6 +1405,49 @@ async function consultarHistorialCliente(req, res) {
 }
 
 
+/**
+ * Listar todos los clientes registrados con al menos una cotización
+ * 
+ * GET /api/cotizaciones/clientes
+ * Requiere autenticación (solo admin)
+ */
+async function listarClientesRegistrados(req, res) {
+  try {
+    const resultado = await ejecutarQuery(
+      `SELECT uc.id, uc.nombre, uc.correo AS correo_encriptado, COUNT(c.id) AS total_cotizaciones,
+              MAX(c.fecha_emision) AS ultima_cotizacion
+       FROM usuarios_clientes uc
+       LEFT JOIN cotizaciones c ON c.id_cliente = uc.id
+       GROUP BY uc.id, uc.nombre, uc.correo
+       ORDER BY ultima_cotizacion DESC NULLS LAST`
+    );
+
+    const clientes = resultado.rows.map((row) => {
+      let email = null;
+      try {
+        email = row.correo_encriptado ? desencriptar(row.correo_encriptado) : null;
+      } catch (_) {
+        email = null;
+      }
+      return {
+        id: row.id,
+        nombre: row.nombre,
+        email,
+        total_cotizaciones: parseInt(row.total_cotizaciones, 10),
+        ultima_cotizacion: row.ultima_cotizacion
+      };
+    });
+
+    return res.json({ exito: true, clientes });
+  } catch (error) {
+    console.error('Error al listar clientes:', error);
+    return res.status(500).json({
+      error: 'Error al listar clientes',
+      mensaje: 'No se pudo recuperar la lista de clientes registrados'
+    });
+  }
+}
+
 module.exports = {
   crearCotizacion,
   consultarCotizacion,
@@ -1413,6 +1457,7 @@ module.exports = {
   notificarCotizacionLista,
   marcarComoReclamada,
   consultarHistorialCliente,
+  listarClientesRegistrados,
   // Exportar funciones auxiliares para testing
   obtenerMargenGanancia,
   generarCodigoTicket,

@@ -8,8 +8,33 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import axios from 'axios';
 import * as api from './api';
 
-// Mock de axios
-jest.mock('axios');
+// Mock de axios con soporte para interceptors
+jest.mock('axios', () => {
+  const mockInterceptors = {
+    request: { use: jest.fn(), eject: jest.fn() },
+    response: { use: jest.fn(), eject: jest.fn() },
+  };
+  const mockInstance = {
+    defaults: {
+      baseURL: 'http://localhost:3000/api',
+      timeout: 30000,
+      headers: { 'Content-Type': 'application/json' },
+    },
+    interceptors: mockInterceptors,
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+  };
+  const mockAxios = {
+    create: jest.fn(() => mockInstance),
+    get: jest.fn(),
+    post: jest.fn(),
+    interceptors: mockInterceptors,
+    defaults: mockInstance.defaults,
+  };
+  return mockAxios;
+});
 
 describe('Servicio de API', () => {
   beforeEach(() => {
@@ -96,9 +121,9 @@ describe('Servicio de API', () => {
 
       api.default.get = jest.fn().mockResolvedValue({ data: mockProducto });
 
-      const resultado = await api.obtenerProductoPorId(1);
+      const resultado = await api.obtenerProductoPorId('procesador', 1);
       expect(resultado).toEqual(mockProducto);
-      expect(api.default.get).toHaveBeenCalledWith('/productos/1');
+      expect(api.default.get).toHaveBeenCalledWith('/productos/procesador/1');
     });
 
     it('debe crear un nuevo producto', async () => {
