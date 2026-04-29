@@ -1,11 +1,11 @@
-/**
- * Contexto Global de Aplicación
+﻿/**
+ * Contexto Global de AplicaciÃ³n
  *
- * Gestiona el estado global de la aplicación:
- * - Autenticación (usuario, token, login/logout)
+ * Gestiona el estado global de la aplicaciÃ³n:
+ * - AutenticaciÃ³n (usuario, token, login/logout)
  * - Productos disponibles
- * - Configuración seleccionada (componentes del cotizador)
- * - Margen de ganancia y tipo de cambio USD/PEN (manual o automático)
+ * - ConfiguraciÃ³n seleccionada (componentes del cotizador)
+ * - Margen de ganancia y tipo de cambio USD/PEN (manual o automÃ¡tico)
  *
  * Valida Requisitos: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 4.4, 14.2
  */
@@ -44,7 +44,7 @@ export const AppProvider = ({ children, value: overrideValue }) => {
 // Internal provider with all state logic
 const AppProviderInternal = ({ children }) => {
   // ============================================
-  // ESTADO DE AUTENTICACI�"N
+  // ESTADO DE AUTENTICACIï¿½"N
   // ============================================
   const [usuario, setUsuario] = useState(null);
   const [autenticado, setAutenticado] = useState(false);
@@ -58,7 +58,7 @@ const AppProviderInternal = ({ children }) => {
   const [errorProductos, setErrorProductos] = useState(null);
 
   // ============================================
-  // ESTADO DE CONFIGURACI�"N SELECCIONADA
+  // ESTADO DE CONFIGURACIï¿½"N SELECCIONADA
   // ============================================
   const [configuracionSeleccionada, setConfiguracionSeleccionada] = useState({
     procesador: null,
@@ -79,10 +79,10 @@ const AppProviderInternal = ({ children }) => {
 
   // Modo de tipo de cambio: "manual" (valor de BD) | "automatico" (API externa)
   const [modoTipoCambio, setModoTipoCambio] = useState('manual');
-  // Valor manual almacenado en BD (respaldo para modo automático)
+  // Valor manual almacenado en BD (respaldo para modo automÃ¡tico)
   const [tipoCambioManualBD, setTipoCambioManualBD] = useState(3.75);
 
-  // Hook de tipo de cambio — gestiona caché, petición al proxy y estados de UI
+  // Hook de tipo de cambio â€” gestiona cachÃ©, peticiÃ³n al proxy y estados de UI
   const {
     tipoCambio: tipoCambioHook,
     cargando: cargandoTipoCambio,
@@ -108,13 +108,13 @@ const AppProviderInternal = ({ children }) => {
   });
 
   // ============================================
-  // ESTADO DE EXTRAS (productos adicionales por categoría)
+  // ESTADO DE EXTRAS (productos adicionales por categorÃ­a)
   // ============================================
   const [extras, setExtras] = useState({});
   const [cargandoExtras, setCargandoExtras] = useState({});
 
   // ============================================
-  // INICIALIZACI�"N: Verificar autenticación
+  // INICIALIZACIï¿½"N: Verificar autenticaciÃ³n
   // ============================================
   useEffect(() => {
     verificarAutenticacion();
@@ -124,7 +124,7 @@ const AppProviderInternal = ({ children }) => {
     cargarConfiguracion();
   }, []);
 
-  // Sincronizar tipoCambioUsdPen con el hook según el modo activo
+  // Sincronizar tipoCambioUsdPen con el hook segÃºn el modo activo
   // Requisito 3.1, 3.3, 3.4
   useEffect(() => {
     if (modoTipoCambio === 'automatico') {
@@ -142,21 +142,21 @@ const AppProviderInternal = ({ children }) => {
       const token = localStorage.getItem('token');
 
       if (usuarioGuardado && token) {
-        // Verificar que el token sea válido
+        // Verificar que el token sea vÃ¡lido
         const resultado = await api.verificarToken();
         if (resultado.valido) {
           setUsuario(usuarioGuardado);
           setAutenticado(true);
           await cargarConfiguracion();
         } else {
-          // Token inválido, limpiar
+          // Token invÃ¡lido, limpiar
           api.logout();
           setUsuario(null);
           setAutenticado(false);
         }
       }
     } catch (error) {
-      console.error('Error al verificar autenticación:', error);
+      console.error('Error al verificar autenticaciÃ³n:', error);
       setUsuario(null);
       setAutenticado(false);
     } finally {
@@ -178,8 +178,8 @@ const AppProviderInternal = ({ children }) => {
           setTasaIgv(respuesta.tasa_igv);
         }
 
-        // Actualizar solo el valor manual de BD; el useEffect de sincronización
-        // se encarga de reflejar el valor correcto según el modo activo.
+        // Actualizar solo el valor manual de BD; el useEffect de sincronizaciÃ³n
+        // se encarga de reflejar el valor correcto segÃºn el modo activo.
         if (typeof respuesta.tipo_cambio_usd_pen === 'number') {
           setTipoCambioManualBD(respuesta.tipo_cambio_usd_pen);
         }
@@ -191,9 +191,9 @@ const AppProviderInternal = ({ children }) => {
   };
 
   /**
-   * Carga configuración completa desde backend en una sola petición.
+   * Carga configuraciÃ³n completa desde backend en una sola peticiÃ³n.
    * Actualiza modo de tipo de cambio, valor manual de BD, margen e IGV.
-   * Reemplaza a cargarMargenGanancia() para el flujo de inicialización.
+   * Reemplaza a cargarMargenGanancia() para el flujo de inicializaciÃ³n.
    * Mantiene cargarMargenGanancia() por retrocompatibilidad.
    * Requisitos: 3.5
    */
@@ -230,11 +230,11 @@ const AppProviderInternal = ({ children }) => {
   };
 
   // ============================================
-  // FUNCIONES DE AUTENTICACI�"N
+  // FUNCIONES DE AUTENTICACIï¿½"N
   // ============================================
 
   /**
-   * Inicia sesión de administrador
+   * Inicia sesiÃ³n de administrador
    */
   const login = async (username, password) => {
     try {
@@ -251,13 +251,13 @@ const AppProviderInternal = ({ children }) => {
       console.error('Error en login:', error);
       return { 
         exito: false, 
-        error: error.mensaje || 'Error al iniciar sesión' 
+        error: error.mensaje || 'Error al iniciar sesiÃ³n' 
       };
     }
   };
 
   /**
-   * Cierra sesión del usuario
+   * Cierra sesiÃ³n del usuario
    */
   const logout = () => {
     api.logout();
@@ -295,7 +295,7 @@ const AppProviderInternal = ({ children }) => {
   };
 
   /**
-   * Obtiene productos por categoría
+   * Obtiene productos por categorÃ­a
    */
   const obtenerProductosPorCategoria = (categoria) => {
     return productos.filter(p => p.categoria === categoria);
@@ -309,7 +309,7 @@ const AppProviderInternal = ({ children }) => {
   };
 
   /**
-   * Refresca un producto específico
+   * Refresca un producto especÃ­fico
    */
   const refrescarProducto = async (id) => {
     try {
@@ -329,11 +329,11 @@ const AppProviderInternal = ({ children }) => {
   };
 
   // ============================================
-  // FUNCIONES DE CONFIGURACI�"N SELECCIONADA
+  // FUNCIONES DE CONFIGURACIï¿½"N SELECCIONADA
   // ============================================
 
   /**
-   * Selecciona un componente en la configuración
+   * Selecciona un componente en la configuraciÃ³n
    */
   const seleccionarComponente = (categoria, producto) => {
     setConfiguracionSeleccionada(prev => ({
@@ -343,7 +343,7 @@ const AppProviderInternal = ({ children }) => {
   };
 
   /**
-   * Agrega RAM a la configuración (puede ser múltiple)
+   * Agrega RAM a la configuraciÃ³n (puede ser mÃºltiple)
    */
   const agregarRAM = (producto) => {
     setConfiguracionSeleccionada(prev => ({
@@ -353,7 +353,7 @@ const AppProviderInternal = ({ children }) => {
   };
 
   /**
-   * Elimina una RAM específica
+   * Elimina una RAM especÃ­fica
    */
   const eliminarRAM = (index) => {
     setConfiguracionSeleccionada(prev => ({
@@ -363,7 +363,7 @@ const AppProviderInternal = ({ children }) => {
   };
 
   /**
-   * Limpia la configuración completa
+   * Limpia la configuraciÃ³n completa
    */
   const limpiarConfiguracion = () => {
     setConfiguracionSeleccionada({
@@ -383,14 +383,74 @@ const AppProviderInternal = ({ children }) => {
   };
 
   /**
-   * Aplica una configuración completa (desde IA o historial)
+   * Aplica una configuraciÃ³n completa (desde IA o historial)
    */
   const aplicarConfiguracion = (configuracion) => {
-    setConfiguracionSeleccionada(configuracion);
+    const normalizarTexto = (v) => String(v || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+
+    const categoriaCompatible = (clave, producto = {}) => {
+      const cat = normalizarTexto(producto.categoria || producto.subcategoria || producto.nombre_categoria || '');
+      if (clave === 'procesador') return /procesador|cpu/.test(cat);
+      if (clave === 'placa_madre') return (/placa|mother/).test(cat) && !/video|gpu|grafica|tarjeta/.test(cat);
+      if (clave === 'ram') return (/ram|memoria|ddr/).test(cat) && !/usb|flash|pendrive/.test(cat);
+      if (clave === 'almacenamiento') return /almacenamiento|ssd|hdd|disco|nvme/.test(cat);
+      if (clave === 'gpu') return (/gpu|grafica|video|tarjeta/).test(cat) && !/placa madre|mother/.test(cat);
+      if (clave === 'fuente') return (/fuente|psu/).test(cat) && !/video|gpu|grafica|tarjeta/.test(cat);
+      if (clave === 'case') return /case|gabinete|chasis/.test(cat);
+      return false;
+    };
+
+    const adaptarProducto = (p) => {
+      if (!p || typeof p !== 'object') return null;
+      if (p.precio_base != null) return p;
+      return {
+        ...p,
+        precio_base: p.precio_usd ?? p.precio_base ?? 0,
+      };
+    };
+
+    const resolverComponente = (valor, clave) => {
+      if (!valor) return null;
+      const candidatos = Array.isArray(productos) ? productos : [];
+
+      if (typeof valor === 'object' && Number.isInteger(Number(valor.id))) {
+        const porId = candidatos.find((p) => Number(p.id) === Number(valor.id));
+        if (porId && categoriaCompatible(clave, porId)) return adaptarProducto(porId);
+      }
+
+      const nombre = normalizarTexto(typeof valor === 'string' ? valor : (valor.nombre || ''));
+      if (!nombre) return null;
+      const porNombre = candidatos.find((p) => {
+        if (!categoriaCompatible(clave, p)) return false;
+        const np = normalizarTexto(p.nombre || '');
+        return np.includes(nombre) || nombre.includes(np);
+      });
+      return porNombre ? adaptarProducto(porNombre) : null;
+    };
+
+    const ramEntrada = Array.isArray(configuracion?.ram)
+      ? configuracion.ram
+      : (configuracion?.ram ? [configuracion.ram] : []);
+
+    const configNormalizada = {
+      procesador: resolverComponente(configuracion?.procesador, 'procesador'),
+      placa_madre: resolverComponente(configuracion?.placa_madre, 'placa_madre'),
+      ram: ramEntrada.map((r) => resolverComponente(r, 'ram')).filter(Boolean),
+      almacenamiento: resolverComponente(configuracion?.almacenamiento, 'almacenamiento'),
+      gpu: resolverComponente(configuracion?.gpu, 'gpu'),
+      fuente: resolverComponente(configuracion?.fuente, 'fuente'),
+      case: resolverComponente(configuracion?.case, 'case')
+    };
+
+    setConfiguracionSeleccionada(configNormalizada);
   };
 
   /**
-   * Verifica si la configuración está completa
+   * Verifica si la configuraciÃ³n estÃ¡ completa
    */
   const configuracionCompleta = () => {
     const { procesador, placa_madre, ram, almacenamiento, gpu, fuente, case: casePC } = configuracionSeleccionada;
@@ -398,7 +458,7 @@ const AppProviderInternal = ({ children }) => {
   };
 
   /**
-   * Calcula el precio total de la configuración
+   * Calcula el precio total de la configuraciÃ³n
    */
   const calcularPrecioTotal = () => {
     const subtotalNeto = calcularSubtotalNeto();
@@ -421,7 +481,7 @@ const AppProviderInternal = ({ children }) => {
     if (configuracionSeleccionada.fuente) total += parseFloat(configuracionSeleccionada.fuente.precio_base);
     if (configuracionSeleccionada.case) total += parseFloat(configuracionSeleccionada.case.precio_base);
     
-    // Sumar RAM (puede ser múltiple)
+    // Sumar RAM (puede ser mÃºltiple)
     configuracionSeleccionada.ram.forEach(ram => {
       total += parseFloat(ram.precio_base);
     });
@@ -433,12 +493,12 @@ const AppProviderInternal = ({ children }) => {
       });
     });
 
-    // Sumar embalaje si está activo (Requisito 5.4, 5.5)
+    // Sumar embalaje si estÃ¡ activo (Requisito 5.4, 5.5)
     if (embalaje.activo && typeof embalaje.precio === 'number' && embalaje.precio > 0) {
       total += embalaje.precio;
     }
 
-    // Sumar flete si está activo (Requisito 6.4, 6.5)
+    // Sumar flete si estÃ¡ activo (Requisito 6.4, 6.5)
     if (flete.activo && typeof flete.precio === 'number' && flete.precio > 0) {
       total += flete.precio;
     }
@@ -502,7 +562,7 @@ const AppProviderInternal = ({ children }) => {
   // ============================================
 
   /**
-   * Valida la compatibilidad de la configuración actual
+   * Valida la compatibilidad de la configuraciÃ³n actual
    */
   const validarCompatibilidad = async () => {
     try {
@@ -555,7 +615,7 @@ const AppProviderInternal = ({ children }) => {
   };
 
   /**
-   * Carga productos de múltiples categorías extras desde la API
+   * Carga productos de mÃºltiples categorÃ­as extras desde la API
    */
   const cargarExtras = async (categorias = []) => {
     const faltantes = categorias.filter(c => !(c in cargandoExtras) || !cargandoExtras[c]);
@@ -608,8 +668,8 @@ const AppProviderInternal = ({ children }) => {
       if (typeof respuesta.tasa_igv === 'number') {
         setTasaIgv(respuesta.tasa_igv);
       }
-      // Actualizar solo el valor manual de BD; el useEffect de sincronización
-      // se encarga de reflejar el valor correcto según el modo activo.
+      // Actualizar solo el valor manual de BD; el useEffect de sincronizaciÃ³n
+      // se encarga de reflejar el valor correcto segÃºn el modo activo.
       if (typeof respuesta.tipo_cambio_usd_pen === 'number') {
         setTipoCambioManualBD(respuesta.tipo_cambio_usd_pen);
       }
@@ -630,8 +690,8 @@ const AppProviderInternal = ({ children }) => {
       if (typeof respuesta.tasa_igv === 'number') {
         setTasaIgv(respuesta.tasa_igv);
       }
-      // Actualizar solo el valor manual de BD; el useEffect de sincronización
-      // se encarga de reflejar el valor correcto según el modo activo.
+      // Actualizar solo el valor manual de BD; el useEffect de sincronizaciÃ³n
+      // se encarga de reflejar el valor correcto segÃºn el modo activo.
       if (typeof respuesta.tipo_cambio_usd_pen === 'number') {
         setTipoCambioManualBD(respuesta.tipo_cambio_usd_pen);
       }
@@ -643,7 +703,7 @@ const AppProviderInternal = ({ children }) => {
   // VALOR DEL CONTEXTO
   // ============================================
   const value = {
-    // Autenticación
+    // AutenticaciÃ³n
     usuario,
     autenticado,
     cargandoAuth,
@@ -660,7 +720,7 @@ const AppProviderInternal = ({ children }) => {
     obtenerProductosDisponibles,
     refrescarProducto,
 
-    // Configuración seleccionada
+    // ConfiguraciÃ³n seleccionada
     configuracionSeleccionada,
     seleccionarComponente,
     agregarRAM,
@@ -678,7 +738,7 @@ const AppProviderInternal = ({ children }) => {
     margenGanancia,
     tasaIgv,
     tipoCambioUsdPen,
-    // Tipo de cambio — modo y estados del hook (Requisitos 3.1–3.6)
+    // Tipo de cambio â€” modo y estados del hook (Requisitos 3.1â€“3.6)
     modoTipoCambio,
     cargandoTipoCambio,
     errorTipoCambio,
@@ -713,4 +773,5 @@ const AppProviderInternal = ({ children }) => {
 };
 
 export default AppContext;
+
 

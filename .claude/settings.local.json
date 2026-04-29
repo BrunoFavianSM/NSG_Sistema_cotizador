@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"require\\('./src/asistente/servicioSesion'\\); require\\('./src/asistente/sistemaPrompt'\\); require\\('./src/asistente/controladorAsistente'\\); console.log\\('Todos los modulos cargan correctamente'\\);\")"
+    ]
+  }
+}

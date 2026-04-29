@@ -37,12 +37,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/productos', require('./rutas/productos'));
 app.use('/api/cotizaciones', require('./rutas/cotizaciones'));
 app.use('/api/compatibilidad', require('./rutas/compatibilidad'));
-app.use('/api/ia', require('./rutas/ia'));
+// app.use('/api/ia', require('./rutas/ia'));           // movido a _asistente_legacy/back_3
 app.use('/api/auth', require('./rutas/auth'));
 app.use('/api/configuracion', require('./rutas/configuracion'));
 app.use('/api/tipo-cambio', require('./rutas/tipoCambio'));
 app.use('/api/importacion', require('./rutas/importacion'));
-app.use('/api/asistente', require('./rutas/rutasAsistente'));
+// app.use('/api/asistente', require('./rutas/rutasAsistente')); // movido a _asistente_legacy/back_3
+app.use('/api/asistente', require('./asistente/rutasAsistente'));
 
 // Servir imágenes subidas
 app.use('/uploads', express.static('uploads'));

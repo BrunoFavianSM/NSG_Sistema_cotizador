@@ -11,10 +11,11 @@ import axios from 'axios';
 
 // Configuración base de Axios
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS || 300000);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000, // 30 segundos
+  timeout: API_TIMEOUT_MS,
   headers: {
     'Content-Type': 'application/json'
   }

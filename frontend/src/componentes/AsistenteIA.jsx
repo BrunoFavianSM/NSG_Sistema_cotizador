@@ -1,5 +1,5 @@
 /**
- * AsistenteIA.jsx — Componente raíz v2
+ * AsistenteIA.jsx �?" Componente raíz v2
  *
  * Orquesta todos los subcomponentes del Asistente IA NSG Concierge.
  * Integra useAsistenteIA para toda la lógica de estado y comunicación.
@@ -30,7 +30,7 @@ import RutaUpgrade from './AsistenteIA/RutaUpgrade';
 // Número de WhatsApp del asesor (fallback; el backend lo gestiona en WHATSAPP_NUMERO_ASESOR)
 const WHATSAPP_NUMERO_ASESOR = '51999999999';
 
-// Icono de envío — SF Symbol equivalente: paperplane.fill
+// Icono de envío �?" SF Symbol equivalente: paperplane.fill
 const IconoEnviar = () => (
   <svg
     viewBox="0 0 24 24"
@@ -66,7 +66,7 @@ const IconoAsistente = () => (
   </svg>
 );
 
-// Icono de historial — SF Symbol equivalente: clock.arrow.circlepath
+// Icono de historial �?" SF Symbol equivalente: clock.arrow.circlepath
 const IconoHistorial = () => (
   <svg
     viewBox="0 0 24 24"
@@ -166,10 +166,10 @@ function BannerError({ mensaje, onReintentar }) {
 // ============================================================
 
 /**
- * AsistenteIA — Componente raíz v2
+ * AsistenteIA �?" Componente raíz v2
  *
  * Props:
- * - className: string — clases adicionales para el botón de apertura
+ * - className: string �?" clases adicionales para el botón de apertura
  *
  * La prop onAplicarRecomendacion se mantiene por retrocompatibilidad con v1,
  * pero la lógica principal usa aplicarConfiguracion del hook (vía AppContext).
@@ -177,27 +177,28 @@ function BannerError({ mensaje, onReintentar }) {
 const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
   const reducedMotion = useReducedMotion();
 
-  // ── Estado del modal ──────────────────────────────────────
+  // �"?�"? Estado del modal �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [debugAbierto, setDebugAbierto] = useState(false);
 
-  // ── Estado del input ──────────────────────────────────────
+  // �"?�"? Estado del input �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   const [textoInput, setTextoInput] = useState('');
   const [estaEscribiendo, setEstaEscribiendo] = useState(false);
 
-  // ── Estado de historial previo ────────────────────────────
+  // �"?�"? Estado de historial previo �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   const [sesionPrevia, setSesionPrevia] = useState(null);
   const [mostrarBannerHistorial, setMostrarBannerHistorial] = useState(false);
   const [historialConsultado, setHistorialConsultado] = useState(false);
 
-  // ── Refs ──────────────────────────────────────────────────
+  // �"?�"? Refs �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   const chatContainerRef = useRef(null);
   const inputRef = useRef(null);
   const timerEscribiendoRef = useRef(null);
 
-  // ── AppContext ────────────────────────────────────────────
+  // �"?�"? AppContext �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   const { autenticado, usuario } = useAppContext();
 
-  // ── Hook del asistente ────────────────────────────────────
+  // �"?�"? Hook del asistente �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   const {
     mensajes,
     cargando,
@@ -206,6 +207,8 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
     semaforo,
     error,
     mostrarAsesor,
+    debugLogs,
+    etapaConversacion,
     enviarMensaje,
     seleccionarQuickReply,
     ocultarQuickReplies,
@@ -213,23 +216,24 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
     reiniciar,
   } = useAsistenteIA({
     usuarioId: autenticado && usuario?.id ? usuario.id : null,
+    activo: modalAbierto,
   });
 
-  // ── Scroll automático al último mensaje ───────────────────
+  // �"?�"? Scroll automático al último mensaje �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [mensajes, cargando]);
 
-  // ── Foco en input al abrir modal ──────────────────────────
+  // �"?�"? Foco en input al abrir modal �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   useEffect(() => {
     if (!modalAbierto) return;
     const timer = setTimeout(() => inputRef.current?.focus(), 50);
     return () => clearTimeout(timer);
   }, [modalAbierto]);
 
-  // ── Consultar historial previo al abrir (usuarios autenticados) ──
+  // �"?�"? Consultar historial previo al abrir (usuarios autenticados) �"?�"?
   useEffect(() => {
     if (!modalAbierto || !autenticado || !usuario?.id || historialConsultado) return;
 
@@ -254,14 +258,14 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
     consultarHistorial();
   }, [modalAbierto, autenticado, usuario, historialConsultado, mensajes.length]);
 
-  // ── Limpiar timer al desmontar ────────────────────────────
+  // �"?�"? Limpiar timer al desmontar �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   useEffect(() => {
     return () => {
       if (timerEscribiendoRef.current) clearTimeout(timerEscribiendoRef.current);
     };
   }, []);
 
-  // ── Handlers ─────────────────────────────────────────────
+  // �"?�"? Handlers �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
 
   const abrirModal = () => setModalAbierto(true);
 
@@ -342,23 +346,26 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
     reiniciar();
   };
 
-  // ── Datos para BotonAsesorHumano ──────────────────────────
+  // �"?�"? Datos para BotonAsesorHumano �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   const nombreUsuario = autenticado && usuario?.nombre ? usuario.nombre : null;
 
   // Extraer presupuesto y perfil de la configuración propuesta si existe
   const presupuestoEstimado = configuracionPropuesta?.precio_total_pen ?? null;
 
-  // ── Animaciones ───────────────────────────────────────────
+  // �"?�"? Animaciones �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   const animMensaje = reducedMotion
     ? {}
     : { initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.15 } };
 
-  // ── Determinar si mostrar quick replies ───────────────────
+  // �"?�"? Determinar si mostrar quick replies �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   const mostrarQuickReplies = quickReplies.length > 0 && !estaEscribiendo;
+  const hayConfigEnMensajes = mensajes.some(
+    (mensaje) => mensaje.rol === 'assistant' && Boolean(mensaje.metadata?.configuracion_propuesta)
+  );
 
   return (
     <>
-      {/* ── Botón de apertura ── */}
+      {/* �"?�"? Botón de apertura �"?�"? */}
       <button
         type="button"
         onClick={abrirModal}
@@ -380,7 +387,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
         <span>Asistente de Configuración</span>
       </button>
 
-      {/* ── Modal del asistente ── */}
+      {/* �"?�"? Modal del asistente �"?�"? */}
       <AnimatePresence>
         {modalAbierto && (
           <>
@@ -395,6 +402,49 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
               exit={reducedMotion ? undefined : { opacity: 0 }}
             />
 
+            {/* TODO: ELIMINAR EN PRODUCCION - ventana debug temporal separada */}
+            <AnimatePresence>
+              {debugAbierto && (
+                <motion.aside
+                  aria-label="Ventana debug temporal"
+                  className={[
+                    'fixed z-50 hidden md:flex md:flex-col',
+                    'md:left-6 md:bottom-6 md:h-[48rem] md:w-[26rem]',
+                    'rounded-[var(--radius-lg)] border border-[var(--color-border)]',
+                    'bg-[var(--color-surface)] shadow-hig2',
+                  ].join(' ')}
+                  initial={reducedMotion ? false : { opacity: 0, x: -10, scale: 0.99 }}
+                  animate={reducedMotion ? undefined : { opacity: 1, x: 0, scale: 1 }}
+                  exit={reducedMotion ? undefined : { opacity: 0, x: -8, scale: 0.99 }}
+                  transition={{ duration: reducedMotion ? 0 : 0.18 }}
+                >
+                  <header className="border-b border-[var(--color-border)] px-4 py-3">
+                    <p className="text-xs font-semibold text-[var(--color-warning)]">
+                      DEBUG TEMPORAL (eliminar mas adelante)
+                    </p>
+                    <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">
+                      Eventos de sesion y flujo del asistente.
+                    </p>
+                  </header>
+                  <div className="flex-1 overflow-auto px-3 py-2">
+                    {debugLogs.length === 0 ? (
+                      <p className="text-[11px] text-[var(--color-text-muted)]">Sin eventos aun.</p>
+                    ) : (
+                      <ul className="space-y-1">
+                        {debugLogs.slice(-120).map((log, idx) => (
+                          <li key={`${log.ts}-${idx}`} className="text-[11px] leading-snug text-[var(--color-text)]">
+                            <span className="text-[var(--color-text-muted)]">{log.ts}</span>{' '}
+                            <strong>{log.evento}</strong>{' '}
+                            <span className="text-[var(--color-text-muted)]">{JSON.stringify(log.detalle)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </motion.aside>
+              )}
+            </AnimatePresence>
+
             {/* Panel del asistente */}
             <motion.section
               role="dialog"
@@ -404,14 +454,14 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                 'fixed inset-3 z-50 flex max-h-[calc(100vh-1.5rem)] flex-col',
                 'rounded-[var(--radius-lg)] border border-[var(--color-border)]',
                 'bg-[var(--color-surface)] shadow-hig2',
-                'md:inset-auto md:bottom-6 md:right-6 md:h-[46rem] md:w-[30rem]',
+                'md:inset-auto md:bottom-6 md:right-6 md:h-[48rem] md:w-[34rem]',
               ].join(' ')}
               initial={reducedMotion ? false : { opacity: 0, y: 16, scale: 0.98 }}
               animate={reducedMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
               exit={reducedMotion ? undefined : { opacity: 0, y: 12, scale: 0.98 }}
               transition={{ duration: reducedMotion ? 0 : 0.2 }}
             >
-              {/* ── Header ── */}
+              {/* �"?�"? Header �"?�"? */}
               <header className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-4 py-3 flex-shrink-0">
                 <div className="flex items-center gap-2 min-w-0">
                   <IconoAsistente />
@@ -426,7 +476,23 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                 </div>
 
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  {/* Botón asesor humano compacto — siempre visible (Req 8.4) */}
+                  {/* TODO: ELIMINAR EN PRODUCCION - boton de debug temporal */}
+                  <button
+                    type="button"
+                    onClick={() => setDebugAbierto((v) => !v)}
+                    aria-label="Abrir panel de depuracion"
+                    className={[
+                      'min-h-11 px-3 rounded-[var(--radius-sm)]',
+                      'text-xs font-semibold',
+                      debugAbierto ? 'bg-[var(--color-warning)]/20 text-[var(--color-warning)]' : 'text-[var(--color-text-muted)]',
+                      'hover:bg-[var(--color-surface-soft)] transition-colors',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]',
+                    ].join(' ')}
+                  >
+                    Debug
+                  </button>
+
+                  {/* Botón asesor humano compacto �?" siempre visible (Req 8.4) */}
                   <BotonAsesorHumano
                     numeroWhatsApp={WHATSAPP_NUMERO_ASESOR}
                     nombreUsuario={nombreUsuario}
@@ -461,12 +527,12 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]',
                     ].join(' ')}
                   >
-                    ×
+                    �-
                   </button>
                 </div>
               </header>
 
-              {/* ── Área de chat ── */}
+              {/* �"?�"? Área de chat �"?�"? */}
               <div
                 ref={chatContainerRef}
                 className="flex-1 overflow-y-auto bg-[var(--color-surface-soft)] p-3 flex flex-col gap-3"
@@ -501,7 +567,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                     );
                   }
 
-                  // Mensaje del asistente — puede incluir semáforo y configuración
+                  // Mensaje del asistente �?" puede incluir semáforo y configuración
                   const metaSemaforo = mensaje.metadata?.semaforo ?? null;
                   const metaConfig = mensaje.metadata?.configuracion_propuesta ?? null;
 
@@ -540,8 +606,27 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                   );
                 })}
 
-                {/* Indicador de validación (Req 13.2) — visible mientras carga y hay config en curso */}
-                <ValidandoIndicador visible={cargando && mensajes.length > 0} />
+                {/* Indicador de validación (Req 13.2) �?" visible mientras carga y hay config en curso */}
+                {configuracionPropuesta && !hayConfigEnMensajes && (
+                  <motion.div
+                    key="configuracion-respaldo"
+                    {...animMensaje}
+                    className="flex justify-start"
+                  >
+                    <MensajeAsistente contenido="Esta es tu configuración recomendada:">
+                      <ConfiguracionPropuesta
+                        configuracion={configuracionPropuesta}
+                        advertencias={configuracionPropuesta.advertencias || []}
+                        onAplicar={manejarAplicarConfiguracion}
+                      />
+                      {configuracionPropuesta.ruta_upgrade && (
+                        <RutaUpgrade rutaUpgrade={configuracionPropuesta.ruta_upgrade} />
+                      )}
+                    </MensajeAsistente>
+                  </motion.div>
+                )}
+
+                <ValidandoIndicador visible={cargando && mensajes.length > 0 && etapaConversacion === 'cotizacion'} />
 
                 {/* Typing indicator (Req 9.2, 13.1) */}
                 {cargando && (
@@ -558,32 +643,9 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                   </motion.div>
                 )}
 
-                {/* Semáforo y configuración propuesta actuales (Req 6.1, 19.4) */}
-                {configuracionPropuesta && !cargando && (
-                  <motion.div
-                    {...animMensaje}
-                    className="flex flex-col gap-3"
-                  >
-                    {semaforo && (
-                      <SemaforoCapacidades
-                        semaforo={semaforo}
-                        onExplicar={manejarExplicarCapacidad}
-                      />
-                    )}
-                    <ConfiguracionPropuesta
-                      configuracion={configuracionPropuesta}
-                      advertencias={configuracionPropuesta.advertencias || []}
-                      onAplicar={manejarAplicarConfiguracion}
-                    />
-                    {/* Ruta de upgrade junto a la configuración (Req 7.1) */}
-                    {configuracionPropuesta.ruta_upgrade && (
-                      <RutaUpgrade rutaUpgrade={configuracionPropuesta.ruta_upgrade} />
-                    )}
-                  </motion.div>
-                )}
               </div>
 
-              {/* ── Quick Replies (Req 10.1–10.7) ── */}
+              {/* �"?�"? Quick Replies (Req 10.1�?"10.7) �"?�"? */}
               {mostrarQuickReplies && (
                 <div className="px-3 py-2 border-t border-[var(--color-border)] bg-[var(--color-surface)] flex-shrink-0">
                   <QuickReplies
@@ -593,7 +655,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                 </div>
               )}
 
-              {/* ── Banner de error (Req 13.3) ── */}
+              {/* �"?�"? Banner de error (Req 13.3) �"?�"? */}
               {error && (
                 <BannerError
                   mensaje={error}
@@ -601,7 +663,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                 />
               )}
 
-              {/* ── Botón asesor humano completo cuando mostrarAsesor (Req 8.2, 13.4) ── */}
+              {/* �"?�"? Botón asesor humano completo cuando mostrarAsesor (Req 8.2, 13.4) �"?�"? */}
               {mostrarAsesor && (
                 <div className="px-4 py-3 border-t border-[var(--color-border)] bg-[var(--color-surface-soft)] flex-shrink-0">
                   <BotonAsesorHumano
@@ -613,8 +675,11 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                 </div>
               )}
 
-              {/* ── Footer: input de texto ── */}
+              {/* �"?�"? Footer: input de texto �"?�"? */}
               <footer className="border-t border-[var(--color-border)] bg-[var(--color-surface)] p-3 flex-shrink-0">
+                <p className="mb-2 px-1 text-[11px] text-[var(--color-text-muted)]">
+                  Indica uso, presupuesto en soles y preferencias. Te responderé con una propuesta clara.
+                </p>
                 <div className="flex items-center gap-2">
                   <label htmlFor="asistente-input" className="sr-only">
                     Escribe tu mensaje al asistente
@@ -675,3 +740,4 @@ AsistenteIA.propTypes = {
 };
 
 export default AsistenteIA;
+
