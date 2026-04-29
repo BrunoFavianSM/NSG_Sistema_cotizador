@@ -1,17 +1,11 @@
-/**
+﻿/**
  * MensajeAsistente.jsx
  *
  * Burbuja de mensaje del asistente IA.
- * - border-radius: 24px 24px 24px 4px
- * - max-width: 80%, padding: 12px 16px
- * - bg: surface-soft, shadow-hig3
- * - Timestamp en text-[11px] alineado a la izquierda
- *
- * Requisitos: 9.4, 9.5, 9.1
  */
 
 /**
- * Formatea un timestamp a hora legible en español
+ * Formatea un timestamp a hora legible en espanol.
  */
 function formatearHora(timestamp) {
   if (!timestamp) return '';
@@ -25,35 +19,81 @@ function formatearHora(timestamp) {
   }
 }
 
-/**
- * Props:
- * - contenido: string — texto del mensaje
- * - timestamp: string | Date — momento del mensaje
- * - children: ReactNode — contenido adicional (semáforo, configuración, etc.)
- */
+function renderTextoConNegrita(texto = '') {
+  const partes = String(texto).split(/(\*\*[^*]+\*\*)/g);
+  return partes.map((parte, idx) => {
+    if (parte.startsWith('**') && parte.endsWith('**')) {
+      return <strong key={idx}>{parte.slice(2, -2)}</strong>;
+    }
+    return <span key={idx}>{parte}</span>;
+  });
+}
+
+function renderContenidoFormateado(contenido = '') {
+  const lineas = String(contenido).split(/\r?\n/);
+  const bloques = [];
+  let listaActual = [];
+  const patronItemLista = /^((\d+[\).\s]+)|[-*•]\s+|\.\s+)/;
+
+  const cerrarLista = () => {
+    if (listaActual.length > 0) {
+      bloques.push(
+        <ul key={`lista-${bloques.length}`} className="list-disc pl-5 space-y-1">
+          {listaActual.map((item, idx) => (
+            <li key={idx} className="leading-relaxed">
+              {renderTextoConNegrita(item)}
+            </li>
+          ))}
+        </ul>
+      );
+      listaActual = [];
+    }
+  };
+
+  lineas.forEach((linea) => {
+    const l = linea.trim();
+    const esItem = patronItemLista.test(l);
+    if (esItem) {
+      listaActual.push(l.replace(patronItemLista, ''));
+      return;
+    }
+
+    cerrarLista();
+    if (l === '') {
+      bloques.push(<div key={`esp-${bloques.length}`} className="h-2" />);
+      return;
+    }
+
+    bloques.push(
+      <p key={`p-${bloques.length}`} className="leading-relaxed">
+        {renderTextoConNegrita(l)}
+      </p>
+    );
+  });
+
+  cerrarLista();
+  return bloques;
+}
+
 export default function MensajeAsistente({ contenido, timestamp, children }) {
   const hora = formatearHora(timestamp);
 
   return (
     <div className="flex flex-col items-start gap-1 max-w-[80%]">
-      {/* Burbuja principal */}
       <div
         className={[
           'px-4 py-3',
           'bg-[var(--color-surface-soft)]',
           'text-[var(--color-text)]',
           'text-sm leading-relaxed',
-          // Sombra HIG nivel 3 (shadow-hig3 → shadow-2 del sistema)
           'shadow-[var(--shadow-2)]',
         ].join(' ')}
         style={{ borderRadius: '24px 24px 24px 4px' }}
       >
-        {/* Texto del mensaje */}
         {contenido && (
-          <p className="whitespace-pre-wrap break-words">{contenido}</p>
+          <div className="break-words text-sm">{renderContenidoFormateado(contenido)}</div>
         )}
 
-        {/* Contenido adicional (semáforo, configuración propuesta, etc.) */}
         {children && (
           <div className="mt-3 flex flex-col gap-3">
             {children}
@@ -61,7 +101,6 @@ export default function MensajeAsistente({ contenido, timestamp, children }) {
         )}
       </div>
 
-      {/* Timestamp */}
       {hora && (
         <span
           className="text-[11px] text-[var(--color-text-muted)] px-1"

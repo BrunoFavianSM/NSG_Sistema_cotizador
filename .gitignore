@@ -46,3 +46,9 @@ Thumbs.db
 *.sln
 *.sw?
 *~
+
+# Herramientas de agentes (Claude / Kiro) - no versionar
+.claude/skills/
+.kiro/skills/
+
+server.log

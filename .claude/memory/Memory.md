@@ -1,0 +1,1 @@
+- [Proyecto NSG Cotizador](project_nsg_cotizador.md) — Contexto completo del proyecto NSG Cotizador: estructura, reglas, estándares y convenciones

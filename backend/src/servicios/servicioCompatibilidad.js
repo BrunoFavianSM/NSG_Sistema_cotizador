@@ -342,6 +342,13 @@ class ServicioCompatibilidad {
       case: this.convertirComponenteBD(componentes.case, mapa),
     };
 
+    const requeridos = ['procesador', 'placa_madre', 'ram', 'almacenamiento', 'fuente', 'case'];
+    requeridos.forEach(r => {
+      if (!normalizados[r] || (Array.isArray(normalizados[r]) && normalizados[r].length === 0)) {
+        errores.push(`Componente faltante o invalido: ${r}`);
+      }
+    });
+
     if (normalizados.procesador && normalizados.placa_madre) {
       if ((normalizados.procesador.socket || '') !== (normalizados.placa_madre.socket || '')) {
         errores.push(`Socket incompatible: ${normalizados.procesador.socket || 'N/D'} vs ${normalizados.placa_madre.socket || 'N/D'}`);
