@@ -326,7 +326,12 @@ async function obtenerProductos(req, res) {
       params
     );
 
-    return res.json({ exito: true, cantidad: resultado.rows.length, productos: resultado.rows });
+    // Strip de precio_base para invitados (no autenticados)
+    const productosFinales = !req.rol
+      ? resultado.rows.map(({ precio_base, ...rest }) => rest)
+      : resultado.rows;
+
+    return res.json({ exito: true, cantidad: productosFinales.length, productos: productosFinales });
   } catch (error) {
     if (error.message.includes('Categoria') || error.message.includes('Subcategoria')) {
       return res.status(400).json({ error: 'Categoria invalida', mensaje: error.message });
@@ -356,7 +361,12 @@ async function obtenerProductoPorId(req, res) {
       return res.status(404).json({ error: 'Producto no encontrado', mensaje: `No existe un producto con ID ${validacionId.id}` });
     }
 
-    return res.json({ exito: true, producto: resultado.rows[0] });
+    // Strip de precio_base para invitados
+    const producto = !req.rol
+      ? (() => { const { precio_base, ...rest } = resultado.rows[0]; return rest; })()
+      : resultado.rows[0];
+
+    return res.json({ exito: true, producto });
   } catch (error) {
     if (error.message.includes('Categoria') || error.message.includes('Subcategoria')) {
       return res.status(400).json({ error: 'Categoria invalida', mensaje: error.message });

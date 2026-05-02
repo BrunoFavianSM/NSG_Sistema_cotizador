@@ -1,22 +1,19 @@
-﻿/**
+/**
  * Componente de Protección de Rutas
- * 
- * Wrapper que protege rutas administrativas verificando autenticación.
- * - Verifica si el usuario está autenticado usando AppContext
- * - Verifica si existe un token JWT válido
- * - Redirige a /login si no está autenticado
- * - Renderiza el componente hijo si está autenticado
- * 
- * Valida Requisitos: 10.1, 10.2
+ *
+ * Wrapper que protege rutas administrativas verificando autenticación y rol admin.
+ * Redirige a /login si no está autenticado, o a /cotizador si no es admin.
+ *
+ * NOTA: App.jsx define sus propias RutaProtegida y RutaProtegidaUsuario localmente.
+ * Este archivo se mantiene por retrocompatibilidad.
  */
 
 import { Navigate } from 'react-router-dom';
 import { useAppContext } from '../contexto/AppContext';
 
 const RutaProtegida = ({ children }) => {
-  const { autenticado, cargandoAuth } = useAppContext();
+  const { autenticado, cargandoAuth, esAdmin } = useAppContext();
 
-  // Mostrar loading mientras se verifica la autenticación
   if (cargandoAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -28,14 +25,10 @@ const RutaProtegida = ({ children }) => {
     );
   }
 
-  // Si no está autenticado, redirigir a login
-  if (!autenticado) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!autenticado) return <Navigate to="/login" replace />;
+  if (!esAdmin) return <Navigate to="/cotizador" replace />;
 
-  // Si está autenticado, renderizar el componente hijo
   return children;
 };
 
 export default RutaProtegida;
-

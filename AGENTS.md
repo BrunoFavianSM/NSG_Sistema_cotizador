@@ -89,3 +89,55 @@ Un cambio se considera terminado solo si:
 
 - La fuente de verdad para ejecutar tasks de Kiro es el **spec activo** indicado en `.kiro/specs/ACTIVO.md`.
 - Protocolo completo: `documentacion-tareas/protocolo-kiro-spec.md`.
+
+---
+
+## 14) Agent Skills — cuándo activar cada una
+
+### Skills de diagnóstico y debugging
+
+- **`diagnose`** — Activar cuando algo está roto, hay un bug difícil de reproducir, hay una regresión de rendimiento, o el usuario dice "esto falla" / "esto no funciona". Sigue el loop: feedback loop → reproducir → hipótesis → instrumentar → fix → test de regresión.
+
+- **`zoom-out`** — Activar cuando se trabaja en un área del código desconocida o cuando se necesita entender cómo encaja un módulo en el sistema completo antes de tocarlo.
+
+### Skills de diseño y arquitectura
+
+- **`grill-with-docs`** — Activar antes de diseñar o implementar una feature nueva de cierta complejidad. Desafía el plan contra el modelo de dominio existente, actualiza `CONTEXT.md` y genera ADRs cuando aplica. Preferir sobre `grill-me`.
+
+- **`grill-me`** — Activar cuando el usuario quiere stress-test rápido de una idea sin necesidad de actualizar documentación de dominio.
+
+- **`improve-codebase-architecture`** — Activar cuando se detecta acoplamiento excesivo, módulos difíciles de testear, o cuando el usuario pide refactorizar o mejorar la arquitectura. También activar después de un `diagnose` si el bug reveló un problema estructural.
+
+### Skills de desarrollo
+
+- **`tdd`** — Activar cuando el usuario quiere construir una feature o fix usando TDD, o cuando se pide explícitamente "red-green-refactor". Usar slices verticales: un test → una implementación → repetir.
+
+### Skills de gestión de trabajo
+
+- **`to-prd`** — Activar cuando el usuario quiere formalizar una idea o conversación en un PRD estructurado para publicar en el issue tracker.
+
+- **`to-issues`** — Activar cuando hay un plan, spec o PRD y se quiere descomponer en issues independientes y ejecutables (slices verticales). Cada issue debe ser completamente end-to-end.
+
+- **`triage`** — Activar cuando el usuario quiere revisar, clasificar o mover issues en el issue tracker. Gestiona el flujo: `needs-triage` → `needs-info` / `ready-for-agent` / `ready-for-human` / `wontfix`.
+
+### Skills de setup y meta
+
+- **`setup-matt-pocock-skills`** — Correr una sola vez al inicio del proyecto para configurar issue tracker, vocabulario de labels y ubicación de docs de dominio. Requerida antes del primer uso de `to-issues`, `triage` o `to-prd`.
+
+- **`write-a-skill`** — Activar solo cuando el usuario quiere crear una nueva skill personalizada.
+
+### Resumen de activación por contexto
+
+| Situación | Skill a activar |
+|---|---|
+| Algo está roto / bug difícil | `diagnose` |
+| Área de código desconocida | `zoom-out` |
+| Diseñar feature nueva | `grill-with-docs` |
+| Stress-test rápido de idea | `grill-me` |
+| Refactor / mejorar arquitectura | `improve-codebase-architecture` |
+| Desarrollo con tests primero | `tdd` |
+| Formalizar idea en PRD | `to-prd` |
+| Descomponer plan en issues | `to-issues` |
+| Gestionar/clasificar issues | `triage` |
+| Setup inicial del proyecto | `setup-matt-pocock-skills` |
+| Crear nueva skill | `write-a-skill` |

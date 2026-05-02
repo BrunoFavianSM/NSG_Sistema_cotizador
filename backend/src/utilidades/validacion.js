@@ -339,6 +339,127 @@ function validarCredenciales(credenciales) {
   };
 }
 
+/**
+ * Valida los datos de registro de usuario.
+ *
+ * @param {Object} datos - { username, password, confirmarPassword, correo, nombre_completo, telefono? }
+ * @returns {Object} { valido: boolean, errores: Array }
+ */
+function validarRegistro(datos) {
+  const errores = [];
+
+  // Username: requerido, 3-50 chars, alfanumérico + guion bajo
+  if (!datos.username || typeof datos.username !== 'string') {
+    errores.push({ campo: 'username', mensaje: 'Username es requerido' });
+  } else if (datos.username.trim().length < 3) {
+    errores.push({ campo: 'username', mensaje: 'Username debe tener minimo 3 caracteres' });
+  } else if (datos.username.trim().length > 50) {
+    errores.push({ campo: 'username', mensaje: 'Username debe tener maximo 50 caracteres' });
+  } else if (!/^[a-zA-Z0-9_]+$/.test(datos.username.trim())) {
+    errores.push({ campo: 'username', mensaje: 'Username solo debe contener letras, numeros y guion bajo' });
+  }
+
+  // Password: requerido, min 8 chars, mayuscula, minuscula, numero, especial
+  if (!datos.password || typeof datos.password !== 'string') {
+    errores.push({ campo: 'password', mensaje: 'Contrasena es requerida' });
+  } else {
+    if (datos.password.length < 8) {
+      errores.push({ campo: 'password', mensaje: 'Contrasena debe tener minimo 8 caracteres' });
+    }
+    if (!/[A-Z]/.test(datos.password)) {
+      errores.push({ campo: 'password', mensaje: 'Contrasena debe contener al menos una letra mayuscula' });
+    }
+    if (!/[a-z]/.test(datos.password)) {
+      errores.push({ campo: 'password', mensaje: 'Contrasena debe contener al menos una letra minuscula' });
+    }
+    if (!/[0-9]/.test(datos.password)) {
+      errores.push({ campo: 'password', mensaje: 'Contrasena debe contener al menos un numero' });
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(datos.password)) {
+      errores.push({ campo: 'password', mensaje: 'Contrasena debe contener al menos un caracter especial' });
+    }
+  }
+
+  // Confirmar password
+  if (datos.password !== datos.confirmarPassword) {
+    errores.push({ campo: 'confirmarPassword', mensaje: 'Las contrasenas no coinciden' });
+  }
+
+  // Correo: requerido, formato válido
+  if (!datos.correo) {
+    errores.push({ campo: 'correo', mensaje: 'Correo electronico es requerido' });
+  } else {
+    const validacionEmail = validarEmail(datos.correo);
+    if (!validacionEmail.valido) {
+      errores.push({ campo: 'correo', mensaje: validacionEmail.error });
+    }
+  }
+
+  // Nombre completo: requerido, 2-100 chars
+  if (!datos.nombre_completo || typeof datos.nombre_completo !== 'string') {
+    errores.push({ campo: 'nombre_completo', mensaje: 'Nombre completo es requerido' });
+  } else if (datos.nombre_completo.trim().length < 2) {
+    errores.push({ campo: 'nombre_completo', mensaje: 'Nombre debe tener minimo 2 caracteres' });
+  } else if (datos.nombre_completo.trim().length > 100) {
+    errores.push({ campo: 'nombre_completo', mensaje: 'Nombre debe tener maximo 100 caracteres' });
+  } else {
+    const validacionCodigo = validarSinCodigoMalicioso(datos.nombre_completo);
+    if (!validacionCodigo.valido) {
+      errores.push({ campo: 'nombre_completo', mensaje: validacionCodigo.error });
+    }
+  }
+
+  // Telefono: opcional, validar si se proporciona
+  if (datos.telefono !== undefined && datos.telefono !== null && datos.telefono !== '') {
+    const validacionTelefono = validarTelefono(datos.telefono);
+    if (!validacionTelefono.valido) {
+      errores.push({ campo: 'telefono', mensaje: validacionTelefono.error });
+    }
+  }
+
+  return { valido: errores.length === 0, errores };
+}
+
+/**
+ * Valida datos de restablecimiento de contraseña.
+ *
+ * @param {Object} datos - { token, nuevaPassword, confirmarPassword }
+ * @returns {Object} { valido: boolean, errores: Array }
+ */
+function validarRestablecimiento(datos) {
+  const errores = [];
+
+  if (!datos.token || typeof datos.token !== 'string' || datos.token.trim().length === 0) {
+    errores.push({ campo: 'token', mensaje: 'Token de recuperacion es requerido' });
+  }
+
+  if (!datos.nuevaPassword || typeof datos.nuevaPassword !== 'string') {
+    errores.push({ campo: 'nuevaPassword', mensaje: 'Nueva contrasena es requerida' });
+  } else {
+    if (datos.nuevaPassword.length < 8) {
+      errores.push({ campo: 'nuevaPassword', mensaje: 'Contrasena debe tener minimo 8 caracteres' });
+    }
+    if (!/[A-Z]/.test(datos.nuevaPassword)) {
+      errores.push({ campo: 'nuevaPassword', mensaje: 'Contrasena debe contener al menos una letra mayuscula' });
+    }
+    if (!/[a-z]/.test(datos.nuevaPassword)) {
+      errores.push({ campo: 'nuevaPassword', mensaje: 'Contrasena debe contener al menos una letra minuscula' });
+    }
+    if (!/[0-9]/.test(datos.nuevaPassword)) {
+      errores.push({ campo: 'nuevaPassword', mensaje: 'Contrasena debe contener al menos un numero' });
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(datos.nuevaPassword)) {
+      errores.push({ campo: 'nuevaPassword', mensaje: 'Contrasena debe contener al menos un caracter especial' });
+    }
+  }
+
+  if (datos.nuevaPassword !== datos.confirmarPassword) {
+    errores.push({ campo: 'confirmarPassword', mensaje: 'Las contrasenas no coinciden' });
+  }
+
+  return { valido: errores.length === 0, errores };
+}
+
 module.exports = {
   validarProducto,
   validarCliente,
@@ -347,5 +468,7 @@ module.exports = {
   validarMargen,
   validarId,
   validarCodigoTicket,
-  validarCredenciales
+  validarCredenciales,
+  validarRegistro,
+  validarRestablecimiento
 };

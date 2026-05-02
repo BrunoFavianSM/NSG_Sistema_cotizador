@@ -10,6 +10,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import PropTypes from 'prop-types';
 
@@ -196,7 +197,8 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
   const timerEscribiendoRef = useRef(null);
 
   // �"?�"? AppContext �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
-  const { autenticado, usuario } = useAppContext();
+  const navigate = useNavigate();
+  const { autenticado, esInvitado, usuario } = useAppContext();
 
   // �"?�"? Hook del asistente �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   const {
@@ -267,7 +269,13 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
 
   // �"?�"? Handlers �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
 
-  const abrirModal = () => setModalAbierto(true);
+  const abrirModal = () => {
+    if (esInvitado) {
+      navigate('/registro');
+      return;
+    }
+    setModalAbierto(true);
+  };
 
   const cerrarModal = () => setModalAbierto(false);
 

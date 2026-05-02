@@ -114,4 +114,22 @@ function construirSeccionContexto(contexto) {
   return `\n## Contexto de conversación\n${partes.join('\n')}`;
 }
 
-module.exports = { construirSystemPrompt };
+/**
+ * Construye un context string con los datos de clasificación del pipeline multi-agente.
+ * Se inyecta en el system prompt del LLM legacy cuando el pipeline está activo,
+ * para que el LLM no re-clasifique datos que ya fueron extraídos.
+ */
+function construirContextoClasificacion(clasificacion) {
+  if (!clasificacion) return '';
+  const partes = [];
+  if (clasificacion.uso_principal) partes.push(`Uso principal ya detectado: ${clasificacion.uso_principal}`);
+  if (clasificacion.presupuesto_pen) partes.push(`Presupuesto detectado: S/${clasificacion.presupuesto_pen}`);
+  if (clasificacion.resolucion) partes.push(`Resolución detectada: ${clasificacion.resolucion}`);
+  if (clasificacion.multitarea_stream !== null) partes.push(`Streaming: ${clasificacion.multitarea_stream ? 'sí' : 'no'}`);
+  if (clasificacion.preferencia_ruido) partes.push(`Ruido: ${clasificacion.preferencia_ruido}`);
+  if (clasificacion.productos_mencionados?.length > 0) partes.push(`Productos mencionados: ${clasificacion.productos_mencionados.join(', ')}`);
+  if (partes.length === 0) return '';
+  return `\n## Datos del pipeline multi-agente (ya clasificados)\n${partes.join('. ')}. No vuelvas a preguntar estos datos.`;
+}
+
+module.exports = { construirSystemPrompt, construirContextoClasificacion };

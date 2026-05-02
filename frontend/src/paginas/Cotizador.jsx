@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import AsistenteIA from '../componentes/AsistenteIA';
+import Button from '../componentes/ui/Button';
 import EmptyState from '../componentes/feedback/EmptyState';
 import ErrorState from '../componentes/feedback/ErrorState';
 import LoadingSpinner from '../componentes/feedback/LoadingSpinner';
@@ -440,7 +441,11 @@ function ExtrasAccordion({ subseccion, extras, cargarExtras, cargandoExtras, agr
                             </p>
                             <div className="mt-0.5 flex items-center gap-2">
                               <span className="text-xs font-semibold text-[var(--color-accent)]">
-                                {formatearMontoSegunMonedaVista({ montoUsd: producto.precio_base })}
+                                {esInvitado ? (
+                                  <span className="text-[var(--color-text-muted)]">Inicia sesión para ver precio</span>
+                                ) : (
+                                  formatearMontoSegunMonedaVista({ montoUsd: producto.precio_base })
+                                )}
                               </span>
                               <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${stockInfo.className}`}>{stockInfo.label}</span>
                             </div>
@@ -494,6 +499,8 @@ export default function Cotizador() {
     errorProductos,
     limpiarConfiguracion,
     autenticado,
+    esAdmin,
+    esInvitado,
     margenGanancia,
     tasaIgv,
     tipoCambioUsdPen,
@@ -550,7 +557,8 @@ export default function Cotizador() {
   const esPasoExtras = pasoInfo.id === 'extras';
   const total = calcularPrecioTotal();
   const resumenFinanciero = calcularResumenFinanciero();
-  const esAdmin = autenticado === true;
+  // esAdmin se obtiene del contexto (true si rol='admin')
+  // esInvitado se obtiene del contexto (true si no autenticado)
 
   // ── Resumen financiero admin (Requisitos 7.1–7.11, 4.4) ──────────────────
   // Calculado localmente con useMemo; se recalcula solo cuando cambian sus dependencias.
@@ -1240,6 +1248,31 @@ export default function Cotizador() {
   return (
     <div className="space-y-6">
 
+      {/* Banner de invitado */}
+      {esInvitado && (
+        <section className="surface-card rounded-[var(--radius-lg)] border border-[var(--color-warning)] bg-[color:rgba(255,214,10,0.08)] p-4 space-y-3" aria-label="Registro requerido">
+          <div className="flex items-start gap-3">
+            <svg className="h-5 w-5 shrink-0 mt-0.5 text-[var(--color-warning)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 4h.01M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+            </svg>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[var(--color-text)]">Inicia sesión para acceder a todas las funciones</p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                Para ver precios, crear cotizaciones y usar el asistente IA, necesitas una cuenta.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-3 pl-8">
+            <Link to="/registro">
+              <Button size="sm">Crear cuenta</Button>
+            </Link>
+            <Link to="/login">
+              <Button variant="secondary" size="sm">Iniciar sesión</Button>
+            </Link>
+          </div>
+        </section>
+      )}
+
       <header className="hidden surface-elevated p-6">
         <h1 className="text-3xl font-semibold text-[var(--color-text)]">Cotizador de PC</h1>
         <p className="mt-2 text-sm text-[var(--color-text-muted)]">Configura tu computadora paso a paso con validacion y total en tiempo real.</p>
@@ -1416,7 +1449,11 @@ export default function Cotizador() {
 
                           <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
                             <p className="text-2xl font-semibold text-[var(--color-accent-text)]">
-                              {formatearMontoSegunMonedaVista({ montoUsd: producto.precio_base })}
+                              {esInvitado ? (
+                                <span className="text-base text-[var(--color-text-muted)]">Inicia sesión para ver precio</span>
+                              ) : (
+                                formatearMontoSegunMonedaVista({ montoUsd: producto.precio_base })
+                              )}
                             </p>
 
                             {!esRam ? (
@@ -1486,8 +1523,8 @@ export default function Cotizador() {
             </div>
           </section>
 
-          {/* Embalaje — solo admin (Requisitos 5.1, 5.8) */}
-          {esAdmin && (
+          {/* Embalaje — solo para usuarios autenticados */}
+          {!esInvitado && (
             <SeccionEmbalaje
               activo={embalaje.activo}
               opcion={embalaje.opcion}
@@ -1499,8 +1536,8 @@ export default function Cotizador() {
             />
           )}
 
-          {/* Flete — solo admin (Requisitos 6.1, 6.8) */}
-          {esAdmin && (
+          {/* Flete — solo para usuarios autenticados */}
+          {!esInvitado && (
             <SeccionFlete
               activo={flete.activo}
               precio={flete.precio}
@@ -1509,8 +1546,8 @@ export default function Cotizador() {
             />
           )}
 
-          {/* Resumen financiero admin — solo admin (Requisitos 7.1, 7.11, 11.6) */}
-          {esAdmin && (
+          {/* Resumen financiero admin — solo para usuarios autenticados */}
+          {!esInvitado && (
             cargandoTipoCambio ? (
               <section className="surface-card p-4" aria-label="Cargando tipo de cambio">
                 <LoadingSpinner label="Obteniendo tipo de cambio..." />
@@ -1522,39 +1559,49 @@ export default function Cotizador() {
 
           <section className="surface-elevated p-5">
             <p className="text-xs uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Total estimado</p>
-            <p className="mt-1 text-3xl font-semibold text-[var(--color-success)]">
-              {formatearMontoSegunMonedaVista({
-                montoUsd: resumenFinanciero.total.usd,
-                montoPen: resumenFinanciero.total.pen
-              })}
-            </p>
-            <p className="mt-2 text-sm text-[var(--color-text-muted)]">{etiquetaMonedaBase(monedaVista)} • {pasosCompletos} de {PASOS.length} pasos completos</p>
-            <div className="mt-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-xs text-[var(--color-text-muted)]">
-              <p>
-                Subtotal neto: {formatearMontoSegunMonedaVista({
-                  montoUsd: resumenFinanciero.subtotal_neto.usd,
-                  montoPen: resumenFinanciero.subtotal_neto.pen
-                })} / {monedaVista === 'USD'
-                  ? formatearMoneda(resumenFinanciero.subtotal_neto.pen, 'PEN')
-                  : formatearMoneda(resumenFinanciero.subtotal_neto.usd, 'USD')}
-              </p>
-              <p>
-                IGV ({Number(resumenFinanciero.igv.porcentaje || 0).toFixed(2)}%): {formatearMontoSegunMonedaVista({
-                  montoUsd: resumenFinanciero.igv.usd,
-                  montoPen: resumenFinanciero.igv.pen
-                })} / {monedaVista === 'USD'
-                  ? formatearMoneda(resumenFinanciero.igv.pen, 'PEN')
-                  : formatearMoneda(resumenFinanciero.igv.usd, 'USD')}
-              </p>
-              <p>
-                Total: {formatearMontoSegunMonedaVista({
-                  montoUsd: resumenFinanciero.total.usd,
-                  montoPen: resumenFinanciero.total.pen
-                })} / {monedaVista === 'USD'
-                  ? formatearMoneda(resumenFinanciero.total.pen, 'PEN')
-                  : formatearMoneda(resumenFinanciero.total.usd, 'USD')}
-              </p>
-            </div>
+            {esInvitado ? (
+              <div className="mt-3 rounded-[var(--radius-sm)] bg-[color:rgba(255,214,10,0.10)] p-3">
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  <span className="font-medium text-[var(--color-text)]">Inicia sesión</span> para ver los precios y el total estimado de tu configuración.
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="mt-1 text-3xl font-semibold text-[var(--color-success)]">
+                  {formatearMontoSegunMonedaVista({
+                    montoUsd: resumenFinanciero.total.usd,
+                    montoPen: resumenFinanciero.total.pen
+                  })}
+                </p>
+                <p className="mt-2 text-sm text-[var(--color-text-muted)]">{etiquetaMonedaBase(monedaVista)} • {pasosCompletos} de {PASOS.length} pasos completos</p>
+                <div className="mt-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-xs text-[var(--color-text-muted)]">
+                  <p>
+                    Subtotal neto: {formatearMontoSegunMonedaVista({
+                      montoUsd: resumenFinanciero.subtotal_neto.usd,
+                      montoPen: resumenFinanciero.subtotal_neto.pen
+                    })} / {monedaVista === 'USD'
+                      ? formatearMoneda(resumenFinanciero.subtotal_neto.pen, 'PEN')
+                      : formatearMoneda(resumenFinanciero.subtotal_neto.usd, 'USD')}
+                  </p>
+                  <p>
+                    IGV ({Number(resumenFinanciero.igv.porcentaje || 0).toFixed(2)}%): {formatearMontoSegunMonedaVista({
+                      montoUsd: resumenFinanciero.igv.usd,
+                      montoPen: resumenFinanciero.igv.pen
+                    })} / {monedaVista === 'USD'
+                      ? formatearMoneda(resumenFinanciero.igv.pen, 'PEN')
+                      : formatearMoneda(resumenFinanciero.igv.usd, 'USD')}
+                  </p>
+                  <p>
+                    Total: {formatearMontoSegunMonedaVista({
+                      montoUsd: resumenFinanciero.total.usd,
+                      montoPen: resumenFinanciero.total.pen
+                    })} / {monedaVista === 'USD'
+                      ? formatearMoneda(resumenFinanciero.total.pen, 'PEN')
+                      : formatearMoneda(resumenFinanciero.total.usd, 'USD')}
+                  </p>
+                </div>
+              </>
+            )}
           </section>
 
           {/* Extras seleccionados */}
@@ -1673,14 +1720,31 @@ export default function Cotizador() {
           </section>
 
           <section className="surface-elevated space-y-4 p-5">
-            <button
-              type="button"
-              onClick={generarCotizacion}
-              disabled={!configuracionCompleta || generando || validacionCompatibilidad.errores.length > 0 || !datosClienteValidos}
-              className="min-h-11 w-full rounded-[var(--radius-md)] bg-[var(--color-success-solid)] px-4 text-sm font-semibold text-[var(--color-on-success)] disabled:opacity-45"
-            >
-              {generando ? 'Generando cotizacion...' : 'Generar cotizacion'}
-            </button>
+            {esInvitado ? (
+              <div className="space-y-3">
+                <div className="rounded-[var(--radius-sm)] bg-[color:rgba(255,214,10,0.10)] p-3 text-sm text-[var(--color-text-muted)]">
+                  <p className="font-medium text-[var(--color-text)]">Inicia sesión para generar cotizaciones</p>
+                  <p className="mt-1 text-xs">Solo los usuarios registrados pueden crear cotizaciones y ver precios completos.</p>
+                </div>
+                <div className="flex gap-3">
+                  <Link to="/registro">
+                    <Button size="sm">Crear cuenta</Button>
+                  </Link>
+                  <Link to="/login">
+                    <Button variant="secondary" size="sm">Iniciar sesión</Button>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={generarCotizacion}
+                disabled={!configuracionCompleta || generando || validacionCompatibilidad.errores.length > 0 || !datosClienteValidos}
+                className="min-h-11 w-full rounded-[var(--radius-md)] bg-[var(--color-success-solid)] px-4 text-sm font-semibold text-[var(--color-on-success)] disabled:opacity-45"
+              >
+                {generando ? 'Generando cotizacion...' : 'Generar cotizacion'}
+              </button>
+            )}
 
             {errorGenerar ? (
               <ErrorState

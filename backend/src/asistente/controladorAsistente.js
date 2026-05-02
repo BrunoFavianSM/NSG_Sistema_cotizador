@@ -10,8 +10,11 @@ const sistemaPrompt = require('./sistemaPrompt');
 const servicioLLM = require('./servicioLLM');
 const servicioSemaforo = require('./servicioSemaforo');
 const servicioCompatibilidad = require('../servicios/servicioCompatibilidad');
+const orquestadorAgentes = require('./orquestadorAgentes');
 const { sanitizarInput } = require('../utilidades/sanitizacion');
 const { ejecutarQuery } = require('../configuracion/baseDatos');
+
+const PIPELINE_ENABLED = process.env.AGENT_PIPELINE_ENABLED !== 'false';
 
 // ── 1. POST /nueva-sesion ──
 
@@ -87,25 +90,49 @@ async function procesarMensaje(req, res) {
       contextoConversacion,
     });
 
-    // Llamar al LLM (Gemini → NVIDIA fallback)
+        // Intentar pipeline multi-agente (Clasificador → Buscador → Reranker) primero
     let respuestaLLM;
-    try {
-      respuestaLLM = await servicioLLM.generarRespuesta({
-        systemPrompt,
-        historial,
-        mensajeActual: mensajeSanitizado,
-      });
-    } catch (errorLLM) {
-      const status = errorLLM.tipo === 'rate_limit' ? 502 : 502;
-      const msg =
-        errorLLM.tipo === 'rate_limit'
-          ? 'El servicio de IA está saturado. Intenta en un momento.'
-          : errorLLM.tipo === 'invalid_json'
-            ? 'No se pudo procesar la respuesta. Intenta de nuevo.'
-            : 'El servicio de IA no está disponible temporalmente.';
-      return res.status(status).json({ exito: false, mensaje: msg });
+    let modoPipeline = false;
+
+    if (PIPELINE_ENABLED) {
+      try {
+        respuestaLLM = await orquestadorAgentes.ejecutarPipeline({
+          mensaje: mensajeSanitizado,
+          historial,
+          productos,
+          tipoCambio,
+          margen,
+          igv,
+          contextoConversacion,
+          cuestionario,
+          ejecutarQuery,
+        });
+        modoPipeline = true;
+        console.info('[Asistente] Pipeline multi-agente completado exitosamente');
+      } catch (errorPipeline) {
+        console.warn('[Asistente] Pipeline multi-agente fallo, usando LLM legacy:', errorPipeline.message);
+      }
     }
 
+    // Fallback al LLM legacy (Gemini → NVIDIA) si el pipeline no esta habilitado o fallo
+    if (!modoPipeline) {
+      try {
+        respuestaLLM = await servicioLLM.generarRespuesta({
+          systemPrompt,
+          historial,
+          mensajeActual: mensajeSanitizado,
+        });
+      } catch (errorLLM) {
+        const status = errorLLM.tipo === 'rate_limit' ? 502 : 502;
+        const msg =
+          errorLLM.tipo === 'rate_limit'
+            ? 'El servicio de IA esta saturado. Intenta en un momento.'
+            : errorLLM.tipo === 'invalid_json'
+              ? 'No se pudo procesar la respuesta. Intenta de nuevo.'
+              : 'El servicio de IA no esta disponible temporalmente.';
+        return res.status(status).json({ exito: false, mensaje: msg });
+      }
+    }
     // Validar campos requeridos del LLM response
     respuestaLLM.respuesta = respuestaLLM.respuesta || '';
     respuestaLLM.quick_replies = Array.isArray(respuestaLLM.quick_replies) ? respuestaLLM.quick_replies : [];

@@ -44,11 +44,15 @@ export const AppProvider = ({ children, value: overrideValue }) => {
 // Internal provider with all state logic
 const AppProviderInternal = ({ children }) => {
   // ============================================
-  // ESTADO DE AUTENTICACIï¿½"N
+  // ESTADO DE AUTENTICACION
   // ============================================
   const [usuario, setUsuario] = useState(null);
   const [autenticado, setAutenticado] = useState(false);
   const [cargandoAuth, setCargandoAuth] = useState(true);
+  const rol = usuario?.rol || null;
+  const esAdmin = rol === 'admin';
+  const esUsuario = rol === 'usuario';
+  const esInvitado = !autenticado;
 
   // ============================================
   // ESTADO DE PRODUCTOS
@@ -142,21 +146,25 @@ const AppProviderInternal = ({ children }) => {
       const token = localStorage.getItem('token');
 
       if (usuarioGuardado && token) {
-        // Verificar que el token sea vÃ¡lido
+        // Verificar que el token sea válido
         const resultado = await api.verificarToken();
         if (resultado.valido) {
+          // Si el backend retorna rol, actualizar el usuario guardado
+          if (resultado.rol) {
+            usuarioGuardado.rol = resultado.rol;
+          }
           setUsuario(usuarioGuardado);
           setAutenticado(true);
           await cargarConfiguracion();
         } else {
-          // Token invÃ¡lido, limpiar
+          // Token inválido, limpiar
           api.logout();
           setUsuario(null);
           setAutenticado(false);
         }
       }
     } catch (error) {
-      console.error('Error al verificar autenticaciÃ³n:', error);
+      console.error('Error al verificar autenticación:', error);
       setUsuario(null);
       setAutenticado(false);
     } finally {
@@ -239,7 +247,7 @@ const AppProviderInternal = ({ children }) => {
   const login = async (username, password) => {
     try {
       const resultado = await api.login(username, password);
-      
+
       if (resultado.exito) {
         setUsuario(resultado.usuario);
         setAutenticado(true);
@@ -249,9 +257,32 @@ const AppProviderInternal = ({ children }) => {
       }
     } catch (error) {
       console.error('Error en login:', error);
-      return { 
-        exito: false, 
-        error: error.mensaje || 'Error al iniciar sesiÃ³n' 
+      return {
+        exito: false,
+        error: error.mensaje || 'Error al iniciar sesión'
+      };
+    }
+  };
+
+  /**
+   * Registra un nuevo usuario
+   */
+  const registrar = async (datos) => {
+    try {
+      const resultado = await api.registrar(datos);
+
+      if (resultado.exito) {
+        setUsuario(resultado.usuario);
+        setAutenticado(true);
+        return { exito: true };
+      } else {
+        return { exito: false, error: resultado.error, detalles: resultado.detalles };
+      }
+    } catch (error) {
+      console.error('Error en registro:', error);
+      return {
+        exito: false,
+        error: error.mensaje || 'Error al procesar el registro'
       };
     }
   };
@@ -703,12 +734,17 @@ const AppProviderInternal = ({ children }) => {
   // VALOR DEL CONTEXTO
   // ============================================
   const value = {
-    // AutenticaciÃ³n
+    // Autenticación
     usuario,
     autenticado,
     cargandoAuth,
+    rol,
+    esAdmin,
+    esUsuario,
+    esInvitado,
     login,
     logout,
+    registrar,
     verificarAutenticacion,
 
     // Productos

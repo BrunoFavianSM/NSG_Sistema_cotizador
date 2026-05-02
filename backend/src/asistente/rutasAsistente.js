@@ -6,7 +6,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const controlador = require('./controladorAsistente');
-const { verificarToken } = require('../middleware/auth');
+const { verificarToken, verificarTokenAdmin, verificarTokenUsuario } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -23,19 +23,19 @@ const limitadorAsistente = rateLimit({
   legacyHeaders: false,
 });
 
-// POST /api/asistente/nueva-sesion
-router.post('/nueva-sesion', limitadorAsistente, controlador.nuevaSesion);
+// POST /api/asistente/nueva-sesion (requiere login)
+router.post('/nueva-sesion', limitadorAsistente, verificarTokenUsuario, controlador.nuevaSesion);
 
-// POST /api/asistente/mensaje
-router.post('/mensaje', limitadorAsistente, controlador.procesarMensaje);
+// POST /api/asistente/mensaje (requiere login)
+router.post('/mensaje', limitadorAsistente, verificarTokenUsuario, controlador.procesarMensaje);
 
-// POST /api/asistente/validar-configuracion
-router.post('/validar-configuracion', limitadorAsistente, controlador.validarConfiguracion);
+// POST /api/asistente/validar-configuracion (requiere login)
+router.post('/validar-configuracion', limitadorAsistente, verificarTokenUsuario, controlador.validarConfiguracion);
 
-// GET /api/asistente/historial/:usuario_id (requiere JWT)
-router.get('/historial/:usuario_id', verificarToken, controlador.obtenerHistorial);
+// GET /api/asistente/historial/:usuario_id (solo admin)
+router.get('/historial/:usuario_id', verificarTokenAdmin, controlador.obtenerHistorial);
 
-// GET /api/asistente/sesion/:sesion_id (sin auth, acceso anónimo)
-router.get('/sesion/:sesion_id', controlador.obtenerSesion);
+// GET /api/asistente/sesion/:sesion_id (requiere login)
+router.get('/sesion/:sesion_id', verificarTokenUsuario, controlador.obtenerSesion);
 
 module.exports = router;

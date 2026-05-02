@@ -1,6 +1,6 @@
 ﻿import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import Button from '../componentes/ui/Button';
 import InputField from '../componentes/ui/InputField';
 import ErrorState from '../componentes/feedback/ErrorState';
@@ -63,10 +63,10 @@ export default function Login() {
   return (
     <div className="mx-auto w-full max-w-xl space-y-6">
       <header className="surface-elevated p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Administración</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Acceso</p>
         <h1 className="mt-1 text-2xl font-semibold text-[var(--color-text)] sm:text-3xl">Iniciar sesión</h1>
         <p className="mt-2 max-w-xl text-sm text-[var(--color-text-muted)]">
-          Accede al panel para gestionar productos, validar cotizaciones y configurar parámetros del sistema.
+          Ingresa con tu cuenta para ver precios, crear cotizaciones y acceder al asistente de configuración.
         </p>
       </header>
 
@@ -98,7 +98,7 @@ export default function Login() {
               setUsername(event.target.value);
               setError('');
             }}
-            placeholder="admin@nsg.com"
+            placeholder="Ingresa tu usuario"
           />
 
           <div className="space-y-1.5">
@@ -119,7 +119,7 @@ export default function Login() {
                   setError('');
                 }}
                 className="w-full min-h-11 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 pr-12 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] transition-colors duration-higNormal ease-hig hover:border-[var(--color-text-muted)]"
-                placeholder="Ingresa tu contraseña"
+                placeholder="••••••••"
                 aria-required="true"
               />
 
@@ -143,13 +143,24 @@ export default function Login() {
               </button>
             </div>
 
-            <p className="text-xs text-[var(--color-text-muted)]">Por seguridad, usa una contraseña de al menos 6 caracteres.</p>
+            <p className="text-xs text-[var(--color-text-muted)]">Por seguridad, usa una contraseña de al menos 8 caracteres.</p>
           </div>
 
-          <div className="flex justify-end pt-2">
+          <div className="flex flex-col items-center gap-3 pt-2">
             <Button type="submit" loading={cargando} className="sm:min-w-[12rem]">
               Iniciar sesión
             </Button>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              <Link to="/recuperar" className="font-medium text-[var(--color-accent-text)] hover:underline">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </p>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              ¿No tienes cuenta?{' '}
+              <Link to="/registro" className="font-medium text-[var(--color-accent-text)] hover:underline">
+                Regístrate
+              </Link>
+            </p>
           </div>
         </form>
       </motion.section>

@@ -91,12 +91,9 @@ function camposRelevantesPorUso(uso) {
   const base = ['uso', 'presupuesto', 'ruido'];
   if (!uso) return [...base, 'resolucion', 'multitarea'];
 
-  if (uso === 'gaming' || uso === 'edicion_video' || uso === 'diseno_3d') {
-    return [...base, 'resolucion'];
-  }
-  if (uso === 'gaming' || uso === 'diseno_3d') {
-    return [...base, 'resolucion', 'multitarea'];
-  }
+  if (uso === 'gaming') return [...base, 'resolucion', 'multitarea'];
+  if (uso === 'edicion_video') return [...base, 'resolucion'];
+  if (uso === 'diseno_3d') return [...base, 'resolucion', 'multitarea'];
   return base;
 }
 
@@ -104,7 +101,7 @@ function camposRelevantesPorUso(uso) {
 
 function construirEstadoCuestionario(historial) {
   const uso = detectarUsoPrincipal(historial);
-  const presupuestoPen = extraerPresupuestoPen(historial);
+  const presupuesto = extraerPresupuestoPen(historial);
   const resolucion = detectarResolucion(historial);
   const multitarea = detectarMultitarea(historial);
   const ruido = detectarPreferenciaRuido(historial);
@@ -113,7 +110,8 @@ function construirEstadoCuestionario(historial) {
 
   const detectados = {
     uso,
-    presupuestoPen,
+    presupuesto,
+    presupuestoPen: presupuesto,
     resolucion,
     multitarea,
     ruido,
