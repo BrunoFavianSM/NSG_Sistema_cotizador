@@ -9,7 +9,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { verificarToken } = require('../middleware/auth');
+const { verificarToken, verificarTokenAdmin, detectarUsuario } = require('../middleware/auth');
 const uploadImagen = require('../middleware/multerImagen');
 const {
   obtenerProductos,
@@ -21,20 +21,20 @@ const {
   limpiarCatalogo,
 } = require('../controladores/controladorProductos');
 
-// Rutas públicas (no requieren autenticación)
-router.get('/', obtenerProductos);
-router.get('/:categoria/:id', obtenerProductoPorId);
+// Rutas públicas con detección de usuario (strip de precios para invitados)
+router.get('/', detectarUsuario, obtenerProductos);
+router.get('/:categoria/:id', detectarUsuario, obtenerProductoPorId);
 
 // Rutas protegidas (requieren autenticación de administrador)
-router.post('/', verificarToken, crearProducto);
-router.put('/:categoria/:id', verificarToken, actualizarProducto);
-router.delete('/:categoria/:id', verificarToken, eliminarProducto);
-router.delete('/limpiar', verificarToken, limpiarCatalogo);
+router.post('/', verificarTokenAdmin, crearProducto);
+router.put('/:categoria/:id', verificarTokenAdmin, actualizarProducto);
+router.delete('/:categoria/:id', verificarTokenAdmin, eliminarProducto);
+router.delete('/limpiar', verificarTokenAdmin, limpiarCatalogo);
 
 // Subida de imagen de producto
 router.post(
   '/:categoria/:id/imagen',
-  verificarToken,
+  verificarTokenAdmin,
   (req, res, next) => {
     uploadImagen.single('imagen')(req, res, (err) => {
       if (err) {

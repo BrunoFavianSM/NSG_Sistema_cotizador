@@ -10,15 +10,16 @@ const express = require('express');
 const router = express.Router();
 const servicioCompatibilidad = require('../servicios/servicioCompatibilidad');
 const { ejecutarQuery } = require('../configuracion/baseDatos');
+const { verificarTokenUsuario } = require('../middleware/auth');
 
 /**
  * POST /api/compatibilidad/validar
- * Valida la compatibilidad entre componentes seleccionados
- * 
+ * Valida la compatibilidad entre componentes seleccionados (requiere login)
+ *
  * Body: { componentes: Object }
  * Response: { compatible: boolean, errores: string[], advertencias: string[] }
  */
-router.post('/validar', async (req, res) => {
+router.post('/validar', verificarTokenUsuario, async (req, res) => {
   try {
     const { componentes } = req.body;
 

@@ -26,9 +26,19 @@ const NAV_ITEMS = [
   {
     key: 'login',
     to: '/login',
-    label: 'Login',
-    description: 'Acceso administrativo',
+    label: 'Iniciar sesión',
+    description: 'Accede a tu cuenta',
     icon: 'lock',
+    group: 'secondary',
+    guestOnly: true,
+    showInMobileTab: true,
+  },
+  {
+    key: 'registro',
+    to: '/registro',
+    label: 'Crear cuenta',
+    description: 'Regístrate para cotizar',
+    icon: 'person_add',
     group: 'secondary',
     guestOnly: true,
     showInMobileTab: true,
@@ -41,6 +51,7 @@ const NAV_ITEMS = [
     icon: 'search',
     group: 'admin',
     requiresAuth: true,
+    requiresAdmin: true,
     showInMobileTab: true,
   },
   {
@@ -51,6 +62,7 @@ const NAV_ITEMS = [
     icon: 'box',
     group: 'admin',
     requiresAuth: true,
+    requiresAdmin: true,
     showInMobileTab: true,
     mobileLabel: 'Admin',
   },
@@ -62,6 +74,7 @@ const NAV_ITEMS = [
     icon: 'sliders',
     group: 'admin',
     requiresAuth: true,
+    requiresAdmin: true,
     showInMobileTab: false,
   },
   {
@@ -72,6 +85,7 @@ const NAV_ITEMS = [
     icon: 'upload',
     group: 'admin',
     requiresAuth: true,
+    requiresAdmin: true,
     showInMobileTab: false,
   },
 ];
@@ -216,17 +230,32 @@ function NavIcon({ name, className }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
         </svg>
       );
+    case 'person_add':
+      return (
+        <svg className={iconClass(className)} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+          <circle cx="8.5" cy="7" r="4" strokeWidth={1.8} />
+          <path strokeLinecap="round" strokeWidth={1.8} d="M20 8v6M23 11h-6" />
+        </svg>
+      );
     default:
       return null;
   }
 }
 
-function buildNavigationItems(autenticado) {
+function buildNavigationItems(autenticado, rol) {
   return NAV_ITEMS.filter((item) => {
     if (item.requiresAuth && !autenticado) return false;
+    if (item.requiresAdmin && rol !== 'admin') return false;
     if (item.guestOnly && autenticado) return false;
     return true;
   });
+}
+
+function subtituloUsuario(autenticado, rol) {
+  if (!autenticado) return 'Inicia sesión para ver precios y acceder al asistente IA.';
+  if (rol === 'admin') return 'Sesión activa con permisos administrativos.';
+  return 'Sesión activa. Puedes crear cotizaciones y usar el asistente.';
 }
 
 function SidebarNavLink({ item, onNavigate }) {
@@ -295,7 +324,7 @@ function MobileDrawer({ open, onClose, navItems, usuario, autenticado, onLogout 
         <div className="surface-card mb-4 rounded-[var(--radius-lg)] p-4">
           <p className="text-sm font-semibold text-[var(--color-text)]">{autenticado ? (usuario?.username || 'Administrador') : 'Modo visitante'}</p>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-            {autenticado ? 'Acceso completo al panel administrativo.' : 'Puedes explorar y generar cotizaciones.'}
+            {subtituloUsuario(autenticado, usuario?.rol)}
           </p>
         </div>
 
@@ -349,7 +378,7 @@ function DesktopSidebar({ navItems, usuario, autenticado, onLogout }) {
       <div className="surface-card mb-6 rounded-[var(--radius-lg)] p-4">
         <p className="text-sm font-semibold text-[var(--color-text)]">{autenticado ? (usuario?.username || 'Administrador') : 'Modo visitante'}</p>
         <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-          {autenticado ? 'Sesión activa con permisos administrativos.' : 'Acceso público para cotización.'}
+          {subtituloUsuario(autenticado, usuario?.rol)}
         </p>
       </div>
 
@@ -425,7 +454,7 @@ export default function AppShell() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [themePreference, setThemePreference] = useState(() => localStorage.getItem(THEME_STORAGE_KEY) || 'system');
 
-  const navItems = useMemo(() => buildNavigationItems(autenticado), [autenticado]);
+  const navItems = useMemo(() => buildNavigationItems(autenticado, usuario?.rol), [autenticado, usuario?.rol]);
   const mobileTabItems = useMemo(
     () => navItems.filter((item) => item.showInMobileTab).slice(0, autenticado ? 4 : 3),
     [autenticado, navItems]
@@ -450,7 +479,7 @@ export default function AppShell() {
   const handleLogout = () => {
     logout();
     setMobileDrawerOpen(false);
-    navigate('/login');
+    navigate('/cotizador');
   };
 
   const isDarkMode = resolveTheme(themePreference) === 'dark';
@@ -532,10 +561,16 @@ export default function AppShell() {
                     {isDarkMode ? 'Modo claro' : 'Modo oscuro'}
                   </button>
                   <NavLink
-                    to="/login"
+                    to="/registro"
                     className="hidden min-h-11 items-center rounded-[var(--radius-sm)] border border-[var(--color-border)] px-4 text-sm font-medium text-[var(--color-text)] transition-colors duration-higNormal ease-hig hover:bg-[var(--color-surface-soft)] sm:inline-flex"
                   >
-                    Login admin
+                    Crear cuenta
+                  </NavLink>
+                  <NavLink
+                    to="/login"
+                    className="hidden min-h-11 items-center rounded-[var(--radius-sm)] bg-[var(--color-accent)] px-4 text-sm font-medium text-white transition-colors duration-higNormal ease-hig hover:opacity-90 sm:inline-flex"
+                  >
+                    Iniciar sesión
                   </NavLink>
                 </div>
               )}

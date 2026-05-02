@@ -6,6 +6,9 @@ import AppShell from './componentes/layout/AppShell';
 import LoadingSpinner from './componentes/feedback/LoadingSpinner';
 import { ToastProvider } from './componentes/feedback/ToastProvider';
 import Login from './paginas/Login';
+import Registro from './paginas/Registro';
+import RecuperarContrasena from './paginas/RecuperarContrasena';
+import RestablecerContrasena from './paginas/RestablecerContrasena';
 import Cotizador from './paginas/Cotizador';
 import ValidadorCotizaciones from './paginas/ValidadorCotizaciones';
 import HistorialCliente from './paginas/HistorialCliente';
@@ -14,7 +17,26 @@ import AdminConfiguracion from './paginas/AdminConfiguracion';
 import ImportarCSV from './paginas/ImportarCSV';
 import { THEME_STORAGE_KEY, applyThemeClass } from './theme';
 
+/** Ruta protegida: solo admin */
 function RutaProtegida({ children }) {
+  const { autenticado, cargandoAuth, esAdmin } = useAppContext();
+
+  if (cargandoAuth) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-hig1">
+        <LoadingSpinner label="Verificando autenticación..." />
+      </div>
+    );
+  }
+
+  if (!autenticado) return <Navigate to="/login" replace />;
+  if (!esAdmin) return <Navigate to="/cotizador" replace />;
+
+  return children;
+}
+
+/** Ruta protegida: cualquier usuario autenticado (admin o usuario registrado) */
+function RutaProtegidaUsuario({ children }) {
   const { autenticado, cargandoAuth } = useAppContext();
 
   if (cargandoAuth) {
@@ -25,7 +47,9 @@ function RutaProtegida({ children }) {
     );
   }
 
-  return autenticado ? children : <Navigate to="/login" replace />;
+  if (!autenticado) return <Navigate to="/login" replace />;
+
+  return children;
 }
 
 function AppRoutes() {
@@ -35,9 +59,12 @@ function AppRoutes() {
         <Route element={<AppShell />}>
           <Route path="/" element={<Navigate to="/cotizador" replace />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/registro" element={<Registro />} />
+          <Route path="/recuperar" element={<RecuperarContrasena />} />
+          <Route path="/restablecer" element={<RestablecerContrasena />} />
           <Route path="/cotizador" element={<Cotizador />} />
-          <Route path="/historial" element={<RutaProtegida><HistorialCliente /></RutaProtegida>} />
-          <Route path="/validar" element={<RutaProtegida><ValidadorCotizaciones /></RutaProtegida>} />
+          <Route path="/historial" element={<RutaProtegidaUsuario><HistorialCliente /></RutaProtegidaUsuario>} />
+          <Route path="/validar" element={<RutaProtegidaUsuario><ValidadorCotizaciones /></RutaProtegidaUsuario>} />
           <Route path="/admin" element={<Navigate to="/admin/productos" replace />} />
           <Route path="/admin/productos" element={<RutaProtegida><AdminProductos /></RutaProtegida>} />
           <Route path="/admin/configuracion" element={<RutaProtegida><AdminConfiguracion /></RutaProtegida>} />

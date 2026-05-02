@@ -1,6 +1,6 @@
 ﻿const express = require('express');
 const router = express.Router();
-const { verificarToken } = require('../middleware/auth');
+const { verificarToken, verificarTokenAdmin, verificarTokenUsuario } = require('../middleware/auth');
 const {
   crearCotizacion,
   consultarCotizacion,
@@ -13,11 +13,11 @@ const {
   listarClientesRegistrados
 } = require('../controladores/controladorCotizaciones');
 
-// Crear nueva cotizacion
-router.post('/', crearCotizacion);
+// Crear nueva cotizacion (requiere login: admin o usuario)
+router.post('/', verificarTokenUsuario, crearCotizacion);
 
 // Listar todos los clientes registrados (solo admin)
-router.get('/clientes', verificarToken, listarClientesRegistrados);
+router.get('/clientes', verificarTokenAdmin, listarClientesRegistrados);
 
 // Historial por cliente (debe ir antes de /:codigoTicket)
 router.get('/cliente/:email', consultarHistorialCliente);
@@ -31,8 +31,8 @@ router.get('/:codigoTicket/pdf', obtenerPdfCotizacion);
 router.get('/:codigoTicket/pdf-tecnico', obtenerPdfTecnico);
 
 // Flujo operativo admin
-router.put('/:codigoTicket/reclamar', verificarToken, marcarComoReclamada);
-router.post('/:codigoTicket/notificar-listo', verificarToken, notificarCotizacionLista);
+router.put('/:codigoTicket/reclamar', verificarTokenAdmin, marcarComoReclamada);
+router.post('/:codigoTicket/notificar-listo', verificarTokenAdmin, notificarCotizacionLista);
 
 module.exports = router;
 

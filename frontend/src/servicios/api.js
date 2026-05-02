@@ -58,7 +58,7 @@ api.interceptors.response.use(
         // Token inválido o expirado
         localStorage.removeItem('token');
         localStorage.removeItem('usuario');
-        if (window.location.pathname !== '/login') {
+        if (window.location.pathname.startsWith('/admin')) {
           window.location.href = '/login';
         }
         break;
@@ -127,7 +127,7 @@ export const verificarToken = async () => {
 export const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('usuario');
-  window.location.href = '/login';
+  window.location.href = '/cotizador';
 };
 
 /**
@@ -615,6 +615,62 @@ export const continuarConversacionIA = async (sesionId, respuestaCliente) => {
 export const obtenerEstadisticasIA = async () => {
   try {
     const response = await api.get('/ia/estadisticas');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// ============================================
+// FUNCIONES DE REGISTRO Y RECUPERACION
+// ============================================
+
+/**
+ * Registra un nuevo usuario
+ * @param {Object} datos - { username, password, confirmarPassword, correo, nombre_completo, telefono? }
+ * @returns {Promise<{exito: boolean, token?: string, usuario?: Object, error?: string}>}
+ */
+export const registrar = async ({ username, password, confirmarPassword, correo, nombre_completo, telefono }) => {
+  try {
+    const response = await api.post('/auth/registro', {
+      username, password, confirmarPassword, correo, nombre_completo, telefono
+    });
+
+    if (response.data.exito && response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('usuario', JSON.stringify(response.data.usuario));
+    }
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Solicita recuperacion de contrasena
+ * @param {string} correo
+ * @returns {Promise<{exito: boolean, mensaje: string}>}
+ */
+export const solicitarRecuperacion = async (correo) => {
+  try {
+    const response = await api.post('/auth/recuperar', { correo });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Restablece contrasena con token de recuperacion
+ * @param {Object} datos - { token, nuevaPassword, confirmarPassword }
+ * @returns {Promise<{exito: boolean, mensaje: string}>}
+ */
+export const restablecerContrasena = async ({ token, nuevaPassword, confirmarPassword }) => {
+  try {
+    const response = await api.post('/auth/restablecer', {
+      token, nuevaPassword, confirmarPassword
+    });
     return response.data;
   } catch (error) {
     throw error;
