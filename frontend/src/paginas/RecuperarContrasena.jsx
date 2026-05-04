@@ -61,7 +61,7 @@ export default function RecuperarContrasena() {
               Si el correo existe, recibirás instrucciones para restablecer tu contraseña.
             </div>
             <p className="text-sm text-[var(--color-text-muted)]">
-              Revisa tu bandeja de entrada y carpeta de spam. El enlace expira en 60 minutos.
+              Revisa tu bandeja de entrada y carpeta de spam. El enlace expira en 5 minutos.
             </p>
             <div className="flex justify-center pt-2">
               <Link
