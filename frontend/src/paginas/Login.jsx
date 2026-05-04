@@ -98,7 +98,7 @@ export default function Login() {
               setUsername(event.target.value);
               setError('');
             }}
-            placeholder="Ingresa tu usuario"
+            placeholder="Usuario"
           />
 
           <div className="space-y-1.5">
@@ -152,7 +152,7 @@ export default function Login() {
             </Button>
             <p className="text-sm text-[var(--color-text-muted)]">
               <Link to="/recuperar" className="font-medium text-[var(--color-accent-text)] hover:underline">
-                ¿Olvidaste tu contraseña?
+                Recuperar contraseña
               </Link>
             </p>
             <p className="text-sm text-[var(--color-text-muted)]">

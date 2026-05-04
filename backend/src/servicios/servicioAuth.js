@@ -14,11 +14,12 @@ const crypto = require('crypto');
 const { ejecutarQuery } = require('../configuracion/baseDatos');
 const { validarCredenciales, validarRegistro, validarRestablecimiento } = require('../utilidades/validacion');
 const { encriptar, hashBusqueda } = require('../utilidades/encriptacion');
+const { enviarCorreoRecuperacion } = require('./servicioCorreo');
 
 const SALT_ROUNDS = 12;
 const MAX_INTENTOS = 5;
 const BLOQUEO_MINUTOS = 15;
-const TOKEN_EXPIRA_MINUTOS = 60;
+const TOKEN_EXPIRA_MINUTOS = 5;
 
 /**
  * Autentica un usuario (admin o usuario) contra la tabla cuentas.
@@ -226,9 +227,14 @@ async function solicitarRecuperacion(correo) {
     );
 
     const enlace = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/restablecer?token=${tokenRecuperacion}`;
-    console.log(`[RECUPERACION] Token generado para cuenta ${cuenta.id}`);
-    console.log(`[RECUPERACION] Enlace: ${enlace}`);
-    console.log(`[RECUPERACION] Expira: ${expira.toISOString()}`);
+    enviarCorreoRecuperacion(correoNormalizado, enlace)
+      .then(() => {
+        console.log(`[RECUPERACION] Correo enviado para cuenta ${cuenta.id}`);
+        console.log(`[RECUPERACION] Expira: ${expira.toISOString()}`);
+      })
+      .catch((errorCorreo) => {
+        console.error(`[RECUPERACION] Falló envío para cuenta ${cuenta.id}:`, errorCorreo);
+      });
 
     return { exito: true, mensaje: 'Si el correo existe, recibirás instrucciones para restablecer tu contraseña.' };
   } catch (error) {
