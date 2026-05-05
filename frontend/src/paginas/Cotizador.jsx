@@ -167,6 +167,16 @@ function extraerFrecuenciaRam(producto) {
   return match ? `${match[1]} MHz` : 'No especificado';
 }
 
+function extraerCapacidadRam(producto) {
+  const texto = obtenerTextoProducto(producto);
+  // Busca el total de GB del kit, ej: "32GB", "16GB (2x8GB)" → toma el primer número mayor
+  const matchKit = texto.match(/(\d+)\s*GB\s*\(\d+x\d+GB\)/i);
+  if (matchKit) return `${matchKit[1]} GB`;
+  const matchSimple = texto.match(/(\d+)\s*GB/i);
+  if (matchSimple) return `${matchSimple[1]} GB`;
+  return 'No especificado';
+}
+
 function extraerCapacidadAlmacenamiento(producto) {
   const texto = obtenerTextoProducto(producto);
   const match = texto.match(/(\d+(?:\.\d+)?)\s*(TB|GB)/i);
@@ -360,7 +370,7 @@ const NOMBRE_CATEGORIA = {
   conectividad: 'Conectividad',
 };
 
-function ExtrasAccordion({ subseccion, extras, cargarExtras, cargandoExtras, agregarExtra, quitarExtra, formatearMontoSegunMonedaVista }) {
+function ExtrasAccordion({ subseccion, extras, cargarExtras, cargandoExtras, agregarExtra, quitarExtra, formatearMontoSegunMonedaVista, esInvitado }) {
   const [abierta, setAbierta] = useState(false);
   const [productosLocales, setProductosLocales] = useState({});
 
@@ -527,6 +537,7 @@ export default function Cotizador() {
     placaMarca: 'all',
     ramMarca: 'all',
     ramFrecuencia: 'all',
+    ramCapacidad: 'all',
     almacenamientoMarca: 'all',
     almacenamientoCapacidad: 'all',
     almacenamientoTipo: 'all',
@@ -712,6 +723,13 @@ export default function Cotizador() {
         return {
           marcas: extraerValoresUnicos(productosPasoBase.map(extraerMarca)),
           frecuencias: extraerValoresUnicos(productosPasoBase.map(extraerFrecuenciaRam)),
+          capacidades: extraerValoresUnicos(
+            productosPasoBase.map(extraerCapacidadRam)
+          ).sort((a, b) => {
+            const numA = parseInt(a, 10) || 0;
+            const numB = parseInt(b, 10) || 0;
+            return numA - numB;
+          }),
         };
       case 'almacenamiento':
         return {
@@ -760,6 +778,9 @@ export default function Cotizador() {
         }
         if (filtrosPaso.ramFrecuencia !== 'all') {
           lista = lista.filter((p) => coincide(extraerFrecuenciaRam(p), filtrosPaso.ramFrecuencia));
+        }
+        if (filtrosPaso.ramCapacidad !== 'all') {
+          lista = lista.filter((p) => coincide(extraerCapacidadRam(p), filtrosPaso.ramCapacidad));
         }
         break;
       case 'almacenamiento':
@@ -1137,13 +1158,21 @@ export default function Cotizador() {
         );
       case 'ram':
         return (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {renderCampoFiltro(
               'filtro-ram-marca',
               'Marca',
               filtrosPaso.ramMarca,
               (valor) => actualizarFiltroPaso('ramMarca', valor),
               opcionesFiltrosPaso.marcas || [],
+              'Todas'
+            )}
+            {renderCampoFiltro(
+              'filtro-ram-capacidad',
+              'Capacidad (GB)',
+              filtrosPaso.ramCapacidad,
+              (valor) => actualizarFiltroPaso('ramCapacidad', valor),
+              opcionesFiltrosPaso.capacidades || [],
               'Todas'
             )}
             {renderCampoFiltro(
@@ -1401,6 +1430,7 @@ export default function Cotizador() {
                     agregarExtra={agregarExtra}
                     quitarExtra={quitarExtra}
                     formatearMontoSegunMonedaVista={formatearMontoSegunMonedaVista}
+                    esInvitado={esInvitado}
                   />
               ))}
             </div>
