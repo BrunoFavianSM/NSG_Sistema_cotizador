@@ -216,6 +216,9 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
     ocultarQuickReplies,
     aplicarConfiguracion,
     reiniciar,
+    esConsultaCompatibilidad,
+    extraerFiltrosCompatibilidad,
+    buscarYMostrarCompatibles,
   } = useAsistenteIA({
     usuarioId: autenticado && usuario?.id ? usuario.id : null,
     activo: modalAbierto,
@@ -302,8 +305,19 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
     setTextoInput('');
     setEstaEscribiendo(false);
     setMostrarBannerHistorial(false);
+
+    // Si el mensaje parece una consulta de compatibilidad, buscar productos
+    // compatibles en paralelo con la respuesta del LLM (Req. 8.5, 8.6)
+    if (esConsultaCompatibilidad(texto)) {
+      const filtros = extraerFiltrosCompatibilidad(texto);
+      if (filtros) {
+        // No esperamos: se ejecuta en paralelo para no bloquear la respuesta del LLM
+        buscarYMostrarCompatibles(filtros);
+      }
+    }
+
     await enviarMensaje(texto);
-  }, [textoInput, cargando, enviarMensaje]);
+  }, [textoInput, cargando, enviarMensaje, esConsultaCompatibilidad, extraerFiltrosCompatibilidad, buscarYMostrarCompatibles]);
 
   const manejarKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {

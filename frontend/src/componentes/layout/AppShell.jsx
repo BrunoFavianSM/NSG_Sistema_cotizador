@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../contexto/AppContext';
 import { THEME_STORAGE_KEY, applyThemeClass, resolveTheme } from '../../theme';
+import { usePollingNotificaciones } from '../../hooks/usePollingNotificaciones';
+import { NotificacionesToastContainer } from '../feedback/NotificacionToast';
 
 const NAV_ITEMS = [
   {
@@ -454,6 +456,9 @@ export default function AppShell() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [themePreference, setThemePreference] = useState(() => localStorage.getItem(THEME_STORAGE_KEY) || 'system');
 
+  // Polling de notificaciones — activo solo cuando el usuario está autenticado (Req. 5.6, 5.7)
+  const { notificaciones, marcarLeida } = usePollingNotificaciones({ autenticado });
+
   const navItems = useMemo(() => buildNavigationItems(autenticado, usuario?.rol), [autenticado, usuario?.rol]);
   const mobileTabItems = useMemo(
     () => navItems.filter((item) => item.showInMobileTab).slice(0, autenticado ? 4 : 3),
@@ -593,6 +598,9 @@ export default function AppShell() {
       />
 
       <BottomNavigation navItems={mobileTabItems} />
+
+      {/* Notificaciones del sistema — un toast por notificación nueva (Req. 5.8) */}
+      <NotificacionesToastContainer notificaciones={notificaciones} onCerrar={marcarLeida} />
     </div>
   );
 }

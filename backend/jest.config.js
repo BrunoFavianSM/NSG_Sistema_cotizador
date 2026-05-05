@@ -9,6 +9,8 @@ module.exports = {
   testMatch: [
     '**/pruebas/**/*.test.js',
     '**/pruebas/**/*.spec.js',
+    '**/src/__tests__/**/*.test.js',
+    '**/src/__tests__/**/*.spec.js',
   ],
   coverageThreshold: {
     global: {

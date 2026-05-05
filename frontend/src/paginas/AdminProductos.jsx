@@ -170,6 +170,9 @@ export default function AdminProductos() {
   const [errorPantalla, setErrorPantalla] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState('');
 
+  // Historial de precios: { [idProducto]: { precio_anterior, total } }
+  const [historialPrecios, setHistorialPrecios] = useState({});
+
   const [modalFormulario, setModalFormulario] = useState({ open: false, mode: 'create', producto: null });
   const [formulario, setFormulario] = useState(PRODUCTO_INICIAL);
   const [errorFormulario, setErrorFormulario] = useState('');
@@ -182,7 +185,29 @@ export default function AdminProductos() {
     setErrorPantalla('');
     try {
       const data = await api.obtenerProductos();
-      setProductos(Array.isArray(data) ? data : data.productos || []);
+      const lista = Array.isArray(data) ? data : data.productos || [];
+      setProductos(lista);
+
+      // Cargar historial de precios para productos que lo tienen (Req. 3.7, 3.9)
+      const conHistorial = lista.filter((p) => p.tiene_historial);
+      if (conHistorial.length > 0) {
+        const resultados = await Promise.allSettled(
+          conHistorial.map((p) => api.obtenerHistorialPrecios(p.id))
+        );
+        const nuevoHistorial = {};
+        resultados.forEach((r, idx) => {
+          if (r.status === 'fulfilled' && r.value.historial?.length > 0) {
+            const idProducto = conHistorial[idx].id;
+            nuevoHistorial[idProducto] = {
+              precio_anterior: Number(r.value.historial[0].precio_anterior),
+              total: r.value.total,
+            };
+          }
+        });
+        setHistorialPrecios(nuevoHistorial);
+      } else {
+        setHistorialPrecios({});
+      }
     } catch {
       setErrorPantalla('No se pudieron cargar los productos. Intenta nuevamente.');
     } finally {
@@ -301,7 +326,38 @@ export default function AdminProductos() {
       label: 'Precio',
       sortable: true,
       align: 'right',
-      render: (row) => `S/ ${Number(row.precio_base).toFixed(2)}`,
+      render: (row) => {
+        const historial = historialPrecios[row.id];
+        return (
+          <div className="flex flex-col items-end gap-0.5">
+            <div className="flex items-center gap-1.5">
+              {/* Badge indicador de historial (Req. 3.9) */}
+              {row.tiene_historial && (
+                <span
+                  title="Este producto tiene historial de cambios de precio"
+                  aria-label="Tiene historial de precios"
+                  className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[var(--color-accent)] text-white text-[9px] font-bold leading-none select-none"
+                >
+                  H
+                </span>
+              )}
+              <span className="font-medium text-[var(--color-text)]">
+                S/ {Number(row.precio_base).toFixed(2)}
+              </span>
+            </div>
+            {/* Precio anterior tachado (Req. 3.7, 3.8) */}
+            {historial && (
+              <span
+                className="text-xs line-through text-[var(--color-text-muted)] opacity-75"
+                aria-label={`Precio anterior: S/ ${historial.precio_anterior.toFixed(2)}`}
+                title={`Precio anterior: S/ ${historial.precio_anterior.toFixed(2)}`}
+              >
+                S/ {historial.precio_anterior.toFixed(2)}
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: 'stock',

@@ -10,7 +10,8 @@ const {
   notificarCotizacionLista,
   marcarComoReclamada,
   consultarHistorialCliente,
-  listarClientesRegistrados
+  listarClientesRegistrados,
+  exportarExcel
 } = require('../controladores/controladorCotizaciones');
 
 // Crear nueva cotizacion (requiere login: admin o usuario)
@@ -29,6 +30,9 @@ router.get('/:codigoTicket/validar', validarCotizacion);
 // Descargas PDF
 router.get('/:codigoTicket/pdf', obtenerPdfCotizacion);
 router.get('/:codigoTicket/pdf-tecnico', obtenerPdfTecnico);
+
+// Exportar a Excel (requiere login: admin o usuario)
+router.get('/:codigoTicket/excel', verificarTokenUsuario, exportarExcel);
 
 // Flujo operativo admin
 router.put('/:codigoTicket/reclamar', verificarTokenAdmin, marcarComoReclamada);

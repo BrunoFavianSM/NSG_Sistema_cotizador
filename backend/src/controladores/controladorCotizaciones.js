@@ -25,6 +25,7 @@ const { sanitizarObjeto, validarEmail, validarTelefono } = require('../utilidade
 const { encriptar, desencriptar, hashBusqueda } = require('../utilidades/encriptacion');
 const jwt = require('jsonwebtoken');
 const servicioPDF = require('../servicios/servicioPDF');
+const servicioExcel = require('../servicios/servicioExcel');
 const { enviarNotificacionListo } = require('../servicios/servicioNotificaciones');
 const { TABLAS_VALIDAS, resolverDestinoOperacion } = require('./controladorProductos');
 
@@ -674,6 +675,29 @@ async function crearCotizacion(req, res) {
             );
 
         detalles.push(detalle.rows[0]);
+      }
+
+      // 9. Insertar notificación si el usuario autenticado tiene rol 'usuario'
+      // La inserción ocurre dentro de la misma transacción para garantizar atomicidad.
+      // Requisito: 5.3
+      if (req.rol === 'usuario' && req.usuario?.id) {
+        try {
+          await cliente.query(
+            `INSERT INTO notificaciones_usuario
+               (id_usuario, tipo, titulo, mensaje, datos_extra)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [
+              req.usuario.id,
+              'cotizacion_creada',
+              'Cotización creada',
+              `Tu cotización ${codigoTicket} fue generada exitosamente y es válida por 3 días.`,
+              JSON.stringify({ codigoTicket })
+            ]
+          );
+        } catch (errorNotificacion) {
+          // No interrumpir la transacción si la tabla aún no existe (entorno sin migración)
+          console.error('[crearCotizacion] Error al insertar notificación:', errorNotificacion);
+        }
       }
 
       return {
@@ -1448,6 +1472,64 @@ async function listarClientesRegistrados(req, res) {
   }
 }
 
+/**
+ * Exportar cotización a Excel
+ *
+ * GET /api/cotizaciones/:codigoTicket/excel
+ * Requiere autenticación (verificarTokenUsuario).
+ *
+ * Responde con un archivo .xlsx descargable.
+ * HTTP 400 si el formato del ticket es inválido.
+ * HTTP 404 si la cotización no existe.
+ *
+ * Requisitos: 2.1, 2.3, 2.4, 2.5
+ */
+async function exportarExcel(req, res) {
+  try {
+    const { codigoTicket } = req.params;
+
+    // Validar formato del ticket (NSG-YYYY-NNNN)
+    const validacion = validarCodigoTicket(codigoTicket);
+    if (!validacion.valido) {
+      return res.status(400).json({
+        error: 'Codigo invalido',
+        mensaje: validacion.error,
+        codigo: 'CODIGO_INVALIDO'
+      });
+    }
+
+    // Consultar cotización con detalles
+    const cotizacionData = await obtenerCotizacionConDetallesPorTicket(codigoTicket);
+    if (!cotizacionData) {
+      return res.status(404).json({
+        error: 'Cotizacion no encontrada',
+        mensaje: 'No existe una cotizacion con ese codigo',
+        codigo: 'COTIZACION_NO_ENCONTRADA'
+      });
+    }
+
+    // Generar buffer Excel
+    const buffer = servicioExcel.generarExcelCotizacion({
+      codigo_ticket: cotizacionData.codigo_ticket,
+      fecha_emision: cotizacionData.fecha_emision,
+      fecha_validez: cotizacionData.fecha_validez,
+      precio_total: parseFloat(cotizacionData.total_con_igv ?? cotizacionData.precio_total ?? 0),
+      componentes: cotizacionData.componentes
+    });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="cotizacion-${codigoTicket}.xlsx"`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('Error al exportar Excel de cotizacion:', error);
+    res.status(500).json({
+      error: 'Error al generar Excel',
+      mensaje: 'No se pudo generar el archivo Excel de la cotizacion',
+      codigo: 'ERROR_EXCEL_COTIZACION'
+    });
+  }
+}
+
 module.exports = {
   crearCotizacion,
   consultarCotizacion,
@@ -1458,6 +1540,7 @@ module.exports = {
   marcarComoReclamada,
   consultarHistorialCliente,
   listarClientesRegistrados,
+  exportarExcel,
   // Exportar funciones auxiliares para testing
   obtenerMargenGanancia,
   generarCodigoTicket,

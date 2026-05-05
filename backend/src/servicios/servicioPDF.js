@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
+const qrcode = require('qrcode');
 
 const EMPRESA_NOMBRE = 'NSG Latinoamerica E.I.R.L.';
 const EMPRESA_SUBTITULO = 'Soluciones en Tecnologia';
@@ -74,6 +75,27 @@ function formatearCategoria(categoria) {
     mousepad: 'Mousepad',
   };
   return mapa[categoria] || categoria;
+}
+
+/**
+ * Genera un código QR como data URL (base64 PNG) para el ticket dado.
+ * Retorna null si la generación falla, para permitir degradación elegante.
+ * @param {string} codigoTicket
+ * @returns {Promise<string|null>}
+ */
+async function generarQRDataUrl(codigoTicket) {
+  try {
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const urlValidacion = `${baseUrl}/validar?ticket=${codigoTicket}`;
+    return await qrcode.toDataURL(urlValidacion, {
+      errorCorrectionLevel: 'M',
+      margin: 1,
+      width: 120
+    });
+  } catch (error) {
+    console.error('[ServicioPDF] Error al generar QR:', error);
+    return null;
+  }
 }
 
 class ServicioPDF {
@@ -283,6 +305,20 @@ class ServicioPDF {
         marginTop: 2,
         color: '#4B5563',
         fontSize: 8
+      },
+      qrWrap: {
+        marginTop: 10,
+        alignItems: 'center'
+      },
+      qrImagen: {
+        width: 80,
+        height: 80
+      },
+      qrLabel: {
+        marginTop: 3,
+        textAlign: 'center',
+        color: '#4B5563',
+        fontSize: 7
       }
     });
   }
@@ -343,7 +379,7 @@ class ServicioPDF {
     );
   }
 
-  construirDocumentoCotizacion(datos, moneda) {
+  construirDocumentoCotizacion(datos, moneda, qrDataUrl = null) {
     const h = this.react.createElement;
     const { Document, Page, Text, View, Image } = this.renderer;
     const estilos = this.estilos;
@@ -408,7 +444,15 @@ class ServicioPDF {
           h(Text, { style: estilos.notaItem }, '2. Validaremos disponibilidad y precio vigente.'),
           h(Text, { style: estilos.notaItem }, '3. Los componentes a pedido se confirman al cerrar venta.')
         ),
-        h(Text, { style: estilos.pie }, 'Valido por 3 dias. Precios sujetos a cambio por disponibilidad.')
+        h(Text, { style: estilos.pie }, 'Valido por 3 dias. Precios sujetos a cambio por disponibilidad.'),
+        qrDataUrl
+          ? h(
+              View,
+              { style: estilos.qrWrap },
+              h(Image, { src: qrDataUrl, style: estilos.qrImagen }),
+              h(Text, { style: estilos.qrLabel }, 'Escanea para validar esta cotizacion')
+            )
+          : null
       )
     );
   }
@@ -479,7 +523,8 @@ class ServicioPDF {
     await this.cargarRenderer();
 
     const moneda = resolverMoneda(opciones.moneda);
-    const documento = this.construirDocumentoCotizacion(datos, moneda);
+    const qrDataUrl = await generarQRDataUrl(datos.codigoTicket);
+    const documento = this.construirDocumentoCotizacion(datos, moneda, qrDataUrl);
     return this.renderBuffer(documento);
   }
 
@@ -502,6 +547,9 @@ class ServicioPDF {
     const moneda = resolverMoneda(opciones.moneda);
     const totalNormalizado = normalizarMontoTotal(datos);
     const total = resolverMontoPorMoneda({ moneda, usd: totalNormalizado.usd, pen: totalNormalizado.pen });
+
+    // Generar QR con degradación elegante
+    const qrDataUrl = await generarQRDataUrl(datos.codigoTicket);
 
     return new Promise((resolve, reject) => {
       const doc = new PDFDocument({ size: 'A4', margin: 50 });
@@ -531,6 +579,15 @@ class ServicioPDF {
 
       doc.moveDown();
       doc.font('Helvetica-Bold').fontSize(12).text(`TOTAL: ${formatearMoneda(total, moneda)}`, { align: 'right' });
+
+      // Insertar QR si está disponible (mínimo 80×80 puntos según Req. 9.4)
+      if (qrDataUrl) {
+        doc.moveDown();
+        const qrBuffer = Buffer.from(qrDataUrl.split(',')[1], 'base64');
+        doc.image(qrBuffer, { width: 80, height: 80, align: 'center' });
+        doc.font('Helvetica').fontSize(7).text('Escanea para validar esta cotizacion', { align: 'center' });
+      }
+
       doc.end();
     });
   }
