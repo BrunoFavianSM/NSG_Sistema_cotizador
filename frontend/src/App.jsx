@@ -15,6 +15,9 @@ import HistorialCliente from './paginas/HistorialCliente';
 import AdminProductos from './paginas/AdminProductos';
 import AdminConfiguracion from './paginas/AdminConfiguracion';
 import ImportarCSV from './paginas/ImportarCSV';
+import Dashboard from './paginas/Dashboard';
+import Perfil from './paginas/Perfil';
+import ConfiguracionCompartida from './paginas/ConfiguracionCompartida';
 import { THEME_STORAGE_KEY, applyThemeClass } from './theme';
 
 /** Ruta protegida: solo admin */
@@ -66,9 +69,12 @@ function AppRoutes() {
           <Route path="/historial" element={<RutaProtegidaUsuario><HistorialCliente /></RutaProtegidaUsuario>} />
           <Route path="/validar" element={<RutaProtegidaUsuario><ValidadorCotizaciones /></RutaProtegidaUsuario>} />
           <Route path="/admin" element={<Navigate to="/admin/productos" replace />} />
+          <Route path="/admin/dashboard" element={<RutaProtegida><Dashboard /></RutaProtegida>} />
           <Route path="/admin/productos" element={<RutaProtegida><AdminProductos /></RutaProtegida>} />
           <Route path="/admin/configuracion" element={<RutaProtegida><AdminConfiguracion /></RutaProtegida>} />
           <Route path="/admin/importar-csv" element={<RutaProtegida><ImportarCSV /></RutaProtegida>} />
+          <Route path="/perfil" element={<RutaProtegidaUsuario><Perfil /></RutaProtegidaUsuario>} />
+          <Route path="/configuracion" element={<ConfiguracionCompartida />} />
           <Route path="*" element={<Navigate to="/cotizador" replace />} />
         </Route>
       </Routes>

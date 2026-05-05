@@ -15,7 +15,8 @@ import {
   consultarHistorialCliente,
   listarClientesRegistrados,
   obtenerUrlPdfCotizacion,
-  obtenerUrlPdfTecnico
+  obtenerUrlPdfTecnico,
+  exportarExcelCotizacion
 } from '../servicios/api';
 import { formatearMoneda as formatoMoneda } from '../utilidades/moneda';
 
@@ -101,6 +102,25 @@ export default function HistorialCliente() {
 
     if (!win) {
       toast.warning('No se pudo abrir el PDF', 'Permite ventanas emergentes para descargar el documento.');
+    }
+  };
+
+  const descargarExcel = async (codigoTicket) => {
+    try {
+      const blob = await exportarExcelCotizacion(codigoTicket);
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement('a');
+      enlace.href = url;
+      enlace.download = `cotizacion-${codigoTicket}.xlsx`;
+      document.body.appendChild(enlace);
+      enlace.click();
+      document.body.removeChild(enlace);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error(
+        'No se pudo exportar el Excel',
+        err?.mensaje || 'Verifica que estés autenticado e intenta nuevamente.'
+      );
     }
   };
 
@@ -308,6 +328,15 @@ export default function HistorialCliente() {
             aria-label={`Descargar PDF tecnico de ${row.codigo_ticket}`}
           >
             Tecnico
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => descargarExcel(row.codigo_ticket)}
+            aria-label={`Exportar Excel de cotización ${row.codigo_ticket}`}
+            title="Descargar cotización en formato Excel"
+          >
+            Excel
           </Button>
         </div>
       ),

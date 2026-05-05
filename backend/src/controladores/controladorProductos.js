@@ -5,7 +5,7 @@
  * Especificaciones 1:1: specs_*
  */
 
-const { ejecutarQuery } = require('../configuracion/baseDatos');
+const { ejecutarQuery, ejecutarTransaccion } = require('../configuracion/baseDatos');
 const { validarId } = require('../utilidades/validacion');
 const { sanitizarObjeto } = require('../utilidades/sanitizacion');
 const {
@@ -89,7 +89,9 @@ const SELECT_PRODUCTO_NORMALIZADO = `
     sc.max_cooler_mm,
     sc.ventiladores_incluidos,
     sc.color,
-    sc.panel_lateral
+    sc.panel_lateral,
+    -- indicador de historial de precios (Req. 3.9)
+    COALESCE(hp.cnt, 0)::INTEGER > 0 AS tiene_historial
   FROM productos p
   INNER JOIN categorias c ON c.id = p.id_categoria
   LEFT JOIN marcas m ON m.id = p.id_marca
@@ -100,6 +102,9 @@ const SELECT_PRODUCTO_NORMALIZADO = `
   LEFT JOIN specs_gpu sg ON sg.id_producto = p.id
   LEFT JOIN specs_fuente sf ON sf.id_producto = p.id
   LEFT JOIN specs_case sc ON sc.id_producto = p.id
+  LEFT JOIN LATERAL (
+    SELECT COUNT(*) AS cnt FROM historial_precios_producto WHERE id_producto = p.id
+  ) hp ON true
 `;
 
 const MAPA_SPECS_POR_CATEGORIA = {
@@ -448,8 +453,9 @@ async function actualizarProducto(req, res) {
 
     const datosSanitizados = sanitizarObjeto(req.body);
 
+    // Leer precio_base actual para detectar cambio y registrar historial (Req. 3.3)
     const check = await ejecutarQuery(
-      `SELECT p.id
+      `SELECT p.id, p.precio_base
        FROM productos p
        INNER JOIN categorias c ON c.id = p.id_categoria
        WHERE p.id = $1 AND c.nombre = $2
@@ -459,6 +465,10 @@ async function actualizarProducto(req, res) {
     if (check.rows.length === 0) {
       return res.status(404).json({ error: 'Producto no encontrado', mensaje: `No existe un producto con ID ${validacionId.id}` });
     }
+
+    const precioAnterior = Number(check.rows[0].precio_base);
+    const cambiaPrecio = Object.prototype.hasOwnProperty.call(datosSanitizados, 'precio_base')
+      && Number(datosSanitizados.precio_base) !== precioAnterior;
 
     const actualizaciones = [];
     const valores = [];
@@ -510,7 +520,28 @@ async function actualizarProducto(req, res) {
       valores.push(idMarca);
     }
 
-    if (actualizaciones.length > 0) {
+    if (cambiaPrecio) {
+      // Ejecutar UPDATE + INSERT historial en una sola transaccion atomica (Req. 3.3)
+      const precioNuevo = Number(datosSanitizados.precio_base);
+      const idUsuarioAdmin = req.usuario?.id || null;
+      const idProducto = validacionId.id;
+      const tablaProducto = destino.categoriaCanonica;
+
+      await ejecutarTransaccion(async (cliente) => {
+        if (actualizaciones.length > 0) {
+          await cliente.query(
+            `UPDATE productos SET ${actualizaciones.join(', ')} WHERE id = $${i}`,
+            [...valores, idProducto]
+          );
+        }
+        await cliente.query(
+          `INSERT INTO historial_precios_producto
+             (id_producto, tabla_producto, precio_anterior, precio_nuevo, id_usuario_admin)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [idProducto, tablaProducto, precioAnterior, precioNuevo, idUsuarioAdmin]
+        );
+      });
+    } else if (actualizaciones.length > 0) {
       valores.push(validacionId.id);
       await ejecutarQuery(`UPDATE productos SET ${actualizaciones.join(', ')} WHERE id = $${i}`, valores);
     }
@@ -531,7 +562,6 @@ async function actualizarProducto(req, res) {
     return res.status(500).json({ error: 'Error al actualizar producto', mensaje: 'No se pudo actualizar el producto' });
   }
 }
-
 async function eliminarProducto(req, res) {
   try {
     const destino = resolverDestinoOperacion(req.params.categoria, req.query.subcategoria);
@@ -621,6 +651,190 @@ async function limpiarCatalogo(req, res) {
   }
 }
 
+/**
+ * Obtiene el historial de cambios de precio de un producto.
+ * Req. 3.4, 3.5, 3.6
+ */
+async function obtenerHistorialPrecios(req, res) {
+  try {
+    const validacionId = validarId(req.params.id);
+    if (!validacionId.valido) {
+      return res.status(400).json({ error: 'ID invalido', mensaje: validacionId.error });
+    }
+
+    // Verificar que el producto existe
+    const existeProducto = await ejecutarQuery(
+      'SELECT id FROM productos WHERE id = $1',
+      [validacionId.id]
+    );
+    if (existeProducto.rows.length === 0) {
+      return res.status(404).json({
+        error: 'Producto no encontrado',
+        mensaje: `No existe un producto con ID ${validacionId.id}`,
+        codigo: 'PRODUCTO_NO_ENCONTRADO',
+      });
+    }
+
+    const resultado = await ejecutarQuery(
+      `SELECT
+         h.id,
+         h.id_producto,
+         h.tabla_producto,
+         h.precio_anterior,
+         h.precio_nuevo,
+         h.fecha_cambio,
+         h.id_usuario_admin,
+         c.username AS usuario_admin
+       FROM historial_precios_producto h
+       LEFT JOIN cuentas c ON c.id = h.id_usuario_admin
+       WHERE h.id_producto = $1
+       ORDER BY h.fecha_cambio DESC`,
+      [validacionId.id]
+    );
+
+    return res.json({
+      exito: true,
+      id_producto: validacionId.id,
+      total: resultado.rows.length,
+      historial: resultado.rows,
+    });
+  } catch (error) {
+    console.error('Error al obtener historial de precios:', error);
+    return res.status(500).json({
+      error: 'Error al obtener historial de precios',
+      mensaje: 'No se pudo recuperar el historial de precios del producto',
+    });
+  }
+}
+/**
+ * Busca productos filtrando por compatibilidad de hardware.
+ * Parámetros opcionales de query: procesador, ram_tipo, socket, categoria, busqueda.
+ * Los filtros de compatibilidad se aplican con AND lógico.
+ * Req. 8.1, 8.2, 8.3, 8.4, 8.7, 8.8
+ */
+async function buscarProductosCompatibles(req, res) {
+  try {
+    const { procesador, ram_tipo, socket, categoria, busqueda, subcategoria } = req.query;
+
+    // Validar y sanitizar parámetros de compatibilidad (Req. 8.8)
+    const LONGITUD_MAX = 100;
+    const PATRON_SEGURO = /^[a-zA-Z0-9\s\-_.+/()áéíóúÁÉÍÓÚñÑ]+$/;
+
+    const erroresValidacion = [];
+
+    if (procesador !== undefined) {
+      const val = String(procesador).trim();
+      if (!val || val.length > LONGITUD_MAX || !PATRON_SEGURO.test(val)) {
+        erroresValidacion.push({ campo: 'procesador', mensaje: 'Valor inválido para el filtro procesador' });
+      }
+    }
+    if (ram_tipo !== undefined) {
+      const val = String(ram_tipo).trim();
+      if (!val || val.length > LONGITUD_MAX || !PATRON_SEGURO.test(val)) {
+        erroresValidacion.push({ campo: 'ram_tipo', mensaje: 'Valor inválido para el filtro ram_tipo' });
+      }
+    }
+    if (socket !== undefined) {
+      const val = String(socket).trim();
+      if (!val || val.length > LONGITUD_MAX || !PATRON_SEGURO.test(val)) {
+        erroresValidacion.push({ campo: 'socket', mensaje: 'Valor inválido para el filtro socket' });
+      }
+    }
+    if (busqueda !== undefined) {
+      const val = String(busqueda).trim();
+      if (val.length > LONGITUD_MAX) {
+        erroresValidacion.push({ campo: 'busqueda', mensaje: 'El término de búsqueda es demasiado largo' });
+      }
+    }
+
+    if (erroresValidacion.length > 0) {
+      return res.status(400).json({
+        error: 'Parámetros inválidos',
+        mensaje: 'Uno o más parámetros de búsqueda son inválidos',
+        codigo: 'PARAMETROS_INVALIDOS',
+        detalle: erroresValidacion,
+      });
+    }
+
+    const params = [];
+    let i = 1;
+    let where = ' WHERE (p.stock > 0 OR p.disponible_a_pedido = true)';
+
+    // Filtro por categoría (opcional)
+    if (categoria) {
+      try {
+        const destino = resolverDestinoOperacion(categoria, subcategoria);
+        const base = construirWhereDestino(destino, params, i);
+        where += base.where.replace(' WHERE', ' AND');
+        i = base.nextIndex;
+      } catch (errCat) {
+        return res.status(400).json({
+          error: 'Categoría inválida',
+          mensaje: errCat.message,
+          codigo: 'PARAMETROS_INVALIDOS',
+        });
+      }
+    }
+
+    // Filtro por socket: aplica a procesadores (sp.socket) y placas madre (sm.socket) — Req. 8.2
+    if (socket) {
+      where += ` AND UPPER(COALESCE(sp.socket, sm.socket)) = UPPER($${i++})`;
+      params.push(String(socket).trim());
+    }
+
+    // Filtro por tipo de RAM: aplica a placas madre (sm.ram_tipo) y módulos RAM (sr.ram_tipo) — Req. 8.3
+    if (ram_tipo) {
+      where += ` AND UPPER(COALESCE(sm.ram_tipo, sr.ram_tipo)) = UPPER($${i++})`;
+      params.push(String(ram_tipo).trim());
+    }
+
+    // Filtro por nombre de procesador compatible: busca en nombre del producto — Req. 8.1
+    if (procesador) {
+      where += ` AND p.nombre ILIKE $${i++}`;
+      params.push(`%${String(procesador).trim()}%`);
+    }
+
+    // Filtro de búsqueda libre
+    if (busqueda) {
+      const termino = String(busqueda).trim();
+      if (termino) {
+        where += ` AND (p.nombre ILIKE $${i} OR COALESCE(p.descripcion_general, '') ILIKE $${i})`;
+        params.push(`%${termino}%`);
+        i++;
+      }
+    }
+
+    const resultado = await ejecutarQuery(
+      `${SELECT_PRODUCTO_NORMALIZADO}
+       ${where}
+       ORDER BY c.nombre, p.subcategoria, p.nombre`,
+      params
+    );
+
+    // Strip de precio_base para invitados (no autenticados)
+    const productosFinales = !req.rol
+      ? resultado.rows.map(({ precio_base, ...rest }) => rest)
+      : resultado.rows;
+
+    const mensajeVacio = productosFinales.length === 0
+      ? 'No se encontraron productos compatibles con los filtros especificados'
+      : null;
+
+    return res.json({
+      exito: true,
+      cantidad: productosFinales.length,
+      productos: productosFinales,
+      ...(mensajeVacio ? { mensaje: mensajeVacio } : {}),
+    });
+  } catch (error) {
+    console.error('Error al buscar productos compatibles:', error);
+    return res.status(500).json({
+      error: 'Error al buscar productos',
+      mensaje: 'No se pudieron recuperar los productos',
+    });
+  }
+}
+
 module.exports = {
   TABLAS_VALIDAS,
   resolverTabla,
@@ -632,4 +846,6 @@ module.exports = {
   eliminarProducto,
   subirImagenProducto,
   limpiarCatalogo,
+  obtenerHistorialPrecios,
+  buscarProductosCompatibles,
 };

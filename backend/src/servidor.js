@@ -34,6 +34,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Rutas
+app.use('/api/dashboard', require('./rutas/dashboard'));
+// Favoritos debe registrarse antes de /api/productos para que Express no interprete
+// "favoritos" como un parámetro de ruta de productos.
+app.use('/api/productos/favoritos', require('./rutas/favoritos'));
 app.use('/api/productos', require('./rutas/productos'));
 app.use('/api/cotizaciones', require('./rutas/cotizaciones'));
 app.use('/api/compatibilidad', require('./rutas/compatibilidad'));
@@ -42,6 +46,7 @@ app.use('/api/auth', require('./rutas/auth'));
 app.use('/api/configuracion', require('./rutas/configuracion'));
 app.use('/api/tipo-cambio', require('./rutas/tipoCambio'));
 app.use('/api/importacion', require('./rutas/importacion'));
+app.use('/api/notificaciones', require('./rutas/notificaciones'));
 // app.use('/api/asistente', require('./rutas/rutasAsistente')); // movido a _asistente_legacy/back_3
 app.use('/api/asistente', require('./asistente/rutasAsistente'));
 

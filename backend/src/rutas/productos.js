@@ -19,11 +19,19 @@ const {
   eliminarProducto,
   subirImagenProducto,
   limpiarCatalogo,
+  obtenerHistorialPrecios,
+  buscarProductosCompatibles,
 } = require('../controladores/controladorProductos');
 
 // Rutas públicas con detección de usuario (strip de precios para invitados)
 router.get('/', detectarUsuario, obtenerProductos);
+// Búsqueda por compatibilidad — Req. 8.1, 8.2, 8.3, 8.4, 8.7, 8.8
+// Debe registrarse antes de /:categoria/:id para evitar conflictos de parámetros
+router.get('/buscar', detectarUsuario, buscarProductosCompatibles);
 router.get('/:categoria/:id', detectarUsuario, obtenerProductoPorId);
+
+// Historial de precios de un producto (solo admin) — Req. 3.4, 3.5, 3.6
+router.get('/:id/historial-precios', verificarTokenAdmin, obtenerHistorialPrecios);
 
 // Rutas protegidas (requieren autenticación de administrador)
 router.post('/', verificarTokenAdmin, crearProducto);

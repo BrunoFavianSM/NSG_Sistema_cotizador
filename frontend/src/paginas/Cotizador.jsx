@@ -11,7 +11,11 @@ import { useToast } from '../componentes/feedback/ToastProvider';
 import SeccionEmbalaje from '../componentes/cotizador/SeccionEmbalaje';
 import SeccionFlete from '../componentes/cotizador/SeccionFlete';
 import ResumenFinancieroAdmin from '../componentes/cotizador/ResumenFinancieroAdmin';
+import PanelComparador from '../componentes/cotizador/PanelComparador';
+import DiagramaCompatibilidad from '../componentes/cotizador/DiagramaCompatibilidad';
+import AnalizadorPresupuesto from '../componentes/cotizador/AnalizadorPresupuesto';
 import { useAppContext } from '../contexto/AppContext';
+import { useComparador } from '../hooks/useComparador';
 import * as api from '../servicios/api';
 import { etiquetaMonedaBase, formatearMoneda } from '../utilidades/moneda';
 import { calcularResumenFinancieroAdmin } from '../utilidades/calcularResumenFinancieroAdmin';
@@ -529,6 +533,22 @@ export default function Cotizador() {
   const navigate = useNavigate();
   const toast = useToast();
 
+  // ── Comparador de productos (Requisitos 6.3, 6.4) ────────────────────────
+  const {
+    productosComparar,
+    errorLimite: errorComparador,
+    agregarAComparador,
+    quitarDeComparador,
+    limpiarComparador,
+  } = useComparador();
+
+  // Mostrar toast cuando se alcanza el límite del comparador (Req. 6.4)
+  useEffect(() => {
+    if (errorComparador) {
+      toast.warning('Límite del comparador', errorComparador);
+    }
+  }, [errorComparador]);
+
   const [pasoActual, setPasoActual] = useState(0);
   const [filtro, setFiltro] = useState('disponibles');
   const [filtrosPaso, setFiltrosPaso] = useState({
@@ -587,7 +607,24 @@ export default function Cotizador() {
     [configuracionSeleccionada, extras, embalaje, flete, margenGanancia, tasaIgv, tipoCambioUsdPen]
   );
 
-  // ── Handlers de embalaje ──────────────────────────────────────────────────
+  // ── Componentes seleccionados para el analizador de presupuesto (Req. 11.5) ─
+  const componentesSeleccionados = useMemo(() => {
+    const lista = [];
+    const agregar = (producto) => {
+      if (producto) lista.push({ nombre: producto.nombre, precio_base: producto.precio_base });
+    };
+    agregar(configuracionSeleccionada.procesador);
+    agregar(configuracionSeleccionada.placa_madre);
+    agregar(configuracionSeleccionada.almacenamiento);
+    agregar(configuracionSeleccionada.gpu);
+    agregar(configuracionSeleccionada.fuente);
+    agregar(configuracionSeleccionada.case);
+    (configuracionSeleccionada.ram || []).forEach(agregar);
+    Object.values(extras).forEach((catItems) =>
+      catItems.forEach(({ producto }) => agregar(producto))
+    );
+    return lista;
+  }, [configuracionSeleccionada, extras]);
   const handleEmbalajeToggle = (activo) => setEmbalaje((prev) => ({ ...prev, activo }));
   const handleEmbalajeCambiarOpcion = (opcion) => setEmbalaje((prev) => ({ ...prev, opcion }));
   const handleEmbalajeCambiarPrecio = (campo, valor) =>
@@ -1086,6 +1123,30 @@ export default function Cotizador() {
     }
   };
 
+  // ── Compartir configuración (Req. 10.1, 10.2, 10.3, 10.9) ───────────────────
+  const compartirConfiguracion = async () => {
+    const haySeleccion = Object.values(configuracionSeleccionada).some((valor) => {
+      if (Array.isArray(valor)) return valor.length > 0;
+      return valor !== null;
+    });
+
+    if (!haySeleccion) return;
+
+    try {
+      const url = api.generarUrlConfiguracion(configuracionSeleccionada);
+      const urlAbsoluta = `${window.location.origin}${url}`;
+
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(urlAbsoluta);
+        toast.success('Enlace copiado', 'El link de configuración está en tu portapapeles.');
+      } else {
+        toast.warning('No se pudo copiar', 'Copia el enlace manualmente: ' + urlAbsoluta);
+      }
+    } catch {
+      toast.error('Error al compartir', 'No se pudo generar el enlace de configuración.');
+    }
+  };
+
   const nuevaCotizacion = () => {
     limpiarConfiguracion();
     limpiarExtras();
@@ -1374,8 +1435,7 @@ export default function Cotizador() {
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <section className="surface-elevated space-y-5 p-5 sm:p-6 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto scrollbar-thin">
-          <div className="flex flex-wrap items-start justify-between gap-3">
+        <section className="surface-elevated space-y-5 p-5 sm:p-6 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto scrollbar-thin">          <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Paso {pasoActual + 1} de {PASOS.length}</p>
               <h2 className="mt-1 text-2xl font-semibold text-[var(--color-text)]">{pasoInfo.nombre}</h2>
@@ -1487,14 +1547,57 @@ export default function Cotizador() {
                             </p>
 
                             {!esRam ? (
-                              <button
-                                type="button"
-                                onClick={() => seleccionarProducto(producto)}
-                                className={`min-h-11 rounded-[var(--radius-sm)] px-4 text-sm font-medium ${seleccionado ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]' : 'bg-[var(--color-surface-soft)] text-[var(--color-text)] hover:bg-[var(--color-accent-soft)]'}`}
-                                aria-label={`${seleccionado ? 'Deseleccionar producto' : 'Seleccionar'}: ${producto.nombre}`}
-                              >
-                                {seleccionado ? 'Deseleccionar' : 'Seleccionar'}
-                              </button>
+                              <div className="flex flex-wrap items-center gap-2">
+                                {/* Botón Comparar (Req. 6.2, 6.10) */}
+                                {!esPasoExtras && (() => {
+                                  const yaEnComparador = productosComparar.some((p) => p.id === producto.id);
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (yaEnComparador) {
+                                          quitarDeComparador(producto.id);
+                                        } else {
+                                          agregarAComparador(producto);
+                                        }
+                                      }}
+                                      aria-label={`${yaEnComparador ? 'Quitar de comparación' : 'Comparar'}: ${producto.nombre}`}
+                                      aria-pressed={yaEnComparador}
+                                      className={`min-h-11 min-w-11 rounded-[var(--radius-sm)] px-3 text-sm font-medium transition-colors duration-higFast ${
+                                        yaEnComparador
+                                          ? 'bg-[color:rgba(0,122,255,0.15)] text-[var(--color-accent-text)] ring-1 ring-[var(--color-accent)]'
+                                          : 'bg-[var(--color-surface-soft)] text-[var(--color-text-muted)] hover:bg-[color:rgba(0,122,255,0.08)] hover:text-[var(--color-accent-text)]'
+                                      }`}
+                                    >
+                                      {yaEnComparador ? (
+                                        <span className="flex items-center gap-1.5">
+                                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                            <path d="m5 12 4 4L19 6" />
+                                          </svg>
+                                          Comparando
+                                        </span>
+                                      ) : (
+                                        <span className="flex items-center gap-1.5">
+                                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                            <rect x="3" y="3" width="7" height="18" rx="1" />
+                                            <rect x="14" y="3" width="7" height="18" rx="1" />
+                                          </svg>
+                                          Comparar
+                                        </span>
+                                      )}
+                                    </button>
+                                  );
+                                })()}
+
+                                <button
+                                  type="button"
+                                  onClick={() => seleccionarProducto(producto)}
+                                  className={`min-h-11 rounded-[var(--radius-sm)] px-4 text-sm font-medium ${seleccionado ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]' : 'bg-[var(--color-surface-soft)] text-[var(--color-text)] hover:bg-[var(--color-accent-soft)]'}`}
+                                  aria-label={`${seleccionado ? 'Deseleccionar producto' : 'Seleccionar'}: ${producto.nombre}`}
+                                >
+                                  {seleccionado ? 'Deseleccionar' : 'Seleccionar'}
+                                </button>
+                              </div>
                             ) : (
                               <div className="inline-flex max-w-full items-center gap-2 self-start rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-1">
                                 <button
@@ -1630,13 +1733,49 @@ export default function Cotizador() {
                       : formatearMoneda(resumenFinanciero.total.usd, 'USD')}
                   </p>
                 </div>
+
+                {/* Botón compartir configuración — visible cuando hay al menos un componente (Req. 10.1, 10.9) */}
+                {pasosCompletos > 0 && (
+                  <button
+                    type="button"
+                    onClick={compartirConfiguracion}
+                    aria-label="Generar link para compartir configuración"
+                    className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-4 text-sm font-medium text-[var(--color-text)] transition-colors duration-higFast hover:bg-[color:rgba(0,122,255,0.08)] hover:text-[var(--color-accent-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+                  >
+                    <svg
+                      className="h-4 w-4 shrink-0"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
+                      <polyline points="16 6 12 2 8 6" />
+                      <line x1="12" y1="2" x2="12" y2="15" />
+                    </svg>
+                    Compartir configuración
+                  </button>
+                )}
               </>
             )}
           </section>
 
+          {/* Analizador de presupuesto — visible para usuarios autenticados (Req. 11.1–11.10) */}
+          {!esInvitado && (
+            <AnalizadorPresupuesto
+              precioTotalUsd={resumenFinanciero.total.usd}
+              precioTotalPen={resumenFinanciero.total.pen}
+              monedaVista={monedaVista}
+              componentes={componentesSeleccionados}
+              tipoCambio={tipoCambioUsdPen}
+            />
+          )}
+
           {/* Extras seleccionados */}
-          {Object.keys(extras).length > 0 && (
-            <section className="surface-elevated p-5">
+          {Object.keys(extras).length > 0 && (            <section className="surface-elevated p-5">
               <h3 className="text-sm font-semibold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Extras</h3>
               <ul className="mt-3 space-y-1.5">
                 {Object.entries(extras).map(([cat, items]) =>
@@ -1668,6 +1807,12 @@ export default function Cotizador() {
               </div>
             )}
           </section>
+
+          {/* Diagrama visual de compatibilidad — visible cuando hay al menos un componente (Req. 7.2) */}
+          <DiagramaCompatibilidad
+            configuracionSeleccionada={configuracionSeleccionada}
+            incompatibilidades={validacionCompatibilidad.errores}
+          />
 
           <section className="surface-elevated space-y-4 p-5" aria-label="Datos del cliente">
             <div>
@@ -1814,6 +1959,14 @@ export default function Cotizador() {
         </aside>
         </div>
       </div>
+
+      {/* Panel de comparación — visible cuando hay ≥2 productos (Req. 6.5) */}
+      {productosComparar.length >= 2 && (
+        <PanelComparador
+          productos={productosComparar}
+          onQuitarProducto={quitarDeComparador}
+        />
+      )}
     </div>
   );
 }

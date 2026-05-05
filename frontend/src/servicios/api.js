@@ -311,6 +311,35 @@ export const importarCSV = async (archivo) => {
 // FUNCIONES DE COTIZACIONES
 // ============================================
 
+// ============================================
+// BÚSQUEDA POR COMPATIBILIDAD — Req. 8.1–8.8
+// ============================================
+
+/**
+ * Busca productos filtrando por compatibilidad de hardware.
+ * Todos los parámetros son opcionales; los que se envíen se aplican con AND lógico.
+ *
+ * @param {Object} filtros
+ * @param {string} [filtros.socket]     - Socket del procesador/placa madre (e.g. "LGA1700", "AM5")
+ * @param {string} [filtros.ram_tipo]   - Tipo de RAM (e.g. "DDR4", "DDR5")
+ * @param {string} [filtros.procesador] - Nombre o modelo del procesador (búsqueda parcial)
+ * @param {string} [filtros.categoria]  - Categoría de producto a filtrar
+ * @param {string} [filtros.busqueda]   - Término de búsqueda libre
+ * @returns {Promise<{exito: boolean, cantidad: number, productos: Array, mensaje?: string}>}
+ */
+export const buscarProductosCompatibles = async (filtros = {}) => {
+  try {
+    const response = await api.get('/productos/buscar', { params: filtros });
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudieron buscar productos compatibles.';
+    throw { mensaje, codigo: error?.codigo || error?.response?.data?.codigo };
+  }
+};
+
 /**
  * Crea una nueva cotización
  * @param {Object} cotizacion - Datos de la cotización
@@ -447,6 +476,19 @@ export const descargarPdfCotizacion = async (codigoTicket, moneda = 'USD') => {
 export const descargarPdfTecnico = async (codigoTicket, moneda = 'USD') => {
   const response = await api.get(`/cotizaciones/${codigoTicket}/pdf-tecnico`, {
     params: { moneda: String(moneda || 'USD').toUpperCase() },
+    responseType: 'blob'
+  });
+  return response.data;
+};
+
+/**
+ * Descarga el archivo Excel (.xlsx) de una cotización.
+ * Requiere autenticación (token de usuario o admin).
+ * @param {string} codigoTicket - Código del ticket (NSG-YYYY-NNNN)
+ * @returns {Promise<Blob>} Blob con el contenido del archivo .xlsx
+ */
+export const exportarExcelCotizacion = async (codigoTicket) => {
+  const response = await api.get(`/cotizaciones/${codigoTicket}/excel`, {
     responseType: 'blob'
   });
   return response.data;
@@ -675,6 +717,256 @@ export const restablecerContrasena = async ({ token, nuevaPassword, confirmarPas
   } catch (error) {
     throw error;
   }
+};
+
+// ============================================
+// FUNCIONES DE DASHBOARD
+// ============================================
+
+/**
+ * Obtiene las métricas operativas del dashboard de administración.
+ * Requiere token JWT de administrador.
+ * Valida Requisito: 1.7
+ *
+ * @returns {Promise<{
+ *   exito: boolean,
+ *   hoy: { total: number, ingresos: number },
+ *   semana: { total: number, ingresos: number },
+ *   productosTop: Array<{ nombre_producto: string, categoria: string, apariciones: number }>
+ * }>}
+ */
+export const obtenerMetricasDashboard = async () => {
+  try {
+    const response = await api.get('/dashboard/metricas');
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudieron obtener las métricas del dashboard.';
+    throw { mensaje };
+  }
+};
+
+// ============================================
+// FUNCIONES DE HISTORIAL DE PRECIOS
+// ============================================
+
+/**
+ * Obtiene el historial de cambios de precio de un producto.
+ * Requiere token JWT de administrador.
+ * Valida Requisitos: 3.4, 3.5, 3.6
+ *
+ * @param {number} idProducto - ID del producto
+ * @returns {Promise<{ exito: boolean, id_producto: number, total: number, historial: Array }>}
+ */
+export const obtenerHistorialPrecios = async (idProducto) => {
+  try {
+    const response = await api.get(`/productos/${idProducto}/historial-precios`);
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudo obtener el historial de precios.';
+    throw { mensaje };
+  }
+};
+
+// ============================================
+// FUNCIONES DE FAVORITOS
+// ============================================
+
+/**
+ * Obtiene la lista de productos favoritos del usuario autenticado.
+ * Requiere token JWT de usuario.
+ * Valida Requisitos: 4.3
+ *
+ * @returns {Promise<{ exito: boolean, favoritos: Array }>}
+ */
+export const obtenerFavoritos = async () => {
+  try {
+    const response = await api.get('/productos/favoritos');
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudieron obtener los favoritos.';
+    throw { mensaje };
+  }
+};
+
+/**
+ * Agrega un producto a los favoritos del usuario autenticado.
+ * Requiere token JWT de usuario.
+ * Valida Requisitos: 4.4
+ *
+ * @param {number} idProducto - ID del producto a agregar
+ * @param {string} tablaProducto - Tabla del producto (e.g. 'productos_procesador')
+ * @returns {Promise<{ exito: boolean, favorito: Object }>}
+ */
+export const agregarFavorito = async (idProducto, tablaProducto) => {
+  try {
+    const response = await api.post('/productos/favoritos', { id_producto: idProducto, tabla_producto: tablaProducto });
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudo agregar el favorito.';
+    throw { mensaje, codigo: error?.codigo || error?.response?.data?.codigo };
+  }
+};
+
+/**
+ * Elimina un producto de los favoritos del usuario autenticado.
+ * Requiere token JWT de usuario.
+ * Valida Requisitos: 4.6
+ *
+ * @param {number} idProducto - ID del producto a eliminar
+ * @param {string} tablaProducto - Tabla del producto
+ * @returns {Promise<{ exito: boolean }>}
+ */
+export const eliminarFavorito = async (idProducto, tablaProducto) => {
+  try {
+    const response = await api.delete(`/productos/favoritos/${idProducto}`, {
+      data: { tabla_producto: tablaProducto }
+    });
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudo eliminar el favorito.';
+    throw { mensaje, codigo: error?.codigo || error?.response?.data?.codigo };
+  }
+};
+
+// ============================================
+// FUNCIONES DE NOTIFICACIONES
+// ============================================
+
+/**
+ * Obtiene las notificaciones pendientes (no leídas) del usuario autenticado.
+ * Requiere token JWT de usuario.
+ * Valida Requisitos: 5.2
+ *
+ * @returns {Promise<{ exito: boolean, notificaciones: Array }>}
+ */
+export const obtenerNotificacionesPendientes = async () => {
+  try {
+    const response = await api.get('/notificaciones/pendientes');
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudieron obtener las notificaciones.';
+    throw { mensaje };
+  }
+};
+
+/**
+ * Marca una notificación como leída.
+ * Requiere token JWT de usuario.
+ * Valida Requisitos: 5.5
+ *
+ * @param {number} idNotificacion - ID de la notificación a marcar como leída
+ * @returns {Promise<{ exito: boolean }>}
+ */
+export const marcarNotificacionLeida = async (idNotificacion) => {
+  try {
+    const response = await api.patch(`/notificaciones/${idNotificacion}/leer`);
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudo marcar la notificación como leída.';
+    throw { mensaje, codigo: error?.codigo || error?.response?.data?.codigo };
+  }
+};
+
+// ============================================
+// CONFIGURACIONES COMPARTIDAS (Req. 10)
+// ============================================
+
+/**
+ * Serializa una configuración de componentes a una URL compartible.
+ *
+ * La configuración es un objeto con claves de categoría y valores de ID de
+ * producto (o array de IDs para RAM). Ejemplo:
+ *   { procesador: { id: 5, categoria: 'procesador' }, ram: [{ id: 2, categoria: 'ram' }] }
+ *
+ * La función es determinista: la misma entrada siempre produce la misma URL.
+ *
+ * @param {Object} configuracion - Objeto de configuración con IDs de productos por categoría
+ * @returns {string} URL relativa con el parámetro config en base64
+ * @validates Requisitos 10.2, 10.8
+ */
+export const generarUrlConfiguracion = (configuracion) => {
+  // Serializar solo los datos necesarios (id + categoria) para mantener URLs cortas
+  const payload = {};
+
+  Object.entries(configuracion).forEach(([categoria, valor]) => {
+    if (!valor) return;
+
+    if (Array.isArray(valor)) {
+      // RAM: array de productos
+      const ids = valor
+        .filter(Boolean)
+        .map((p) => ({ id: p.id, categoria: p.categoria || categoria }));
+      if (ids.length > 0) payload[categoria] = ids;
+    } else if (valor && typeof valor === 'object' && valor.id != null) {
+      payload[categoria] = { id: valor.id, categoria: valor.categoria || categoria };
+    }
+  });
+
+  // Ordenar claves para garantizar determinismo
+  const payloadOrdenado = Object.fromEntries(
+    Object.keys(payload)
+      .sort()
+      .map((k) => [k, payload[k]])
+  );
+
+  const json = JSON.stringify(payloadOrdenado);
+  const base64 = btoa(unescape(encodeURIComponent(json)));
+  return `/configuracion?config=${base64}`;
+};
+
+/**
+ * Decodifica un string base64 de configuración compartida.
+ *
+ * @param {string} base64 - String base64 generado por generarUrlConfiguracion
+ * @returns {Object} Objeto de configuración con IDs de productos por categoría
+ * @throws {Error} Si el string es inválido o no puede parsearse
+ * @validates Requisitos 10.2, 10.5, 10.8
+ */
+export const decodificarConfiguracion = (base64) => {
+  if (!base64 || typeof base64 !== 'string') {
+    throw new Error('El parámetro de configuración está vacío o es inválido.');
+  }
+
+  let json;
+  try {
+    json = decodeURIComponent(escape(atob(base64)));
+  } catch {
+    throw new Error('El enlace de configuración no es válido. No se pudo decodificar.');
+  }
+
+  let configuracion;
+  try {
+    configuracion = JSON.parse(json);
+  } catch {
+    throw new Error('El enlace de configuración contiene datos corruptos.');
+  }
+
+  if (typeof configuracion !== 'object' || configuracion === null || Array.isArray(configuracion)) {
+    throw new Error('El formato de la configuración compartida no es válido.');
+  }
+
+  return configuracion;
 };
 
 // ============================================

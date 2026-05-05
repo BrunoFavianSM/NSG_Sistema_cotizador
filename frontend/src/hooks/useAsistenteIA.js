@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppContext } from '../contexto/AppContext';
 import * as asistente from '../servicios/asistente';
+import { buscarProductosCompatibles } from '../servicios/api';
 
 const MENSAJE_BIENVENIDA_BASE = {
   rol: 'assistant',
@@ -272,6 +273,106 @@ export function useAsistenteIA({ sesionId: sesionIdProp = null, usuarioId = null
     }
   }, [resolverUsuarioId, sembrarBienvenida, registrarDebug]);
 
+  /**
+   * Extrae filtros de compatibilidad desde el texto del usuario.
+   * Detecta menciones de socket, tipo de RAM y nombre de procesador.
+   * Req. 8.5, 8.6
+   */
+  const extraerFiltrosCompatibilidad = useCallback((texto) => {
+    const filtros = {};
+    const t = texto.toLowerCase();
+
+    // Detectar socket (LGA1700, AM5, AM4, etc.)
+    const matchSocket = texto.match(/\b(LGA\s?\d{3,4}|AM[45]|AM3\+?|TR4|sTRX4|FM2\+?)\b/i);
+    if (matchSocket) filtros.socket = matchSocket[1].replace(/\s/, '').toUpperCase();
+
+    // Detectar tipo de RAM (DDR4, DDR5)
+    const matchRam = texto.match(/\b(DDR[345])\b/i);
+    if (matchRam) filtros.ram_tipo = matchRam[1].toUpperCase();
+
+    // Detectar nombre de procesador (Intel i3/i5/i7/i9, Ryzen 3/5/7/9)
+    const matchCpu = texto.match(/\b(i[3579]-\d{4,5}[A-Z]*|Ryzen\s*[3579]\s*\d{4}[A-Z]*|Core\s*Ultra\s*\d+)\b/i);
+    if (matchCpu) filtros.procesador = matchCpu[1];
+
+    return Object.keys(filtros).length > 0 ? filtros : null;
+  }, []);
+
+  /**
+   * Detecta si el mensaje del usuario es una consulta de compatibilidad.
+   * Req. 8.5
+   */
+  const esConsultaCompatibilidad = useCallback((texto) => {
+    const t = texto.toLowerCase();
+    const palabrasClave = [
+      'compatible', 'compatibilidad', 'funciona con', 'sirve con',
+      'socket', 'ddr4', 'ddr5', 'lga', 'am4', 'am5',
+      'qué placa', 'que placa', 'qué ram', 'que ram',
+      'qué procesador', 'que procesador', 'recomienda',
+      'compatible con mi', 'compatible con el',
+    ];
+    return palabrasClave.some((kw) => t.includes(kw));
+  }, []);
+
+  /**
+   * Busca productos compatibles y los agrega como mensaje del asistente.
+   * Se llama cuando se detecta una consulta de compatibilidad.
+   * Req. 8.5, 8.6
+   */
+  const buscarYMostrarCompatibles = useCallback(async (filtros) => {
+    try {
+      const resultado = await buscarProductosCompatibles(filtros);
+      if (!montadoRef.current) return;
+
+      const productos = resultado?.productos || [];
+      const filtrosTexto = Object.entries(filtros)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(', ');
+
+      let contenido;
+      if (productos.length === 0) {
+        contenido = `No encontré productos compatibles con los filtros especificados (${filtrosTexto}). Te recomiendo revisar el catálogo completo o consultar con un asesor.`;
+      } else {
+        const lista = productos
+          .slice(0, 5)
+          .map((p) => {
+            const specs = [];
+            if (p.socket) specs.push(`Socket: ${p.socket}`);
+            if (p.ram_type) specs.push(`RAM: ${p.ram_type}`);
+            if (p.chipset) specs.push(`Chipset: ${p.chipset}`);
+            if (p.wattage) specs.push(`Potencia: ${p.wattage}W`);
+            if (p.capacidad_gb) specs.push(`Capacidad: ${p.capacidad_gb}GB`);
+            const specsStr = specs.length > 0 ? ` (${specs.join(', ')})` : '';
+            return `• ${p.nombre}${specsStr}`;
+          })
+          .join('\n');
+
+        const total = resultado.cantidad;
+        const sufijo = total > 5 ? `\n\n_Mostrando 5 de ${total} productos compatibles._` : '';
+        contenido = `Encontré ${total} producto${total !== 1 ? 's' : ''} compatible${total !== 1 ? 's' : ''} con los filtros (${filtrosTexto}):\n\n${lista}${sufijo}`;
+      }
+
+      const mensajeCompatibilidad = {
+        id: `assistant-compat-${Date.now()}`,
+        rol: 'assistant',
+        contenido,
+        timestamp: new Date().toISOString(),
+        metadata: {
+          quick_replies: [],
+          semaforo: null,
+          configuracion_propuesta: null,
+          productos_compatibles: productos.slice(0, 5),
+          filtros_aplicados: filtros,
+        },
+      };
+
+      setMensajes((prev) => [...prev, mensajeCompatibilidad]);
+      registrarDebug('busqueda_compatibilidad', { filtros, total: resultado.cantidad });
+    } catch (err) {
+      registrarDebug('error_compatibilidad', { error: err?.mensaje || 'fallo busqueda' });
+      // Silencioso: no interrumpir la experiencia si la búsqueda falla
+    }
+  }, [registrarDebug]);
+
   return {
     mensajes,
     cargando,
@@ -289,6 +390,9 @@ export function useAsistenteIA({ sesionId: sesionIdProp = null, usuarioId = null
     ocultarQuickReplies,
     aplicarConfiguracion,
     reiniciar,
+    esConsultaCompatibilidad,
+    extraerFiltrosCompatibilidad,
+    buscarYMostrarCompatibles,
   };
 }
 

@@ -7,13 +7,17 @@
  * - Indica disponibilidad (En Stock / A Pedido con días)
  * - Filtra por compatibilidad (socket, RAM type)
  * - Reutilizable para todas las categorías
+ * - Botón de favorito (❤️) para usuarios autenticados con optimistic update
  * 
- * Valida Requisitos: 2.1, 2.2, 2.3, 3.2
+ * Valida Requisitos: 2.1, 2.2, 2.3, 3.2, 4.8, 4.9, 4.10
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import PropTypes from 'prop-types';
+import { useAppContext } from '../contexto/AppContext';
+import { useToast } from './feedback/ToastProvider';
+import { obtenerFavoritos, agregarFavorito, eliminarFavorito } from '../servicios/api';
 
 const SelectorComponente = ({
   categoria,
@@ -26,6 +30,110 @@ const SelectorComponente = ({
 }) => {
   const [productosFiltrados, setProductosFiltrados] = useState([]);
   const [busqueda, setBusqueda] = useState('');
+
+  // Estado de favoritos
+  const { autenticado } = useAppContext();
+  const toast = useToast();
+  // Set de IDs de favoritos: `${id_producto}:${tabla_producto}`
+  const [favoritosSet, setFavoritosSet] = useState(new Set());
+  // Set de IDs en proceso (para evitar doble clic)
+  const [procesandoFavorito, setProcesandoFavorito] = useState(new Set());
+
+  // Cargar favoritos al montar si el usuario está autenticado
+  useEffect(() => {
+    if (!autenticado) {
+      setFavoritosSet(new Set());
+      return;
+    }
+    obtenerFavoritos()
+      .then((res) => {
+        if (res?.exito && Array.isArray(res.favoritos)) {
+          const claves = res.favoritos.map((f) => `${f.id_producto}:${f.tabla_producto}`);
+          setFavoritosSet(new Set(claves));
+        }
+      })
+      .catch(() => {
+        // Silencioso: los favoritos son complementarios, no bloquean el flujo
+      });
+  }, [autenticado]);
+
+  /**
+   * Determina la clave de favorito para un producto.
+   * La tabla se infiere de la categoría del producto.
+   */
+  const obtenerTablaProducto = useCallback((producto) => {
+    const cat = producto.subcategoria || producto.categoria || '';
+    const mapa = {
+      procesador: 'productos_procesador',
+      placa_madre: 'productos_placa_madre',
+      ram: 'productos_ram',
+      almacenamiento: 'productos_almacenamiento',
+      gpu: 'productos_gpu',
+      fuente: 'productos_fuente',
+      case: 'productos_case',
+    };
+    return mapa[cat] || `productos_${cat}`;
+  }, []);
+
+  const esFavorito = useCallback((producto) => {
+    const tabla = obtenerTablaProducto(producto);
+    return favoritosSet.has(`${producto.id}:${tabla}`);
+  }, [favoritosSet, obtenerTablaProducto]);
+
+  /**
+   * Alterna el estado de favorito con optimistic update.
+   * Requisitos: 4.8, 4.9, 4.10
+   */
+  const alternarFavorito = useCallback(async (e, producto) => {
+    e.stopPropagation(); // No propagar al onClick de la tarjeta
+    const tabla = obtenerTablaProducto(producto);
+    const clave = `${producto.id}:${tabla}`;
+
+    if (procesandoFavorito.has(clave)) return;
+
+    const eraFavorito = favoritosSet.has(clave);
+
+    // Optimistic update
+    setProcesandoFavorito((prev) => new Set([...prev, clave]));
+    setFavoritosSet((prev) => {
+      const siguiente = new Set(prev);
+      if (eraFavorito) {
+        siguiente.delete(clave);
+      } else {
+        siguiente.add(clave);
+      }
+      return siguiente;
+    });
+
+    try {
+      if (eraFavorito) {
+        await eliminarFavorito(producto.id, tabla);
+        toast.success('Favorito eliminado', `${producto.nombre} fue quitado de tus favoritos.`);
+      } else {
+        await agregarFavorito(producto.id, tabla);
+        toast.success('Favorito agregado', `${producto.nombre} fue agregado a tus favoritos.`);
+      }
+    } catch (err) {
+      // Revertir optimistic update en caso de error
+      setFavoritosSet((prev) => {
+        const revertido = new Set(prev);
+        if (eraFavorito) {
+          revertido.add(clave);
+        } else {
+          revertido.delete(clave);
+        }
+        return revertido;
+      });
+      const mensaje = err?.mensaje || 'No se pudo actualizar el favorito.';
+      toast.error('Error', mensaje);
+    } finally {
+      setProcesandoFavorito((prev) => {
+        const siguiente = new Set(prev);
+        siguiente.delete(clave);
+        return siguiente;
+      });
+    }
+  }, [favoritosSet, procesandoFavorito, obtenerTablaProducto, toast]);
 
   // Filtrar productos por disponibilidad y compatibilidad
   useEffect(() => {
