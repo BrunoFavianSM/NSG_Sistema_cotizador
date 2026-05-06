@@ -38,7 +38,7 @@ async function login(username, password) {
 
     const resultado = await ejecutarQuery(
       `SELECT id, username, password_hash, nombre_completo, rol,
-              intentos_fallidos, bloqueado_hasta
+              estado, intentos_fallidos, bloqueado_hasta
        FROM cuentas WHERE username = $1`,
       [username]
     );
@@ -57,6 +57,17 @@ async function login(username, password) {
       return {
         exito: false,
         error: `Cuenta bloqueada. Intenta nuevamente en ${minutosRestantes} minuto(s).`
+      };
+    }
+
+    // Verificar estado de la cuenta (Requisito 7.1, 7.3)
+    if (cuenta.estado === 'pendiente_activacion') {
+      return {
+        exito: false,
+        status: 403,
+        error: 'Cuenta no activada',
+        mensaje: 'Debes activar tu cuenta antes de iniciar sesión',
+        codigo: 'CUENTA_PENDIENTE'
       };
     }
 
@@ -137,10 +148,20 @@ async function registrar(datos) {
     const correoNormalizado = datos.correo.trim().toLowerCase();
     const correoHash = hashBusqueda(correoNormalizado);
     const correoExiste = await ejecutarQuery(
-      'SELECT id FROM cuentas WHERE correo_hash = $1',
+      'SELECT id, estado FROM cuentas WHERE correo_hash = $1',
       [correoHash]
     );
     if (correoExiste.rows.length > 0) {
+      const cuentaExistente = correoExiste.rows[0];
+      if (cuentaExistente.estado === 'pendiente_activacion') {
+        return {
+          exito: false,
+          status: 409,
+          error: 'Correo con cuenta pendiente de activación',
+          codigo: 'CUENTA_PENDIENTE_ACTIVACION',
+          mensaje: 'Este correo ya tiene cotizaciones asociadas. Activa tu cuenta para acceder a ellas.'
+        };
+      }
       return { exito: false, status: 409, error: 'El correo electrónico ya está registrado' };
     }
 
@@ -403,12 +424,95 @@ async function obtenerCuentaPorId(id) {
   }
 }
 
+/**
+ * Activa una Cuenta_Pendiente estableciendo username y contraseña.
+ * Cambia estado de 'pendiente_activacion' a 'activa'.
+ *
+ * @param {Object} datos - { correo, username, password, confirmarPassword }
+ * @returns {Promise<Object>}
+ */
+async function activarCuenta(datos) {
+  try {
+    const { correo, username, password } = datos;
+
+    // 1. Validar inputs
+    if (!username || username.trim().length === 0) {
+      return { exito: false, status: 400, error: 'El nombre de usuario es requerido', codigo: 'USERNAME_REQUERIDO' };
+    }
+    if (!password || password.length < 8) {
+      return { exito: false, status: 400, error: 'La contraseña debe tener al menos 8 caracteres', codigo: 'PASSWORD_INVALIDO' };
+    }
+    if (!correo) {
+      return { exito: false, status: 400, error: 'El correo es requerido', codigo: 'CORREO_REQUERIDO' };
+    }
+
+    // 2. Buscar cuenta por correo_hash con estado='pendiente_activacion'
+    const correoNormalizado = correo.trim().toLowerCase();
+    const correoHash = hashBusqueda(correoNormalizado);
+
+    const resultadoCuenta = await ejecutarQuery(
+      "SELECT id, nombre_completo, rol FROM cuentas WHERE correo_hash = $1 AND estado = 'pendiente_activacion'",
+      [correoHash]
+    );
+
+    if (resultadoCuenta.rows.length === 0) {
+      return { exito: false, status: 404, error: 'Cuenta pendiente no encontrada para ese correo', codigo: 'CUENTA_NO_ENCONTRADA' };
+    }
+
+    const cuenta = resultadoCuenta.rows[0];
+
+    // 3. Verificar unicidad de username
+    const usernameExiste = await ejecutarQuery(
+      'SELECT id FROM cuentas WHERE username = $1 AND id != $2',
+      [username.trim(), cuenta.id]
+    );
+    if (usernameExiste.rows.length > 0) {
+      return { exito: false, status: 409, error: 'El nombre de usuario ya está en uso', codigo: 'USERNAME_EN_USO' };
+    }
+
+    // 4. Hashear contraseña
+    const passwordHash = await hashPassword(password);
+
+    // 5. Activar cuenta
+    await ejecutarQuery(
+      `UPDATE cuentas
+       SET password_hash = $1, username = $2, estado = 'activa',
+           intentos_fallidos = 0, bloqueado_hasta = NULL, updated_at = NOW()
+       WHERE correo_hash = $3 AND estado = 'pendiente_activacion'`,
+      [passwordHash, username.trim(), correoHash]
+    );
+
+    // 6. Generar JWT y retornar
+    const token = generarToken({
+      id: cuenta.id,
+      username: username.trim(),
+      nombre: cuenta.nombre_completo,
+      rol: cuenta.rol
+    });
+
+    return {
+      exito: true,
+      token,
+      usuario: {
+        id: cuenta.id,
+        username: username.trim(),
+        nombre: cuenta.nombre_completo,
+        rol: cuenta.rol
+      }
+    };
+  } catch (error) {
+    console.error('Error en activarCuenta:', error);
+    return { exito: false, status: 500, error: 'Error al activar la cuenta' };
+  }
+}
+
 // Retrocompatibilidad
 const obtenerAdministradorPorId = obtenerCuentaPorId;
 
 module.exports = {
   login,
   registrar,
+  activarCuenta,
   solicitarRecuperacion,
   restablecerContrasena,
   generarToken,

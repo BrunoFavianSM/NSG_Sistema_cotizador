@@ -85,8 +85,9 @@ function normalizarTelefonoCliente(telefono) {
 }
 
 function resolverContextoAdmin(req) {
+  // Solo retorna true si el usuario autenticado tiene rol 'admin'
   if (req?.usuario?.id) {
-    return true;
+    return req.rol === 'admin' || req.usuario?.rol === 'admin';
   }
 
   const authHeader = req?.headers?.authorization || req?.headers?.Authorization;
@@ -99,7 +100,7 @@ function resolverContextoAdmin(req) {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    return Boolean(payload?.id);
+    return payload?.rol === 'admin';
   } catch {
     return false;
   }
@@ -309,7 +310,7 @@ async function buscarOCrearCliente(email, nombre = null, telefono = null) {
     
     // Buscar cliente existente por hash
     const clienteExistente = await ejecutarQuery(
-      'SELECT id, nombre, telefono FROM usuarios_clientes WHERE correo_hash = $1',
+      'SELECT id, nombre_completo AS nombre, telefono_encrypted AS telefono FROM cuentas WHERE correo_hash = $1',
       [emailHash]
     );
     
@@ -332,7 +333,7 @@ async function buscarOCrearCliente(email, nombre = null, telefono = null) {
       if (camposActualizar.length > 0) {
         valores.push(cliente.id);
         await ejecutarQuery(
-          `UPDATE usuarios_clientes
+          `UPDATE cuentas
            SET ${camposActualizar.join(', ')}
            WHERE id = $${indice}`,
           valores
@@ -347,8 +348,8 @@ async function buscarOCrearCliente(email, nombre = null, telefono = null) {
     const telefonoEncriptado = telefono ? encriptar(telefono) : null;
     
     const nuevoCliente = await ejecutarQuery(
-      `INSERT INTO usuarios_clientes (nombre, correo, correo_hash, telefono)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO cuentas (nombre_completo, correo_encrypted, correo_hash, telefono_encrypted, rol, estado, password_hash)
+       VALUES ($1, $2, $3, $4, 'usuario', 'pendiente_activacion', NULL)
        RETURNING id`,
       [nombre, emailEncriptado, emailHash, telefonoEncriptado]
     );
@@ -557,13 +558,22 @@ async function crearCotizacion(req, res) {
       // 4. Generar cÃ³digo ticket
       const codigoTicket = await generarCodigoTicket();
 
-      // 5. Buscar o crear cliente (si se proporciona email)
-
-      const idCliente = await buscarOCrearCliente(
-        validacionDatosCliente.datos.email,
-        validacionDatosCliente.datos.nombre,
-        validacionDatosCliente.datos.telefono
-      );
+      // 5. Determinar id_cliente
+      // - Usuario autenticado (rol='usuario'): usar su propio id del token
+      // - Admin: buscar/crear cliente por email si se proporcionó
+      // - Sin autenticación: null
+      let idCliente;
+      const rolSolicitante = req.rol || req.usuario?.rol;
+      if (rolSolicitante === 'usuario' && req.usuario?.id) {
+        // El usuario ya está autenticado — la cotización le pertenece directamente
+        idCliente = req.usuario.id;
+      } else {
+        idCliente = await buscarOCrearCliente(
+          validacionDatosCliente.datos.email,
+          validacionDatosCliente.datos.nombre,
+          validacionDatosCliente.datos.telefono
+        );
+      }
 
       // 6. Calcular fecha de validez (3 dÃ­as desde emisiÃ³n)
       const fechaValidez = new Date();
@@ -757,17 +767,17 @@ async function obtenerCotizacionConDetallesPorTicket(codigoTicket) {
           c.subtotal_neto, c.igv_porcentaje, c.igv_monto, c.total_con_igv,
           c.tipo_cambio_referencia, c.subtotal_neto_pen, c.igv_monto_pen, c.total_con_igv_pen,
           c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion,
-          uc.nombre AS cliente_nombre, uc.correo AS cliente_correo
+          uc.nombre_completo AS cliente_nombre, uc.correo_encrypted AS cliente_correo
         FROM cotizaciones c
-        LEFT JOIN usuarios_clientes uc ON uc.id = c.id_cliente
+        LEFT JOIN cuentas uc ON uc.id = c.id_cliente
         WHERE c.codigo_ticket = $1`
       : `SELECT 
           c.id, c.codigo_unico, c.codigo_ticket, c.id_cliente,
           c.fecha_emision, c.fecha_validez,
           c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion,
-          uc.nombre AS cliente_nombre, uc.correo AS cliente_correo
+          uc.nombre_completo AS cliente_nombre, uc.correo_encrypted AS cliente_correo
         FROM cotizaciones c
-        LEFT JOIN usuarios_clientes uc ON uc.id = c.id_cliente
+        LEFT JOIN cuentas uc ON uc.id = c.id_cliente
         WHERE c.codigo_ticket = $1`,
     [codigoTicket]
   );
@@ -1364,7 +1374,7 @@ async function consultarHistorialCliente(req, res) {
 
     const emailHash = hashBusqueda(validacionEmail.email);
 
-    const cliente = await ejecutarQuery('SELECT id, nombre FROM usuarios_clientes WHERE correo_hash = $1', [emailHash]);
+    const cliente = await ejecutarQuery('SELECT id, nombre_completo AS nombre FROM cuentas WHERE correo_hash = $1', [emailHash]);
 
     if (cliente.rows.length === 0) {
       return res.json({
@@ -1438,11 +1448,12 @@ async function consultarHistorialCliente(req, res) {
 async function listarClientesRegistrados(req, res) {
   try {
     const resultado = await ejecutarQuery(
-      `SELECT uc.id, uc.nombre, uc.correo AS correo_encriptado, COUNT(c.id) AS total_cotizaciones,
+      `SELECT uc.id, uc.nombre_completo AS nombre, uc.correo_encrypted AS correo_encriptado, COUNT(c.id) AS total_cotizaciones,
               MAX(c.fecha_emision) AS ultima_cotizacion
-       FROM usuarios_clientes uc
+       FROM cuentas uc
        LEFT JOIN cotizaciones c ON c.id_cliente = uc.id
-       GROUP BY uc.id, uc.nombre, uc.correo
+       WHERE uc.rol = 'usuario'
+       GROUP BY uc.id, uc.nombre_completo, uc.correo_encrypted
        ORDER BY ultima_cotizacion DESC NULLS LAST`
     );
 
