@@ -643,9 +643,12 @@ export default function Cotizador() {
   const hayErrorEmailCliente = (!esAdmin && intentoGenerar && !emailClienteLimpio)
     || (emailClienteLimpio && !emailClienteEsValido);
   const hayErrorTelefonoCliente = telefonoClienteLimpio && !telefonoClienteEsValido;
-  const datosClienteValidos = esAdmin
-    ? (!emailClienteLimpio || emailClienteEsValido) && telefonoClienteEsValido
-    : Boolean(nombreClienteLimpio && emailClienteEsValido && telefonoClienteEsValido);
+  // Para usuario autenticado (no admin): sus datos ya están en el token, no necesita formulario
+  const datosClienteValidos = autenticado && !esAdmin
+    ? true  // usuario registrado — el backend usa su id del token
+    : esAdmin
+      ? (!emailClienteLimpio || emailClienteEsValido) && telefonoClienteEsValido
+      : Boolean(nombreClienteLimpio && emailClienteEsValido && telefonoClienteEsValido);
   const procesadorTieneGraficosIntegrados = useMemo(() => {
     const procesador = configuracionSeleccionada.procesador;
     if (!procesador) return false;
@@ -1814,6 +1817,8 @@ export default function Cotizador() {
             incompatibilidades={validacionCompatibilidad.errores}
           />
 
+          {/* Datos del cliente — solo para admin (datos opcionales) o invitado (no puede cotizar) */}
+          {(esAdmin) && (
           <section className="surface-elevated space-y-4 p-5" aria-label="Datos del cliente">
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Datos del cliente</h3>
@@ -1893,6 +1898,7 @@ export default function Cotizador() {
               </label>
             </div>
           </section>
+          )}
 
           <section className="surface-elevated space-y-4 p-5">
             {esInvitado ? (

@@ -40,13 +40,13 @@ async function limpiarDatos(cliente) {
   await cliente.query('TRUNCATE TABLE conversaciones_ia CASCADE');
   await cliente.query('TRUNCATE TABLE auditoria CASCADE');
   await cliente.query('TRUNCATE TABLE productos CASCADE');
-  await cliente.query('TRUNCATE TABLE usuarios_clientes CASCADE');
+  await cliente.query('TRUNCATE TABLE cuentas CASCADE');
   await cliente.query('TRUNCATE TABLE administradores CASCADE');
   
   // Reiniciar secuencias
   await cliente.query('ALTER SEQUENCE administradores_id_seq RESTART WITH 1');
   await cliente.query('ALTER SEQUENCE productos_id_seq RESTART WITH 1');
-  await cliente.query('ALTER SEQUENCE usuarios_clientes_id_seq RESTART WITH 1');
+  await cliente.query('ALTER SEQUENCE cuentas_id_seq RESTART WITH 1');
   await cliente.query('ALTER SEQUENCE cotizaciones_id_seq RESTART WITH 1');
   
   log('✓ Datos limpiados correctamente', 'green');

@@ -11,6 +11,7 @@
  */
 
 const jwt = require('jsonwebtoken');
+const { ejecutarQuery } = require('../configuracion/baseDatos');
 
 function extraerToken(req) {
   const authHeader = req.headers['authorization'];
@@ -54,9 +55,10 @@ function detectarUsuario(req, res, next) {
 
 /**
  * Middleware que requiere autenticación (admin o usuario).
- * Rechaza con 401 si no hay token, 403 si el rol no es válido.
+ * Rechaza con 401 si no hay token, 403 si el rol no es válido o la cuenta no está activa.
+ * Consulta BD para verificar estado actual de la cuenta (req. 7.4).
  */
-function verificarTokenUsuario(req, res, next) {
+async function verificarTokenUsuario(req, res, next) {
   const token = extraerToken(req);
 
   if (!token) {
@@ -73,6 +75,18 @@ function verificarTokenUsuario(req, res, next) {
       return res.status(403).json({
         error: 'Rol no autorizado',
         mensaje: 'Tu cuenta no tiene permisos para acceder a este recurso'
+      });
+    }
+
+    // NUEVO: verificar estado actual en BD (req. 7.4)
+    const { rows } = await ejecutarQuery(
+      'SELECT estado FROM cuentas WHERE id = $1',
+      [decoded.id]
+    );
+    if (rows.length === 0 || rows[0].estado !== 'activa') {
+      return res.status(403).json({
+        error: 'Cuenta no activada',
+        mensaje: 'Debes activar tu cuenta antes de acceder a este recurso'
       });
     }
 

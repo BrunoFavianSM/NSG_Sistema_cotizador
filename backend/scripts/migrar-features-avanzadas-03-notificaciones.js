@@ -19,7 +19,7 @@ async function ejecutarMigracion() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS notificaciones_usuario (
         id             SERIAL PRIMARY KEY,
-        id_usuario     INTEGER NOT NULL REFERENCES usuarios_clientes(id) ON DELETE CASCADE,
+        id_usuario     INTEGER NOT NULL REFERENCES cuentas(id) ON DELETE CASCADE,
         tipo           VARCHAR(50) NOT NULL,
         titulo         VARCHAR(200) NOT NULL,
         mensaje        TEXT NOT NULL,

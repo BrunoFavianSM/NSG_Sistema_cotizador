@@ -43,7 +43,7 @@ router.post('/login', async (req, res) => {
 
     if (!resultado.exito) {
       console.warn(`[LOGIN_FALLIDO] username=${username} ip=${req.ip}`);
-      return res.status(401).json(resultado);
+      return res.status(resultado.status || 401).json(resultado);
     }
 
     res.json(resultado);
@@ -171,6 +171,50 @@ router.post('/restablecer', async (req, res) => {
     res.json(resultado);
   } catch (error) {
     console.error('Error en /restablecer:', error);
+    res.status(500).json({
+      exito: false,
+      error: 'Error interno del servidor'
+    });
+  }
+});
+
+/**
+ * POST /api/auth/activar
+ * Activa una Cuenta_Pendiente estableciendo username y contraseña.
+ * Cambia estado de 'pendiente_activacion' a 'activa' y retorna JWT.
+ */
+router.post('/activar', async (req, res) => {
+  try {
+    const { correo, username, password, confirmarPassword } = req.body;
+
+    if (!correo || !username || !password) {
+      return res.status(400).json({
+        exito: false,
+        error: 'Correo, username y password son requeridos'
+      });
+    }
+
+    if (confirmarPassword !== undefined && password !== confirmarPassword) {
+      return res.status(400).json({
+        exito: false,
+        error: 'Las contraseñas no coinciden'
+      });
+    }
+
+    const resultado = await servicioAuth.activarCuenta({
+      correo: correo.trim().toLowerCase(),
+      username: username.trim(),
+      password,
+      confirmarPassword
+    });
+
+    if (!resultado.exito) {
+      return res.status(resultado.status || 400).json(resultado);
+    }
+
+    res.json(resultado);
+  } catch (error) {
+    console.error('Error en /activar:', error);
     res.status(500).json({
       exito: false,
       error: 'Error interno del servidor'
