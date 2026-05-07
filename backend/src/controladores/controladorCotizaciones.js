@@ -1440,6 +1440,154 @@ async function consultarHistorialCliente(req, res) {
 
 
 /**
+ * Obtener cotizaciones propias del usuario autenticado
+ *
+ * GET /api/cotizaciones/propias
+ * Requiere autenticación (verificarTokenUsuario).
+ *
+ * El id del usuario se obtiene exclusivamente del token JWT (req.usuario.id).
+ * No acepta parámetros de identificación en query string ni body.
+ *
+ * Retorna la misma estructura que GET /api/cotizaciones/cliente/:email
+ * para mantener compatibilidad con el frontend existente.
+ *
+ * Requisitos: 5.1, 5.8, 5.9
+ */
+async function obtenerPropias(req, res) {
+  try {
+    // El id del usuario proviene exclusivamente del token JWT
+    const idUsuario = req.usuario?.id;
+
+    if (!idUsuario) {
+      return res.status(401).json({
+        error: 'No autorizado',
+        mensaje: 'Se requiere autenticación para acceder a este recurso.',
+        codigo: 'NO_AUTORIZADO'
+      });
+    }
+
+    // Obtener datos del usuario autenticado
+    const cuentaResult = await ejecutarQuery(
+      'SELECT id, nombre_completo AS nombre, correo_encrypted AS correo_encriptado FROM cuentas WHERE id = $1',
+      [idUsuario]
+    );
+
+    if (cuentaResult.rows.length === 0) {
+      return res.status(401).json({
+        error: 'No autorizado',
+        mensaje: 'No se encontró la cuenta del usuario autenticado.',
+        codigo: 'NO_AUTORIZADO'
+      });
+    }
+
+    const cuenta = cuentaResult.rows[0];
+    const emailDesencriptado = desencriptarSeguro(cuenta.correo_encriptado);
+
+    const tieneEsquemaFinancieroV2 = await usaEsquemaFinancieroV2();
+
+    let cotizaciones;
+    try {
+      cotizaciones = await ejecutarQuery(
+        tieneEsquemaFinancieroV2
+          ? `SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez,
+                    c.precio_total, c.total_con_igv, c.subtotal_neto, c.igv_porcentaje, c.igv_monto,
+                    c.tipo_cambio_referencia, c.subtotal_neto_pen, c.igv_monto_pen, c.total_con_igv_pen,
+                    c.moneda_base, c.margen_aplicado, c.estado, c.fecha_reclamacion,
+                    COUNT(dc.id) AS cantidad_componentes,
+                    n.estado AS estado_notificacion,
+                    n.fecha_envio AS fecha_notificacion
+             FROM cotizaciones c
+             LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion
+             LEFT JOIN LATERAL (
+               SELECT nc.estado, nc.fecha_envio
+               FROM notificaciones_cotizacion nc
+               WHERE nc.id_cotizacion = c.id
+               ORDER BY nc.fecha_intento DESC
+               LIMIT 1
+             ) n ON TRUE
+             WHERE c.id_cliente = $1
+             GROUP BY c.id, n.estado, n.fecha_envio
+             ORDER BY c.fecha_emision DESC`
+          : `SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez,
+                    c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion,
+                    COUNT(dc.id) AS cantidad_componentes,
+                    n.estado AS estado_notificacion,
+                    n.fecha_envio AS fecha_notificacion
+             FROM cotizaciones c
+             LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion
+             LEFT JOIN LATERAL (
+               SELECT nc.estado, nc.fecha_envio
+               FROM notificaciones_cotizacion nc
+               WHERE nc.id_cotizacion = c.id
+               ORDER BY nc.fecha_intento DESC
+               LIMIT 1
+             ) n ON TRUE
+             WHERE c.id_cliente = $1
+             GROUP BY c.id, n.estado, n.fecha_envio
+             ORDER BY c.fecha_emision DESC`,
+        [idUsuario]
+      );
+    } catch (_errorNotificaciones) {
+      // Fallback sin JOIN a notificaciones_cotizacion (tabla puede no existir en entornos sin migración)
+      cotizaciones = await ejecutarQuery(
+        tieneEsquemaFinancieroV2
+          ? `SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez,
+                    c.precio_total, c.total_con_igv, c.subtotal_neto, c.igv_porcentaje, c.igv_monto,
+                    c.tipo_cambio_referencia, c.subtotal_neto_pen, c.igv_monto_pen, c.total_con_igv_pen,
+                    c.moneda_base, c.margen_aplicado, c.estado, c.fecha_reclamacion,
+                    COUNT(dc.id) AS cantidad_componentes
+             FROM cotizaciones c
+             LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion
+             WHERE c.id_cliente = $1
+             GROUP BY c.id
+             ORDER BY c.fecha_emision DESC`
+          : `SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez,
+                    c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion,
+                    COUNT(dc.id) AS cantidad_componentes
+             FROM cotizaciones c
+             LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion
+             WHERE c.id_cliente = $1
+             GROUP BY c.id
+             ORDER BY c.fecha_emision DESC`,
+        [idUsuario]
+      );
+    }
+
+    return res.json({
+      exito: true,
+      cliente: {
+        nombre: cuenta.nombre,
+        email: emailDesencriptado
+      },
+      cantidad: cotizaciones.rows.length,
+      cotizaciones: cotizaciones.rows.map((c) => ({
+        id: c.id,
+        codigo_unico: c.codigo_unico,
+        codigo_ticket: c.codigo_ticket,
+        fecha_emision: c.fecha_emision,
+        fecha_validez: c.fecha_validez,
+        precio_total: parseFloat(c.total_con_igv ?? c.precio_total),
+        margen_aplicado: parseFloat(c.margen_aplicado),
+        finanzas: construirBloqueFinanzas(c),
+        estado: normalizarEstadoCotizacion(c.estado),
+        fecha_reclamacion: c.fecha_reclamacion,
+        cantidad_componentes: parseInt(c.cantidad_componentes, 10),
+        notificacion: c.estado_notificacion
+          ? { estado: c.estado_notificacion, fecha_envio: c.fecha_notificacion || null }
+          : null
+      }))
+    });
+  } catch (error) {
+    console.error('[obtenerPropias] Error al consultar cotizaciones propias:', error);
+    return res.status(500).json({
+      error: 'Error al consultar cotizaciones',
+      mensaje: 'No se pudo recuperar el historial de cotizaciones propias.',
+      codigo: 'ERROR_INTERNO'
+    });
+  }
+}
+
+/**
  * Listar todos los clientes registrados con al menos una cotización
  * 
  * GET /api/cotizaciones/clientes
@@ -1550,6 +1698,7 @@ module.exports = {
   notificarCotizacionLista,
   marcarComoReclamada,
   consultarHistorialCliente,
+  obtenerPropias,
   listarClientesRegistrados,
   exportarExcel,
   // Exportar funciones auxiliares para testing

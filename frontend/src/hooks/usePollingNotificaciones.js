@@ -2,10 +2,10 @@
  * Hook usePollingNotificaciones
  *
  * Consulta GET /api/notificaciones/pendientes cada 30 segundos mientras el
- * usuario está autenticado. Expone las notificaciones nuevas y una función
- * para marcar una notificación como leída.
+ * usuario está autenticado. Expone las notificaciones nuevas, el conteo de
+ * notificaciones no leídas y una función para marcar una notificación como leída.
  *
- * Valida Requisitos: 5.6, 5.7, 5.12
+ * Valida Requisitos: 5.6, 5.7, 5.12, 6.2
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -17,6 +17,7 @@ const INTERVALO_POLLING_MS = 30_000; // 30 segundos
  * @param {{ autenticado: boolean }} opciones
  * @returns {{
  *   notificaciones: Array,
+ *   conteoNoLeidas: number,
  *   marcarLeida: (id: number) => Promise<void>
  * }}
  */
@@ -82,7 +83,12 @@ export function usePollingNotificaciones({ autenticado }) {
     }
   }, []);
 
-  return { notificaciones, marcarLeida };
+  // Req. 6.2: conteo de notificaciones con leida === false
+  // Las notificaciones del polling son siempre pendientes (leida = false),
+  // pero se calcula explícitamente para robustez ante futuros cambios.
+  const conteoNoLeidas = notificaciones.filter((n) => n.leida === false).length;
+
+  return { notificaciones, conteoNoLeidas, marcarLeida };
 }
 
 export default usePollingNotificaciones;

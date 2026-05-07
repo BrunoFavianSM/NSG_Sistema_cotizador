@@ -46,6 +46,12 @@
       "skillPath": "skills/engineering/setup-matt-pocock-skills/SKILL.md",
       "computedHash": "ab6e8143f9237f970435d95e94a0f79703faf125a0b8c583b35ee7fe340eeefe"
     },
+    "sileo-react-toasts": {
+      "source": "xoverlap/sileo-skill",
+      "sourceType": "github",
+      "skillPath": "sileo-react-toasts/SKILL.md",
+      "computedHash": "b3f61db133da723e669dc2a851c3c94cd41015e56b9a11e001419189bff1dc01"
+    },
     "tdd": {
       "source": "mattpocock/skills",
       "sourceType": "github",

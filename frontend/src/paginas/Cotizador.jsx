@@ -14,6 +14,7 @@ import ResumenFinancieroAdmin from '../componentes/cotizador/ResumenFinancieroAd
 import PanelComparador from '../componentes/cotizador/PanelComparador';
 import DiagramaCompatibilidad from '../componentes/cotizador/DiagramaCompatibilidad';
 import AnalizadorPresupuesto from '../componentes/cotizador/AnalizadorPresupuesto';
+import BalanceFinal from '../componentes/cotizador/BalanceFinal';
 import { useAppContext } from '../contexto/AppContext';
 import { useComparador } from '../hooks/useComparador';
 import * as api from '../servicios/api';
@@ -550,7 +551,8 @@ export default function Cotizador() {
   }, [errorComparador]);
 
   const [pasoActual, setPasoActual] = useState(0);
-  const [filtro, setFiltro] = useState('disponibles');
+  // soloDisponibles: true → muestra solo productos con stock > 0 o disponible_a_pedido === true
+  const [soloDisponibles, setSoloDisponibles] = useState(true);
   const [filtrosPaso, setFiltrosPaso] = useState({
     procesadorMarca: 'all',
     procesadorModelo: 'all',
@@ -712,6 +714,26 @@ export default function Cotizador() {
     [configuracionSeleccionada.ram]
   );
 
+  // ── Productos para BalanceFinal (Req. 3.2) ───────────────────────────────
+  // Array plano de { precio_base, cantidad } para todos los componentes principales.
+  // Los extras se pasan directamente como el objeto `extras` del contexto.
+  const productosParaBalance = useMemo(() => {
+    const lista = [];
+    const agregar = (producto, cantidad = 1) => {
+      if (producto?.precio_base != null) {
+        lista.push({ precio_base: producto.precio_base, cantidad });
+      }
+    };
+    agregar(configuracionSeleccionada.procesador);
+    agregar(configuracionSeleccionada.placa_madre);
+    agregar(configuracionSeleccionada.almacenamiento);
+    agregar(configuracionSeleccionada.gpu);
+    agregar(configuracionSeleccionada.fuente);
+    agregar(configuracionSeleccionada.case);
+    Object.values(ramAgrupada).forEach((item) => agregar(item.producto, item.cantidad));
+    return lista;
+  }, [configuracionSeleccionada, ramAgrupada]);
+
   const productosPasoBase = useMemo(() => {
     let lista = productos.filter((p) => p.categoria === pasoInfo.categoria);
 
@@ -743,12 +765,12 @@ export default function Cotizador() {
       }
     }
 
-    if (filtro === 'disponibles') {
-      lista = lista.filter((p) => p.stock > 0 || p.disponible_a_pedido);
+    if (soloDisponibles) {
+      lista = lista.filter((p) => p.stock > 0 || p.disponible_a_pedido === true);
     }
 
     return lista;
-  }, [productos, pasoInfo, configuracionSeleccionada, filtro]);
+  }, [productos, pasoInfo, configuracionSeleccionada, soloDisponibles]);
 
   const opcionesFiltrosPaso = useMemo(() => {
     switch (pasoInfo.id) {
@@ -1417,24 +1439,6 @@ export default function Cotizador() {
             );
           })}
         </ol>
-        <div className="flex flex-col gap-2 border-t border-[var(--color-border)] pt-3 sm:flex-row sm:items-center sm:justify-between">
-          <button
-            type="button"
-            onClick={irAnterior}
-            disabled={pasoActual === 0}
-            className="min-h-11 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-4 text-sm font-medium disabled:opacity-50"
-          >
-            Anterior
-          </button>
-          <button
-            type="button"
-            onClick={irSiguiente}
-            disabled={pasoActual === PASOS.length - 1}
-            className="min-h-11 rounded-[var(--radius-sm)] bg-[var(--color-accent)] px-4 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            Siguiente
-          </button>
-        </div>
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
@@ -1444,24 +1448,95 @@ export default function Cotizador() {
               <h2 className="mt-1 text-2xl font-semibold text-[var(--color-text)]">{pasoInfo.nombre}</h2>
             </div>
 
-            <div className="inline-flex rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-1">
-              <button
-                type="button"
-                onClick={() => setFiltro('disponibles')}
-                aria-pressed={filtro === 'disponibles'}
-                className={`min-h-11 rounded-[var(--radius-sm)] px-3 text-sm font-medium ${filtro === 'disponibles' ? 'bg-[var(--color-surface)] shadow-hig1' : 'text-[var(--color-text-muted)]'}`}
+            {/* Switch_Disponibilidad — centrado horizontalmente dentro del Paso_Actual (Req. 2.4, 2.5, 2.6) */}
+            <button
+              type="button"
+              role="switch"
+              aria-checked={soloDisponibles}
+              aria-label="Filtrar por disponibilidad"
+              onClick={() => setSoloDisponibles((prev) => !prev)}
+              className={[
+                'inline-flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-[var(--radius-md)]',
+                'border px-4 text-sm font-medium',
+                'transition-colors duration-higNormal ease-hig',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
+                'active:scale-[0.97]',
+                soloDisponibles
+                  ? 'border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]'
+                  : 'border-[var(--color-border)] bg-[var(--color-surface-soft)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text)]',
+              ].join(' ')}
+            >
+              {/* Track visual del switch */}
+              <span
+                aria-hidden="true"
+                className={[
+                  'relative inline-flex h-5 w-9 shrink-0 items-center rounded-full',
+                  'transition-colors duration-higNormal',
+                  soloDisponibles ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]',
+                ].join(' ')}
               >
-                Disponibles
-              </button>
-              <button
-                type="button"
-                onClick={() => setFiltro('todos')}
-                aria-pressed={filtro === 'todos'}
-                className={`min-h-11 rounded-[var(--radius-sm)] px-3 text-sm font-medium ${filtro === 'todos' ? 'bg-[var(--color-surface)] shadow-hig1' : 'text-[var(--color-text-muted)]'}`}
-              >
-                Todos
-              </button>
-            </div>
+                <span
+                  className={[
+                    'inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm',
+                    'transition-transform duration-higNormal',
+                    soloDisponibles ? 'translate-x-4' : 'translate-x-1',
+                  ].join(' ')}
+                />
+              </span>
+              {soloDisponibles ? 'Disponibles' : 'Todos'}
+            </button>
+          </div>
+
+          {/* Botones de navegación — parte superior del área de contenido del Paso_Actual (Req. 2.7, 2.8, 2.9, 2.10) */}
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={irAnterior}
+              disabled={pasoActual === 0}
+              aria-label="Paso anterior"
+              className={[
+                'inline-flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-[var(--radius-sm)]',
+                'border border-[var(--color-border)] px-4 text-sm font-medium',
+                'text-[var(--color-text-muted)]',
+                'transition-colors duration-higNormal ease-hig',
+                'hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text)]',
+                'active:bg-[var(--color-surface-soft)]',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
+                'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent',
+              ].join(' ')}
+            >
+              <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              Anterior
+            </button>
+            <p className="text-center text-sm text-[var(--color-text-muted)]">
+              {pasoInfo.id === 'gpu' && procesadorTieneGraficosIntegrados && !configuracionSeleccionada.gpu
+                ? 'Paso opcional'
+                : pasoCompleto(pasoActual)
+                  ? 'Paso completado.'
+                  : 'Selecciona una opcion.'}
+            </p>
+            <button
+              type="button"
+              onClick={irSiguiente}
+              disabled={pasoActual === PASOS.length - 1}
+              aria-label="Paso siguiente"
+              className={[
+                'inline-flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-[var(--radius-sm)]',
+                'bg-[var(--color-accent)] px-4 text-sm font-semibold text-white',
+                'transition-colors duration-higNormal ease-hig',
+                'hover:bg-[color:rgba(0,122,255,0.85)]',
+                'active:bg-[color:rgba(0,122,255,0.75)]',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
+                'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[var(--color-accent)]',
+              ].join(' ')}
+            >
+              Siguiente
+              <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
           </div>
 
           {seleccionActual && pasoInfo.id !== 'ram' ? (
@@ -1515,7 +1590,7 @@ export default function Cotizador() {
                   title="Sin productos para este paso"
                   description="Prueba con el filtro Todos o revisa el stock disponible."
                   actionLabel="Ver todos"
-                  onAction={() => setFiltro('todos')}
+                  onAction={() => setSoloDisponibles(false)}
                 />
               ) : (
                 <div className="space-y-5">
@@ -1636,17 +1711,6 @@ export default function Cotizador() {
           </>
           )}
 
-          <footer className="flex flex-col gap-3 border-t border-[var(--color-border)] pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <button type="button" onClick={irAnterior} disabled={pasoActual === 0} className="min-h-11 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-4 text-sm font-medium disabled:opacity-50">Anterior</button>
-            <p className="text-sm text-[var(--color-text-muted)]">
-              {pasoInfo.id === 'gpu' && procesadorTieneGraficosIntegrados && !configuracionSeleccionada.gpu
-                ? 'Paso opcional: puedes continuar sin Tarjeta grafica.'
-                : pasoCompleto(pasoActual)
-                  ? 'Paso completado.'
-                  : 'Selecciona una opcion para continuar.'}
-            </p>
-            <button type="button" onClick={irSiguiente} disabled={pasoActual === PASOS.length - 1} className="min-h-11 rounded-[var(--radius-sm)] bg-[var(--color-accent)] px-4 text-sm font-semibold text-white disabled:opacity-50">Siguiente</button>
-          </footer>
         </section>
 
         <div className="relative">
@@ -1900,6 +1964,17 @@ export default function Cotizador() {
           </section>
           )}
 
+          {/* Balance final — solo para admin (Req. 3.1, 3.8) */}
+          {esAdmin && (
+            <BalanceFinal
+              productosSeleccionados={productosParaBalance}
+              extras={extras}
+              margenGanancia={margenGanancia}
+              monedaVista={monedaVista}
+              formatearMontoSegunMonedaVista={formatearMontoSegunMonedaVista}
+            />
+          )}
+
           <section className="surface-elevated space-y-4 p-5">
             {esInvitado ? (
               <div className="space-y-3">
@@ -1945,18 +2020,20 @@ export default function Cotizador() {
                 })}`}
               >
                 <div className="space-y-2">
+                  {/* Visibles para todos los roles: código de ticket (en description) y descarga PDF */}
                   <button type="button" onClick={copiarTicket} className="min-h-11 w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 text-sm font-medium">Copiar codigo</button>
                   <button type="button" onClick={descargarPdf} className="min-h-11 w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 text-sm font-medium">Descargar PDF</button>
-                  {autenticado ? (
+                  {/* Solo admin: Ver historial y Validar ticket (Req. 4.1–4.5) */}
+                  {esAdmin && (
                     <button type="button" onClick={() => navigate('/historial')} className="min-h-11 w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 text-sm font-medium">
                       Ver historial
                     </button>
-                  ) : (
-                    <button type="button" disabled aria-disabled="true" className="min-h-11 w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 text-sm font-medium text-[var(--color-text-muted)] opacity-70">
-                      Historial requiere sesión
+                  )}
+                  {esAdmin && (
+                    <button type="button" onClick={() => navigate('/validar')} className="min-h-11 w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 text-sm font-medium">
+                      Validar ticket
                     </button>
                   )}
-                  <button type="button" onClick={() => navigate(autenticado ? '/validar' : '/login')} className="min-h-11 w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 text-sm font-medium">{autenticado ? 'Validar ticket' : 'Iniciar sesion para validar'}</button>
                   <button type="button" onClick={nuevaCotizacion} className="min-h-11 w-full rounded-[var(--radius-sm)] bg-[var(--color-accent)] px-3 text-sm font-semibold text-white">Nueva cotizacion</button>
                 </div>
               </SuccessState>

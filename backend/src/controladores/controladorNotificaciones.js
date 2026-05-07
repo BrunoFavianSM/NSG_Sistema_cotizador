@@ -5,7 +5,7 @@
  * Las notificaciones se almacenan en `notificaciones_usuario` y se consultan
  * mediante polling desde el frontend cada 30 segundos.
  *
- * Requisitos: 5.2, 5.5
+ * Requisitos: 5.2, 5.5, 6.1, 6.11
  */
 
 const { ejecutarQuery } = require('../configuracion/baseDatos');
@@ -109,4 +109,106 @@ async function marcarLeida(req, res) {
   }
 }
 
-module.exports = { obtenerPendientes, marcarLeida };
+/**
+ * GET /api/notificaciones/todas
+ *
+ * Retorna todas las notificaciones (leídas y no leídas) del usuario autenticado,
+ * ordenadas por fecha_creacion descendente, con paginación opcional.
+ *
+ * Parámetros de query:
+ *   - limit  (número, default 50, máx 100): cantidad de registros a retornar
+ *   - offset (número, default 0): desplazamiento para paginación
+ *
+ * Requisitos: 6.1
+ */
+async function obtenerTodas(req, res) {
+  try {
+    const idUsuario = req.usuario.id;
+
+    // Parsear y validar parámetros de paginación
+    const limitRaw = req.query.limit !== undefined ? Number(req.query.limit) : 50;
+    const offsetRaw = req.query.offset !== undefined ? Number(req.query.offset) : 0;
+
+    if (!Number.isInteger(limitRaw) || limitRaw < 1 || limitRaw > 100) {
+      return res.status(400).json({
+        error: 'Parámetro limit inválido',
+        mensaje: 'El parámetro limit debe ser un entero entre 1 y 100.',
+        codigo: 'PARAMETROS_INVALIDOS',
+      });
+    }
+
+    if (!Number.isInteger(offsetRaw) || offsetRaw < 0) {
+      return res.status(400).json({
+        error: 'Parámetro offset inválido',
+        mensaje: 'El parámetro offset debe ser un entero mayor o igual a 0.',
+        codigo: 'PARAMETROS_INVALIDOS',
+      });
+    }
+
+    const resultado = await ejecutarQuery(
+      `SELECT
+         id,
+         tipo,
+         titulo,
+         mensaje,
+         leida,
+         fecha_creacion,
+         datos_extra
+       FROM notificaciones_usuario
+       WHERE id_usuario = $1
+       ORDER BY fecha_creacion DESC
+       LIMIT $2 OFFSET $3`,
+      [idUsuario, limitRaw, offsetRaw]
+    );
+
+    return res.json({
+      exito: true,
+      total: resultado.rows.length,
+      notificaciones: resultado.rows,
+    });
+  } catch (error) {
+    console.error('[controladorNotificaciones] Error al obtener todas las notificaciones:', error);
+    return res.status(500).json({
+      error: 'Error al obtener notificaciones',
+      mensaje: 'No se pudieron recuperar las notificaciones.',
+      codigo: 'ERROR_OBTENER_NOTIFICACIONES',
+    });
+  }
+}
+
+/**
+ * PATCH /api/notificaciones/leer-todas
+ *
+ * Marca como leídas todas las notificaciones no leídas del usuario autenticado.
+ * Retorna la cantidad de registros actualizados.
+ *
+ * Requisitos: 6.11
+ */
+async function marcarTodasLeidas(req, res) {
+  try {
+    const idUsuario = req.usuario.id;
+
+    const resultado = await ejecutarQuery(
+      `UPDATE notificaciones_usuario
+       SET leida = true
+       WHERE id_usuario = $1
+         AND leida = false
+       RETURNING id`,
+      [idUsuario]
+    );
+
+    return res.json({
+      exito: true,
+      actualizadas: resultado.rows.length,
+    });
+  } catch (error) {
+    console.error('[controladorNotificaciones] Error al marcar todas las notificaciones como leídas:', error);
+    return res.status(500).json({
+      error: 'Error al actualizar notificaciones',
+      mensaje: 'No se pudieron marcar las notificaciones como leídas.',
+      codigo: 'ERROR_MARCAR_TODAS_LEIDAS',
+    });
+  }
+}
+
+module.exports = { obtenerPendientes, marcarLeida, obtenerTodas, marcarTodasLeidas };
