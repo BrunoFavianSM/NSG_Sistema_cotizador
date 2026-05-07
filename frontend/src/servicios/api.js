@@ -888,6 +888,71 @@ export const marcarNotificacionLeida = async (idNotificacion) => {
   }
 };
 
+/**
+ * Obtiene todas las notificaciones (leídas y no leídas) del usuario autenticado,
+ * ordenadas por fecha_creacion descendente, con paginación opcional.
+ * Requiere token JWT de usuario.
+ * Valida Requisitos: 6.1, 6.10
+ *
+ * @param {{ limit?: number, offset?: number }} opciones - Parámetros de paginación
+ * @returns {Promise<{ exito: boolean, total: number, notificaciones: Array }>}
+ */
+export const obtenerTodasNotificaciones = async ({ limit = 50, offset = 0 } = {}) => {
+  try {
+    const response = await api.get('/notificaciones/todas', { params: { limit, offset } });
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudieron obtener las notificaciones.';
+    throw { mensaje, codigo: error?.codigo || error?.response?.data?.codigo };
+  }
+};
+
+/**
+ * Marca todas las notificaciones no leídas del usuario autenticado como leídas.
+ * Requiere token JWT de usuario.
+ * Valida Requisitos: 6.11
+ *
+ * @returns {Promise<{ exito: boolean, actualizadas: number }>}
+ */
+export const marcarTodasNotificacionesLeidas = async () => {
+  try {
+    const response = await api.patch('/notificaciones/leer-todas');
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudieron marcar las notificaciones como leídas.';
+    throw { mensaje, codigo: error?.codigo || error?.response?.data?.codigo };
+  }
+};
+
+/**
+ * Obtiene las cotizaciones propias del usuario autenticado.
+ * Llama a GET /api/cotizaciones/propias con el token de autenticación.
+ * El token se adjunta automáticamente por el interceptor de Axios.
+ * Retorna la misma estructura que consultarHistorialCliente para compatibilidad.
+ * Requiere token JWT de usuario.
+ * Valida Requisitos: 5.2
+ *
+ * @returns {Promise<{ exito: boolean, cliente: { nombre: string, email: string }, cotizaciones: Array }>}
+ */
+export const obtenerCotizacionesPropias = async () => {
+  try {
+    const response = await api.get('/cotizaciones/propias');
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudieron obtener las cotizaciones propias.';
+    throw { mensaje, codigo: error?.codigo || error?.response?.data?.codigo };
+  }
+};
+
 // ============================================
 // CONFIGURACIONES COMPARTIDAS (Req. 10)
 // ============================================

@@ -54,6 +54,7 @@ describe('DiagramaCompatibilidad', () => {
         incompatibilidades={[]}
       />
     );
+    // La section raíz tiene aria-label con "diagrama de compatibilidad"
     expect(screen.getByRole('region', { name: /diagrama de compatibilidad/i })).toBeInTheDocument();
   });
 
@@ -111,7 +112,7 @@ describe('DiagramaCompatibilidad', () => {
       />
     );
     const svg = screen.getByRole('img');
-    expect(svg.getAttribute('aria-label')).toMatch(/incompatibilidades detectadas/i);
+    expect(svg.getAttribute('aria-label')).toMatch(/incompatibilidades/i);
   });
 
   // ── Req. 7.5 — Indicador de estado compatible ────────────────────────────
@@ -123,9 +124,7 @@ describe('DiagramaCompatibilidad', () => {
         incompatibilidades={[]}
       />
     );
-    // El badge del encabezado tiene clase de color verde
     const badges = screen.getAllByText('Compatible');
-    // Al menos uno debe ser el badge del encabezado (con clase de color verde)
     const badgeEncabezado = badges.find(
       (el) => el.closest('span') && el.closest('span').classList.contains('rounded-full')
     );
@@ -141,7 +140,6 @@ describe('DiagramaCompatibilidad', () => {
         incompatibilidades={['Socket incompatible']}
       />
     );
-    // El badge del encabezado tiene clase de color rojo
     const badges = screen.getAllByText('Incompatible');
     const badgeEncabezado = badges.find(
       (el) => el.closest('span') && el.closest('span').classList.contains('rounded-full')
@@ -156,9 +154,7 @@ describe('DiagramaCompatibilidad', () => {
         incompatibilidades={['Socket incompatible']}
       />
     );
-    // El badge del encabezado debe ser "Incompatible", no "Compatible"
     const badgesCompatible = screen.queryAllByText('Compatible');
-    // Solo debe aparecer en la leyenda (sin clase rounded-full), no en el encabezado
     const badgeEncabezado = badgesCompatible.find(
       (el) => el.closest('span') && el.closest('span').classList.contains('rounded-full')
     );
@@ -174,7 +170,6 @@ describe('DiagramaCompatibilidad', () => {
         incompatibilidades={[]}
       />
     );
-    // La leyenda siempre muestra los 3 estados
     expect(screen.getAllByText('Compatible').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Incompatible').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Sin seleccionar')).toBeInTheDocument();
@@ -194,37 +189,35 @@ describe('DiagramaCompatibilidad', () => {
 
   // ── Colores de líneas (verificados via atributos SVG) ────────────────────
 
-  it('las líneas entre componentes compatibles tienen stroke verde (#34C759) (Req. 7.5)', () => {
+  it('las líneas entre componentes compatibles usan gradiente verde (Req. 7.5)', () => {
     const { container } = render(
       <DiagramaCompatibilidad
         configuracionSeleccionada={configCompleta}
         incompatibilidades={[]}
       />
     );
-    // Buscar el SVG principal (el que tiene role="img" y viewBox)
     const svgPrincipal = container.querySelector('svg[role="img"]');
+    // Las líneas activas usan url(#dc-grad-ok) o stroke directo verde
     const lineas = svgPrincipal.querySelectorAll('line');
-    const lineasVerdes = Array.from(lineas).filter(
-      (l) => l.getAttribute('stroke') === '#34C759'
+    const lineasActivas = Array.from(lineas).filter(
+      (l) => l.getAttribute('stroke') === 'url(#dc-grad-ok)' || l.getAttribute('stroke') === '#34C759'
     );
-    // Con configuración completa y sin incompatibilidades, debe haber líneas verdes
-    expect(lineasVerdes.length).toBeGreaterThan(0);
+    expect(lineasActivas.length).toBeGreaterThan(0);
   });
 
-  it('las líneas con incompatibilidad de socket tienen stroke rojo (#FF453A) (Req. 7.4)', () => {
+  it('las líneas con incompatibilidad de socket usan gradiente rojo (Req. 7.4)', () => {
     const { container } = render(
       <DiagramaCompatibilidad
         configuracionSeleccionada={configCompleta}
         incompatibilidades={['socket incompatible']}
       />
     );
-    // Buscar el SVG principal
     const svgPrincipal = container.querySelector('svg[role="img"]');
     const lineas = svgPrincipal.querySelectorAll('line');
-    const lineasRojas = Array.from(lineas).filter(
-      (l) => l.getAttribute('stroke') === '#FF453A'
+    const lineasError = Array.from(lineas).filter(
+      (l) => l.getAttribute('stroke') === 'url(#dc-grad-err)' || l.getAttribute('stroke') === '#FF453A'
     );
-    expect(lineasRojas.length).toBeGreaterThan(0);
+    expect(lineasError.length).toBeGreaterThan(0);
   });
 
   // ── Responsividad ────────────────────────────────────────────────────────
@@ -236,9 +229,13 @@ describe('DiagramaCompatibilidad', () => {
         incompatibilidades={[]}
       />
     );
-    // Buscar el SVG principal (el que tiene role="img")
     const svgPrincipal = container.querySelector('svg[role="img"]');
-    expect(svgPrincipal).toHaveClass('w-full');
+    expect(svgPrincipal).toBeTruthy();
+    // El SVG es responsivo: tiene clase w-full o width="100%" via style
+    const clases = svgPrincipal.className?.baseVal || svgPrincipal.getAttribute('class') || '';
+    const estiloWidth = svgPrincipal.style?.width || '';
+    const esResponsivo = clases.includes('w-full') || estiloWidth === '100%';
+    expect(esResponsivo).toBe(true);
   });
 
   it('el SVG tiene viewBox definido para escalar correctamente', () => {

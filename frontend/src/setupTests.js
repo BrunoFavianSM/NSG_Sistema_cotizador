@@ -15,15 +15,21 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// Mock window.scrollTo (no implementado en jsdom)
+window.scrollTo = jest.fn();
+
 // Mock process.env para compatibilidad con babel-plugin-transform-vite-meta-env
 process.env.VITE_API_URL = 'http://localhost:3000/api';
 
 // Mock framer-motion: renderiza elementos HTML planos sin animaciones
 jest.mock('framer-motion', () => {
   const React = require('react');
+
+  // Usar forwardRef para evitar warnings de React sobre refs en componentes funcionales
   const passthrough = (tag) =>
-    // eslint-disable-next-line react/display-name
-    ({ children, ...props }) => React.createElement(tag, props, children);
+    React.forwardRef(({ children, variants, initial, animate, exit, whileHover, whileTap, whileFocus, ...props }, ref) =>
+      React.createElement(tag, { ...props, ref }, children)
+    );
 
   return {
     AnimatePresence: ({ children }) => React.createElement(React.Fragment, null, children),

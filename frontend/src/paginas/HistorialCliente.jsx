@@ -14,6 +14,7 @@ import { useAppContext } from '../contexto/AppContext';
 import {
   consultarHistorialCliente,
   listarClientesRegistrados,
+  obtenerCotizacionesPropias,
   obtenerUrlPdfCotizacion,
   obtenerUrlPdfTecnico,
   exportarExcelCotizacion
@@ -63,7 +64,7 @@ function StatCard({ label, value, helper }) {
 export default function HistorialCliente() {
   const toast = useToast();
   const navigate = useNavigate();
-  const { monedaVista, formatearMontoSegunMonedaVista } = useAppContext();
+  const { monedaVista, formatearMontoSegunMonedaVista, esAdmin, esUsuario } = useAppContext();
 
   const [email, setEmail] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
@@ -73,11 +74,39 @@ export default function HistorialCliente() {
   const [cliente, setCliente] = useState(null);
   const [cotizaciones, setCotizaciones] = useState([]);
 
-  // Lista de clientes registrados
+  // Lista de clientes registrados (solo admin)
   const [clientesRegistrados, setClientesRegistrados] = useState([]);
-  const [cargandoClientes, setCargandoClientes] = useState(true);
+  const [cargandoClientes, setCargandoClientes] = useState(false);
 
+  // ─── Carga automática para rol usuario ───────────────────────────────────────
   useEffect(() => {
+    if (!esUsuario) return;
+
+    setBuscando(true);
+    setError('');
+
+    obtenerCotizacionesPropias()
+      .then((respuesta) => {
+        if (!respuesta?.exito) {
+          setError(respuesta?.mensaje || 'No se pudo cargar tu historial.');
+          return;
+        }
+        const lista = Array.isArray(respuesta?.cotizaciones) ? respuesta.cotizaciones : [];
+        setCliente(respuesta?.cliente || null);
+        setCotizaciones(lista);
+        setHistorialCargado(true);
+        setFiltroEstado('todos');
+      })
+      .catch((err) => {
+        setError(err?.mensaje || 'No se pudo cargar tu historial. Intenta nuevamente.');
+      })
+      .finally(() => setBuscando(false));
+  }, [esUsuario]);
+
+  // ─── Carga de clientes registrados (solo admin) ───────────────────────────────
+  useEffect(() => {
+    if (!esAdmin) return;
+
     setCargandoClientes(true);
     listarClientesRegistrados()
       .then((res) => {
@@ -87,7 +116,7 @@ export default function HistorialCliente() {
         // Silencioso: la lista es un complemento, no bloquea el flujo
       })
       .finally(() => setCargandoClientes(false));
-  }, []);
+  }, [esAdmin]);
 
   const cotizacionesFiltradas = useMemo(() => {
     if (filtroEstado === 'todos') return cotizaciones;
@@ -171,6 +200,28 @@ export default function HistorialCliente() {
     } finally {
       setBuscando(false);
     }
+  };
+
+  // Reintentar carga de cotizaciones propias (rol usuario)
+  const reintentarPropias = () => {
+    setBuscando(true);
+    setError('');
+    obtenerCotizacionesPropias()
+      .then((respuesta) => {
+        if (!respuesta?.exito) {
+          setError(respuesta?.mensaje || 'No se pudo cargar tu historial.');
+          return;
+        }
+        const lista = Array.isArray(respuesta?.cotizaciones) ? respuesta.cotizaciones : [];
+        setCliente(respuesta?.cliente || null);
+        setCotizaciones(lista);
+        setHistorialCargado(true);
+        setFiltroEstado('todos');
+      })
+      .catch((err) => {
+        setError(err?.mensaje || 'No se pudo cargar tu historial. Intenta nuevamente.');
+      })
+      .finally(() => setBuscando(false));
   };
 
   const buscarHistorial = async (event) => {
@@ -304,12 +355,15 @@ export default function HistorialCliente() {
       align: 'right',
       render: (row) => (
         <div className="flex justify-end gap-2">
+          {/* Botones "Validar", "Técnico" y "Excel" deshabilitados para rol usuario — Req. 5.5, 5.6 */}
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(`/validar?ticket=${row.codigo_ticket}`)}
+            onClick={esUsuario ? undefined : () => navigate(`/validar?ticket=${row.codigo_ticket}`)}
+            disabled={esUsuario}
+            aria-disabled={esUsuario ? 'true' : undefined}
             aria-label={`Validar ticket ${row.codigo_ticket}`}
-            title="Ir al validador con este ticket"
+            title={esUsuario ? 'No disponible para tu rol' : 'Ir al validador con este ticket'}
           >
             Validar
           </Button>
@@ -324,7 +378,9 @@ export default function HistorialCliente() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => descargarPDF(row.codigo_ticket, 'tecnico')}
+            onClick={esUsuario ? undefined : () => descargarPDF(row.codigo_ticket, 'tecnico')}
+            disabled={esUsuario}
+            aria-disabled={esUsuario ? 'true' : undefined}
             aria-label={`Descargar PDF tecnico de ${row.codigo_ticket}`}
           >
             Tecnico
@@ -332,9 +388,11 @@ export default function HistorialCliente() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => descargarExcel(row.codigo_ticket)}
+            onClick={esUsuario ? undefined : () => descargarExcel(row.codigo_ticket)}
+            disabled={esUsuario}
+            aria-disabled={esUsuario ? 'true' : undefined}
             aria-label={`Exportar Excel de cotización ${row.codigo_ticket}`}
-            title="Descargar cotización en formato Excel"
+            title={esUsuario ? 'No disponible para tu rol' : 'Descargar cotización en formato Excel'}
           >
             Excel
           </Button>
@@ -346,68 +404,77 @@ export default function HistorialCliente() {
   return (
     <div className="space-y-6">
       <header className="surface-elevated p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Cliente</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">
+          {esUsuario ? 'Mi cuenta' : 'Cliente'}
+        </p>
         <h1 className="mt-1 text-2xl font-semibold text-[var(--color-text)] sm:text-3xl">Historial de Cotizaciones</h1>
         <p className="mt-2 max-w-2xl text-sm text-[var(--color-text-muted)]">
-          Consulta tickets anteriores con un flujo simple, accesible y listo para descargar en PDF.
+          {esUsuario
+            ? 'Consulta tus cotizaciones anteriores listas para descargar en PDF.'
+            : 'Consulta tickets anteriores con un flujo simple, accesible y listo para descargar en PDF.'}
         </p>
       </header>
 
-      <motion.section
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-        className="surface-elevated p-6"
-        aria-labelledby="historial-busqueda-title"
-      >
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 id="historial-busqueda-title" className="text-lg font-semibold text-[var(--color-text)]">Buscar por correo</h2>
-          {historialCargado ? (
-            <Button variant="ghost" size="sm" onClick={limpiarBusqueda}>
-              Nueva busqueda
+      {/* ── Sección de búsqueda por email: solo visible para admin (Req. 5.3, 5.4) ── */}
+      {esAdmin ? (
+        <motion.section
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="surface-elevated p-6"
+          aria-labelledby="historial-busqueda-title"
+        >
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 id="historial-busqueda-title" className="text-lg font-semibold text-[var(--color-text)]">Buscar por correo</h2>
+            {historialCargado ? (
+              <Button variant="ghost" size="sm" onClick={limpiarBusqueda}>
+                Nueva busqueda
+              </Button>
+            ) : null}
+          </div>
+
+          <form onSubmit={buscarHistorial} className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+            <InputField
+              id="historial-email"
+              type="email"
+              label="Correo del cliente"
+              required
+              value={email}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                setError('');
+              }}
+              placeholder="cliente@correo.com"
+              error={error}
+              hint="Usa el mismo correo con el que se genero la cotizacion."
+            />
+
+            <Button type="submit" loading={buscando} className="sm:min-w-[12rem]">
+              Buscar historial
             </Button>
-          ) : null}
-        </div>
+          </form>
+        </motion.section>
+      ) : null}
 
-        <form onSubmit={buscarHistorial} className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-          <InputField
-            id="historial-email"
-            type="email"
-            label="Correo del cliente"
-            required
-            value={email}
-            onChange={(event) => {
-              setEmail(event.target.value);
-              setError('');
-            }}
-            placeholder="cliente@correo.com"
-            error={error}
-            hint="Usa el mismo correo con el que se genero la cotizacion."
-          />
-
-          <Button type="submit" loading={buscando} className="sm:min-w-[12rem]">
-            Buscar historial
-          </Button>
-        </form>
-      </motion.section>
-
+      {/* ── Estado de carga ── */}
       {buscando ? (
         <section className="surface-card p-10">
-          <LoadingSpinner label="Buscando historial..." />
+          <LoadingSpinner label={esUsuario ? 'Cargando tus cotizaciones...' : 'Buscando historial...'} />
         </section>
       ) : null}
 
+      {/* ── Estado de error con botón Reintentar ── */}
       {!buscando && error && !historialCargado ? (
         <ErrorState
           title="No se pudo cargar el historial"
           description={error}
-          onRetry={email.trim() ? consultarHistorial : null}
+          onRetry={esUsuario ? reintentarPropias : (email.trim() ? consultarHistorial : null)}
           retryLabel="Reintentar"
         />
       ) : null}
 
-      {/* Lista de clientes registrados — visible solo cuando no hay historial cargado */}
-      {!buscando && !historialCargado && !error ? (
+      {/* ── Lista de clientes registrados: solo admin, cuando no hay historial cargado ── */}
+      {esAdmin && !buscando && !historialCargado && !error ? (
         <motion.section
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -474,6 +541,7 @@ export default function HistorialCliente() {
         </motion.section>
       ) : null}
 
+      {/* ── Historial cargado ── */}
       {!buscando && historialCargado ? (
         <>
           <section className="grid gap-4 md:grid-cols-3">
@@ -491,11 +559,21 @@ export default function HistorialCliente() {
             />
           </section>
 
+          {/* Estado vacío con CTA al cotizador para rol usuario (Req. 5.10) */}
           {cotizaciones.length === 0 ? (
-            <EmptyState
-              title="Sin cotizaciones registradas"
-              description="Este correo aun no tiene tickets emitidos en el sistema."
-            />
+            esUsuario ? (
+              <EmptyState
+                title="Aún no tienes cotizaciones"
+                description="Cuando generes una cotización aparecerá aquí con todos sus detalles."
+                actionLabel="Ir al cotizador"
+                onAction={() => navigate('/cotizador')}
+              />
+            ) : (
+              <EmptyState
+                title="Sin cotizaciones registradas"
+                description="Este correo aun no tiene tickets emitidos en el sistema."
+              />
+            )
           ) : (
             <DataTable
               caption="Tabla de cotizaciones historicas del cliente"

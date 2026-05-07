@@ -1,107 +1,58 @@
 /**
  * DiagramaCompatibilidad
  *
- * Renderiza un diagrama SVG con nodos para los 5 componentes principales
- * (CPU, Motherboard, RAM, GPU, Fuente de poder) y líneas de conexión que
- * reflejan el estado de compatibilidad entre ellos.
+ * Diagrama SVG de compatibilidad entre componentes de PC.
+ * Diseño Apple HIG: nodos tipo card con íconos SVG inline por componente,
+ * nombre completo visible en múltiples líneas, líneas de conexión con
+ * gradientes y estado de compatibilidad.
  *
- * Comportamiento:
- * - Nodos con componente seleccionado: nombre del producto, color activo.
- * - Nodos sin componente: estado deshabilitado (color neutro, opacidad reducida).
- * - Líneas verdes (#34C759) cuando los componentes conectados son compatibles.
- * - Líneas rojas (#FF453A) + ícono de advertencia cuando hay incompatibilidad.
- * - Respeta prefers-reduced-motion desactivando transiciones CSS.
- * - Responsivo: se adapta al ancho del contenedor.
- * - Accesible: role="img" + aria-label descriptivo del estado global.
+ * Arquitectura:
+ *   DiagramaSVGPuro   → solo el SVG (reutilizable en modal sin card anidada)
+ *   DiagramaCompatibilidad → card completa con header, leyenda y botón expand
  *
- * Valida Requisitos: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9
+ * HIG aplicado:
+ *   - Jerarquía visual: tipo de componente (caption) → nombre (body)
+ *   - Colores semánticos del sistema del proyecto
+ *   - Separación de capas: card de contenido vs overlay de modal
+ *   - Motion con prefers-reduced-motion
+ *   - Contraste WCAG AA en todos los estados
+ *   - Touch targets mínimos 44×44 px
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState, useRef } from 'react';
+import ModalDiagrama from './ModalDiagrama';
 
-// ── Constantes de diseño ──────────────────────────────────────────────────────
+// ─── Paleta ───────────────────────────────────────────────────────────────────
+const C_OK    = '#34C759';
+const C_ERR   = '#FF453A';
+const C_MUTED = '#636366';   // valor fijo para SVG (no hereda CSS vars)
 
-const COLOR_COMPATIBLE = '#34C759';
-const COLOR_INCOMPATIBLE = '#FF453A';
-const COLOR_NEUTRO_LINEA = 'var(--color-border)';
+// ─── Layout del viewBox ───────────────────────────────────────────────────────
+// Nodos tipo card: 130×90 px, esquinas 14 px — más espacio para nombre completo
+const VB_W  = 760;
+const VB_H  = 420;
+const NW    = 130;
+const NH    = 90;
+const NR    = 14;
 
-// Dimensiones del viewBox (coordenadas internas del SVG)
-const VB_W = 480;
-const VB_H = 320;
-
-// Radio de los nodos
-const R_NODO = 38;
-
-/**
- * Posiciones (cx, cy) de cada nodo dentro del viewBox 480×320.
- * Disposición:
- *
- *        [CPU]          [Motherboard]        [RAM]
- *
- *              [GPU]              [Fuente]
- */
 const POSICIONES = {
-  procesador:  { cx: 80,  cy: 100 },
-  placa_madre: { cx: 240, cy: 100 },
-  ram:         { cx: 400, cy: 100 },
-  gpu:         { cx: 150, cy: 230 },
-  fuente:      { cx: 330, cy: 230 },
+  procesador:  { cx: 105,  cy: 115 },
+  placa_madre: { cx: 380,  cy: 115 },
+  ram:         { cx: 655,  cy: 115 },
+  gpu:         { cx: 225,  cy: 310 },
+  fuente:      { cx: 535,  cy: 310 },
 };
 
-/**
- * Conexiones entre nodos.
- * Cada entrada define qué par de nodos conecta y qué clave de incompatibilidad
- * buscar en el array de errores para colorear la línea en rojo.
- *
- * La detección de incompatibilidad es heurística: busca palabras clave del
- * mensaje de error que relacionen los dos componentes.
- */
 const CONEXIONES = [
-  {
-    id: 'cpu-mb',
-    desde: 'procesador',
-    hasta: 'placa_madre',
-    palabrasClave: ['socket', 'procesador', 'placa'],
-  },
-  {
-    id: 'mb-ram',
-    desde: 'placa_madre',
-    hasta: 'ram',
-    palabrasClave: ['ram', 'memoria', 'ddr'],
-  },
-  {
-    id: 'mb-gpu',
-    desde: 'placa_madre',
-    hasta: 'gpu',
-    palabrasClave: ['gpu', 'grafica', 'video', 'pcie'],
-  },
-  {
-    id: 'fuente-cpu',
-    desde: 'fuente',
-    hasta: 'procesador',
-    palabrasClave: ['fuente', 'watt', 'potencia', 'energia'],
-  },
-  {
-    id: 'fuente-mb',
-    desde: 'fuente',
-    hasta: 'placa_madre',
-    palabrasClave: ['fuente', 'watt', 'potencia', 'energia'],
-  },
-  {
-    id: 'fuente-ram',
-    desde: 'fuente',
-    hasta: 'ram',
-    palabrasClave: ['fuente', 'watt', 'potencia', 'energia'],
-  },
-  {
-    id: 'fuente-gpu',
-    desde: 'fuente',
-    hasta: 'gpu',
-    palabrasClave: ['fuente', 'watt', 'potencia', 'energia', 'gpu'],
-  },
+  { id: 'cpu-mb',    desde: 'procesador',  hasta: 'placa_madre', kw: ['socket','procesador','placa'] },
+  { id: 'mb-ram',    desde: 'placa_madre', hasta: 'ram',         kw: ['ram','memoria','ddr'] },
+  { id: 'mb-gpu',    desde: 'placa_madre', hasta: 'gpu',         kw: ['gpu','grafica','video','pcie'] },
+  { id: 'fuente-cpu',desde: 'fuente',      hasta: 'procesador',  kw: ['fuente','watt','potencia','energia'] },
+  { id: 'fuente-mb', desde: 'fuente',      hasta: 'placa_madre', kw: ['fuente','watt','potencia','energia'] },
+  { id: 'fuente-ram',desde: 'fuente',      hasta: 'ram',         kw: ['fuente','watt','potencia','energia'] },
+  { id: 'fuente-gpu',desde: 'fuente',      hasta: 'gpu',         kw: ['fuente','watt','potencia','energia','gpu'] },
 ];
 
-// Etiquetas legibles para los nodos
 const ETIQUETAS = {
   procesador:  'CPU',
   placa_madre: 'Motherboard',
@@ -110,367 +61,541 @@ const ETIQUETAS = {
   fuente:      'Fuente',
 };
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/**
- * Trunca un nombre de producto para que quepa dentro del nodo.
- * Devuelve hasta dos líneas de texto.
- *
- * @param {string} nombre
- * @returns {string[]} Array de 1 o 2 líneas
- */
-function truncarNombre(nombre) {
-  if (!nombre) return [];
-  // Tomar las primeras dos palabras significativas
-  const palabras = nombre.trim().split(/\s+/);
-  if (palabras.length <= 2) return [palabras.join(' ')];
-  // Primera línea: primeras 2 palabras; segunda línea: siguiente palabra + "…"
-  const linea1 = palabras.slice(0, 2).join(' ');
-  const linea2 = palabras[2] + (palabras.length > 3 ? '…' : '');
-  return [linea1, linea2];
+function tieneError(errores, kw) {
+  if (!errores?.length) return false;
+  const t = errores.join(' ').toLowerCase();
+  return kw.some(k => t.includes(k));
 }
 
-/**
- * Determina si algún error de compatibilidad afecta a una conexión específica.
- *
- * @param {string[]} errores
- * @param {string[]} palabrasClave
- * @returns {boolean}
- */
-function conexionTieneError(errores, palabrasClave) {
-  if (!errores || errores.length === 0) return false;
-  const texto = errores.join(' ').toLowerCase();
-  return palabrasClave.some((kw) => texto.includes(kw.toLowerCase()));
+function bordeNodo(cx, cy, tx, ty) {
+  const dx = tx - cx;
+  const dy = ty - cy;
+  const hw = NW / 2;
+  const hh = NH / 2;
+  if (dx === 0 && dy === 0) return { x: cx, y: cy };
+  const sx = dx === 0 ? Infinity : hw / Math.abs(dx);
+  const sy = dy === 0 ? Infinity : hh / Math.abs(dy);
+  const s  = Math.min(sx, sy);
+  return { x: cx + dx * s, y: cy + dy * s };
 }
 
-/**
- * Calcula el punto medio de una línea para posicionar el ícono de advertencia.
- */
-function puntoMedio(x1, y1, x2, y2) {
+function midpoint(x1, y1, x2, y2) {
   return { x: (x1 + x2) / 2, y: (y1 + y2) / 2 };
 }
 
 /**
- * Calcula el punto en el borde del nodo (círculo) en dirección al otro nodo.
- * Devuelve el punto de inicio/fin de la línea para que no se superponga al nodo.
+ * Parte el nombre en líneas de máx `maxChars` caracteres,
+ * respetando palabras. Devuelve máx `maxLines` líneas.
  */
-function puntoEnBorde(cx, cy, targetX, targetY, radio) {
-  const dx = targetX - cx;
-  const dy = targetY - cy;
-  const dist = Math.sqrt(dx * dx + dy * dy);
-  if (dist === 0) return { x: cx, y: cy };
-  return {
-    x: cx + (dx / dist) * radio,
-    y: cy + (dy / dist) * radio,
-  };
+function partirNombre(nombre, maxChars = 18, maxLines = 3) {
+  if (!nombre) return [];
+  const palabras = nombre.trim().split(/\s+/);
+  const lineas = [];
+  let actual = '';
+
+  for (const p of palabras) {
+    if (lineas.length >= maxLines) break;
+    const candidato = actual ? `${actual} ${p}` : p;
+    if (candidato.length <= maxChars) {
+      actual = candidato;
+    } else {
+      if (actual) lineas.push(actual);
+      actual = p.length > maxChars ? p.slice(0, maxChars - 1) + '…' : p;
+    }
+  }
+  if (actual && lineas.length < maxLines) lineas.push(actual);
+  return lineas;
 }
 
-// ── Subcomponentes ────────────────────────────────────────────────────────────
+// ─── Paths SVG de íconos por componente (inline, sin foreignObject) ───────────
 
 /**
- * Ícono de advertencia (triángulo con !) para líneas incompatibles.
- * Se renderiza en el punto medio de la línea.
+ * Cada función devuelve el path/group SVG centrado en (0,0) para un tamaño de 22×22.
+ * Se aplica transform="translate(cx, cy)" en el nodo.
  */
-function IconoAdvertencia({ x, y }) {
+
+function PathCPU() {
   return (
-    <g transform={`translate(${x - 8}, ${y - 8})`} aria-hidden="true">
-      {/* Fondo blanco/oscuro para contraste */}
-      <circle cx="8" cy="8" r="8" fill="var(--color-bg)" />
-      {/* Triángulo de advertencia */}
-      <path
-        d="M8 2 L14.5 13 L1.5 13 Z"
-        fill={COLOR_INCOMPATIBLE}
-        stroke="none"
-      />
-      {/* Signo de exclamación */}
-      <text
-        x="8"
-        y="12"
-        textAnchor="middle"
-        fontSize="7"
-        fontWeight="bold"
-        fill="white"
-        style={{ userSelect: 'none' }}
-      >
-        !
-      </text>
+    <g fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="-5" y="-5" width="10" height="10" rx="2"/>
+      <line x1="-3" y1="-11" x2="-3" y2="-5"/>
+      <line x1="3" y1="-11" x2="3" y2="-5"/>
+      <line x1="-3" y1="5" x2="-3" y2="11"/>
+      <line x1="3" y1="5" x2="3" y2="11"/>
+      <line x1="5" y1="-3" x2="11" y2="-3"/>
+      <line x1="5" y1="3" x2="11" y2="3"/>
+      <line x1="-11" y1="-3" x2="-5" y2="-3"/>
+      <line x1="-11" y1="3" x2="-5" y2="3"/>
     </g>
   );
 }
 
-/**
- * Nodo individual del diagrama.
- */
-function Nodo({ id, cx, cy, producto, activo }) {
-  const etiqueta = ETIQUETAS[id] || id;
-  const lineasNombre = activo ? truncarNombre(producto?.nombre) : [];
+function PathMotherboard() {
+  return (
+    <g fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="-10" y="-10" width="20" height="20" rx="2"/>
+      <rect x="-5" y="-5" width="7" height="7" rx="1"/>
+      <line x1="5" y1="-5" x2="7" y2="-5"/>
+      <line x1="5" y1="-2" x2="7" y2="-2"/>
+      <line x1="5" y1="1" x2="7" y2="1"/>
+      <line x1="-3" y1="5" x2="5" y2="5"/>
+    </g>
+  );
+}
 
-  // Colores según estado
-  const colorFondo = activo
-    ? 'var(--color-accent-soft)'
-    : 'var(--color-surface-soft)';
-  const colorBorde = activo
-    ? 'var(--color-accent)'
-    : 'var(--color-border)';
-  const colorTextoEtiqueta = activo
-    ? 'var(--color-accent-text)'
-    : 'var(--color-text-muted)';
-  const opacidad = activo ? 1 : 0.5;
+function PathRAM() {
+  return (
+    <g fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="-10" y="-5" width="20" height="10" rx="2"/>
+      <line x1="-6" y1="-1" x2="-5" y2="-1"/>
+      <line x1="-2" y1="-1" x2="-1" y2="-1"/>
+      <line x1="2" y1="-1" x2="3" y2="-1"/>
+      <line x1="6" y1="-1" x2="7" y2="-1"/>
+      <line x1="-7" y1="5" x2="-7" y2="8"/>
+      <line x1="-3" y1="5" x2="-3" y2="8"/>
+      <line x1="1" y1="5" x2="1" y2="8"/>
+      <line x1="5" y1="5" x2="5" y2="8"/>
+    </g>
+  );
+}
+
+function PathGPU() {
+  return (
+    <g fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="-10" y="-6" width="17" height="12" rx="2"/>
+      <circle cx="-3" cy="0" r="3"/>
+      <line x1="7" y1="-3" x2="11" y2="-3"/>
+      <line x1="7" y1="3" x2="11" y2="3"/>
+      <line x1="-7" y1="6" x2="-7" y2="9"/>
+      <line x1="-3" y1="6" x2="-3" y2="9"/>
+      <line x1="1" y1="6" x2="1" y2="9"/>
+    </g>
+  );
+}
+
+function PathFuente() {
+  return (
+    <g fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="-10" y="-10" width="20" height="20" rx="2"/>
+      <circle cx="-2" cy="0" r="4"/>
+      <line x1="6" y1="-5" x2="9" y2="-5"/>
+      <line x1="6" y1="-2" x2="9" y2="-2"/>
+      <line x1="6" y1="1" x2="9" y2="1"/>
+    </g>
+  );
+}
+
+const PATHS = {
+  procesador:  PathCPU,
+  placa_madre: PathMotherboard,
+  ram:         PathRAM,
+  gpu:         PathGPU,
+  fuente:      PathFuente,
+};
+
+// ─── Nodo tipo card (SVG puro, sin foreignObject) ─────────────────────────────
+
+/**
+ * compacto=true → solo ícono + etiqueta tipo (vista previa en sidebar)
+ * compacto=false → ícono + etiqueta + nombre completo (vista ampliada)
+ */
+function NodoCard({ id, producto, activo, modoOscuro, compacto = false }) {
+  const { cx, cy } = POSICIONES[id];
+  const x = cx - NW / 2;
+  const y = cy - NH / 2;
+  const PathIcono = PATHS[id] || PathCPU;
+  const etiqueta = ETIQUETAS[id] || id;
+
+  // Colores adaptativos light/dark
+  const fillFondo  = activo
+    ? (modoOscuro ? '#1a3a5c' : '#e8f0fe')
+    : (modoOscuro ? '#2c2c2e' : '#f2f2f7');
+  const fillBorde  = activo
+    ? (modoOscuro ? '#0b63ce' : '#005ecb')
+    : (modoOscuro ? '#48484a' : '#c7c7cc');
+  const colorIcono = activo
+    ? (modoOscuro ? '#9fd0ff' : '#005ecb')
+    : (modoOscuro ? '#636366' : '#8e8e93');
+  const colorLabel = activo
+    ? (modoOscuro ? '#9fd0ff' : '#005ecb')
+    : (modoOscuro ? '#636366' : '#8e8e93');
+  const colorNombre = modoOscuro ? '#f5f5f7' : '#1d1d1f';
+  const opacidad   = activo ? 1 : 0.5;
+
+  // En modo compacto no mostramos nombre
+  const lineas = (!compacto && activo) ? partirNombre(producto?.nombre, 18, 3) : [];
+
+  // Posicionamiento vertical
+  // Modo compacto: ícono centrado verticalmente en el nodo
+  // Modo completo: ícono arriba, label, nombre
+  const iconY  = compacto ? cy : y + 22;
+  const labelY = compacto ? cy + 16 : y + 42;
+  const nombre1Y = y + 57;
+  const nombre2Y = y + 68;
+  const nombre3Y = y + 79;
+  const nombreYs = [nombre1Y, nombre2Y, nombre3Y];
 
   return (
     <g opacity={opacidad} aria-hidden="true">
-      {/* Círculo del nodo */}
-      <circle
-        cx={cx}
-        cy={cy}
-        r={R_NODO}
-        fill={colorFondo}
-        stroke={colorBorde}
-        strokeWidth={activo ? 2 : 1.5}
+      {/* Sombra */}
+      {activo && (
+        <rect
+          x={x + 2} y={y + 4}
+          width={NW} height={NH}
+          rx={NR}
+          fill={modoOscuro ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.07)'}
+        />
+      )}
+
+      {/* Fondo de la card */}
+      <rect
+        x={x} y={y}
+        width={NW} height={NH}
+        rx={NR}
+        fill={fillFondo}
+        stroke={fillBorde}
+        strokeWidth={activo ? 1.5 : 1}
       />
 
-      {/* Etiqueta del tipo de componente (siempre visible) */}
+      {/* Barra de acento superior (solo activo) */}
+      {activo && (
+        <rect
+          x={x + NR} y={y}
+          width={NW - NR * 2} height={3}
+          fill={fillBorde}
+          rx={1.5}
+        />
+      )}
+
+      {/* Ícono SVG inline centrado */}
+      <g
+        transform={`translate(${cx}, ${iconY})`}
+        color={colorIcono}
+        style={{ color: colorIcono }}
+      >
+        <PathIcono />
+      </g>
+
+      {/* Etiqueta tipo (CPU, RAM…) — caption uppercase */}
       <text
         x={cx}
-        y={activo && lineasNombre.length > 0 ? cy - 14 : cy - 6}
+        y={labelY}
         textAnchor="middle"
-        fontSize="9"
+        fontSize="8"
         fontWeight="700"
-        fill={colorTextoEtiqueta}
-        letterSpacing="0.06em"
-        style={{ textTransform: 'uppercase', userSelect: 'none' }}
+        fill={colorLabel}
+        letterSpacing="0.1em"
+        style={{ textTransform: 'uppercase', userSelect: 'none', fontFamily: 'var(--font-sans, system-ui)' }}
       >
         {etiqueta}
       </text>
 
-      {/* Nombre del producto (solo si hay componente seleccionado) */}
-      {activo && lineasNombre.length > 0 && (
-        <>
-          <text
-            x={cx}
-            y={cy + 4}
-            textAnchor="middle"
-            fontSize="8"
-            fontWeight="500"
-            fill="var(--color-text)"
-            style={{ userSelect: 'none' }}
-          >
-            {lineasNombre[0]}
-          </text>
-          {lineasNombre[1] && (
-            <text
-              x={cx}
-              y={cy + 15}
-              textAnchor="middle"
-              fontSize="8"
-              fontWeight="500"
-              fill="var(--color-text)"
-              style={{ userSelect: 'none' }}
-            >
-              {lineasNombre[1]}
-            </text>
-          )}
-        </>
-      )}
-
-      {/* Punto indicador de "sin selección" */}
-      {!activo && (
+      {/* Nombre del producto — solo en modo completo */}
+      {!compacto && lineas.map((linea, i) => (
         <text
+          key={i}
           x={cx}
-          y={cy + 8}
+          y={nombreYs[i]}
           textAnchor="middle"
-          fontSize="10"
-          fill="var(--color-text-muted)"
+          fontSize="8.5"
+          fontWeight="500"
+          fill={colorNombre}
+          style={{ userSelect: 'none', fontFamily: 'var(--font-sans, system-ui)' }}
+        >
+          {linea}
+        </text>
+      ))}
+
+      {/* Estado "sin selección" — solo en modo completo */}
+      {!compacto && !activo && (
+        <text
+          x={cx} y={cy + 18}
+          textAnchor="middle"
+          fontSize="8"
+          fill={colorLabel}
           style={{ userSelect: 'none' }}
         >
-          —
+          Sin seleccionar
         </text>
       )}
     </g>
   );
 }
 
-// ── Componente principal ──────────────────────────────────────────────────────
+// ─── Advertencia en línea ─────────────────────────────────────────────────────
 
-/**
- * @param {{
- *   configuracionSeleccionada: {
- *     procesador: Object|null,
- *     placa_madre: Object|null,
- *     ram: Object[],
- *     gpu: Object|null,
- *     fuente: Object|null,
- *   },
- *   incompatibilidades: string[],
- * }} props
- */
-export default function DiagramaCompatibilidad({ configuracionSeleccionada, incompatibilidades = [] }) {
-  // Normalizar: ram puede ser array o null
+function IconoAdvertenciaLinea({ x, y, modoOscuro }) {
+  const bg = modoOscuro ? '#1c1c1e' : '#ffffff';
+  return (
+    <g transform={`translate(${x - 9}, ${y - 9})`} aria-hidden="true">
+      <circle cx="9" cy="9" r="9" fill={bg} stroke={C_ERR} strokeWidth="1.5"/>
+      <line x1="9" y1="5" x2="9" y2="10" stroke={C_ERR} strokeWidth="2" strokeLinecap="round"/>
+      <circle cx="9" cy="13.5" r="1" fill={C_ERR}/>
+    </g>
+  );
+}
+
+// ─── SVG puro exportado (reutilizable en modal sin card anidada) ──────────────
+
+export function DiagramaSVGPuro({ configuracionSeleccionada, incompatibilidades = [], modoOscuro = false, className = '', compacto = false }) {
   const config = {
     procesador:  configuracionSeleccionada?.procesador  ?? null,
     placa_madre: configuracionSeleccionada?.placa_madre ?? null,
     ram:         Array.isArray(configuracionSeleccionada?.ram) && configuracionSeleccionada.ram.length > 0
                    ? configuracionSeleccionada.ram[0]
                    : null,
-    gpu:         configuracionSeleccionada?.gpu         ?? null,
-    fuente:      configuracionSeleccionada?.fuente      ?? null,
+    gpu:         configuracionSeleccionada?.gpu   ?? null,
+    fuente:      configuracionSeleccionada?.fuente ?? null,
   };
 
-  // Determinar si hay al menos un componente seleccionado (Req. 7.2)
-  const hayAlgunComponente = Object.values(config).some(Boolean);
-  if (!hayAlgunComponente) return null;
+  const estadoConexiones = useMemo(() => CONEXIONES.map(con => {
+    const desdeActivo = Boolean(config[con.desde]);
+    const hastaActivo = Boolean(config[con.hasta]);
+    const ambos = desdeActivo && hastaActivo;
+    const error = ambos && tieneError(incompatibilidades, con.kw);
+    return { ...con, ambos, color: ambos ? (error ? C_ERR : C_OK) : C_MUTED, error };
+  }), [config, incompatibilidades]);
 
-  // ── Calcular estado de cada conexión ────────────────────────────────────
-  const estadoConexiones = useMemo(() => {
-    return CONEXIONES.map((conexion) => {
-      const desdeActivo = Boolean(config[conexion.desde]);
-      const hastaActivo = Boolean(config[conexion.hasta]);
-      const ambosActivos = desdeActivo && hastaActivo;
-
-      let color = COLOR_NEUTRO_LINEA;
-      let tieneError = false;
-
-      if (ambosActivos) {
-        tieneError = conexionTieneError(incompatibilidades, conexion.palabrasClave);
-        color = tieneError ? COLOR_INCOMPATIBLE : COLOR_COMPATIBLE;
-      }
-
-      return { ...conexion, ambosActivos, color, tieneError };
-    });
-  }, [config, incompatibilidades]);
-
-  // ── Construir aria-label descriptivo (Req. 7.7) ─────────────────────────
   const ariaLabel = useMemo(() => {
-    const componentesActivos = Object.entries(config)
-      .filter(([, v]) => Boolean(v))
-      .map(([k]) => ETIQUETAS[k] || k);
-
-    if (componentesActivos.length === 0) return 'Diagrama de compatibilidad sin componentes seleccionados';
-
-    const hayErrores = incompatibilidades.length > 0;
-    const resumen = hayErrores
-      ? `Incompatibilidades detectadas: ${incompatibilidades.join('; ')}`
-      : 'Todos los componentes seleccionados son compatibles';
-
-    return `Diagrama de compatibilidad. Componentes seleccionados: ${componentesActivos.join(', ')}. ${resumen}`;
+    const activos = Object.entries(config).filter(([,v]) => Boolean(v)).map(([k]) => ETIQUETAS[k] || k);
+    if (!activos.length) return 'Diagrama de compatibilidad sin componentes seleccionados';
+    const estado = incompatibilidades.length
+      ? `Incompatibilidades: ${incompatibilidades.join('; ')}`
+      : 'Todos los componentes son compatibles';
+    return `Diagrama de compatibilidad. Componentes: ${activos.join(', ')}. ${estado}`;
   }, [config, incompatibilidades]);
+
+  // IDs únicos para gradientes (evitar colisiones si hay múltiples instancias)
+  const uid = 'dc';
+
+  return (
+    <svg
+      role="img"
+      aria-label={ariaLabel}
+      viewBox={`0 0 ${VB_W} ${VB_H}`}
+      className={`w-full ${className}`}
+      style={{ height: '100%', overflow: 'visible' }}
+    >
+      <defs>
+        <linearGradient id={`${uid}-grad-ok`} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor={C_OK} stopOpacity="0.5"/>
+          <stop offset="50%" stopColor={C_OK} stopOpacity="1"/>
+          <stop offset="100%" stopColor={C_OK} stopOpacity="0.5"/>
+        </linearGradient>
+        <linearGradient id={`${uid}-grad-err`} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor={C_ERR} stopOpacity="0.5"/>
+          <stop offset="50%" stopColor={C_ERR} stopOpacity="1"/>
+          <stop offset="100%" stopColor={C_ERR} stopOpacity="0.5"/>
+        </linearGradient>
+        <filter id={`${uid}-glow-ok`} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2" result="blur"/>
+          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+        </filter>
+      </defs>
+
+      {/* ── Líneas de conexión ── */}
+      {estadoConexiones.map(con => {
+        const pd = POSICIONES[con.desde];
+        const ph = POSICIONES[con.hasta];
+        const ini = bordeNodo(pd.cx, pd.cy, ph.cx, ph.cy);
+        const fin = bordeNodo(ph.cx, ph.cy, pd.cx, pd.cy);
+        const mid = midpoint(ini.x, ini.y, fin.x, fin.y);
+        const opacidad = con.ambos ? 1 : 0.18;
+
+        return (
+          <g key={con.id} aria-hidden="true">
+            {/* Línea de brillo (solo activas compatibles) */}
+            {con.ambos && !con.error && (
+              <line
+                x1={ini.x} y1={ini.y}
+                x2={fin.x} y2={fin.y}
+                stroke={C_OK}
+                strokeWidth="4"
+                opacity="0.15"
+                strokeLinecap="round"
+              />
+            )}
+            {/* Línea principal */}
+            <line
+              x1={ini.x} y1={ini.y}
+              x2={fin.x} y2={fin.y}
+              stroke={con.ambos
+                ? (con.error ? `url(#${uid}-grad-err)` : `url(#${uid}-grad-ok)`)
+                : C_MUTED}
+              strokeWidth={con.ambos ? 2 : 1.5}
+              strokeDasharray={con.ambos ? 'none' : '5 4'}
+              opacity={opacidad}
+              strokeLinecap="round"
+            />
+            {/* Punto central en líneas compatibles */}
+            {con.ambos && !con.error && (
+              <circle cx={mid.x} cy={mid.y} r="3.5" fill={C_OK} opacity="0.8"/>
+            )}
+            {/* Advertencia en líneas con error */}
+            {con.error && (
+              <IconoAdvertenciaLinea x={mid.x} y={mid.y} modoOscuro={modoOscuro}/>
+            )}
+          </g>
+        );
+      })}
+
+      {/* ── Nodos ── */}
+      {Object.keys(POSICIONES).map(id => (
+        <NodoCard
+          key={id}
+          id={id}
+          producto={config[id]}
+          activo={Boolean(config[id])}
+          modoOscuro={modoOscuro}
+          compacto={compacto}
+        />
+      ))}
+    </svg>
+  );
+}
+
+// ─── Íconos UI (para header y leyenda) ───────────────────────────────────────
+
+function IconoCompatibleUI() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke={C_OK} strokeWidth="2.5"
+      strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3" aria-hidden="true">
+      <path d="M5 12l4 4L19 6"/>
+    </svg>
+  );
+}
+
+function IconoIncompatibleUI() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke={C_ERR} strokeWidth="2.5"
+      strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3" aria-hidden="true">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  );
+}
+
+function IconoExpand() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="21" y1="3" x2="14" y2="10"/>
+      <polyline points="9 21 3 21 3 15"/>
+      <line x1="3" y1="21" x2="10" y2="14"/>
+    </svg>
+  );
+}
+
+// ─── Componente principal (card completa) ─────────────────────────────────────
+
+export default function DiagramaCompatibilidad({ configuracionSeleccionada, incompatibilidades = [] }) {
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const refBotonExpansion = useRef(null);
+
+  // Detectar modo oscuro para pasar al SVG
+  const modoOscuro = typeof window !== 'undefined'
+    ? document.documentElement.classList.contains('dark')
+    : false;
+
+  const config = {
+    procesador:  configuracionSeleccionada?.procesador  ?? null,
+    placa_madre: configuracionSeleccionada?.placa_madre ?? null,
+    ram:         Array.isArray(configuracionSeleccionada?.ram) && configuracionSeleccionada.ram.length > 0
+                   ? configuracionSeleccionada.ram[0]
+                   : null,
+    gpu:         configuracionSeleccionada?.gpu   ?? null,
+    fuente:      configuracionSeleccionada?.fuente ?? null,
+  };
+
+  const hayAlgunComponente = Object.values(config).some(Boolean);
+  const hayError = incompatibilidades.length > 0;
+
+  // Todos los hooks antes del return condicional
+  if (!hayAlgunComponente) return null;
 
   return (
     <section
-      className="surface-elevated overflow-hidden rounded-[var(--radius-lg)] p-4"
+      className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]"
+      style={{ boxShadow: 'var(--shadow-1)' }}
       aria-label="Diagrama de compatibilidad de componentes"
     >
-      {/* Encabezado */}
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">
-          Compatibilidad visual
-        </h3>
-        {/* Indicador de estado global */}
-        {incompatibilidades.length > 0 ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:rgba(255,69,58,0.12)] px-2.5 py-1 text-xs font-semibold text-[#FF453A]">
-            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-            Incompatible
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:rgba(52,199,89,0.12)] px-2.5 py-1 text-xs font-semibold text-[#34C759]">
-            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="m5 12 4 4L19 6" />
-            </svg>
-            Compatible
-          </span>
-        )}
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3">
+        <div className="flex items-center gap-2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+            strokeLinecap="round" strokeLinejoin="round"
+            className="h-4 w-4 text-[var(--color-text-muted)]" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M9 9h6M9 12h6M9 15h4"/>
+          </svg>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">
+            Compatibilidad visual
+          </h3>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {hayError ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[color:rgba(255,69,58,0.12)] px-2 py-0.5 text-[11px] font-semibold text-[#FF453A]">
+              <IconoIncompatibleUI/>
+              Incompatible
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[color:rgba(52,199,89,0.12)] px-2 py-0.5 text-[11px] font-semibold text-[#34C759]">
+              <IconoCompatibleUI/>
+              Compatible
+            </span>
+          )}
+
+          <button
+            ref={refBotonExpansion}
+            type="button"
+            onClick={() => setModalAbierto(true)}
+            aria-label="Ampliar diagrama"
+            className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-[8px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+          >
+            <IconoExpand/>
+          </button>
+        </div>
       </div>
 
-      {/* SVG responsivo (Req. 7.9) */}
-      <svg
-        role="img"
-        aria-label={ariaLabel}
-        viewBox={`0 0 ${VB_W} ${VB_H}`}
-        className="w-full"
-        style={{
-          maxHeight: '260px',
-          // Desactivar animaciones si prefers-reduced-motion (Req. 7.8)
-          // Las transiciones CSS se controlan con la clase motion-safe
-        }}
-      >
-        {/* Definición de marcadores de flecha (no usados, pero reservados) */}
-        <defs>
-          {/* Filtro de sombra suave para nodos activos */}
-          <filter id="nodo-sombra" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="1" stdDeviation="2" floodOpacity="0.12" />
-          </filter>
-        </defs>
+      {/* ── SVG del diagrama ── */}
+      <div className="px-3 py-4" style={{ aspectRatio: `${VB_W}/${VB_H}` }}>
+        <DiagramaSVGPuro
+          configuracionSeleccionada={configuracionSeleccionada}
+          incompatibilidades={incompatibilidades}
+          modoOscuro={modoOscuro}
+          compacto={true}
+        />
+      </div>
 
-        {/* ── Líneas de conexión (se dibujan antes que los nodos) ── */}
-        {estadoConexiones.map((conexion) => {
-          const posDesde = POSICIONES[conexion.desde];
-          const posHasta = POSICIONES[conexion.hasta];
-
-          // Calcular puntos en el borde de cada nodo
-          const inicio = puntoEnBorde(posDesde.cx, posDesde.cy, posHasta.cx, posHasta.cy, R_NODO + 2);
-          const fin    = puntoEnBorde(posHasta.cx, posHasta.cy, posDesde.cx, posDesde.cy, R_NODO + 2);
-          const medio  = puntoMedio(inicio.x, inicio.y, fin.x, fin.y);
-
-          // Opacidad: línea activa si ambos nodos tienen componente
-          const opacidadLinea = conexion.ambosActivos ? 1 : 0.25;
-
-          return (
-            <g key={conexion.id} aria-hidden="true">
-              <line
-                x1={inicio.x}
-                y1={inicio.y}
-                x2={fin.x}
-                y2={fin.y}
-                stroke={conexion.color}
-                strokeWidth={conexion.ambosActivos ? 2 : 1.5}
-                strokeDasharray={conexion.ambosActivos ? 'none' : '4 3'}
-                opacity={opacidadLinea}
-                className="motion-safe:transition-all motion-safe:duration-300"
-              />
-              {/* Ícono de advertencia en el punto medio (Req. 7.4) */}
-              {conexion.tieneError && (
-                <IconoAdvertencia x={medio.x} y={medio.y} />
-              )}
-            </g>
-          );
-        })}
-
-        {/* ── Nodos ── */}
-        {Object.entries(POSICIONES).map(([id, { cx, cy }]) => {
-          const producto = config[id];
-          const activo = Boolean(producto);
-          return (
-            <Nodo
-              key={id}
-              id={id}
-              cx={cx}
-              cy={cy}
-              producto={producto}
-              activo={activo}
-            />
-          );
-        })}
-      </svg>
-
-      {/* Leyenda */}
-      <div className="mt-3 flex flex-wrap items-center gap-4 border-t border-[var(--color-border)] pt-3">
-        <span className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
-          <span className="inline-block h-2.5 w-5 rounded-sm" style={{ backgroundColor: COLOR_COMPATIBLE }} aria-hidden="true" />
+      {/* ── Leyenda ── */}
+      <div className="flex flex-wrap items-center gap-4 border-t border-[var(--color-border)] px-4 py-2.5">
+        <span className="flex items-center gap-1.5 text-[11px] text-[var(--color-text-muted)]">
+          <span className="inline-block h-2 w-4 rounded-sm" style={{ backgroundColor: C_OK }} aria-hidden="true"/>
           Compatible
         </span>
-        <span className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
-          <span className="inline-block h-2.5 w-5 rounded-sm" style={{ backgroundColor: COLOR_INCOMPATIBLE }} aria-hidden="true" />
+        <span className="flex items-center gap-1.5 text-[11px] text-[var(--color-text-muted)]">
+          <span className="inline-block h-2 w-4 rounded-sm" style={{ backgroundColor: C_ERR }} aria-hidden="true"/>
           Incompatible
         </span>
-        <span className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
-          <span className="inline-block h-2.5 w-5 rounded-sm border border-dashed border-[var(--color-border)]" aria-hidden="true" />
+        <span className="flex items-center gap-1.5 text-[11px] text-[var(--color-text-muted)]">
+          <span className="inline-block h-2 w-4 rounded-sm border border-dashed border-[var(--color-border)]" aria-hidden="true"/>
           Sin seleccionar
         </span>
       </div>
+
+      {/* Modal */}
+      <ModalDiagrama
+        abierto={modalAbierto}
+        onCerrar={() => setModalAbierto(false)}
+        refBotonExpansion={refBotonExpansion}
+        configuracionSeleccionada={configuracionSeleccionada}
+        incompatibilidades={incompatibilidades}
+        modoOscuro={modoOscuro}
+      />
     </section>
   );
 }

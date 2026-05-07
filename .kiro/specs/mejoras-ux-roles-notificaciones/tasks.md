@@ -13,8 +13,8 @@ Cada tarea construye sobre la anterior. Los tests de propiedades se ubican junto
 
 ## Tareas
 
-- [ ] 1. Crear `ModalDiagrama.jsx` e integrar botón de expansión en `DiagramaCompatibilidad.jsx`
-  - [ ] 1.1 Crear `frontend/src/componentes/cotizador/ModalDiagrama.jsx`
+- [x] 1. Crear `ModalDiagrama.jsx` e integrar botón de expansión en `DiagramaCompatibilidad.jsx`
+  - [x] 1.1 Crear `frontend/src/componentes/cotizador/ModalDiagrama.jsx`
     - Implementar overlay de pantalla completa con `role="dialog"`, `aria-modal="true"`, `aria-label="Diagrama de compatibilidad ampliado"`
     - Renderizar `DiagramaCompatibilidad` ampliado ocupando ≥ 90 % del viewport
     - Botón de cierre con `aria-label="Cerrar diagrama"` y touch target 44×44 px
@@ -24,7 +24,7 @@ Cada tarea construye sobre la anterior. Los tests de propiedades se ubican junto
     - Respetar `prefers-reduced-motion` desactivando animaciones de entrada/salida
     - Dark mode completo
     - _Requisitos: 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9_
-  - [ ] 1.2 Modificar `frontend/src/componentes/cotizador/DiagramaCompatibilidad.jsx`
+  - [x] 1.2 Modificar `frontend/src/componentes/cotizador/DiagramaCompatibilidad.jsx`
     - Agregar estado `modalAbierto` (useState)
     - Agregar botón de expansión en esquina superior derecha con ícono SVG inline de "expand", touch target 44×44 px
     - Reemplazar íconos de estado (compatible/incompatible) por SVG inline propios del proyecto, eliminando dependencias externas
@@ -35,13 +35,13 @@ Cada tarea construye sobre la anterior. Los tests de propiedades se ubican junto
     - Archivo: `frontend/src/__tests__/ModalDiagrama.test.jsx`
     - _Requisitos: 1.4, 1.5, 1.6, 1.7_
 
-- [ ] 2. Corregir switch "Disponibles/Todos" y reubicar botones "Anterior"/"Siguiente" en `Cotizador.jsx`
-  - [ ] 2.1 Corregir posicionamiento del `Switch_Disponibilidad` en `Cotizador.jsx`
+- [x] 2. Corregir switch "Disponibles/Todos" y reubicar botones "Anterior"/"Siguiente" en `Cotizador.jsx`
+  - [x] 2.1 Corregir posicionamiento del `Switch_Disponibilidad` en `Cotizador.jsx`
     - Mover el switch al interior del contenedor del `Paso_Actual`, centrado horizontalmente
     - Asegurar `role="switch"`, `aria-checked` con valor booleano, `aria-label="Filtrar por disponibilidad"`
     - Contraste WCAG AA en estado activo/inactivo en dark y light mode
     - _Requisitos: 2.4, 2.5, 2.6_
-  - [ ] 2.2 Corregir lógica de filtrado del switch en `Cotizador.jsx`
+  - [x] 2.2 Corregir lógica de filtrado del switch en `Cotizador.jsx`
     - Estado "Disponibles": mostrar solo productos con `stock > 0` o `disponible_a_pedido === true`
     - Estado "Todos": mostrar todos los productos sin filtro
     - _Requisitos: 2.1, 2.2, 2.3_
@@ -50,7 +50,7 @@ Cada tarea construye sobre la anterior. Los tests de propiedades se ubican junto
     - **Valida: Requisitos 2.1, 2.2, 2.3**
     - Archivo: `frontend/src/__tests__/propiedades/filtroDisponibilidad.property.test.js`
     - Usar `fc.array(fc.record({ stock: fc.integer(), disponible_a_pedido: fc.boolean() }))` con 100 iteraciones
-  - [ ] 2.4 Reubicar botones "Anterior" y "Siguiente" en `Cotizador.jsx`
+  - [x] 2.4 Reubicar botones "Anterior" y "Siguiente" en `Cotizador.jsx`
     - Mover los botones a la parte superior del área de contenido del `Paso_Actual`, antes de la lista de productos
     - Botón "Anterior" deshabilitado cuando `pasoActual === 0`
     - Botón "Siguiente" deshabilitado cuando `pasoActual === PASOS.length - 1`
@@ -62,11 +62,11 @@ Cada tarea construye sobre la anterior. Los tests de propiedades se ubican junto
     - Archivo: `frontend/src/__tests__/propiedades/botonesNavegacion.property.test.js`
     - Usar `fc.integer({ min: 0, max: PASOS.length - 1 })` con 100 iteraciones
 
-- [ ] 3. Checkpoint — Verificar que el cotizador funciona correctamente
+- [x] 3. Checkpoint — Verificar que el cotizador funciona correctamente
   - Asegurar que todos los tests pasan, que el switch filtra correctamente y los botones están en posición correcta. Consultar al usuario si hay dudas.
 
-- [ ] 4. Crear `BalanceFinal.jsx` e integrarlo en `Cotizador.jsx`
-  - [ ] 4.1 Crear `frontend/src/componentes/cotizador/BalanceFinal.jsx`
+- [x] 4. Crear `BalanceFinal.jsx` e integrarlo en `Cotizador.jsx`
+  - [x] 4.1 Crear `frontend/src/componentes/cotizador/BalanceFinal.jsx`
     - Calcular costo neto total: suma de `precio_base × cantidad` de todos los productos seleccionados (principales + extras)
     - Calcular precio de venta total: `costoNeto × (1 + margenGanancia / 100)` usando `margenGanancia` de `AppContext`
     - Calcular porcentaje de ganancia: `((precioVenta - costoNeto) / costoNeto) × 100` redondeado a 2 decimales
@@ -75,7 +75,7 @@ Cada tarea construye sobre la anterior. Los tests de propiedades se ubican junto
     - `aria-live="polite"` para anunciar cambios a tecnologías asistivas
     - Dark mode completo, contraste WCAG AA
     - _Requisitos: 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.9, 3.10_
-  - [ ] 4.2 Integrar `BalanceFinal` en `Cotizador.jsx`
+  - [x] 4.2 Integrar `BalanceFinal` en `Cotizador.jsx`
     - Renderizar `{esAdmin && <BalanceFinal ... />}` en el paso de resumen/generación
     - Pasar los productos seleccionados y extras como props; el componente se actualiza automáticamente al cambiar la configuración
     - _Requisitos: 3.1, 3.8_
@@ -90,8 +90,8 @@ Cada tarea construye sobre la anterior. Los tests de propiedades se ubican junto
     - Archivo: `frontend/src/__tests__/BalanceFinal.test.jsx`
     - _Requisitos: 3.5, 3.6, 3.7, 3.10_
 
-- [ ] 5. Aplicar control de visibilidad por rol en `SuccessState` de `Cotizador.jsx`
-  - [ ] 5.1 Modificar el panel `SuccessState` en `Cotizador.jsx`
+- [x] 5. Aplicar control de visibilidad por rol en `SuccessState` de `Cotizador.jsx`
+  - [x] 5.1 Modificar el panel `SuccessState` en `Cotizador.jsx`
     - Envolver los botones "Ver historial" y "Validar ticket" con `{esAdmin && ...}` (renderizado condicional, no CSS)
     - Obtener `esAdmin` exclusivamente de `AppContext`
     - Mantener visibles para todos los roles: código de ticket y botón de descarga de PDF
@@ -103,29 +103,29 @@ Cada tarea construye sobre la anterior. Los tests de propiedades se ubican junto
     - Archivo: `frontend/src/__tests__/propiedades/panelCotizacionLista.property.test.js`
     - Usar `fc.record({ esAdmin: fc.boolean() })` con 100 iteraciones; mockear `AppContext`
 
-- [ ] 6. Checkpoint — Verificar UX del cotizador completa
+- [x] 6. Checkpoint — Verificar UX del cotizador completa
   - Asegurar que todos los tests pasan y que el balance, el modal y el panel lista funcionan correctamente. Consultar al usuario si hay dudas.
 
-- [ ] 7. Crear endpoint `GET /api/cotizaciones/propias` y adaptar `HistorialCliente.jsx`
-  - [ ] 7.1 Implementar `obtenerPropias` en `backend/src/controladores/controladorCotizaciones.js`
+- [x] 7. Crear endpoint `GET /api/cotizaciones/propias` y adaptar `HistorialCliente.jsx`
+  - [x] 7.1 Implementar `obtenerPropias` en `backend/src/controladores/controladorCotizaciones.js`
     - Consulta SQL parametrizada usando `req.usuario.id` (del token JWT); no aceptar parámetros de usuario en query string ni body
     - Retornar misma estructura que `GET /api/cotizaciones/cliente/:email`: `{ exito: true, cliente: { nombre, email }, cotizaciones: [...] }`
     - Incluir campos: `id`, `codigo_ticket`, `fecha_emision`, `fecha_validez`, `precio_total`, `margen_aplicado`, `estado`, campos financieros, datos de notificación
     - Manejo de error estándar: 401 `NO_AUTORIZADO` si sin token
     - _Requisitos: 5.1, 5.8, 5.9_
-  - [ ] 7.2 Registrar ruta `GET /api/cotizaciones/propias` en `backend/src/rutas/cotizaciones.js`
+  - [x] 7.2 Registrar ruta `GET /api/cotizaciones/propias` en `backend/src/rutas/cotizaciones.js`
     - Proteger con middleware `verificarTokenUsuario`
     - Registrar antes de rutas con parámetros para evitar conflictos de matching
     - _Requisitos: 5.1_
-  - [ ] 7.3 Agregar función `obtenerCotizacionesPropias` en `frontend/src/servicios/api.js`
+  - [x] 7.3 Agregar función `obtenerCotizacionesPropias` en `frontend/src/servicios/api.js`
     - `export const obtenerCotizacionesPropias = async () => { ... }`
     - Llamar a `GET /api/cotizaciones/propias` con token de autenticación
     - _Requisitos: 5.2_
-  - [ ] 7.4 Agregar índice SQL recomendado si no existe
+  - [x] 7.4 Agregar índice SQL recomendado si no existe
     - Crear migración o script: `CREATE INDEX IF NOT EXISTS idx_notificaciones_usuario_todas ON notificaciones_usuario (id_usuario, fecha_creacion DESC);`
     - Archivo: `backend/scripts/migraciones/add-idx-notificaciones-usuario-todas.sql`
     - _Requisitos: Restricción transversal 6 (BD)_
-  - [ ] 7.5 Modificar `frontend/src/paginas/HistorialCliente.jsx`
+  - [x] 7.5 Modificar `frontend/src/paginas/HistorialCliente.jsx`
     - Para `esUsuario === true`: cargar automáticamente con `obtenerCotizacionesPropias()` al montar, sin requerir ingreso de email
     - Para `esUsuario === true`: ocultar campo de búsqueda por email del DOM (renderizado condicional)
     - Para `esUsuario === true`: deshabilitar botones "Validar", "Técnico" y "Excel" con `disabled={true}` y `aria-disabled="true"`
@@ -149,35 +149,35 @@ Cada tarea construye sobre la anterior. Los tests de propiedades se ubican junto
     - Archivo: `frontend/src/__tests__/HistorialCliente.test.jsx`
     - _Requisitos: 5.2, 5.3, 5.5, 5.10_
 
-- [ ] 8. Checkpoint — Verificar historial y endpoint /propias
+- [x] 8. Checkpoint — Verificar historial y endpoint /propias
   - Asegurar que todos los tests pasan y que el historial carga automáticamente para usuarios. Consultar al usuario si hay dudas.
 
-- [ ] 9. Crear endpoints de notificaciones y extender `usePollingNotificaciones`
-  - [ ] 9.1 Implementar `obtenerTodas` en `backend/src/controladores/controladorNotificaciones.js`
+- [x] 9. Crear endpoints de notificaciones y extender `usePollingNotificaciones`
+  - [x] 9.1 Implementar `obtenerTodas` en `backend/src/controladores/controladorNotificaciones.js`
     - Consulta SQL parametrizada: `SELECT ... FROM notificaciones_usuario WHERE id_usuario = $1 ORDER BY fecha_creacion DESC LIMIT $2 OFFSET $3`
     - Parámetros opcionales: `limit` (default 50, máx 100), `offset` (default 0)
     - Validar que `limit` esté en `[1, 100]` y `offset >= 0`; retornar 400 `PARAMETROS_INVALIDOS` si no
     - Respuesta: `{ exito: true, total: N, notificaciones: [...] }`
     - _Requisitos: 6.1_
-  - [ ] 9.2 Implementar `marcarTodasLeidas` en `backend/src/controladores/controladorNotificaciones.js`
+  - [x] 9.2 Implementar `marcarTodasLeidas` en `backend/src/controladores/controladorNotificaciones.js`
     - `UPDATE notificaciones_usuario SET leida = true WHERE id_usuario = $1 AND leida = false RETURNING id`
     - Respuesta: `{ exito: true, actualizadas: N }`
     - _Requisitos: 6.11_
-  - [ ] 9.3 Registrar nuevas rutas en `backend/src/rutas/notificaciones.js`
+  - [x] 9.3 Registrar nuevas rutas en `backend/src/rutas/notificaciones.js`
     - `GET /api/notificaciones/todas` → `verificarTokenUsuario` → `obtenerTodas`
     - `PATCH /api/notificaciones/leer-todas` → `verificarTokenUsuario` → `marcarTodasLeidas`
     - _Requisitos: 6.1, 6.11_
-  - [ ] 9.4 Agregar funciones en `frontend/src/servicios/api.js`
+  - [x] 9.4 Agregar funciones en `frontend/src/servicios/api.js`
     - `export const obtenerTodasNotificaciones = async ({ limit = 50, offset = 0 } = {}) => { ... }`
     - `export const marcarTodasNotificacionesLeidas = async () => { ... }`
     - _Requisitos: 6.1, 6.10, 6.11_
-  - [ ] 9.5 Extender `frontend/src/hooks/usePollingNotificaciones.js`
+  - [x] 9.5 Extender `frontend/src/hooks/usePollingNotificaciones.js`
     - Exponer `conteoNoLeidas` (número de notificaciones con `leida === false`) además de `notificaciones`
     - Mantener compatibilidad con los consumidores existentes del hook
     - _Requisitos: 6.2_
 
-- [ ] 10. Crear `BadgeNotificaciones.jsx` e integrarlo en `AppShell.jsx`
-  - [ ] 10.1 Crear `frontend/src/componentes/ui/BadgeNotificaciones.jsx`
+- [x] 10. Crear `BadgeNotificaciones.jsx` e integrarlo en `AppShell.jsx`
+  - [x] 10.1 Crear `frontend/src/componentes/ui/BadgeNotificaciones.jsx`
     - Recibir prop `conteo: number`
     - Si `conteo === 0`: no renderizar nada (retornar `null`)
     - Si `1 ≤ conteo ≤ 99`: mostrar `String(conteo)`
@@ -186,7 +186,7 @@ Cada tarea construye sobre la anterior. Los tests de propiedades se ubican junto
     - `aria-label` dinámico: `"${conteo} notificaciones pendientes"` (o `"99+ notificaciones pendientes"`)
     - Contraste WCAG AA verificado
     - _Requisitos: 6.4, 6.5, 6.6_
-  - [ ] 10.2 Integrar `BadgeNotificaciones` en `AppShell.jsx`
+  - [x] 10.2 Integrar `BadgeNotificaciones` en `AppShell.jsx`
     - Agregar ícono de notificaciones en el header con touch target 44×44 px
     - Superponer `BadgeNotificaciones` con `conteoNoLeidas` del hook `usePollingNotificaciones`
     - El clic en el ícono abre `PanelNotificaciones`
@@ -202,8 +202,8 @@ Cada tarea construye sobre la anterior. Los tests de propiedades se ubican junto
     - Archivo: `frontend/src/__tests__/BadgeNotificaciones.test.jsx`
     - _Requisitos: 6.3, 6.4, 6.5, 6.6_
 
-- [ ] 11. Crear `PanelNotificaciones.jsx` e integrarlo en `AppShell.jsx`
-  - [ ] 11.1 Crear `frontend/src/componentes/notificaciones/PanelNotificaciones.jsx`
+- [x] 11. Crear `PanelNotificaciones.jsx` e integrarlo en `AppShell.jsx`
+  - [x] 11.1 Crear `frontend/src/componentes/notificaciones/PanelNotificaciones.jsx`
     - Cargar notificaciones con `obtenerTodasNotificaciones()` al abrir el panel
     - Mostrar lista con: título, mensaje, fecha de creación y estado de lectura por cada notificación
     - Estado no leída: fondo con tinte de acento; estado leída: fondo neutro
@@ -216,7 +216,7 @@ Cada tarea construye sobre la anterior. Los tests de propiedades se ubican junto
     - `prefers-reduced-motion` respetado en animaciones de apertura/cierre
     - Dark mode completo, contraste WCAG AA
     - _Requisitos: 6.8, 6.9, 6.10, 6.12, 6.13, 6.14, 6.15, 6.16_
-  - [ ] 11.2 Integrar `PanelNotificaciones` en `AppShell.jsx`
+  - [x] 11.2 Integrar `PanelNotificaciones` en `AppShell.jsx`
     - Controlar apertura/cierre con estado local `panelAbierto`
     - Pasar callback para actualizar `conteoNoLeidas` al marcar notificaciones como leídas
     - _Requisitos: 6.7_
@@ -230,7 +230,7 @@ Cada tarea construye sobre la anterior. Los tests de propiedades se ubican junto
     - Archivo: `frontend/src/__tests__/PanelNotificaciones.test.jsx`
     - _Requisitos: 6.8, 6.9, 6.10, 6.13, 6.14, 6.15_
 
-- [ ] 12. Checkpoint final — Verificar integración completa
+- [x] 12. Checkpoint final — Verificar integración completa
   - Asegurar que todos los tests pasan (propiedades + componentes + integración). Verificar que el badge, el panel de notificaciones y el historial funcionan de punta a punta. Consultar al usuario si hay dudas.
 
 ---

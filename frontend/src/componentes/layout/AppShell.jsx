@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../contexto/AppContext';
 import { THEME_STORAGE_KEY, applyThemeClass, resolveTheme } from '../../theme';
 import { usePollingNotificaciones } from '../../hooks/usePollingNotificaciones';
 import { NotificacionesToastContainer } from '../feedback/NotificacionToast';
+import BadgeNotificaciones from '../ui/BadgeNotificaciones';
+import PanelNotificaciones from '../notificaciones/PanelNotificaciones';
 
 const NAV_ITEMS = [
   {
@@ -240,6 +242,12 @@ function NavIcon({ name, className }) {
           <path strokeLinecap="round" strokeWidth={1.8} d="M20 8v6M23 11h-6" />
         </svg>
       );
+    case 'bell':
+      return (
+        <svg className={iconClass(className)} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+      );
     default:
       return null;
   }
@@ -450,14 +458,29 @@ function BottomNavigation({ navItems }) {
 }
 
 export default function AppShell() {
-  const { autenticado, usuario, logout, monedaVista, alternarMonedaVista } = useAppContext();
+  const { autenticado, usuario, logout, monedaVista, alternarMonedaVista, esInvitado } = useAppContext();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [themePreference, setThemePreference] = useState(() => localStorage.getItem(THEME_STORAGE_KEY) || 'system');
+  const [panelAbierto, setPanelAbierto] = useState(false);
 
   // Polling de notificaciones — activo solo cuando el usuario está autenticado (Req. 5.6, 5.7)
-  const { notificaciones, marcarLeida } = usePollingNotificaciones({ autenticado });
+  const { notificaciones, conteoNoLeidas: conteoPolling, marcarLeida } = usePollingNotificaciones({ autenticado });
+
+  // Conteo local que puede ser actualizado por PanelNotificaciones al marcar como leídas (Req. 6.9, 6.10)
+  const [conteoOverride, setConteoOverride] = useState(null);
+  const conteoNoLeidas = conteoOverride !== null ? conteoOverride : conteoPolling;
+
+  // Sincronizar override cuando el polling detecta nuevas notificaciones
+  const prevConteoPollingRef = useRef(conteoPolling);
+  useEffect(() => {
+    if (conteoPolling > prevConteoPollingRef.current) {
+      // Llegaron notificaciones nuevas — resetear override para mostrar el conteo real
+      setConteoOverride(null);
+    }
+    prevConteoPollingRef.current = conteoPolling;
+  }, [conteoPolling]);
 
   const navItems = useMemo(() => buildNavigationItems(autenticado, usuario?.rol), [autenticado, usuario?.rol]);
   const mobileTabItems = useMemo(
@@ -532,6 +555,38 @@ export default function AppShell() {
               {autenticado ? (
                 <div className="flex items-center gap-2 sm:gap-3">
                   <span className="hidden text-sm text-[var(--color-text-muted)] md:inline">{usuario?.username || 'Administrador'}</span>
+
+                  {/* Req. 6.2, 6.3, 6.7: ícono de notificaciones con badge — solo para usuarios autenticados (!esInvitado) */}
+                  {!esInvitado && (
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setPanelAbierto((prev) => !prev)}
+                        aria-label={
+                          conteoNoLeidas > 0
+                            ? `Notificaciones. ${conteoNoLeidas > 99 ? '99+' : conteoNoLeidas} pendientes`
+                            : 'Notificaciones'
+                        }
+                        aria-expanded={panelAbierto}
+                        aria-haspopup="true"
+                        className="relative inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-[var(--radius-sm)] border border-[var(--color-border)] text-[var(--color-text-muted)] transition-colors duration-higNormal ease-hig hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-text)]"
+                      >
+                        <NavIcon name="bell" className="h-5 w-5" />
+                        {/* Badge superpuesto en esquina superior derecha */}
+                        <span className="pointer-events-none absolute -right-1 -top-1">
+                          <BadgeNotificaciones conteo={conteoNoLeidas} />
+                        </span>
+                      </button>
+
+                      {/* PanelNotificaciones — Req. 6.7, 6.8, 6.9, 6.10, 6.12–6.16 */}
+                      <PanelNotificaciones
+                        abierto={panelAbierto}
+                        onCerrar={() => setPanelAbierto(false)}
+                        onActualizarConteo={setConteoOverride}
+                      />
+                    </div>
+                  )}
+
                   <button
                     type="button"
                     onClick={alternarMonedaVista}
