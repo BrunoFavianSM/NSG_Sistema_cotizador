@@ -328,8 +328,7 @@ export default function PanelNotificaciones({ abierto, onCerrar, onActualizarCon
       className={[
         'absolute right-0 top-full z-50 mt-2 w-80 sm:w-96',
         'rounded-[14px] border border-[var(--color-border)]',
-        'bg-[var(--color-surface)]/95 shadow-[0_6px_24px_rgba(0,0,0,.10)]',
-        'backdrop-blur-md',
+        'bg-[var(--color-surface)] shadow-[0_8px_32px_rgba(0,0,0,.18)]',
         'flex flex-col overflow-hidden',
         animacionPanel,
       ].join(' ')}

@@ -355,18 +355,18 @@ export default function HistorialCliente() {
       align: 'right',
       render: (row) => (
         <div className="flex justify-end gap-2">
-          {/* Botones "Validar", "Técnico" y "Excel" deshabilitados para rol usuario — Req. 5.5, 5.6 */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={esUsuario ? undefined : () => navigate(`/validar?ticket=${row.codigo_ticket}`)}
-            disabled={esUsuario}
-            aria-disabled={esUsuario ? 'true' : undefined}
-            aria-label={`Validar ticket ${row.codigo_ticket}`}
-            title={esUsuario ? 'No disponible para tu rol' : 'Ir al validador con este ticket'}
-          >
-            Validar
-          </Button>
+          {/* Validar y Técnico: solo visibles para admin (renderizado condicional, no CSS) */}
+          {!esUsuario && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(`/validar?ticket=${row.codigo_ticket}`)}
+              aria-label={`Validar ticket ${row.codigo_ticket}`}
+              title="Ir al validador con este ticket"
+            >
+              Validar
+            </Button>
+          )}
           <Button
             variant="secondary"
             size="sm"
@@ -375,27 +375,27 @@ export default function HistorialCliente() {
           >
             Comercial
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={esUsuario ? undefined : () => descargarPDF(row.codigo_ticket, 'tecnico')}
-            disabled={esUsuario}
-            aria-disabled={esUsuario ? 'true' : undefined}
-            aria-label={`Descargar PDF tecnico de ${row.codigo_ticket}`}
-          >
-            Tecnico
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={esUsuario ? undefined : () => descargarExcel(row.codigo_ticket)}
-            disabled={esUsuario}
-            aria-disabled={esUsuario ? 'true' : undefined}
-            aria-label={`Exportar Excel de cotización ${row.codigo_ticket}`}
-            title={esUsuario ? 'No disponible para tu rol' : 'Descargar cotización en formato Excel'}
-          >
-            Excel
-          </Button>
+          {!esUsuario && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => descargarPDF(row.codigo_ticket, 'tecnico')}
+              aria-label={`Descargar PDF tecnico de ${row.codigo_ticket}`}
+            >
+              Técnico
+            </Button>
+          )}
+          {!esUsuario && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => descargarExcel(row.codigo_ticket)}
+              aria-label={`Exportar Excel de cotización ${row.codigo_ticket}`}
+              title="Descargar cotización en formato Excel"
+            >
+              Excel
+            </Button>
+          )}
         </div>
       ),
     },

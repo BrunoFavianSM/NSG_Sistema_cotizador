@@ -1448,15 +1448,15 @@ export default function Cotizador() {
               <h2 className="mt-1 text-2xl font-semibold text-[var(--color-text)]">{pasoInfo.nombre}</h2>
             </div>
 
-            {/* Switch_Disponibilidad — centrado horizontalmente dentro del Paso_Actual (Req. 2.4, 2.5, 2.6) */}
+            {/* Switch_Disponibilidad — Compatibles/Todos (Req. 2.4, 2.5, 2.6) */}
             <button
               type="button"
               role="switch"
               aria-checked={soloDisponibles}
-              aria-label="Filtrar por disponibilidad"
+              aria-label="Filtrar por compatibilidad"
               onClick={() => setSoloDisponibles((prev) => !prev)}
               className={[
-                'inline-flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-[var(--radius-md)]',
+                'inline-flex min-h-[44px] w-[148px] shrink-0 items-center gap-2 rounded-[var(--radius-md)]',
                 'border px-4 text-sm font-medium',
                 'transition-colors duration-higNormal ease-hig',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
@@ -1483,7 +1483,9 @@ export default function Cotizador() {
                   ].join(' ')}
                 />
               </span>
-              {soloDisponibles ? 'Disponibles' : 'Todos'}
+              <span className="flex-1 text-left">
+                {soloDisponibles ? 'Compatibles' : 'Todos'}
+              </span>
             </button>
           </div>
 
