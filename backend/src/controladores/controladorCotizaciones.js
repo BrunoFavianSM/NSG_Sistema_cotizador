@@ -106,13 +106,16 @@ function resolverContextoAdmin(req) {
   }
 }
 
-function validarDatosClienteParaCotizacion({ esAdmin, email, nombre, telefono }) {
+function validarDatosClienteParaCotizacion({ esAdmin, esUsuarioAutenticado, email, nombre, telefono }) {
   const errores = [];
   const emailNormalizado = typeof email === 'string' ? email.trim().toLowerCase() : '';
   const nombreNormalizado = normalizarNombreCliente(nombre);
   const telefonoNormalizado = normalizarTelefonoCliente(telefono);
 
-  if (!esAdmin) {
+  // Admin: datos opcionales
+  // Usuario autenticado: no necesita nombre ni correo (usa su id del token)
+  // Invitado: nombre y correo obligatorios
+  if (!esAdmin && !esUsuarioAutenticado) {
     if (!nombreNormalizado) {
       errores.push('El nombre del cliente es obligatorio');
     }
@@ -124,14 +127,14 @@ function validarDatosClienteParaCotizacion({ esAdmin, email, nombre, telefono })
   if (emailNormalizado) {
     const validacionEmail = validarEmail(emailNormalizado);
     if (!validacionEmail.valido) {
-      errores.push(validacionEmail.error || 'Formato de correo invÃ¡lido');
+      errores.push(validacionEmail.error || 'Formato de correo inválido');
     }
   }
 
   if (telefonoNormalizado) {
     const validacionTelefono = validarTelefono(telefonoNormalizado);
     if (!validacionTelefono.valido) {
-      errores.push(validacionTelefono.error || 'Formato de telÃ©fono invÃ¡lido');
+      errores.push(validacionTelefono.error || 'Formato de teléfono inválido');
     }
   }
 
@@ -404,8 +407,12 @@ async function crearCotizacion(req, res) {
     }
 
     const esAdmin = resolverContextoAdmin(req);
+    // Usuario autenticado con rol 'usuario': no necesita datos de cliente en el body
+    const esUsuarioAutenticado = !esAdmin && req.usuario?.id && req.rol === 'usuario';
+
     const validacionDatosCliente = validarDatosClienteParaCotizacion({
       esAdmin,
+      esUsuarioAutenticado,
       email: datosSanitizados.email_cliente,
       nombre: datosSanitizados.nombre_cliente,
       telefono: datosSanitizados.telefono_cliente
