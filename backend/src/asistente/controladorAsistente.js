@@ -54,7 +54,7 @@ async function procesarMensaje(req, res) {
       return res.status(400).json({ exito: false, mensaje: 'Mensaje vacío después de sanitizar' });
     }
 
-    // Verificar que la sesión existe
+    // Verificar que la sesión existe ANTES de guardar el mensaje
     const sesionCheck = await ejecutarQuery(
       'SELECT sesion_id FROM asistente_sesiones WHERE sesion_id = $1',
       [sesion_id]
@@ -135,6 +135,9 @@ async function procesarMensaje(req, res) {
     }
     // Validar campos requeridos del LLM response
     respuestaLLM.respuesta = respuestaLLM.respuesta || '';
+  if (!respuestaLLM.respuesta.trim()) {
+    respuestaLLM.respuesta = 'No pude generar una respuesta. Intenta de nuevo o consulta con un asesor.';
+  }
     respuestaLLM.quick_replies = Array.isArray(respuestaLLM.quick_replies) ? respuestaLLM.quick_replies : [];
     respuestaLLM.configuracion_propuesta = respuestaLLM.configuracion_propuesta || null;
     respuestaLLM.perfil_usuario = respuestaLLM.perfil_usuario || null;

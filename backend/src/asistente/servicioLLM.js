@@ -18,6 +18,8 @@ const NVIDIA_MODEL = process.env.NVIDIA_MODEL || 'meta/llama-3.3-70b-instruct';
 
 const MAX_REINTENTOS = 3;
 const BACKOFF_BASE = 1000; // ms
+const NVIDIA_FETCH_TIMEOUT_MS = parseInt(process.env.NVIDIA_FETCH_TIMEOUT_MS || '25000', 10);
+const GEMINI_TIMEOUT_MS = parseInt(process.env.GEMINI_TIMEOUT_MS || '25000', 10);
 
 // ── Errores clasificados ──
 
@@ -122,10 +124,16 @@ async function llamarGemini(systemPrompt, historial, mensajeActual) {
 
   return await llamarConReintentos(async () => {
     const contenido = construirContenidoGemini(historial, mensajeActual);
-    const resultado = await modelo.generateContent({
-      contents: contenido,
-      systemInstruction: systemPrompt,
-    });
+
+    const resultado = await Promise.race([
+      modelo.generateContent({
+        contents: contenido,
+        systemInstruction: systemPrompt,
+      }),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`Gemini excedió timeout de ${GEMINI_TIMEOUT_MS}ms`)), GEMINI_TIMEOUT_MS)
+      ),
+    ]);
 
     const texto = resultado.response?.text?.() || '';
     const json = extraerJSON(texto);
@@ -160,20 +168,29 @@ async function llamarNVIDIA(systemPrompt, historial, mensajeActual) {
   return await llamarConReintentos(async () => {
     const mensajes = construirMensajesNVIDIA(systemPrompt, historial, mensajeActual);
 
-    const respuesta = await fetch(`${NVIDIA_BASE_URL}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${NVIDIA_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: NVIDIA_MODEL,
-        messages: mensajes,
-        temperature: 0.7,
-        max_tokens: 900,
-        top_p: 0.9,
-      }),
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), NVIDIA_FETCH_TIMEOUT_MS);
+
+    let respuesta;
+    try {
+      respuesta = await fetch(`${NVIDIA_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${NVIDIA_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: NVIDIA_MODEL,
+          messages: mensajes,
+          temperature: 0.7,
+          max_tokens: 900,
+          top_p: 0.9,
+        }),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
 
     if (!respuesta.ok) {
       const errorBody = await respuesta.text().catch(() => '');

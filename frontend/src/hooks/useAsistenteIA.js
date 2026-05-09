@@ -2,6 +2,7 @@
 import { useAppContext } from '../contexto/AppContext';
 import * as asistente from '../servicios/asistente';
 import { buscarProductosCompatibles } from '../servicios/api';
+import { ASISTENTE_TIMEOUT_MS } from '../servicios/api';
 
 const MENSAJE_BIENVENIDA_BASE = {
   rol: 'assistant',
@@ -38,6 +39,8 @@ export function useAsistenteIA({ sesionId: sesionIdProp = null, usuarioId = null
   const sesionIdRef = useRef(sesionIdProp);
   const [sesionIdEstado, setSesionIdEstado] = useState(sesionIdProp);
   const inicializadoRef = useRef(false);
+  const iniciandoRef = useRef(false);
+  const abortControllerRef = useRef(null);
 
   const montadoRef = useRef(true);
   useEffect(() => {
@@ -77,6 +80,7 @@ export function useAsistenteIA({ sesionId: sesionIdProp = null, usuarioId = null
   useEffect(() => {
     if (!activo) return;
     if (inicializadoRef.current) return;
+    if (iniciandoRef.current) return;
 
     if (sesionIdProp) {
       sesionIdRef.current = sesionIdProp;
@@ -86,6 +90,8 @@ export function useAsistenteIA({ sesionId: sesionIdProp = null, usuarioId = null
       registrarDebug('sesion_reutilizada', { sesionId: sesionIdProp });
       return;
     }
+
+    iniciandoRef.current = true;
 
     const iniciarSesion = async () => {
       try {
@@ -109,6 +115,8 @@ export function useAsistenteIA({ sesionId: sesionIdProp = null, usuarioId = null
         setError('No se pudo iniciar la sesion del asistente. Por favor, recarga la pagina.');
         setMostrarAsesor(true);
         registrarDebug('error_sesion', { error: 'exception nuevaSesion' });
+      } finally {
+        iniciandoRef.current = false;
       }
     };
 
@@ -161,9 +169,20 @@ export function useAsistenteIA({ sesionId: sesionIdProp = null, usuarioId = null
       setError(null);
       setCargando(true);
 
+      // AbortController con timeout cliente para evitar que quede colgado
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      const timeoutId = setTimeout(() => controller.abort(), ASISTENTE_TIMEOUT_MS);
+
       try {
         const uid = resolverUsuarioId();
-        const resultado = await llamarConRetry(() => asistente.enviarMensaje(sesionActual, texto.trim(), uid), 2);
+        const resultado = await llamarConRetry(
+          () => asistente.enviarMensaje(sesionActual, texto.trim(), uid),
+          2
+        );
         registrarDebug('respuesta_api', {
           exito: !!resultado?.exito,
           tieneConfig: !!resultado?.configuracion_propuesta,
@@ -202,12 +221,18 @@ export function useAsistenteIA({ sesionId: sesionIdProp = null, usuarioId = null
         setSemaforo(resultado.semaforo || null);
         setConfiguracionPropuesta(resultado.configuracion_propuesta || null);
         setEtapaConversacion(resultado.etapa || 'cuestionario');
-      } catch (_) {
+      } catch (err) {
         if (!montadoRef.current) return;
-        setError('Hubo un problema al conectar con el asistente. Por favor, intenta de nuevo o contacta a un asesor.');
+        const esTimeout = err?.name === 'AbortError' || err?.code === 'ECONNABORTED';
+        const msg = esTimeout
+          ? 'El asistente tardó demasiado en responder. Intenta de nuevo o contacta a un asesor.'
+          : 'Hubo un problema al conectar con el asistente. Por favor, intenta de nuevo o contacta a un asesor.';
+        setError(msg);
         setMostrarAsesor(true);
-        registrarDebug('error_envio', { error: 'fallo enviarMensaje' });
+        registrarDebug('error_envio', { error: esTimeout ? 'timeout' : 'fallo enviarMensaje' });
       } finally {
+        clearTimeout(timeoutId);
+        abortControllerRef.current = null;
         if (montadoRef.current) {
           setCargando(false);
         }
@@ -248,6 +273,7 @@ export function useAsistenteIA({ sesionId: sesionIdProp = null, usuarioId = null
     sesionIdRef.current = null;
     setSesionIdEstado(null);
     inicializadoRef.current = false;
+    iniciandoRef.current = false;
 
     try {
       const uid = resolverUsuarioId();

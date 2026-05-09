@@ -12,6 +12,7 @@ const NVIDIA_EMBEDDING_MODEL = process.env.NVIDIA_EMBEDDING_MODEL || 'nvidia/nv-
 
 const CACHE_TTL = parseInt(process.env.EMBEDDING_CACHE_TTL || '300', 10);
 const CACHE_MAX = parseInt(process.env.EMBEDDING_CACHE_MAX_ITEMS || '500', 10);
+const EMBEDDING_FETCH_TIMEOUT_MS = parseInt(process.env.EMBEDDING_FETCH_TIMEOUT_MS || '15000', 10);
 
 // Caché: clave → { embedding: number[], texto: string }
 const cacheEmbeddings = new NodeCache({ stdTTL: CACHE_TTL, checkperiod: 120, maxKeys: CACHE_MAX });
@@ -71,18 +72,27 @@ async function generarEmbedding(textos, tipo = 'query') {
 
   const input = Array.isArray(textos) ? textos : [textos];
 
-  const respuesta = await fetch(`${NVIDIA_BASE_URL}/embeddings`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${NVIDIA_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: NVIDIA_EMBEDDING_MODEL,
-      input,
-      input_type: tipo, // "query" para búsquedas, "passage" para documentos
-    }),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), EMBEDDING_FETCH_TIMEOUT_MS);
+
+  let respuesta;
+  try {
+    respuesta = await fetch(`${NVIDIA_BASE_URL}/embeddings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${NVIDIA_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: NVIDIA_EMBEDDING_MODEL,
+        input,
+        input_type: tipo,
+      }),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!respuesta.ok) {
     const errorBody = await respuesta.text().catch(() => '');
@@ -168,9 +178,8 @@ async function obtenerEmbeddingsProductos(productos, ejecutarQuery) {
       todosLosEmbeddings = todosLosEmbeddings.concat(embeddings);
     } catch (error) {
       console.error(`[Embeddings] Error en lote ${i}:`, error.message);
-      // Rellenar con vectores nulos para no romper índices
-      const nulo = new Array(1024).fill(0);
-      todosLosEmbeddings = todosLosEmbeddings.concat(lote.map(() => nulo));
+      // Lanzar error para que agenteBuscador caiga al fallback SQL
+      throw new Error(`Embeddings fallaron en lote ${i}: ${error.message}`);
     }
   }
 
@@ -240,6 +249,13 @@ async function buscarSemantico(clasificacion, productos, ejecutarQuery, topK = 5
   return porCategoria;
 }
 
+// ── Verificar si hay caché de embeddings disponible ──
+
+function cacheDisponible() {
+  const cacheado = cacheEmbeddings.get('embeddings_catalogo_completo');
+  return !!(cacheado && cacheado.mapa && cacheado.mapa.size > 0);
+}
+
 // Mapeo de categorías de BD a categorías internas
 const MAPA_CATEGORIAS_EMBEDDING = {
   procesador: 'procesador',
@@ -258,4 +274,5 @@ module.exports = {
   generarEmbedding,
   obtenerEmbeddingsProductos,
   buscarSemantico,
+  cacheDisponible,
 };

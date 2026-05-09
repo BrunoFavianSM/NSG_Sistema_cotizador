@@ -11,10 +11,15 @@ const agenteReranker = require('./agenteReranker');
 const servicioCuestionario = require('./servicioCuestionario');
 
 const ENABLED = process.env.AGENT_PIPELINE_ENABLED !== 'false';
-const TIMEOUT_TOTAL_MS = parseInt(process.env.AGENT_PIPELINE_TIMEOUT_MS || '35000', 10);
+const TIMEOUT_TOTAL_MS = parseInt(process.env.AGENT_PIPELINE_TIMEOUT_MS || '45000', 10);
 const TIMEOUT_CLASIFICADOR_MS = 5000;
-const TIMEOUT_BUSCADOR_MS = 20000;
+const TIMEOUT_BUSCADOR_MS = 30000;
 const TIMEOUT_RERANKER_MS = 5000;
+
+// Keywords que indican el usuario quiere ver su configuración
+const KEYWORDS_COTIZAR = ['ver mi configuracion', 'ver mi configuración', 'mostrar configuracion', 'mostrar configuración',
+  'armar pc', 'cotizar', 'ver config', 'ver propuesta', 'mostrar propuesta', 'generar configuracion',
+  'generar configuración', 'que me recomiendas', 'qué me recomiendas', 'ver la config', 'ver mi pc'];
 
 const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY;
 
@@ -146,18 +151,35 @@ async function ejecutarPipeline({ mensaje, historial, productos, tipoCambio, mar
     throw new Error('NVIDIA_API_KEY no configurada');
   }
 
-  // ── Paso 1: Clasificador ──
-  let clasificacion;
-  try {
-    clasificacion = await ejecutarConTimeout(
-      agenteClasificador.clasificar(mensaje, historial),
-      TIMEOUT_CLASIFICADOR_MS,
-      'Clasificador'
-    );
-  } catch (errorClasificador) {
-    console.warn('[Orquestador] Clasificador falló, usando cuestionario determinístico:', errorClasificador.message);
-    clasificacion = fallbackClasificador(cuestionario, historial);
-  }
+  // Envolver todo el pipeline con timeout total
+  return ejecutarConTimeout(_ejecutarPipelineInterno({ mensaje, historial, productos, tipoCambio, margen, igv, contextoConversacion, cuestionario, ejecutarQuery }), TIMEOUT_TOTAL_MS, 'Pipeline');
+}
+
+async function _ejecutarPipelineInterno({ mensaje, historial, productos, tipoCambio, margen, igv, contextoConversacion, cuestionario, ejecutarQuery }) {
+
+
+    // ── Paso 0: Detección determinística de intención ──
+    const intencionDetectada = detectarIntencionDeterministica(mensaje);
+
+    // ── Paso 1: Clasificador ──
+    let clasificacion;
+    try {
+        clasificacion = await ejecutarConTimeout(
+            agenteClasificador.clasificar(mensaje, historial),
+            TIMEOUT_CLASIFICADOR_MS,
+            'Clasificador'
+        );
+        // Sobreescribir si la detección determinística es más confiable
+        if (intencionDetectada && clasificacion.pregunta_especifica !== 'cotizar' && clasificacion.pregunta_especifica !== 'recomendar') {
+            clasificacion.pregunta_especifica = intencionDetectada;
+        }
+    } catch (errorClasificador) {
+        console.warn('[Orquestador] Clasificador falló, usando cuestionario determinístico:', errorClasificador.message);
+        clasificacion = fallbackClasificador(cuestionario, historial);
+        if (intencionDetectada) {
+            clasificacion.pregunta_especifica = intencionDetectada;
+        }
+    }
 
   // Enriquecer clasificación con datos del cuestionario determinístico
   if (!clasificacion.uso_principal && cuestionario.uso) {
@@ -218,8 +240,9 @@ async function ejecutarPipeline({ mensaje, historial, productos, tipoCambio, mar
   // Incluir configuracion_propuesta cuando:
   //   a) El cuestionario determinístico está completo, O
   //   b) El usuario pidió explícitamente ver la configuración (clasificador)
-  const mostrarConfig = (cuestionario?.completo === true) ||
-    (clasificacion?.pregunta_especifica === 'cotizar' || clasificacion?.pregunta_especifica === 'recomendar');
+    const listoParaCotizarDeterministico = cuestionario?.uso && cuestionario?.presupuestoPen;
+    const pideCotizar = clasificacion?.pregunta_especifica === 'cotizar' || clasificacion?.pregunta_especifica === 'recomendar';
+    const mostrarConfig = cuestionario?.completo === true || pideCotizar || (listoParaCotizarDeterministico && intencionDetectada);
 
   const configEnriquecida = configPropuesta?.configuracion_propuesta && mostrarConfig
     ? enriquecerConfigPropuesta(
@@ -319,6 +342,18 @@ function fallbackClasificador(cuestionario, historial) {
     productos_mencionados: [],
   };
 }
+
+// ── Detección determinística de intención ──
+
+function detectarIntencionDeterministica(mensaje) {
+    if (!mensaje || typeof mensaje !== 'string') return null;
+    const t = mensaje.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    if (KEYWORDS_COTIZAR.some((kw) => t.includes(kw))) {
+        return 'cotizar';
+    }
+    return null;
+}
+
 
 module.exports = {
   ejecutarPipeline,

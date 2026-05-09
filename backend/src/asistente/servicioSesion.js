@@ -175,9 +175,10 @@ async function obtenerProductosDisponibles() {
     `SELECT p.id, p.nombre, c.nombre AS nombre_categoria, p.precio_base, p.stock, p.disponible_a_pedido
      FROM productos p
      INNER JOIN categorias c ON c.id = p.id_categoria
-     WHERE p.stock > 0 OR p.disponible_a_pedido = TRUE
+     WHERE (p.stock > 0 OR p.disponible_a_pedido = TRUE)
+       AND c.nombre IN ('procesador', 'placa_madre', 'ram', 'almacenamiento', 'gpu', 'fuente', 'case')
      ORDER BY c.nombre, p.precio_base
-     LIMIT 140`
+     LIMIT 500`
   );
 
   const productos = resultado.rows.map((r) => ({
