@@ -11,18 +11,27 @@ const { ejecutarQuery } = require('../configuracion/baseDatos');
 // ── Búsqueda semántica principal ──
 
 async function buscarProductos(clasificacion, productos, ejecutarQueryFn) {
-  try {
-    const resultados = await servicioEmbeddings.buscarSemantico(
-      clasificacion,
-      productos,
-      ejecutarQueryFn,
-      5 // top-K por categoría
-    );
-    return resultados;
-  } catch (error) {
-    console.warn('[Buscador] Búsqueda semántica falló, usando fallback SQL:', error.message);
-    return buscarProductosFallback(clasificacion, productos, ejecutarQueryFn);
+  // Intentar búsqueda semántica solo si hay caché existente (evitar timeout en cold start)
+  const cacheDisponible = servicioEmbeddings.cacheDisponible();
+
+  if (cacheDisponible) {
+    try {
+      const resultados = await servicioEmbeddings.buscarSemantico(
+        clasificacion,
+        productos,
+        ejecutarQueryFn,
+        5 // top-K por categoría
+      );
+      return resultados;
+    } catch (error) {
+      console.warn('[Buscador] Búsqueda semántica falló, usando fallback SQL:', error.message);
+      return buscarProductosFallback(clasificacion, productos, ejecutarQueryFn);
+    }
   }
+
+  // Sin caché: usar fallback SQL directamente (evita timeout generando ~500 embeddings)
+  console.info('[Buscador] Sin caché de embeddings, usando fallback SQL');
+  return buscarProductosFallback(clasificacion, productos, ejecutarQueryFn);
 }
 
 // ── Fallback: búsqueda SQL por filtros ──

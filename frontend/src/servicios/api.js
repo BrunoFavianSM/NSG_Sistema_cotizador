@@ -11,7 +11,8 @@ import axios from 'axios';
 
 // Configuración base de Axios
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const API_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS || 300000);
+const API_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS || 45000);
+const ASISTENTE_TIMEOUT_MS = Number(import.meta.env.VITE_ASISTENTE_TIMEOUT_MS || 30000);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -1052,5 +1053,6 @@ export const verificarSalud = async () => {
 };
 
 // Exportar instancia de axios configurada para casos especiales
+export { ASISTENTE_TIMEOUT_MS };
 export default api;
 

@@ -7,7 +7,7 @@
  * Valida Requisitos: 16.1, 16.2, 16.3, 16.4, 16.5, 16.6
  */
 
-import api from './api.js';
+import api, { ASISTENTE_TIMEOUT_MS } from './api.js';
 
 // ============================================
 // FUNCIONES DEL ASISTENTE IA v2
@@ -26,7 +26,7 @@ export const nuevaSesion = async (usuario_id = null) => {
     if (usuario_id !== null && usuario_id !== undefined) {
       payload.usuario_id = usuario_id;
     }
-    const response = await api.post('/asistente/nueva-sesion', payload);
+    const response = await api.post('/asistente/nueva-sesion', payload, { timeout: ASISTENTE_TIMEOUT_MS });
     return response.data;
   } catch (error) {
     const mensaje =
@@ -60,7 +60,7 @@ export const enviarMensaje = async (sesion_id, mensaje, usuario_id = null) => {
     if (usuario_id !== null && usuario_id !== undefined) {
       payload.usuario_id = usuario_id;
     }
-    const response = await api.post('/asistente/mensaje', payload);
+    const response = await api.post('/asistente/mensaje', payload, { timeout: ASISTENTE_TIMEOUT_MS });
     return response.data;
   } catch (error) {
     const mensaje_error =

@@ -7,6 +7,7 @@
 const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY;
 const NVIDIA_BASE_URL = process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
 const NVIDIA_CLASSIFIER_MODEL = process.env.NVIDIA_CLASSIFIER_MODEL || 'meta/llama-3.2-3b-instruct';
+const CLASSIFIER_FETCH_TIMEOUT_MS = parseInt(process.env.CLASSIFIER_FETCH_TIMEOUT_MS || '8000', 10);
 
 const { extraerJSON } = require('./servicioLLM');
 
@@ -65,20 +66,29 @@ async function clasificar(mensaje, historial = []) {
 
   const prompt = construirPromptClasificador(mensaje, resumirHistorial(historial));
 
-  const respuesta = await fetch(`${NVIDIA_BASE_URL}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${NVIDIA_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: NVIDIA_CLASSIFIER_MODEL,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.1,
-      max_tokens: 300,
-      top_p: 0.9,
-    }),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), CLASSIFIER_FETCH_TIMEOUT_MS);
+
+  let respuesta;
+  try {
+    respuesta = await fetch(`${NVIDIA_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${NVIDIA_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: NVIDIA_CLASSIFIER_MODEL,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.1,
+        max_tokens: 300,
+        top_p: 0.9,
+      }),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!respuesta.ok) {
     const errorBody = await respuesta.text().catch(() => '');
