@@ -216,6 +216,39 @@ El asistente opera en tres modos mutuamente excluyentes controlados por la varia
 
 ---
 
+### Requisito 11: Configuración de claves API de IA desde el panel administrativo
+
+**User Story:** Como Admin, quiero configurar las claves API de Google Gemini y NVIDIA desde el panel de configuración, para no tener que editar el archivo `.env` del servidor cada vez que necesite rotar o cambiar una clave.
+
+#### Contexto técnico
+
+Las claves API se usan en 5 módulos del asistente como constantes de módulo leídas al arrancar el servidor:
+- `servicioLLM.js` — `GEMINI_API_KEY` (Gemini) y `NVIDIA_API_KEY` (NVIDIA uni-modelo)
+- `agenteClasificador.js` — `NVIDIA_API_KEY` (pipeline clasificador)
+- `servicioEmbeddings.js` — `NVIDIA_API_KEY` (pipeline embeddings)
+- `orquestadorAgentes.js` — `NVIDIA_API_KEY` (validación de disponibilidad)
+- `inicializarCache.js` — `NVIDIA_API_KEY` (precarga de embeddings)
+
+Las claves deben almacenarse **encriptadas con AES-256** en la tabla `configuracion` usando la misma `ENCRYPTION_KEY` del `.env`. El `.env` sigue siendo la fuente de verdad para `ENCRYPTION_KEY`, `JWT_SECRET` y credenciales de BD — solo las API keys de IA se mueven a la BD.
+
+#### Criterios de Aceptación
+
+1. THE Sistema SHALL exponer el endpoint `GET /api/configuracion/api-keys-ia` protegido por `verificarTokenAdmin`, que retorna si cada clave está configurada en BD (`{ gemini_configurada: bool, nvidia_configurada: bool }`) **sin revelar el valor real de las claves**.
+2. THE Sistema SHALL exponer el endpoint `PUT /api/configuracion/api-keys-ia` protegido por `verificarTokenAdmin`, que acepta `gemini_api_key` y/o `nvidia_api_key` en el body y los persiste encriptados con AES-256 en la tabla `configuracion`.
+3. WHEN se invoca `PUT /api/configuracion/api-keys-ia`, THE Sistema SHALL encriptar cada clave recibida con `encriptarAES(valor)` antes de almacenarla en la tabla `configuracion` bajo las claves `ia_gemini_api_key_enc` e `ia_nvidia_api_key_enc`.
+4. IF un campo de clave API recibido está vacío o contiene solo espacios en blanco, THEN THE Sistema SHALL retornar HTTP 400 con código `API_KEY_INVALIDA`.
+5. THE `servicioConfigIA.obtenerConfigIA()` SHALL también retornar las API keys desencriptadas (`gemini_api_key`, `nvidia_api_key`), usando los valores del `.env` como fallback si no existen registros en BD.
+6. WHEN `servicioLLM.js` recibe `configIA` con `gemini_api_key` definida, THE Sistema SHALL usar ese valor en lugar de `process.env.GEMINI_API_KEY` para inicializar el cliente de Gemini.
+7. WHEN `agenteClasificador.js`, `servicioEmbeddings.js` y `orquestadorAgentes.js` reciben `configIA` con `nvidia_api_key` definida, THE Sistema SHALL usar ese valor en lugar de `process.env.NVIDIA_API_KEY` en los headers de autorización.
+8. THE AdminConfiguracion SHALL mostrar en la sección "Asistente de IA" dos campos de tipo password para las claves API: "Clave API de Google Gemini" y "Clave API de NVIDIA".
+9. THE campos de clave API SHALL mostrar un indicador visual ("✓ Configurada" en verde / "No configurada" en gris) basado en la respuesta del endpoint `GET /api/configuracion/api-keys-ia`, sin mostrar el valor real.
+10. WHEN el Admin escribe en un campo de clave API, THE campo SHALL mostrar el valor como texto enmascarado (`type="password"`) con opción de revelar temporalmente (`type="text"`) mediante un botón de ojo.
+11. WHEN el Admin guarda las claves, THE AdminConfiguracion SHALL mostrar un Toast de tipo `success` con "Claves API guardadas correctamente." o un Toast de tipo `error` con el mensaje del backend si falla.
+12. THE Sistema SHALL nunca retornar el valor real de las claves API en ninguna respuesta de API, incluyendo el endpoint `GET /api/configuracion/modelos-ia`.
+13. THE claves API almacenadas en BD SHALL ser desencriptadas en memoria solo en el momento de usarlas para llamadas a APIs externas, nunca almacenadas en variables de proceso globales.
+
+---
+
 ## Restricciones Transversales
 
 ### Seguridad
