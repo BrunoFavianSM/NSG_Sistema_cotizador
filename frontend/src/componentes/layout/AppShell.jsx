@@ -528,7 +528,7 @@ export default function AppShell() {
         Saltar al contenido principal
       </a>
 
-      <div className="lg:grid lg:min-h-screen lg:grid-cols-[18rem_minmax(0,1fr)]">
+      <div className="lg:grid lg:min-h-screen lg:grid-cols-[19rem_minmax(0,1fr)]">
         <DesktopSidebar navItems={navItems} usuario={usuario} autenticado={autenticado} onLogout={handleLogout} />
 
         <div className="min-w-0 pb-24 lg:pb-0">
