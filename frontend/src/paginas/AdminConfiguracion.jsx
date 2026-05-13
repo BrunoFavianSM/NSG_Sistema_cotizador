@@ -52,6 +52,54 @@ function SelectorModoTipoCambio({ modo, onChange, disabled }) {
   );
 }
 
+/**
+ * Selector segmentado de modo IA.
+ * Cumple WCAG AA: role="radiogroup", focus visible, contraste, touch targets 44px.
+ */
+function SelectorModoIA({ modo, onChange, disabled }) {
+  const opciones = [
+    { valor: 'pipeline', etiqueta: 'Pipeline Multi-Agente NVIDIA' },
+    { valor: 'nvidia',   etiqueta: 'Uni-modelo NVIDIA' },
+    { valor: 'gemini',   etiqueta: 'Uni-modelo Gemini' },
+  ];
+
+  return (
+    <div
+      role="radiogroup"
+      aria-label="Modo del asistente de IA"
+      className="flex flex-wrap gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-0.5"
+    >
+      {opciones.map(({ valor, etiqueta }) => {
+        const activo = modo === valor;
+        return (
+          <button
+            key={valor}
+            type="button"
+            role="radio"
+            aria-checked={activo}
+            disabled={disabled}
+            onClick={() => onChange(valor)}
+            className={[
+              'min-h-[44px] min-w-[44px] px-4 py-2 rounded-[calc(var(--radius-sm)-2px)] text-sm font-medium transition-colors',
+              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]',
+              'disabled:opacity-50 disabled:cursor-not-allowed',
+              activo
+                ? 'bg-[var(--color-accent)] text-white shadow-sm'
+                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]',
+            ].join(' ')}
+          >
+            {etiqueta}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Tarjeta de estadística con tono visual configurable.
+ * Cumple WCAG AA: contraste, semántica de article.
+ */
 function StatCard({ title, value, helper, tone = 'neutral' }) {
   const toneClass = {
     neutral: 'border-[var(--color-border)] bg-[var(--color-surface-soft)]',
@@ -99,9 +147,30 @@ export default function AdminConfiguracion() {
   const [errorEstadisticas, setErrorEstadisticas] = useState('');
   const [limpiando, setLimpiando] = useState(false);
 
+  // ── Estado sección Asistente de IA (Requisitos 2.10–2.17) ──────────────────
+  const [modoIA, setModoIA] = useState('pipeline');
+  const [modelos, setModelos] = useState({
+    gemini_model: '',
+    nvidia_model: '',
+    nvidia_classifier_model: '',
+    nvidia_embedding_model: '',
+    nvidia_reranker_model: '',
+  });
+  const [erroresModelos, setErroresModelos] = useState({});
+  const [cargandoModelosIA, setCargandoModelosIA] = useState(true);
+  const [guardandoModelosIA, setGuardandoModelosIA] = useState(false);
+
+  // ── Estado sección Claves API de IA (Requisitos 11.1–11.13) ───────────────
+  const [apiKeys, setApiKeys] = useState({ gemini_api_key: '', nvidia_api_key: '' });
+  const [mostrarApiKey, setMostrarApiKey] = useState({ gemini: false, nvidia: false });
+  const [estadoApiKeys, setEstadoApiKeys] = useState({ gemini_configurada: false, nvidia_configurada: false });
+  const [guardandoApiKeys, setGuardandoApiKeys] = useState(false);
+
   useEffect(() => {
     if (autenticado) {
       cargarEstadisticasIA();
+      cargarModelosIA();
+      cargarEstadoApiKeys();
     }
   }, [autenticado]);
 
@@ -127,6 +196,104 @@ export default function AdminConfiguracion() {
       setEstadisticasIA(null);
     } finally {
       setCargandoEstadisticas(false);
+    }
+  };
+
+  /** Carga la configuración de modo y modelos de IA desde el backend (Requisito 2.11). */
+  const cargarModelosIA = async () => {
+    setCargandoModelosIA(true);
+    try {
+      const config = await api.obtenerModelosIA();
+      setModoIA(config.modo_activo || 'pipeline');
+      setModelos({
+        gemini_model:            config.gemini_model            || '',
+        nvidia_model:            config.nvidia_model            || '',
+        nvidia_classifier_model: config.nvidia_classifier_model || '',
+        nvidia_embedding_model:  config.nvidia_embedding_model  || '',
+        nvidia_reranker_model:   config.nvidia_reranker_model   || '',
+      });
+    } catch {
+      // Silencioso: la sección mostrará campos vacíos con valores por defecto
+    } finally {
+      setCargandoModelosIA(false);
+    }
+  };
+
+  /** Carga el estado de configuración de las claves API de IA (Requisito 11.8). */
+  const cargarEstadoApiKeys = async () => {
+    try {
+      const estado = await api.obtenerApiKeysIA();
+      setEstadoApiKeys({
+        gemini_configurada: estado.gemini_configurada ?? false,
+        nvidia_configurada: estado.nvidia_configurada ?? false,
+      });
+    } catch {
+      // Silencioso: los indicadores mostrarán "No configurada"
+    }
+  };
+
+  /** Guarda las claves API de IA (Requisito 11.9, 11.10, 11.11). */
+  const guardarApiKeys = async () => {
+    const payload = {};
+    if (apiKeys.gemini_api_key.trim()) payload.gemini_api_key = apiKeys.gemini_api_key.trim();
+    if (apiKeys.nvidia_api_key.trim()) payload.nvidia_api_key = apiKeys.nvidia_api_key.trim();
+
+    if (Object.keys(payload).length === 0) {
+      toast.warning('Sin cambios', 'Ingresa al menos una clave API para guardar.');
+      return;
+    }
+
+    setGuardandoApiKeys(true);
+    try {
+      await api.actualizarApiKeysIA(payload);
+      toast.success('Claves API guardadas correctamente.');
+      // Limpiar campos y recargar estado
+      setApiKeys({ gemini_api_key: '', nvidia_api_key: '' });
+      setMostrarApiKey({ gemini: false, nvidia: false });
+      await cargarEstadoApiKeys();
+    } catch (error) {
+      toast.error('No se pudieron guardar las claves', error?.mensaje || 'Intenta nuevamente en unos segundos.');
+    } finally {
+      setGuardandoApiKeys(false);
+    }
+  };
+
+  /**
+   * Valida los campos requeridos según el modo activo.
+   * Retorna true si todo es válido, false si hay errores.
+   */
+  const validarCamposModelos = (modo, vals) => {
+    const errores = {};
+    if (modo === 'pipeline') {
+      if (!vals.nvidia_classifier_model?.trim()) errores.nvidia_classifier_model = 'Campo requerido para el modo Pipeline.';
+      if (!vals.nvidia_embedding_model?.trim())  errores.nvidia_embedding_model  = 'Campo requerido para el modo Pipeline.';
+      if (!vals.nvidia_reranker_model?.trim())   errores.nvidia_reranker_model   = 'Campo requerido para el modo Pipeline.';
+    } else if (modo === 'nvidia') {
+      if (!vals.nvidia_model?.trim()) errores.nvidia_model = 'Campo requerido para el modo NVIDIA.';
+    } else if (modo === 'gemini') {
+      if (!vals.gemini_model?.trim()) errores.gemini_model = 'Campo requerido para el modo Gemini.';
+    }
+    setErroresModelos(errores);
+    return Object.keys(errores).length === 0;
+  };
+
+  /** Guarda la configuración de modelos de IA (Requisito 2.14, 2.15). */
+  const guardarModelosIA = async () => {
+    if (!validarCamposModelos(modoIA, modelos)) return;
+
+    setGuardandoModelosIA(true);
+    try {
+      await api.actualizarModelosIA({ modo_activo: modoIA, ...modelos });
+      const etiquetaModo = {
+        pipeline: 'Pipeline Multi-Agente NVIDIA',
+        nvidia:   'Uni-modelo NVIDIA',
+        gemini:   'Uni-modelo Gemini',
+      }[modoIA] || modoIA;
+      toast.success('Configuración de IA guardada', `Modo activo: ${etiquetaModo}.`);
+    } catch (error) {
+      toast.error('No se pudo guardar', error?.mensaje || 'Intenta nuevamente en unos segundos.');
+    } finally {
+      setGuardandoModelosIA(false);
     }
   };
 
@@ -444,6 +611,422 @@ export default function AdminConfiguracion() {
             />
           </div>
         )}
+      </section>
+
+      <section className="surface-elevated p-6">
+        <header className="mb-6">
+          <h2 className="text-lg font-semibold text-[var(--color-text)]">Asistente de IA</h2>
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+            Configura el modo de operación y los modelos del asistente de inteligencia artificial.
+          </p>
+        </header>
+
+        {cargandoModelosIA ? (
+          <div className="py-6">
+            <LoadingSpinner label="Cargando configuración de IA..." />
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* ── Selector de modo ── */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[var(--color-text)]">
+                Modo de operación
+              </label>
+              <SelectorModoIA
+                modo={modoIA}
+                onChange={(nuevoModo) => {
+                  setModoIA(nuevoModo);
+                  setErroresModelos({});
+                }}
+                disabled={guardandoModelosIA}
+              />
+              <p className="text-xs text-[var(--color-text-muted)]">
+                {modoIA === 'pipeline' && 'Usa tres modelos NVIDIA especializados en clasificación, embeddings y reranking.'}
+                {modoIA === 'nvidia'   && 'Usa un único modelo NVIDIA para todas las respuestas del asistente.'}
+                {modoIA === 'gemini'   && 'Usa un único modelo Gemini de Google para todas las respuestas del asistente.'}
+              </p>
+            </div>
+
+            {/* ── Campos condicionales según modo ── */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              {modoIA === 'pipeline' && (
+                <>
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="ia-classifier-model"
+                      className="block text-sm font-medium text-[var(--color-text)]"
+                    >
+                      Modelo clasificador
+                    </label>
+                    <input
+                      id="ia-classifier-model"
+                      type="text"
+                      aria-label="Modelo NVIDIA clasificador para el pipeline multi-agente"
+                      aria-describedby={erroresModelos.nvidia_classifier_model ? 'ia-classifier-error' : undefined}
+                      aria-invalid={!!erroresModelos.nvidia_classifier_model}
+                      value={modelos.nvidia_classifier_model}
+                      onChange={(e) => setModelos((prev) => ({ ...prev, nvidia_classifier_model: e.target.value }))}
+                      disabled={guardandoModelosIA}
+                      placeholder="meta/llama-3.2-3b-instruct"
+                      className={[
+                        'w-full min-h-[44px] rounded-[var(--radius-sm)] border px-3 py-2 text-sm',
+                        'bg-[var(--color-surface)] text-[var(--color-text)]',
+                        'placeholder:text-[var(--color-text-muted)]',
+                        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]',
+                        'disabled:opacity-50 disabled:cursor-not-allowed',
+                        'transition-colors',
+                        erroresModelos.nvidia_classifier_model
+                          ? 'border-[var(--color-danger)] focus-visible:outline-[var(--color-danger)]'
+                          : 'border-[var(--color-border)]',
+                      ].join(' ')}
+                    />
+                    {erroresModelos.nvidia_classifier_model && (
+                      <p
+                        id="ia-classifier-error"
+                        role="alert"
+                        className="text-xs font-medium text-[var(--color-danger)]"
+                      >
+                        {erroresModelos.nvidia_classifier_model}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="ia-embedding-model"
+                      className="block text-sm font-medium text-[var(--color-text)]"
+                    >
+                      Modelo embeddings
+                    </label>
+                    <input
+                      id="ia-embedding-model"
+                      type="text"
+                      aria-label="Modelo NVIDIA de embeddings para el pipeline multi-agente"
+                      aria-describedby={erroresModelos.nvidia_embedding_model ? 'ia-embedding-error' : undefined}
+                      aria-invalid={!!erroresModelos.nvidia_embedding_model}
+                      value={modelos.nvidia_embedding_model}
+                      onChange={(e) => setModelos((prev) => ({ ...prev, nvidia_embedding_model: e.target.value }))}
+                      disabled={guardandoModelosIA}
+                      placeholder="nvidia/nv-embed-v1"
+                      className={[
+                        'w-full min-h-[44px] rounded-[var(--radius-sm)] border px-3 py-2 text-sm',
+                        'bg-[var(--color-surface)] text-[var(--color-text)]',
+                        'placeholder:text-[var(--color-text-muted)]',
+                        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]',
+                        'disabled:opacity-50 disabled:cursor-not-allowed',
+                        'transition-colors',
+                        erroresModelos.nvidia_embedding_model
+                          ? 'border-[var(--color-danger)] focus-visible:outline-[var(--color-danger)]'
+                          : 'border-[var(--color-border)]',
+                      ].join(' ')}
+                    />
+                    {erroresModelos.nvidia_embedding_model && (
+                      <p
+                        id="ia-embedding-error"
+                        role="alert"
+                        className="text-xs font-medium text-[var(--color-danger)]"
+                      >
+                        {erroresModelos.nvidia_embedding_model}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1 sm:col-span-2">
+                    <label
+                      htmlFor="ia-reranker-model"
+                      className="block text-sm font-medium text-[var(--color-text)]"
+                    >
+                      Modelo reranker
+                    </label>
+                    <input
+                      id="ia-reranker-model"
+                      type="text"
+                      aria-label="Modelo NVIDIA reranker para el pipeline multi-agente"
+                      aria-describedby={erroresModelos.nvidia_reranker_model ? 'ia-reranker-error' : undefined}
+                      aria-invalid={!!erroresModelos.nvidia_reranker_model}
+                      value={modelos.nvidia_reranker_model}
+                      onChange={(e) => setModelos((prev) => ({ ...prev, nvidia_reranker_model: e.target.value }))}
+                      disabled={guardandoModelosIA}
+                      placeholder="nvidia/rerank-qa-mistral-4b"
+                      className={[
+                        'w-full min-h-[44px] rounded-[var(--radius-sm)] border px-3 py-2 text-sm',
+                        'bg-[var(--color-surface)] text-[var(--color-text)]',
+                        'placeholder:text-[var(--color-text-muted)]',
+                        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]',
+                        'disabled:opacity-50 disabled:cursor-not-allowed',
+                        'transition-colors',
+                        erroresModelos.nvidia_reranker_model
+                          ? 'border-[var(--color-danger)] focus-visible:outline-[var(--color-danger)]'
+                          : 'border-[var(--color-border)]',
+                      ].join(' ')}
+                    />
+                    {erroresModelos.nvidia_reranker_model && (
+                      <p
+                        id="ia-reranker-error"
+                        role="alert"
+                        className="text-xs font-medium text-[var(--color-danger)]"
+                      >
+                        {erroresModelos.nvidia_reranker_model}
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {modoIA === 'nvidia' && (
+                <div className="space-y-1 sm:col-span-2">
+                  <label
+                    htmlFor="ia-nvidia-model"
+                    className="block text-sm font-medium text-[var(--color-text)]"
+                  >
+                    Modelo NVIDIA
+                  </label>
+                  <input
+                    id="ia-nvidia-model"
+                    type="text"
+                    aria-label="Modelo NVIDIA para el modo uni-modelo"
+                    aria-describedby={erroresModelos.nvidia_model ? 'ia-nvidia-error' : undefined}
+                    aria-invalid={!!erroresModelos.nvidia_model}
+                    value={modelos.nvidia_model}
+                    onChange={(e) => setModelos((prev) => ({ ...prev, nvidia_model: e.target.value }))}
+                    disabled={guardandoModelosIA}
+                    placeholder="mistralai/mistral-small-4-119b-2603"
+                    className={[
+                      'w-full min-h-[44px] rounded-[var(--radius-sm)] border px-3 py-2 text-sm',
+                      'bg-[var(--color-surface)] text-[var(--color-text)]',
+                      'placeholder:text-[var(--color-text-muted)]',
+                      'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]',
+                      'disabled:opacity-50 disabled:cursor-not-allowed',
+                      'transition-colors',
+                      erroresModelos.nvidia_model
+                        ? 'border-[var(--color-danger)] focus-visible:outline-[var(--color-danger)]'
+                        : 'border-[var(--color-border)]',
+                    ].join(' ')}
+                  />
+                  {erroresModelos.nvidia_model && (
+                    <p
+                      id="ia-nvidia-error"
+                      role="alert"
+                      className="text-xs font-medium text-[var(--color-danger)]"
+                    >
+                      {erroresModelos.nvidia_model}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {modoIA === 'gemini' && (
+                <div className="space-y-1 sm:col-span-2">
+                  <label
+                    htmlFor="ia-gemini-model"
+                    className="block text-sm font-medium text-[var(--color-text)]"
+                  >
+                    Modelo Gemini
+                  </label>
+                  <input
+                    id="ia-gemini-model"
+                    type="text"
+                    aria-label="Modelo Gemini para el modo uni-modelo"
+                    aria-describedby={erroresModelos.gemini_model ? 'ia-gemini-error' : undefined}
+                    aria-invalid={!!erroresModelos.gemini_model}
+                    value={modelos.gemini_model}
+                    onChange={(e) => setModelos((prev) => ({ ...prev, gemini_model: e.target.value }))}
+                    disabled={guardandoModelosIA}
+                    placeholder="gemini-2.5-flash"
+                    className={[
+                      'w-full min-h-[44px] rounded-[var(--radius-sm)] border px-3 py-2 text-sm',
+                      'bg-[var(--color-surface)] text-[var(--color-text)]',
+                      'placeholder:text-[var(--color-text-muted)]',
+                      'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]',
+                      'disabled:opacity-50 disabled:cursor-not-allowed',
+                      'transition-colors',
+                      erroresModelos.gemini_model
+                        ? 'border-[var(--color-danger)] focus-visible:outline-[var(--color-danger)]'
+                        : 'border-[var(--color-border)]',
+                    ].join(' ')}
+                  />
+                  {erroresModelos.gemini_model && (
+                    <p
+                      id="ia-gemini-error"
+                      role="alert"
+                      className="text-xs font-medium text-[var(--color-danger)]"
+                    >
+                      {erroresModelos.gemini_model}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* ── Botón guardar ── */}
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                loading={guardandoModelosIA}
+                disabled={guardandoModelosIA}
+                onClick={guardarModelosIA}
+              >
+                Guardar configuración de IA
+              </Button>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ── Sección Claves API de IA (Requisitos 11.1–11.13) ── */}
+      <section className="surface-elevated p-6">
+        <header className="mb-6">
+          <h2 className="text-lg font-semibold text-[var(--color-text)]">Claves API de IA</h2>
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+            Configura las claves API de Gemini y NVIDIA. Se almacenan encriptadas en la base de datos.
+          </p>
+        </header>
+
+        <div className="space-y-5">
+          {/* ── Gemini API Key ── */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="gemini-api-key"
+                className="block text-sm font-medium text-[var(--color-text)]"
+              >
+                Clave API de Gemini
+              </label>
+              {estadoApiKeys.gemini_configurada ? (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400">
+                  <span aria-hidden="true">✓</span> Configurada
+                </span>
+              ) : (
+                <span className="text-xs text-[var(--color-text-muted)]">No configurada</span>
+              )}
+            </div>
+            <div className="relative flex items-center">
+              <input
+                id="gemini-api-key"
+                type={mostrarApiKey.gemini ? 'text' : 'password'}
+                aria-label="Clave API de Google Gemini"
+                value={apiKeys.gemini_api_key}
+                onChange={(e) => setApiKeys((prev) => ({ ...prev, gemini_api_key: e.target.value }))}
+                disabled={guardandoApiKeys}
+                placeholder={estadoApiKeys.gemini_configurada ? '••••••••••••••••••••' : 'AIza...'}
+                autoComplete="off"
+                className={[
+                  'w-full min-h-[44px] rounded-[var(--radius-sm)] border px-3 py-2 pr-12 text-sm',
+                  'bg-[var(--color-surface)] text-[var(--color-text)]',
+                  'placeholder:text-[var(--color-text-muted)]',
+                  'border-[var(--color-border)]',
+                  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]',
+                  'disabled:opacity-50 disabled:cursor-not-allowed',
+                  'transition-colors',
+                ].join(' ')}
+              />
+              <button
+                type="button"
+                aria-label={mostrarApiKey.gemini ? 'Ocultar clave API de Gemini' : 'Mostrar clave API de Gemini'}
+                onClick={() => setMostrarApiKey((prev) => ({ ...prev, gemini: !prev.gemini }))}
+                disabled={guardandoApiKeys}
+                className={[
+                  'absolute right-0 flex items-center justify-center min-h-[44px] min-w-[44px]',
+                  'text-[var(--color-text-muted)] hover:text-[var(--color-text)]',
+                  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]',
+                  'disabled:opacity-50 disabled:cursor-not-allowed',
+                  'transition-colors rounded-r-[var(--radius-sm)]',
+                ].join(' ')}
+              >
+                {mostrarApiKey.gemini ? (
+                  /* Ojo cerrado */
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4" aria-hidden="true">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                ) : (
+                  /* Ojo abierto */
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* ── NVIDIA API Key ── */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="nvidia-api-key"
+                className="block text-sm font-medium text-[var(--color-text)]"
+              >
+                Clave API de NVIDIA
+              </label>
+              {estadoApiKeys.nvidia_configurada ? (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400">
+                  <span aria-hidden="true">✓</span> Configurada
+                </span>
+              ) : (
+                <span className="text-xs text-[var(--color-text-muted)]">No configurada</span>
+              )}
+            </div>
+            <div className="relative flex items-center">
+              <input
+                id="nvidia-api-key"
+                type={mostrarApiKey.nvidia ? 'text' : 'password'}
+                aria-label="Clave API de NVIDIA"
+                value={apiKeys.nvidia_api_key}
+                onChange={(e) => setApiKeys((prev) => ({ ...prev, nvidia_api_key: e.target.value }))}
+                disabled={guardandoApiKeys}
+                placeholder={estadoApiKeys.nvidia_configurada ? '••••••••••••••••••••' : 'nvapi-...'}
+                autoComplete="off"
+                className={[
+                  'w-full min-h-[44px] rounded-[var(--radius-sm)] border px-3 py-2 pr-12 text-sm',
+                  'bg-[var(--color-surface)] text-[var(--color-text)]',
+                  'placeholder:text-[var(--color-text-muted)]',
+                  'border-[var(--color-border)]',
+                  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]',
+                  'disabled:opacity-50 disabled:cursor-not-allowed',
+                  'transition-colors',
+                ].join(' ')}
+              />
+              <button
+                type="button"
+                aria-label={mostrarApiKey.nvidia ? 'Ocultar clave API de NVIDIA' : 'Mostrar clave API de NVIDIA'}
+                onClick={() => setMostrarApiKey((prev) => ({ ...prev, nvidia: !prev.nvidia }))}
+                disabled={guardandoApiKeys}
+                className={[
+                  'absolute right-0 flex items-center justify-center min-h-[44px] min-w-[44px]',
+                  'text-[var(--color-text-muted)] hover:text-[var(--color-text)]',
+                  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]',
+                  'disabled:opacity-50 disabled:cursor-not-allowed',
+                  'transition-colors rounded-r-[var(--radius-sm)]',
+                ].join(' ')}
+              >
+                {mostrarApiKey.nvidia ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4" aria-hidden="true">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* ── Botón guardar ── */}
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              loading={guardandoApiKeys}
+              disabled={guardandoApiKeys || (!apiKeys.gemini_api_key.trim() && !apiKeys.nvidia_api_key.trim())}
+              onClick={guardarApiKeys}
+            >
+              Guardar claves API
+            </Button>
+          </div>
+        </div>
       </section>
 
       <section className="surface-elevated p-6 border-l-4 border-[var(--color-danger)]">

@@ -691,7 +691,7 @@ export const registrar = async ({ username, password, confirmarPassword, correo,
 };
 
 /**
- * Solicita recuperacion de contrasena
+ * Solicita recuperacion de contrasena por correo electronico
  * @param {string} correo
  * @returns {Promise<{exito: boolean, mensaje: string}>}
  */
@@ -700,6 +700,25 @@ export const solicitarRecuperacion = async (correo) => {
     const response = await api.post('/auth/recuperar', { correo });
     return response.data;
   } catch (error) {
+    // Retornar el body del error (404 = cuenta no encontrada) en lugar de lanzar
+    if (error?.response?.data) return error.response.data;
+    throw error;
+  }
+};
+
+/**
+ * Solicita recuperacion de contrasena por numero de telefono
+ * Requisitos: 1.6, 1.7, 1.8
+ * @param {string} telefono - Numero de telefono (solo digitos, 7-15 caracteres)
+ * @returns {Promise<{exito: boolean, mensaje: string}>}
+ */
+export const solicitarRecuperacionPorTelefono = async (telefono) => {
+  try {
+    const response = await api.post('/auth/recuperar-por-telefono', { telefono });
+    return response.data;
+  } catch (error) {
+    // Retornar el body del error (404 = cuenta no encontrada) en lugar de lanzar
+    if (error?.response?.data) return error.response.data;
     throw error;
   }
 };
@@ -1033,6 +1052,112 @@ export const decodificarConfiguracion = (base64) => {
   }
 
   return configuracion;
+};
+
+// ============================================
+// FUNCIONES DE CONFIGURACIÓN DE IA
+// ============================================
+
+/**
+ * Obtiene la configuración de modo y modelos del asistente de IA.
+ * Requiere token JWT de administrador.
+ * Valida Requisitos: 2.10, 2.11
+ *
+ * @returns {Promise<{
+ *   modo_activo: 'pipeline' | 'nvidia' | 'gemini',
+ *   gemini_model: string,
+ *   nvidia_model: string,
+ *   nvidia_classifier_model: string,
+ *   nvidia_embedding_model: string,
+ *   nvidia_reranker_model: string
+ * }>}
+ */
+export const obtenerModelosIA = async () => {
+  try {
+    const response = await api.get('/configuracion/modelos-ia');
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudo obtener la configuración de modelos de IA.';
+    throw { mensaje, codigo: error?.codigo || error?.response?.data?.codigo };
+  }
+};
+
+/**
+ * Actualiza la configuración de modo y modelos del asistente de IA.
+ * Requiere token JWT de administrador.
+ * Valida Requisitos: 2.12, 2.13, 2.14, 2.15
+ *
+ * @param {{
+ *   modo_activo: 'pipeline' | 'nvidia' | 'gemini',
+ *   gemini_model?: string,
+ *   nvidia_model?: string,
+ *   nvidia_classifier_model?: string,
+ *   nvidia_embedding_model?: string,
+ *   nvidia_reranker_model?: string
+ * }} config
+ * @returns {Promise<{ exito: boolean, config: Object }>}
+ */
+export const actualizarModelosIA = async (config) => {
+  try {
+    const response = await api.put('/configuracion/modelos-ia', config);
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudo actualizar la configuración de modelos de IA.';
+    throw { mensaje, codigo: error?.codigo || error?.response?.data?.codigo };
+  }
+};
+
+// ============================================
+// FUNCIONES DE CLAVES API DE IA (Req. 11)
+// ============================================
+
+/**
+ * Obtiene el estado de configuración de las claves API de IA.
+ * Retorna solo si están configuradas, sin revelar los valores.
+ * Requiere token JWT de administrador.
+ * Valida Requisitos: 11.1, 11.8
+ *
+ * @returns {Promise<{ exito: boolean, gemini_configurada: boolean, nvidia_configurada: boolean }>}
+ */
+export const obtenerApiKeysIA = async () => {
+  try {
+    const response = await api.get('/configuracion/api-keys-ia');
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudo obtener el estado de las claves API de IA.';
+    throw { mensaje, codigo: error?.codigo || error?.response?.data?.codigo };
+  }
+};
+
+/**
+ * Actualiza las claves API de IA (encriptadas en BD).
+ * Solo envía los campos que el admin haya llenado.
+ * Requiere token JWT de administrador.
+ * Valida Requisitos: 11.2, 11.3, 11.9
+ *
+ * @param {{ gemini_api_key?: string, nvidia_api_key?: string }} claves
+ * @returns {Promise<{ exito: boolean }>}
+ */
+export const actualizarApiKeysIA = async (claves) => {
+  try {
+    const response = await api.put('/configuracion/api-keys-ia', claves);
+    return response.data;
+  } catch (error) {
+    const mensaje =
+      error?.mensaje ||
+      error?.response?.data?.mensaje ||
+      'No se pudieron guardar las claves API de IA.';
+    throw { mensaje, codigo: error?.codigo || error?.response?.data?.codigo };
+  }
 };
 
 // ============================================

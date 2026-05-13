@@ -1,0 +1,4 @@
+id_producto,tipo_almacenamiento,capacidad_gb,interfaz,form_factor,velocidad_lectura_mbps,velocidad_escritura_mbps,nvme_gen,created_at,updated_at
+45,HDD,8192,SATA III,"3.5'"",190,185,,2026-04-15 17:02:11.228085,2026-05-04 10:19:19.945844
+4,SSD,2048,SATA III,"2.5'"",550,500,,2026-04-15 17:02:11.134889,2026-05-04 10:20:44.958249
+44,NVMe,4000,NVMe PCIe 4.0,M.2,7250,6898,Gen 4,2026-04-15 17:02:11.224208,2026-05-04 10:22:31.13205

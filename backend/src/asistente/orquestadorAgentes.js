@@ -142,8 +142,10 @@ function generarRespuestaConversacional(clasificacion, configPropuesta, tipoCamb
 
 // ── Función principal: ejecutar pipeline ──
 
-async function ejecutarPipeline({ mensaje, historial, productos, tipoCambio, margen, igv, contextoConversacion, cuestionario, ejecutarQuery }) {
-  if (!ENABLED) {
+async function ejecutarPipeline({ mensaje, historial, productos, tipoCambio, margen, igv, contextoConversacion, cuestionario, ejecutarQuery, configIA }) {
+  const enabled = configIA?.pipeline_enabled ?? ENABLED;
+
+  if (!enabled) {
     throw new Error('Pipeline multi-agente deshabilitado por configuración');
   }
 
@@ -152,10 +154,10 @@ async function ejecutarPipeline({ mensaje, historial, productos, tipoCambio, mar
   }
 
   // Envolver todo el pipeline con timeout total
-  return ejecutarConTimeout(_ejecutarPipelineInterno({ mensaje, historial, productos, tipoCambio, margen, igv, contextoConversacion, cuestionario, ejecutarQuery }), TIMEOUT_TOTAL_MS, 'Pipeline');
+  return ejecutarConTimeout(_ejecutarPipelineInterno({ mensaje, historial, productos, tipoCambio, margen, igv, contextoConversacion, cuestionario, ejecutarQuery, configIA }), TIMEOUT_TOTAL_MS, 'Pipeline');
 }
 
-async function _ejecutarPipelineInterno({ mensaje, historial, productos, tipoCambio, margen, igv, contextoConversacion, cuestionario, ejecutarQuery }) {
+async function _ejecutarPipelineInterno({ mensaje, historial, productos, tipoCambio, margen, igv, contextoConversacion, cuestionario, ejecutarQuery, configIA }) {
 
 
     // ── Paso 0: Detección determinística de intención ──
@@ -165,7 +167,7 @@ async function _ejecutarPipelineInterno({ mensaje, historial, productos, tipoCam
     let clasificacion;
     try {
         clasificacion = await ejecutarConTimeout(
-            agenteClasificador.clasificar(mensaje, historial),
+            agenteClasificador.clasificar(mensaje, historial, configIA),
             TIMEOUT_CLASIFICADOR_MS,
             'Clasificador'
         );
@@ -212,7 +214,7 @@ async function _ejecutarPipelineInterno({ mensaje, historial, productos, tipoCam
   if (listoParaCotizar && productos && productos.length > 0) {
     try {
       candidatos = await ejecutarConTimeout(
-        agenteBuscador.buscarProductos(clasificacion, productos, ejecutarQuery),
+        agenteBuscador.buscarProductos(clasificacion, productos, ejecutarQuery, configIA?.nvidia_api_key),
         TIMEOUT_BUSCADOR_MS,
         'Buscador'
       );

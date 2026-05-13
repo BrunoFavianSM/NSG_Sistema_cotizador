@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Badge from '../componentes/ui/Badge';
 import Button from '../componentes/ui/Button';
@@ -15,8 +15,6 @@ import {
   consultarHistorialCliente,
   listarClientesRegistrados,
   obtenerCotizacionesPropias,
-  obtenerUrlPdfCotizacion,
-  obtenerUrlPdfTecnico,
   exportarExcelCotizacion
 } from '../servicios/api';
 import { formatearMoneda as formatoMoneda } from '../utilidades/moneda';
@@ -38,18 +36,21 @@ function formatearMoneda(monto, moneda = 'USD') {
   return formatoMoneda(monto, moneda);
 }
 
-function estadoToBadgeVariant(estado) {
-  switch (estado) {
-    case 'Pendiente':
-      return 'warning';
-    case 'Completada':
-      return 'success';
-    case 'Caducada':
-      return 'danger';
-    default:
-      return 'neutral';
-  }
-}
+// Mapa de estado backend → texto visible en UI (Req. 7)
+const ESTADO_LABELS = {
+  'Pendiente':  'Pendiente',
+  'Completada': 'Completada',
+  'Reclamada':  'Reclamada',
+  'Caducada':   'Vencida',   // ← "Caducada" en BD se muestra como "Vencida" en UI
+};
+
+// Mapa de estado → variant del Badge (Req. 7)
+const ESTADO_VARIANTS = {
+  'Pendiente':  'warning',
+  'Completada': 'success',
+  'Reclamada':  'info',
+  'Caducada':   'danger',
+};
 
 function StatCard({ label, value, helper }) {
   return (
@@ -123,14 +124,49 @@ export default function HistorialCliente() {
     return cotizaciones.filter((item) => item.estado === filtroEstado);
   }, [cotizaciones, filtroEstado]);
 
-  const descargarPDF = (codigoTicket, tipo = 'comercial') => {
-    const pdfUrl = tipo === 'tecnico'
-      ? obtenerUrlPdfTecnico(codigoTicket, monedaVista)
-      : obtenerUrlPdfCotizacion(codigoTicket, monedaVista);
-    const win = window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+  const descargarPDF = async (codigoTicket, tipo = 'comercial') => {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    const monedaParam = new URLSearchParams({ moneda: String(monedaVista || 'USD').toUpperCase() });
+    const endpoint = tipo === 'tecnico'
+      ? `${API_BASE_URL}/cotizaciones/${codigoTicket}/pdf-tecnico?${monedaParam}`
+      : `${API_BASE_URL}/cotizaciones/${codigoTicket}/pdf?${monedaParam}`;
 
-    if (!win) {
-      toast.warning('No se pudo abrir el PDF', 'Permite ventanas emergentes para descargar el documento.');
+    const token = localStorage.getItem('token');
+
+    try {
+      const respuesta = await fetch(endpoint, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!respuesta.ok) {
+        if (respuesta.status === 410) {
+          toast.error(
+            'Cotización vencida',
+            'Esta cotización superó su fecha de validez y no puede generarse en PDF.'
+          );
+          return;
+        }
+        // Otros errores HTTP
+        const data = await respuesta.json().catch(() => ({}));
+        toast.error(
+          'Error al generar PDF',
+          data.mensaje || 'Ocurrió un error al generar el PDF.'
+        );
+        return;
+      }
+
+      // Descarga exitosa: crear blob y disparar descarga
+      const blob = await respuesta.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cotizacion-${codigoTicket}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Error de red', 'No se pudo conectar al servidor.');
     }
   };
 
@@ -302,7 +338,7 @@ export default function HistorialCliente() {
       key: 'estado',
       label: 'Estado',
       sortable: true,
-      render: (row) => <Badge variant={estadoToBadgeVariant(row.estado)}>{row.estado || 'Sin estado'}</Badge>,
+      render: (row) => <Badge variant={ESTADO_VARIANTS[row.estado] || 'neutral'}>{ESTADO_LABELS[row.estado] || row.estado || 'Sin estado'}</Badge>,
     },
     {
       key: 'precio_total',
@@ -357,15 +393,14 @@ export default function HistorialCliente() {
         <div className="flex justify-end gap-2">
           {/* Validar y Técnico: solo visibles para admin (renderizado condicional, no CSS) */}
           {!esUsuario && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/validar?ticket=${row.codigo_ticket}`)}
+            <Link
+              to={`/validar?ticket=${row.codigo_ticket}`}
+              className="inline-flex items-center justify-center min-h-[32px] px-3 py-1 text-sm font-medium rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-soft)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
               aria-label={`Validar ticket ${row.codigo_ticket}`}
               title="Ir al validador con este ticket"
             >
               Validar
-            </Button>
+            </Link>
           )}
           <Button
             variant="secondary"
@@ -594,7 +629,8 @@ export default function HistorialCliente() {
                     { value: 'todos', label: 'Todos' },
                     { value: 'Pendiente', label: 'Pendiente' },
                     { value: 'Completada', label: 'Completada' },
-                    { value: 'Caducada', label: 'Caducada' },
+                    { value: 'Reclamada', label: 'Reclamada' },
+                    { value: 'Caducada', label: 'Vencida' },
                   ]}
                 />
               )}

@@ -1,0 +1,4 @@
+id_producto,socket,arquitectura,nucleos,hilos,frecuencia_base_ghz,frecuencia_boost_ghz,tdp_w,graficos_integrados,created_at,updated_at
+682,LGA 1700,Raptor Lake Refresh,20,28,3.40,5.60,125,f,2026-04-15 17:02:12.156541,2026-04-16 17:09:53.131841
+684,LGA 1700,"Alder Lake-S (10 nm / '"Intel 7'")",16,24,3.20,5.20,125,f,2026-04-15 17:02:12.159798,2026-04-16 17:14:00.865723
+652,AM4,Zen 3 (Cezanne),6,12,3.60,4.20,65,f,2026-04-15 17:02:12.104567,2026-04-16 16:35:11.396197

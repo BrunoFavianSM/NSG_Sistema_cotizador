@@ -17,6 +17,7 @@ import AnalizadorPresupuesto from '../componentes/cotizador/AnalizadorPresupuest
 import BalanceFinal from '../componentes/cotizador/BalanceFinal';
 import { useAppContext } from '../contexto/AppContext';
 import { useComparador } from '../hooks/useComparador';
+import usePersistenciaSeleccion from '../hooks/usePersistenciaSeleccion';
 import * as api from '../servicios/api';
 import { etiquetaMonedaBase, formatearMoneda } from '../utilidades/moneda';
 import { calcularResumenFinancieroAdmin } from '../utilidades/calcularResumenFinancieroAdmin';
@@ -266,6 +267,22 @@ function extraerValoresUnicos(lista) {
   return [...new Set(lista.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
 }
 
+/**
+ * Ordena una lista de productos por precio_base.
+ * Función pura: no modifica la lista original.
+ * @param {Array} productos
+ * @param {'relevancia'|'menor'|'mayor'} orden
+ * @returns {Array}
+ */
+function ordenarProductos(productos, orden) {
+  if (orden === 'relevancia') return productos;
+  return [...productos].sort((a, b) =>
+    orden === 'menor'
+      ? a.precio_base - b.precio_base
+      : b.precio_base - a.precio_base
+  );
+}
+
 function valorBooleano(valor) {
   if (typeof valor === 'boolean') return valor;
   if (typeof valor === 'number') return valor === 1;
@@ -502,6 +519,7 @@ function ExtrasAccordion({ subseccion, extras, cargarExtras, cargandoExtras, agr
 export default function Cotizador() {
   const {
     configuracionSeleccionada,
+    setConfiguracionSeleccionada,
     seleccionarComponente,
     agregarRAM,
     eliminarRAM,
@@ -543,6 +561,13 @@ export default function Cotizador() {
     limpiarComparador,
   } = useComparador();
 
+  // ── Persistencia de selección en localStorage (Requisitos 3.1–3.7) ───────
+  const { limpiarPersistencia } = usePersistenciaSeleccion(
+    configuracionSeleccionada,
+    setConfiguracionSeleccionada,
+    productos
+  );
+
   // Mostrar toast cuando se alcanza el límite del comparador (Req. 6.4)
   useEffect(() => {
     if (errorComparador) {
@@ -553,6 +578,8 @@ export default function Cotizador() {
   const [pasoActual, setPasoActual] = useState(0);
   // soloDisponibles: true → muestra solo productos con stock > 0 o disponible_a_pedido === true
   const [soloDisponibles, setSoloDisponibles] = useState(true);
+  // ordenPrecio: 'relevancia' | 'menor' | 'mayor' — persiste entre pasos (Req. 10.9)
+  const [ordenPrecio, setOrdenPrecio] = useState('relevancia');
   const [filtrosPaso, setFiltrosPaso] = useState({
     procesadorMarca: 'all',
     procesadorModelo: 'all',
@@ -884,9 +911,15 @@ export default function Cotizador() {
     return lista;
   }, [productosPasoBase, pasoInfo.id, filtrosPaso]);
 
+  // Aplicar ordenamiento por precio después de todos los filtros (Req. 10.3–10.6)
+  const productosFiltradosYOrdenados = useMemo(
+    () => ordenarProductos(productosFiltrados, ordenPrecio),
+    [productosFiltrados, ordenPrecio]
+  );
+
   const gruposProductos = useMemo(() => {
     if (pasoInfo.id === 'procesador') {
-      const grupos = productosFiltrados.reduce((acc, producto) => {
+      const grupos = productosFiltradosYOrdenados.reduce((acc, producto) => {
         const modelo = extraerModeloProcesador(producto);
         if (!acc[modelo]) acc[modelo] = [];
         acc[modelo].push(producto);
@@ -898,7 +931,7 @@ export default function Cotizador() {
     }
 
     if (pasoInfo.id === 'placa_madre') {
-      const grupos = productosFiltrados.reduce((acc, producto) => {
+      const grupos = productosFiltradosYOrdenados.reduce((acc, producto) => {
         const socket = producto.socket ? `Socket ${producto.socket}` : 'Otros sockets';
         if (!acc[socket]) acc[socket] = [];
         acc[socket].push(producto);
@@ -910,7 +943,7 @@ export default function Cotizador() {
     }
 
     if (pasoInfo.id === 'ram') {
-      const grupos = productosFiltrados.reduce((acc, producto) => {
+      const grupos = productosFiltradosYOrdenados.reduce((acc, producto) => {
         const tipo = producto.ram_type || 'Otros';
         if (!acc[tipo]) acc[tipo] = [];
         acc[tipo].push(producto);
@@ -923,7 +956,7 @@ export default function Cotizador() {
 
     if (pasoInfo.id === 'almacenamiento') {
       const orden = ['M.2 / NVMe', 'SSD', 'HDD', 'Otros'];
-      const grupos = productosFiltrados.reduce((acc, producto) => {
+      const grupos = productosFiltradosYOrdenados.reduce((acc, producto) => {
         const tipo = extraerTipoAlmacenamiento(producto);
         if (!acc[tipo]) acc[tipo] = [];
         acc[tipo].push(producto);
@@ -935,7 +968,7 @@ export default function Cotizador() {
     }
     
     if (pasoInfo.id === 'fuente') {
-      const grupos = productosFiltrados.reduce((acc, producto) => {
+      const grupos = productosFiltradosYOrdenados.reduce((acc, producto) => {
         const t = normalizarTexto(producto.descripcion_tecnica);
         let cert = 'Otras';
         if (t.includes('80 plus titanium') || t.includes('80+ titanium')) cert = '80+ Titanium';
@@ -954,8 +987,8 @@ export default function Cotizador() {
         .map((titulo) => ({ titulo, items: grupos[titulo] }));
     }
 
-    return [{ titulo: null, items: productosFiltrados }];
-  }, [productosFiltrados, pasoInfo.id]);
+    return [{ titulo: null, items: productosFiltradosYOrdenados }];
+  }, [productosFiltradosYOrdenados, pasoInfo.id]);
 
   const seleccionActual = configuracionSeleccionada[pasoInfo.id];
   const actualizarFiltroPaso = (clave, valor) => {
@@ -1113,6 +1146,7 @@ export default function Cotizador() {
     try {
       const respuesta = await api.crearCotizacion(construirPayloadCotizacion());
       setCotizacionGenerada(respuesta?.cotizacion || null);
+      limpiarPersistencia();
       toast.success('Cotizacion generada', 'Ya puedes copiar el ticket o descargar el PDF.');
     } catch (error) {
       const mensaje = error?.mensaje || 'No se pudo generar la cotizacion.';
@@ -1175,6 +1209,7 @@ export default function Cotizador() {
   const nuevaCotizacion = () => {
     limpiarConfiguracion();
     limpiarExtras();
+    limpiarPersistencia();
     setPasoActual(0);
     setCotizacionGenerada(null);
     setErrorGenerar('');
@@ -1487,6 +1522,38 @@ export default function Cotizador() {
                 {soloDisponibles ? 'Compatibles' : 'Todos'}
               </span>
             </button>
+
+            {/* Control de ordenamiento por precio (Req. 10.1, 10.2, 10.9–10.11) */}
+            {!esPasoExtras && (
+              <div
+                role="group"
+                aria-label="Ordenar por precio"
+                className="flex rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-0.5 gap-0.5"
+              >
+                {[
+                  { value: 'relevancia', label: 'Relevancia' },
+                  { value: 'menor', label: 'Menor precio' },
+                  { value: 'mayor', label: 'Mayor precio' },
+                ].map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setOrdenPrecio(value)}
+                    aria-pressed={ordenPrecio === value}
+                    className={[
+                      'min-h-[44px] min-w-[44px] px-3 py-2 rounded-[calc(var(--radius-sm)-2px)] text-sm font-medium',
+                      'transition-colors duration-higNormal ease-hig',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
+                      ordenPrecio === value
+                        ? 'bg-[var(--color-accent)] text-white shadow-sm'
+                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-hover)]',
+                    ].join(' ')}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Botones de navegación — parte superior del área de contenido del Paso_Actual (Req. 2.7, 2.8, 2.9, 2.10) */}
@@ -1587,7 +1654,7 @@ export default function Cotizador() {
                 </div>
               ) : errorProductos ? (
                 <ErrorState title="No se cargaron productos" description={errorProductos} onRetry={cargarProductos} />
-              ) : productosFiltrados.length === 0 ? (
+              ) : productosFiltradosYOrdenados.length === 0 ? (
                 <EmptyState
                   title="Sin productos para este paso"
                   description="Prueba con el filtro Todos o revisa el stock disponible."

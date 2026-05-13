@@ -65,8 +65,10 @@ function construirTextoQuery(clasificacion) {
 
 // ── Llamada a NVIDIA Embeddings API ──
 
-async function generarEmbedding(textos, tipo = 'query') {
-  if (!NVIDIA_API_KEY) {
+async function generarEmbedding(textos, tipo = 'query', apiKey) {
+  const keyEfectiva = apiKey || NVIDIA_API_KEY;
+
+  if (!keyEfectiva) {
     throw new Error('NVIDIA_API_KEY no configurada para embeddings');
   }
 
@@ -81,7 +83,7 @@ async function generarEmbedding(textos, tipo = 'query') {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${NVIDIA_API_KEY}`,
+        'Authorization': `Bearer ${keyEfectiva}`,
       },
       body: JSON.stringify({
         model: NVIDIA_EMBEDDING_MODEL,
@@ -111,7 +113,7 @@ async function generarEmbedding(textos, tipo = 'query') {
  * Genera y cachea embeddings para todos los productos del catálogo.
  * Retorna un Map<productoId, { embedding, texto }>
  */
-async function obtenerEmbeddingsProductos(productos, ejecutarQuery) {
+async function obtenerEmbeddingsProductos(productos, ejecutarQuery, apiKey) {
   const cacheKey = 'embeddings_catalogo_completo';
   const cacheado = cacheEmbeddings.get(cacheKey);
   if (cacheado && cacheado.productos) {
@@ -173,9 +175,9 @@ async function obtenerEmbeddingsProductos(productos, ejecutarQuery) {
 
   for (let i = 0; i < textos.length; i += LOTE) {
     const lote = textos.slice(i, i + LOTE);
-    try {
-      const embeddings = await generarEmbedding(lote, 'passage');
-      todosLosEmbeddings = todosLosEmbeddings.concat(embeddings);
+      try {
+        const embeddings = await generarEmbedding(lote, 'passage', apiKey);
+        todosLosEmbeddings = todosLosEmbeddings.concat(embeddings);
     } catch (error) {
       console.error(`[Embeddings] Error en lote ${i}:`, error.message);
       // Lanzar error para que agenteBuscador caiga al fallback SQL
@@ -205,13 +207,13 @@ async function obtenerEmbeddingsProductos(productos, ejecutarQuery) {
  * Busca productos por similaridad semántica contra la query del usuario.
  * Retorna top-K productos por categoría.
  */
-async function buscarSemantico(clasificacion, productos, ejecutarQuery, topK = 5) {
-  const mapaEmbeddings = await obtenerEmbeddingsProductos(productos, ejecutarQuery);
+async function buscarSemantico(clasificacion, productos, ejecutarQuery, topK = 5, apiKey) {
+  const mapaEmbeddings = await obtenerEmbeddingsProductos(productos, ejecutarQuery, apiKey);
   const textoQuery = construirTextoQuery(clasificacion);
 
   let queryEmbedding;
   try {
-    const [embedding] = await generarEmbedding([textoQuery], 'query');
+    const [embedding] = await generarEmbedding([textoQuery], 'query', apiKey);
     queryEmbedding = embedding;
   } catch (error) {
     console.error('[Embeddings] Error generando embedding de query:', error.message);
