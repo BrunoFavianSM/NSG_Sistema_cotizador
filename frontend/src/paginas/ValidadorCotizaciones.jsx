@@ -83,13 +83,35 @@ export default function ValidadorCotizaciones() {
   const [cotizacion, setCotizacion] = useState(null);
   const [confirmarReclamoOpen, setConfirmarReclamoOpen] = useState(false);
 
-  // Auto-cargar ticket si viene por query param (?ticket=NSG-2026-XXXX)
+  // Auto-validar ticket si viene por query param (?ticket=NSG-2026-XXXX) — Req. 8.1–8.6
   useEffect(() => {
     const ticketParam = searchParams.get('ticket');
-    if (ticketParam) {
-      setCodigoTicket(ticketParam.trim().toUpperCase());
-    }
-  }, [searchParams]);
+    if (!ticketParam || !ticketParam.trim()) return;
+
+    const codigo = ticketParam.trim().toUpperCase();
+    setCodigoTicket(codigo); // Pre-rellenar campo visible (Req. 8.6)
+
+    // Ejecutar validación automática sin mostrar toast (Req. 8.5)
+    setBuscando(true);
+    setCotizacion(null);
+    setError('');
+
+    api.validarCotizacion(codigo)
+      .then((resultado) => {
+        if (!resultado?.valida) {
+          setError(resultado?.mensaje || 'No se encontró una cotización válida con ese código.');
+          return;
+        }
+        setCotizacion(resultado.cotizacion);
+        // No mostrar toast en auto-validación (Req. 8.5)
+      })
+      .catch((err) => {
+        setError(err?.mensaje || 'Error al consultar la cotización.');
+      })
+      .finally(() => {
+        setBuscando(false);
+      });
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const componentes = useMemo(() => {
     if (!Array.isArray(cotizacion?.componentes)) return [];

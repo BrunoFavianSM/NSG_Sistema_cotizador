@@ -137,9 +137,43 @@ router.post('/recuperar', limitadorRecuperacion, async (req, res) => {
     }
 
     const resultado = await servicioAuth.solicitarRecuperacion(correo);
+
+    if (!resultado.exito) {
+      return res.status(404).json(resultado);
+    }
+
     res.json(resultado);
   } catch (error) {
     console.error('Error en /recuperar:', error);
+    res.status(500).json({
+      exito: false,
+      error: 'Error interno del servidor'
+    });
+  }
+});
+
+/**
+ * POST /api/auth/recuperar-por-telefono
+ * Solicita recuperación de contraseña por número de teléfono.
+ * Siempre retorna respuesta genérica (anti-enumeración).
+ */
+router.post('/recuperar-por-telefono', limitadorRecuperacion, async (req, res) => {
+  try {
+    const { telefono } = req.body;
+
+    const resultado = await servicioAuth.recuperarPorTelefono(telefono);
+
+    if (!resultado.exito && resultado.codigo === 'TELEFONO_INVALIDO') {
+      return res.status(400).json(resultado);
+    }
+
+    if (!resultado.exito) {
+      return res.status(404).json(resultado);
+    }
+
+    res.json(resultado);
+  } catch (error) {
+    console.error('Error en /recuperar-por-telefono:', error);
     res.status(500).json({
       exito: false,
       error: 'Error interno del servidor'

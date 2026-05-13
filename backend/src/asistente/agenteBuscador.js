@@ -10,7 +10,7 @@ const { ejecutarQuery } = require('../configuracion/baseDatos');
 
 // ── Búsqueda semántica principal ──
 
-async function buscarProductos(clasificacion, productos, ejecutarQueryFn) {
+async function buscarProductos(clasificacion, productos, ejecutarQueryFn, apiKey) {
   // Intentar búsqueda semántica solo si hay caché existente (evitar timeout en cold start)
   const cacheDisponible = servicioEmbeddings.cacheDisponible();
 
@@ -20,7 +20,8 @@ async function buscarProductos(clasificacion, productos, ejecutarQueryFn) {
         clasificacion,
         productos,
         ejecutarQueryFn,
-        5 // top-K por categoría
+        5, // top-K por categoría
+        apiKey
       );
       return resultados;
     } catch (error) {

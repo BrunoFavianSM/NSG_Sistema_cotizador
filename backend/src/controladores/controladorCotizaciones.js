@@ -1267,7 +1267,7 @@ async function notificarCotizacionLista(req, res) {
 
       return res.json({
         exito: true,
-        mensaje: 'Notificacion enviada correctamente',
+        mensaje: 'Correo enviado al cliente.',
         notificacion: {
           estado: 'enviada',
           destino: cotizacionData.cliente_email,

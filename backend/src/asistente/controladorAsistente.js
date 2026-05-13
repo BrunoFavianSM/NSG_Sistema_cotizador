@@ -11,10 +11,9 @@ const servicioLLM = require('./servicioLLM');
 const servicioSemaforo = require('./servicioSemaforo');
 const servicioCompatibilidad = require('../servicios/servicioCompatibilidad');
 const orquestadorAgentes = require('./orquestadorAgentes');
+const servicioConfigIA = require('./servicioConfigIA');
 const { sanitizarInput } = require('../utilidades/sanitizacion');
 const { ejecutarQuery } = require('../configuracion/baseDatos');
-
-const PIPELINE_ENABLED = process.env.AGENT_PIPELINE_ENABLED !== 'false';
 
 // ── 1. POST /nueva-sesion ──
 
@@ -90,11 +89,14 @@ async function procesarMensaje(req, res) {
       contextoConversacion,
     });
 
-        // Intentar pipeline multi-agente (Clasificador → Buscador → Reranker) primero
+    // Leer configuración de IA dinámicamente desde BD (con fallback a .env)
+    const configIA = await servicioConfigIA.obtenerConfigIA();
+
+    // Intentar pipeline multi-agente (Clasificador → Buscador → Reranker) primero
     let respuestaLLM;
     let modoPipeline = false;
 
-    if (PIPELINE_ENABLED) {
+    if (configIA.pipeline_enabled) {
       try {
         respuestaLLM = await orquestadorAgentes.ejecutarPipeline({
           mensaje: mensajeSanitizado,
@@ -106,6 +108,7 @@ async function procesarMensaje(req, res) {
           contextoConversacion,
           cuestionario,
           ejecutarQuery,
+          configIA,
         });
         modoPipeline = true;
         console.info('[Asistente] Pipeline multi-agente completado exitosamente');
@@ -121,6 +124,7 @@ async function procesarMensaje(req, res) {
           systemPrompt,
           historial,
           mensajeActual: mensajeSanitizado,
+          configIA,
         });
       } catch (errorLLM) {
         const status = errorLLM.tipo === 'rate_limit' ? 502 : 502;

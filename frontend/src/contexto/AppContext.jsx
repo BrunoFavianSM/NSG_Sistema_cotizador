@@ -758,6 +758,7 @@ const AppProviderInternal = ({ children }) => {
 
     // ConfiguraciÃ³n seleccionada
     configuracionSeleccionada,
+    setConfiguracionSeleccionada,
     seleccionarComponente,
     agregarRAM,
     eliminarRAM,

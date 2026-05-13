@@ -21,13 +21,78 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate limiting
-const limitadorAPI = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // 100 requests por ventana
-  message: 'Demasiadas solicitudes desde esta IP, intente más tarde'
+// ─────────────────────────────────────────────────────────────
+// Rate limiting diferenciado por tipo de endpoint
+//
+// En desarrollo los límites se multiplican x20 para no bloquear
+// el flujo de trabajo (hot-reload, navegación frecuente, etc.).
+// En producción se aplican los límites reales.
+//
+// Criterios de diseño:
+//   - Auth:        muy restrictivo → protección contra fuerza bruta
+//   - Asistente:   restrictivo     → cada request llama a APIs externas (Gemini/NVIDIA)
+//   - Cotizaciones: moderado       → genera PDFs/Excel, queries pesadas
+//   - Productos:   permisivo       → lectura simple, bajo costo en BD
+//   - General:     fallback razonable para el resto
+// ─────────────────────────────────────────────────────────────
+const esDev = process.env.NODE_ENV === 'development';
+const devMultiplier = esDev ? 20 : 1;
+
+const mensajeRateLimit = {
+  message: 'Demasiadas solicitudes desde esta IP, intente más tarde',
+};
+
+/** Auth: 10 req / 15 min — protección contra fuerza bruta en login/registro/recuperación */
+const limitadorAuth = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10 * devMultiplier,
+  standardHeaders: true,
+  legacyHeaders: false,
+  ...mensajeRateLimit,
 });
-app.use('/api/', limitadorAPI);
+
+/** Asistente IA: 20 req / 15 min — cada llamada consume tokens de APIs externas */
+const limitadorAsistente = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20 * devMultiplier,
+  standardHeaders: true,
+  legacyHeaders: false,
+  ...mensajeRateLimit,
+});
+
+/** Cotizaciones: 60 req / 15 min — genera PDFs/Excel y hace queries complejas */
+const limitadorCotizaciones = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60 * devMultiplier,
+  standardHeaders: true,
+  legacyHeaders: false,
+  ...mensajeRateLimit,
+});
+
+/** Productos: 500 req / 15 min — lectura de catálogo, bajo costo */
+const limitadorProductos = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 500 * devMultiplier,
+  standardHeaders: true,
+  legacyHeaders: false,
+  ...mensajeRateLimit,
+});
+
+/** General: fallback para el resto de endpoints (/configuracion, /dashboard, etc.) */
+const limitadorGeneral = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300 * devMultiplier,
+  standardHeaders: true,
+  legacyHeaders: false,
+  ...mensajeRateLimit,
+});
+
+// Aplicar limitadores específicos antes del general (Express los evalúa en orden)
+app.use('/api/auth', limitadorAuth);
+app.use('/api/asistente', limitadorAsistente);
+app.use('/api/cotizaciones', limitadorCotizaciones);
+app.use('/api/productos', limitadorProductos);
+app.use('/api/', limitadorGeneral);
 
 // Parsers
 app.use(express.json());

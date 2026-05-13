@@ -13,7 +13,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { ejecutarQuery } = require('../configuracion/baseDatos');
 const { validarCredenciales, validarRegistro, validarRestablecimiento } = require('../utilidades/validacion');
-const { encriptar, hashBusqueda } = require('../utilidades/encriptacion');
+const { encriptar, hashBusqueda, desencriptar } = require('../utilidades/encriptacion');
 const { enviarCorreoRecuperacion } = require('./servicioCorreo');
 
 const SALT_ROUNDS = 12;
@@ -225,8 +225,7 @@ async function solicitarRecuperacion(correo) {
     try {
       correoHash = hashBusqueda(correoNormalizado);
     } catch {
-      // Si falla el hash (ej. ENCRYPTION_KEY no configurada), respuesta genérica
-      return { exito: true, mensaje: 'Si el correo existe, recibirás instrucciones para restablecer tu contraseña.' };
+      return { exito: false, encontrado: false, mensaje: 'Cuenta no encontrada.' };
     }
 
     const resultado = await ejecutarQuery(
@@ -235,7 +234,7 @@ async function solicitarRecuperacion(correo) {
     );
 
     if (resultado.rows.length === 0) {
-      return { exito: true, mensaje: 'Si el correo existe, recibirás instrucciones para restablecer tu contraseña.' };
+      return { exito: false, encontrado: false, mensaje: 'Cuenta no encontrada.' };
     }
 
     const cuenta = resultado.rows[0];
@@ -257,10 +256,10 @@ async function solicitarRecuperacion(correo) {
         console.error(`[RECUPERACION] Falló envío para cuenta ${cuenta.id}:`, errorCorreo);
       });
 
-    return { exito: true, mensaje: 'Si el correo existe, recibirás instrucciones para restablecer tu contraseña.' };
+    return { exito: true, encontrado: true, mensaje: 'Correo enviado. Revisa tu bandeja de entrada.' };
   } catch (error) {
     console.error('Error en solicitarRecuperacion:', error);
-    return { exito: true, mensaje: 'Si el correo existe, recibirás instrucciones para restablecer tu contraseña.' };
+    return { exito: false, encontrado: false, mensaje: 'Error al procesar la solicitud. Intenta nuevamente.' };
   }
 }
 
@@ -506,6 +505,66 @@ async function activarCuenta(datos) {
   }
 }
 
+/**
+ * Solicita recuperación de contraseña por número de teléfono.
+ * Siempre retorna respuesta genérica (anti-enumeración).
+ *
+ * @param {string} telefono
+ * @returns {Promise<Object>}
+ */
+async function recuperarPorTelefono(telefono) {
+  // 1. Validar formato de teléfono
+  if (!telefono || !/^\d{7,15}$/.test(telefono)) {
+    return { exito: false, status: 400, codigo: 'TELEFONO_INVALIDO' };
+  }
+
+  try {
+    // 2. Calcular hash del teléfono (mismo patrón que hashBusqueda)
+    const telefonoHash = hashBusqueda(telefono);
+
+    // 3. Buscar en cuentas por telefono_hash
+    const resultado = await ejecutarQuery(
+      'SELECT id, correo_encrypted FROM cuentas WHERE telefono_hash = $1',
+      [telefonoHash]
+    );
+
+    if (resultado.rows.length === 0) {
+      return { exito: false, encontrado: false, mensaje: 'Cuenta no encontrada.' };
+    }
+
+    const cuenta = resultado.rows[0];
+
+    // 4. Generar token de recuperación
+    const tokenRecuperacion = crypto.randomBytes(32).toString('hex');
+    const expira = new Date(Date.now() + TOKEN_EXPIRA_MINUTOS * 60 * 1000);
+
+    await ejecutarQuery(
+      'UPDATE cuentas SET token_recuperacion = $1, token_recuperacion_expira = $2 WHERE id = $3',
+      [tokenRecuperacion, expira, cuenta.id]
+    );
+
+    // 5. Desencriptar correo y enviar enlace de recuperación
+    try {
+      const correoDesencriptado = desencriptar(cuenta.correo_encrypted);
+      const enlace = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/restablecer?token=${tokenRecuperacion}`;
+      enviarCorreoRecuperacion(correoDesencriptado, enlace)
+        .then(() => {
+          console.log(`[RECUPERACION_TELEFONO] Correo enviado para cuenta ${cuenta.id}`);
+        })
+        .catch((errorCorreo) => {
+          console.error(`[RECUPERACION_TELEFONO] Falló envío para cuenta ${cuenta.id}:`, errorCorreo);
+        });
+    } catch (errorDesencriptar) {
+      console.error(`[RECUPERACION_TELEFONO] Error al desencriptar correo para cuenta ${cuenta.id}:`, errorDesencriptar);
+    }
+
+    return { exito: true, encontrado: true, mensaje: 'Correo enviado. Revisa la bandeja de entrada asociada a este número.' };
+  } catch (error) {
+    console.error('Error en recuperarPorTelefono:', error);
+    return { exito: false, encontrado: false, mensaje: 'Error al procesar la solicitud. Intenta nuevamente.' };
+  }
+}
+
 // Retrocompatibilidad
 const obtenerAdministradorPorId = obtenerCuentaPorId;
 
@@ -514,6 +573,7 @@ module.exports = {
   registrar,
   activarCuenta,
   solicitarRecuperacion,
+  recuperarPorTelefono,
   restablecerContrasena,
   generarToken,
   verificarToken,

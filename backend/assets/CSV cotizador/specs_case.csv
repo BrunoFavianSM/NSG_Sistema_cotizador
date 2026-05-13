@@ -1,0 +1,4 @@
+id_producto,form_factor,compatibilidad_placa,max_gpu_mm,max_cooler_mm,ventiladores_incluidos,color,panel_lateral,created_at,updated_at
+161,Micro-ATX,"ATX,MICRO-ATX,MINI-ITX",338,170,1,Blanco,Malla Metálica,2026-04-15 17:02:11.387856,2026-05-04 10:37:34.852923
+160,Mini-ITX,"ATX,MICRO-ATX,MINI-ITX",390,175,4,blanco,Vidrio Templado Panorámico,2026-04-15 17:02:11.386064,2026-05-04 10:36:08.41491
+174,ATX,"ATX,MICRO-ATX,MINI-ITX",320,150,0,negro,Acrílico Transparente,2026-04-15 17:02:11.415278,2026-05-04 10:38:47.100948

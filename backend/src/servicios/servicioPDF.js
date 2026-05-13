@@ -6,6 +6,29 @@ const qrcode = require('qrcode');
 const EMPRESA_NOMBRE = 'NSG Latinoamerica E.I.R.L.';
 const EMPRESA_SUBTITULO = 'Soluciones en Tecnologia';
 
+// Rutas candidatas en orden de prioridad (Req. 4)
+const RUTAS_LOGO_CANDIDATAS = [
+  path.resolve(__dirname, '../../../resources/logo vector-1.png'),
+  path.resolve(__dirname, '../../assets/logo-nsg.png'),
+  path.resolve(__dirname, '../../../frontend/dist/favicon.png'),
+];
+
+/**
+ * Resuelve la ruta del logo iterando sobre las rutas candidatas.
+ * Retorna la primera ruta que exista en el sistema de archivos.
+ * Si ninguna existe, registra un warning y retorna null.
+ * @returns {string|null}
+ */
+function resolverRutaLogo() {
+  for (const ruta of RUTAS_LOGO_CANDIDATAS) {
+    if (fs.existsSync(ruta)) {
+      return ruta;
+    }
+  }
+  console.warn('[ServicioPDF] Logo no encontrado en ninguna ruta candidata');
+  return null;
+}
+
 function resolverMoneda(valor) {
   return String(valor || 'USD').toUpperCase() === 'PEN' ? 'PEN' : 'USD';
 }
@@ -324,19 +347,7 @@ class ServicioPDF {
   }
 
   obtenerRutaLogo() {
-    const candidatos = [
-      path.join(__dirname, '../../../resources/logo vector-1.png'),
-      path.join(__dirname, '../../assets/logo-nsg.png')
-    ];
-    const ruta = candidatos.find((candidato) => fs.existsSync(candidato));
-    if (!ruta) return null;
-
-    try {
-      const contenido = fs.readFileSync(ruta);
-      return `data:image/png;base64,${contenido.toString('base64')}`;
-    } catch {
-      return null;
-    }
+    return resolverRutaLogo();
   }
 
   renderFilaComponente(comp, index, incluirPrecios, moneda) {

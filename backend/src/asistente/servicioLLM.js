@@ -106,14 +106,18 @@ async function llamarConReintentos(fn, nombreProveedor) {
 
 // ── Llamada a Gemini ──
 
-async function llamarGemini(systemPrompt, historial, mensajeActual) {
-  if (!GEMINI_API_KEY) {
+async function llamarGemini(systemPrompt, historial, mensajeActual, configIA) {
+  const geminiKey = configIA?.gemini_api_key || GEMINI_API_KEY;
+
+  if (!geminiKey) {
     throw new ErrorLLM('GEMINI_API_KEY no configurada', 'no_provider');
   }
 
-  const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+  const modeloGemini = configIA?.gemini_model || GEMINI_MODEL;
+
+  const genAI = new GoogleGenerativeAI(geminiKey);
   const modelo = genAI.getGenerativeModel({
-    model: GEMINI_MODEL,
+    model: modeloGemini,
     generationConfig: {
       temperature: 0.7,
       maxOutputTokens: 900,
@@ -160,10 +164,14 @@ function construirContenidoGemini(historial, mensajeActual) {
 
 // ── Llamada a NVIDIA (OpenAI-compatible) ──
 
-async function llamarNVIDIA(systemPrompt, historial, mensajeActual) {
-  if (!NVIDIA_API_KEY) {
+async function llamarNVIDIA(systemPrompt, historial, mensajeActual, configIA) {
+  const nvidiaKey = configIA?.nvidia_api_key || NVIDIA_API_KEY;
+
+  if (!nvidiaKey) {
     throw new ErrorLLM('NVIDIA_API_KEY no configurada', 'no_provider');
   }
+
+  const modeloNVIDIA = configIA?.nvidia_model || NVIDIA_MODEL;
 
   return await llamarConReintentos(async () => {
     const mensajes = construirMensajesNVIDIA(systemPrompt, historial, mensajeActual);
@@ -177,10 +185,10 @@ async function llamarNVIDIA(systemPrompt, historial, mensajeActual) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${NVIDIA_API_KEY}`,
+          'Authorization': `Bearer ${nvidiaKey}`,
         },
         body: JSON.stringify({
-          model: NVIDIA_MODEL,
+          model: modeloNVIDIA,
           messages: mensajes,
           temperature: 0.7,
           max_tokens: 900,
@@ -222,10 +230,10 @@ function construirMensajesNVIDIA(systemPrompt, historial, mensajeActual) {
 
 // ── Función principal: Gemini → NVIDIA fallback ──
 
-async function generarRespuesta({ systemPrompt, historial, mensajeActual }) {
+async function generarRespuesta({ systemPrompt, historial, mensajeActual, configIA }) {
   // Intentar Gemini primero
   try {
-    const resultado = await llamarGemini(systemPrompt, historial, mensajeActual);
+    const resultado = await llamarGemini(systemPrompt, historial, mensajeActual, configIA);
     return resultado;
   } catch (errorGemini) {
     console.warn('[LLM] Gemini falló, intentando NVIDIA fallback:', errorGemini.message);
@@ -233,7 +241,8 @@ async function generarRespuesta({ systemPrompt, historial, mensajeActual }) {
     // Si Gemini no tiene API key configurada, no tiene sentido reintentar
     if (errorGemini.tipo === 'no_provider') {
       // Si tampoco hay NVIDIA, error fatal
-      if (!NVIDIA_API_KEY) {
+      const nvidiaKey = configIA?.nvidia_api_key || NVIDIA_API_KEY;
+      if (!nvidiaKey) {
         throw new ErrorLLM('No hay proveedor LLM configurado (GEMINI_API_KEY y NVIDIA_API_KEY ausentes)', 'no_provider');
       }
     }
@@ -241,7 +250,7 @@ async function generarRespuesta({ systemPrompt, historial, mensajeActual }) {
 
   // Fallback a NVIDIA
   try {
-    const resultado = await llamarNVIDIA(systemPrompt, historial, mensajeActual);
+    const resultado = await llamarNVIDIA(systemPrompt, historial, mensajeActual, configIA);
     return resultado;
   } catch (errorNVIDIA) {
     console.error('[LLM] NVIDIA también falló:', errorNVIDIA.message);

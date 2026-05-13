@@ -59,10 +59,14 @@ function resumirHistorial(historial) {
 
 // ── Llamada al clasificador ──
 
-async function clasificar(mensaje, historial = []) {
-  if (!NVIDIA_API_KEY) {
+async function clasificar(mensaje, historial = [], configIA) {
+  const apiKey = configIA?.nvidia_api_key || NVIDIA_API_KEY;
+
+  if (!apiKey) {
     throw new Error('NVIDIA_API_KEY no configurada para clasificador');
   }
+
+  const modeloClasificador = configIA?.nvidia_classifier_model || (typeof configIA === 'string' ? configIA : null) || NVIDIA_CLASSIFIER_MODEL;
 
   const prompt = construirPromptClasificador(mensaje, resumirHistorial(historial));
 
@@ -75,10 +79,10 @@ async function clasificar(mensaje, historial = []) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${NVIDIA_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: NVIDIA_CLASSIFIER_MODEL,
+        model: modeloClasificador,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.1,
         max_tokens: 300,

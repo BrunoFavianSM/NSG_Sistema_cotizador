@@ -1,0 +1,4 @@
+id_producto,socket,chipset,form_factor,ram_tipo,max_ram_gb,slots_ram,pcie_version,m2_slots,created_at,updated_at
+492,AM4,AMD A520,Micro-ATX,DDR4,64,2,PCIe 3.0 x16,1,2026-04-15 17:02:11.83668,2026-04-16 17:40:39.11874
+493,AM4,AMD B550,ATX,DDR4,128,4,PCIe 4.0 x16,2,2026-04-15 17:02:11.838857,2026-04-16 17:42:41.920372
+500,AM5,AMD B850,Micro-ATX,DDR5,128,2,PCIe 5.0 x16,2,2026-04-15 17:02:11.851074,2026-04-16 18:10:18.321392
