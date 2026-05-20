@@ -481,7 +481,7 @@ async function crearCotizacion(req, res) {
       const gruposPorTabla = new Map();
       for (const comp of datosSanitizados.componentes) {
         const categoriaEntrada = comp.tabla_producto.replace(/^productos_/, '');
-        const destino = resolverDestinoOperacion(categoriaEntrada);
+        const destino = resolverDestinoOperacion(categoriaEntrada, comp.subcategoria);
         const tablaCanonica = destino.tabla;
         const subcategoriaCanonica = destino.subcategoria;
 
@@ -529,7 +529,7 @@ async function crearCotizacion(req, res) {
       // 2. Validar disponibilidad y preparar componentes
       const componentesConInfo = datosSanitizados.componentes.map(comp => {
         const categoriaEntrada = comp.tabla_producto.replace(/^productos_/, '');
-        const destino = resolverDestinoOperacion(categoriaEntrada);
+        const destino = resolverDestinoOperacion(categoriaEntrada, comp.subcategoria);
         const tablaProducto = destino.tabla;
         const clave = `${tablaProducto}:${comp.id_producto}`;
         const producto = mapaProductos.get(clave);

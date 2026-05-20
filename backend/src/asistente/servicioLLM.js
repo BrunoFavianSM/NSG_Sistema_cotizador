@@ -7,8 +7,6 @@
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// ── Configuración ──
-
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
@@ -17,46 +15,38 @@ const NVIDIA_BASE_URL = process.env.NVIDIA_BASE_URL || 'https://integrate.api.nv
 const NVIDIA_MODEL = process.env.NVIDIA_MODEL || 'meta/llama-3.3-70b-instruct';
 
 const MAX_REINTENTOS = 3;
-const BACKOFF_BASE = 1000; // ms
+const BACKOFF_BASE = 1000;
 const NVIDIA_FETCH_TIMEOUT_MS = parseInt(process.env.NVIDIA_FETCH_TIMEOUT_MS || '25000', 10);
 const GEMINI_TIMEOUT_MS = parseInt(process.env.GEMINI_TIMEOUT_MS || '25000', 10);
-
-// ── Errores clasificados ──
 
 class ErrorLLM extends Error {
   constructor(mensaje, tipo) {
     super(mensaje);
     this.name = 'ErrorLLM';
-    this.tipo = tipo; // 'rate_limit' | 'server_error' | 'invalid_json' | 'no_provider'
+    this.tipo = tipo;
   }
 }
 
 function clasificarError(error) {
   const status = error?.status || error?.statusCode || 0;
+  const mensaje = String(error?.message || '').toLowerCase();
   if (status === 429) return 'rate_limit';
   if (status >= 500 && status <= 504) return 'server_error';
+  if (error?.name === 'AbortError' || mensaje.includes('aborted') || mensaje.includes('timeout')) return 'timeout';
   return 'unknown';
 }
-
-// ── Utilidad de espera ──
 
 function esperar(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// ── Parser robusto de JSON ──
-
 function extraerJSON(texto) {
   if (!texto || typeof texto !== 'string') return null;
 
-  // Intentar parse directo
   try {
     return JSON.parse(texto);
-  } catch (_) {
-    // Continuar con extracción
-  }
+  } catch (_) {}
 
-  // Quitar markdown fences
   const limpio = texto
     .replace(/```json\s*/gi, '')
     .replace(/```\s*/g, '')
@@ -64,25 +54,18 @@ function extraerJSON(texto) {
 
   try {
     return JSON.parse(limpio);
-  } catch (_) {
-    // Continuar
-  }
+  } catch (_) {}
 
-  // Buscar primer { y último }
   const inicio = limpio.indexOf('{');
   const fin = limpio.lastIndexOf('}');
   if (inicio !== -1 && fin > inicio) {
     try {
       return JSON.parse(limpio.substring(inicio, fin + 1));
-    } catch (_) {
-      // No parseable
-    }
+    } catch (_) {}
   }
 
   return null;
 }
-
-// ── Responder con reintentos genéricos ──
 
 async function llamarConReintentos(fn, nombreProveedor) {
   for (let intento = 0; intento < MAX_REINTENTOS; intento++) {
@@ -90,7 +73,7 @@ async function llamarConReintentos(fn, nombreProveedor) {
       return await fn();
     } catch (error) {
       const tipo = clasificarError(error);
-      const esReintentable = tipo === 'rate_limit' || tipo === 'server_error';
+      const esReintentable = tipo === 'rate_limit' || tipo === 'server_error' || tipo === 'timeout';
 
       if (!esReintentable || intento === MAX_REINTENTOS - 1) {
         console.error(`[${nombreProveedor}] Error final (intento ${intento + 1}):`, error.message);
@@ -103,8 +86,6 @@ async function llamarConReintentos(fn, nombreProveedor) {
     }
   }
 }
-
-// ── Llamada a Gemini ──
 
 async function llamarGemini(systemPrompt, historial, mensajeActual, configIA) {
   const geminiKey = configIA?.gemini_api_key || GEMINI_API_KEY;
@@ -156,13 +137,10 @@ function construirContenidoGemini(historial, mensajeActual) {
     partes.push({ role: rol, parts: [{ text: msg.contenido }] });
   }
 
-  // Mensaje actual del usuario
   partes.push({ role: 'user', parts: [{ text: mensajeActual }] });
 
   return partes;
 }
-
-// ── Llamada a NVIDIA (OpenAI-compatible) ──
 
 async function llamarNVIDIA(systemPrompt, historial, mensajeActual, configIA) {
   const nvidiaKey = configIA?.nvidia_api_key || NVIDIA_API_KEY;
@@ -185,17 +163,25 @@ async function llamarNVIDIA(systemPrompt, historial, mensajeActual, configIA) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${nvidiaKey}`,
+          Authorization: `Bearer ${nvidiaKey}`,
         },
         body: JSON.stringify({
           model: modeloNVIDIA,
           messages: mensajes,
-          temperature: 0.7,
+          temperature: 0.1,
           max_tokens: 900,
-          top_p: 0.9,
+          top_p: 0.1,
+          response_format: {
+            type: 'json_object',
+          },
         }),
         signal: controller.signal,
       });
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        throw new ErrorLLM(`NVIDIA excedió timeout de ${NVIDIA_FETCH_TIMEOUT_MS}ms`, 'timeout');
+      }
+      throw error;
     } finally {
       clearTimeout(timer);
     }
@@ -228,19 +214,13 @@ function construirMensajesNVIDIA(systemPrompt, historial, mensajeActual) {
   return mensajes;
 }
 
-// ── Función principal: Gemini → NVIDIA fallback ──
-
 async function generarRespuesta({ systemPrompt, historial, mensajeActual, configIA }) {
-  // Intentar Gemini primero
   try {
-    const resultado = await llamarGemini(systemPrompt, historial, mensajeActual, configIA);
-    return resultado;
+    return await llamarGemini(systemPrompt, historial, mensajeActual, configIA);
   } catch (errorGemini) {
     console.warn('[LLM] Gemini falló, intentando NVIDIA fallback:', errorGemini.message);
 
-    // Si Gemini no tiene API key configurada, no tiene sentido reintentar
     if (errorGemini.tipo === 'no_provider') {
-      // Si tampoco hay NVIDIA, error fatal
       const nvidiaKey = configIA?.nvidia_api_key || NVIDIA_API_KEY;
       if (!nvidiaKey) {
         throw new ErrorLLM('No hay proveedor LLM configurado (GEMINI_API_KEY y NVIDIA_API_KEY ausentes)', 'no_provider');
@@ -248,10 +228,8 @@ async function generarRespuesta({ systemPrompt, historial, mensajeActual, config
     }
   }
 
-  // Fallback a NVIDIA
   try {
-    const resultado = await llamarNVIDIA(systemPrompt, historial, mensajeActual, configIA);
-    return resultado;
+    return await llamarNVIDIA(systemPrompt, historial, mensajeActual, configIA);
   } catch (errorNVIDIA) {
     console.error('[LLM] NVIDIA también falló:', errorNVIDIA.message);
     throw new ErrorLLM(
@@ -261,8 +239,48 @@ async function generarRespuesta({ systemPrompt, historial, mensajeActual, config
   }
 }
 
+async function generarRespuestaConPrioridad({ systemPrompt, historial, mensajeActual, configIA, prioridadProveedores }) {
+  const prioridad = Array.isArray(prioridadProveedores) && prioridadProveedores.length > 0
+    ? prioridadProveedores
+    : ['gemini', 'nvidia'];
+
+  const errores = [];
+
+  for (const proveedor of prioridad) {
+    try {
+      if (proveedor === 'nvidia') {
+        return await llamarNVIDIA(systemPrompt, historial, mensajeActual, configIA);
+      }
+
+      if (proveedor === 'gemini') {
+        return await llamarGemini(systemPrompt, historial, mensajeActual, configIA);
+      }
+    } catch (error) {
+      errores.push({ proveedor, error });
+      console.warn(`[LLM] ${proveedor} falló, intentando siguiente proveedor:`, error.message);
+    }
+  }
+
+  const ultimoError = errores[errores.length - 1]?.error;
+  if (!ultimoError) {
+    throw new ErrorLLM('No hay proveedores de IA configurados para la prioridad solicitada', 'no_provider');
+  }
+
+  if (errores.every(({ error }) => error?.tipo === 'no_provider')) {
+    throw new ErrorLLM('No hay proveedor LLM configurado para el enriquecimiento', 'no_provider');
+  }
+
+  throw new ErrorLLM(
+    'El servicio de IA no está disponible temporalmente. Intenta en un momento.',
+    ultimoError.tipo || clasificarError(ultimoError) || 'server_error'
+  );
+}
+
 module.exports = {
   generarRespuesta,
+  generarRespuestaConPrioridad,
+  llamarGemini,
+  llamarNVIDIA,
   extraerJSON,
   ErrorLLM,
 };

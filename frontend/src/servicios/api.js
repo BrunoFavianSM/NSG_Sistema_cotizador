@@ -308,6 +308,40 @@ export const importarCSV = async (archivo) => {
   }
 };
 
+/**
+ * Obtiene el estado actual del proceso de enriquecimiento IA.
+ * Requiere token JWT de administrador.
+ * Valida Requisitos: 5.1, 5.2
+ *
+ * @returns {Promise<{ en_proceso: boolean, pendientes: number, completados: number, fallidos: number, ultima_actualizacion: string|null }>}
+ */
+export const obtenerEstadoEnriquecimiento = async () => {
+  try {
+    const response = await api.get('/importacion/estado-enriquecimiento');
+    return response.data;
+  } catch (error) {
+    const mensaje = error?.mensaje || error?.response?.data?.mensaje || 'No se pudo obtener el estado de enriquecimiento.';
+    throw { mensaje };
+  }
+};
+
+/**
+ * Mueve todos los productos con estado ia_fallido a pendiente y reactiva la cola IA.
+ * Requiere token JWT de administrador.
+ * Valida Requisitos: 5.3, 5.4, 5.5
+ *
+ * @returns {Promise<{ exito: boolean, reintentados: number, mensaje?: string }>}
+ */
+export const reintentarFallidos = async () => {
+  try {
+    const response = await api.post('/importacion/reintentar-fallidos');
+    return response.data;
+  } catch (error) {
+    const mensaje = error?.mensaje || error?.response?.data?.mensaje || 'No se pudo reintentar los productos fallidos.';
+    throw { mensaje };
+  }
+};
+
 // ============================================
 // FUNCIONES DE COTIZACIONES
 // ============================================

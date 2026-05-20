@@ -373,6 +373,128 @@ function StepIcon({ pasoId, className = 'h-4 w-4' }) {
   }
 }
 
+function formatearValorDetalle(valor, sufijo = '') {
+  if (valor === null || valor === undefined || valor === '') return 'Sin dato';
+  if (typeof valor === 'boolean') return valor ? 'Sí' : 'No';
+  return `${valor}${sufijo}`;
+}
+
+function obtenerSpecsDetalladasProducto(producto, pasoId) {
+  switch (pasoId) {
+    case 'procesador':
+      return [
+        ['Socket', formatearValorDetalle(producto.socket)],
+        ['Arquitectura', formatearValorDetalle(producto.arquitectura)],
+        ['Núcleos', formatearValorDetalle(producto.nucleos)],
+        ['Hilos', formatearValorDetalle(producto.hilos)],
+        ['Base', formatearValorDetalle(producto.frecuencia_base_ghz, ' GHz')],
+        ['Boost', formatearValorDetalle(producto.frecuencia_boost_ghz, ' GHz')],
+        ['TDP', formatearValorDetalle(producto.tdp, ' W')],
+        ['iGPU', formatearValorDetalle(valorBooleano(producto.graficos_integrados))],
+      ];
+    case 'placa_madre':
+      return [
+        ['Socket', formatearValorDetalle(producto.socket)],
+        ['Chipset', formatearValorDetalle(producto.chipset)],
+        ['Form factor', formatearValorDetalle(producto.mb_form_factor || producto.form_factor)],
+        ['RAM', formatearValorDetalle(producto.ram_type)],
+        ['RAM máxima', formatearValorDetalle(producto.max_ram_gb, ' GB')],
+        ['Slots RAM', formatearValorDetalle(producto.slots_ram)],
+        ['PCIe', formatearValorDetalle(producto.pcie_version)],
+        ['M.2', formatearValorDetalle(producto.m2_slots)],
+      ];
+    case 'ram':
+      return [
+        ['Tipo', formatearValorDetalle(producto.ram_type)],
+        ['Capacidad', formatearValorDetalle(producto.capacidad_gb, ' GB')],
+        ['Velocidad', formatearValorDetalle(producto.velocidad_mhz, ' MHz')],
+        ['Latencia', formatearValorDetalle(producto.latencia)],
+        ['Módulos', formatearValorDetalle(producto.modulos)],
+        ['Cantidad', formatearValorDetalle(producto.cantidad_modulos)],
+        ['RGB', formatearValorDetalle(valorBooleano(producto.rgb))],
+      ];
+    case 'almacenamiento':
+      return [
+        ['Tipo', formatearValorDetalle(producto.tipo_almacenamiento)],
+        ['Capacidad', formatearValorDetalle(producto.capacidad_gb, ' GB')],
+        ['Interfaz', formatearValorDetalle(producto.interfaz)],
+        ['Form factor', formatearValorDetalle(producto.storage_form_factor || producto.form_factor)],
+        ['Lectura', formatearValorDetalle(producto.velocidad_lectura_mbps, ' MB/s')],
+        ['Escritura', formatearValorDetalle(producto.velocidad_escritura_mbps, ' MB/s')],
+        ['NVMe', formatearValorDetalle(producto.nvme_gen)],
+      ];
+    case 'gpu':
+      return [
+        ['Chipset', formatearValorDetalle(producto.chipset || producto.chipset_gpu)],
+        ['VRAM', formatearValorDetalle(producto.vram_gb, ' GB')],
+        ['Tipo VRAM', formatearValorDetalle(producto.vram_tipo)],
+        ['Bus', formatearValorDetalle(producto.bus_bits, ' bits')],
+        ['Boost', formatearValorDetalle(producto.boost_mhz, ' MHz')],
+        ['TDP', formatearValorDetalle(producto.tdp, ' W')],
+        ['Longitud', formatearValorDetalle(producto.longitud_mm, ' mm')],
+        ['Fuente sugerida', formatearValorDetalle(producto.fuente_recomendada_w, ' W')],
+      ];
+    case 'fuente':
+      return [
+        ['Potencia', formatearValorDetalle(producto.wattage, ' W')],
+        ['Certificación', formatearValorDetalle(producto.certificacion)],
+        ['Modularidad', formatearValorDetalle(producto.modular)],
+        ['Form factor', formatearValorDetalle(producto.psu_form_factor || producto.form_factor)],
+        ['PCIe', formatearValorDetalle(producto.pcie_conectores)],
+        ['SATA', formatearValorDetalle(producto.sata_conectores)],
+      ];
+    case 'case':
+      return [
+        ['Form factor', formatearValorDetalle(producto.case_form_factor || producto.form_factor)],
+        ['Compatibilidad placa', formatearValorDetalle(producto.compatibilidad_placa)],
+        ['GPU máxima', formatearValorDetalle(producto.max_gpu_mm, ' mm')],
+        ['Cooler máximo', formatearValorDetalle(producto.max_cooler_mm, ' mm')],
+        ['Ventiladores', formatearValorDetalle(producto.ventiladores_incluidos)],
+        ['Color', formatearValorDetalle(producto.color)],
+        ['Panel lateral', formatearValorDetalle(producto.panel_lateral)],
+      ];
+    default:
+      return [];
+  }
+}
+
+function SelectorVistaProductos({ vistaDetallada, onChange }) {
+  const opciones = [
+    { valor: 'compacta', etiqueta: 'Vista compacta' },
+    { valor: 'detallada', etiqueta: 'Vista detallada' },
+  ];
+
+  return (
+    <div
+      role="radiogroup"
+      aria-label="Modo de visualización de productos"
+      className="flex flex-wrap gap-1 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-0.5"
+    >
+      {opciones.map(({ valor, etiqueta }) => {
+        const activo = vistaDetallada ? valor === 'detallada' : valor === 'compacta';
+        return (
+          <button
+            key={valor}
+            type="button"
+            role="radio"
+            aria-checked={activo}
+            onClick={() => onChange(valor === 'detallada')}
+            className={[
+              'min-h-[44px] min-w-[44px] rounded-[calc(var(--radius-sm)-2px)] px-4 py-2 text-sm font-medium transition-colors duration-higNormal ease-hig',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
+              activo
+                ? 'bg-[var(--color-accent)] text-white shadow-sm'
+                : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text)]',
+            ].join(' ')}
+          >
+            {etiqueta}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 const NOMBRE_CATEGORIA = {
   mouse: 'Mouse',
   teclado: 'Teclado',
@@ -576,6 +698,7 @@ export default function Cotizador() {
   }, [errorComparador]);
 
   const [pasoActual, setPasoActual] = useState(0);
+  const [vistaDetalladaProductos, setVistaDetalladaProductos] = useState(false);
   // soloDisponibles: true → muestra solo productos con stock > 0 o disponible_a_pedido === true
   const [soloDisponibles, setSoloDisponibles] = useState(true);
   // ordenPrecio: 'relevancia' | 'menor' | 'mayor' — persiste entre pasos (Req. 10.9)
@@ -1483,77 +1606,84 @@ export default function Cotizador() {
               <h2 className="mt-1 text-2xl font-semibold text-[var(--color-text)]">{pasoInfo.nombre}</h2>
             </div>
 
-            {/* Switch_Disponibilidad — Compatibles/Todos (Req. 2.4, 2.5, 2.6) */}
-            <button
-              type="button"
-              role="switch"
-              aria-checked={soloDisponibles}
-              aria-label="Filtrar por compatibilidad"
-              onClick={() => setSoloDisponibles((prev) => !prev)}
-              className={[
-                'inline-flex min-h-[44px] w-[148px] shrink-0 items-center gap-2 rounded-[var(--radius-md)]',
-                'border px-4 text-sm font-medium',
-                'transition-colors duration-higNormal ease-hig',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
-                'active:scale-[0.97]',
-                soloDisponibles
-                  ? 'border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]'
-                  : 'border-[var(--color-border)] bg-[var(--color-surface-soft)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text)]',
-              ].join(' ')}
-            >
-              {/* Track visual del switch */}
-              <span
-                aria-hidden="true"
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              {!esPasoExtras ? (
+                <SelectorVistaProductos
+                  vistaDetallada={vistaDetalladaProductos}
+                  onChange={setVistaDetalladaProductos}
+                />
+              ) : null}
+
+              {/* Switch_Disponibilidad — Compatibles/Todos (Req. 2.4, 2.5, 2.6) */}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={soloDisponibles}
+                aria-label="Filtrar por compatibilidad"
+                onClick={() => setSoloDisponibles((prev) => !prev)}
                 className={[
-                  'relative inline-flex h-5 w-9 shrink-0 items-center rounded-full',
-                  'transition-colors duration-higNormal',
-                  soloDisponibles ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]',
+                  'inline-flex min-h-[44px] w-[148px] shrink-0 items-center gap-2 rounded-[var(--radius-md)]',
+                  'border px-4 text-sm font-medium',
+                  'transition-colors duration-higNormal ease-hig',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
+                  'active:scale-[0.97]',
+                  soloDisponibles
+                    ? 'border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]'
+                    : 'border-[var(--color-border)] bg-[var(--color-surface-soft)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text)]',
                 ].join(' ')}
               >
                 <span
+                  aria-hidden="true"
                   className={[
-                    'inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm',
-                    'transition-transform duration-higNormal',
-                    soloDisponibles ? 'translate-x-4' : 'translate-x-1',
+                    'relative inline-flex h-5 w-9 shrink-0 items-center rounded-full',
+                    'transition-colors duration-higNormal',
+                    soloDisponibles ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]',
                   ].join(' ')}
-                />
-              </span>
-              <span className="flex-1 text-left">
-                {soloDisponibles ? 'Compatibles' : 'Todos'}
-              </span>
-            </button>
-
-            {/* Control de ordenamiento por precio (Req. 10.1, 10.2, 10.9–10.11) */}
-            {!esPasoExtras && (
-              <div
-                role="group"
-                aria-label="Ordenar por precio"
-                className="flex rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-0.5 gap-0.5"
-              >
-                {[
-                  { value: 'relevancia', label: 'Relevancia' },
-                  { value: 'menor', label: 'Menor precio' },
-                  { value: 'mayor', label: 'Mayor precio' },
-                ].map(({ value, label }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setOrdenPrecio(value)}
-                    aria-pressed={ordenPrecio === value}
+                >
+                  <span
                     className={[
-                      'min-h-[44px] min-w-[44px] px-3 py-2 rounded-[calc(var(--radius-sm)-2px)] text-sm font-medium',
-                      'transition-colors duration-higNormal ease-hig',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
-                      ordenPrecio === value
-                        ? 'bg-[var(--color-accent)] text-white shadow-sm'
-                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-hover)]',
+                      'inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm',
+                      'transition-transform duration-higNormal',
+                      soloDisponibles ? 'translate-x-4' : 'translate-x-1',
                     ].join(' ')}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            )}
+                  />
+                </span>
+                <span className="flex-1 text-left">
+                  {soloDisponibles ? 'Compatibles' : 'Todos'}
+                </span>
+              </button>
+
+              {!esPasoExtras && (
+                <div
+                  role="group"
+                  aria-label="Ordenar por precio"
+                  className="flex rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-0.5 gap-0.5"
+                >
+                  {[
+                    { value: 'relevancia', label: 'Relevancia' },
+                    { value: 'menor', label: 'Menor precio' },
+                    { value: 'mayor', label: 'Mayor precio' },
+                  ].map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setOrdenPrecio(value)}
+                      aria-pressed={ordenPrecio === value}
+                      className={[
+                        'min-h-[44px] min-w-[44px] px-3 py-2 rounded-[calc(var(--radius-sm)-2px)] text-sm font-medium',
+                        'transition-colors duration-higNormal ease-hig',
+                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
+                        ordenPrecio === value
+                          ? 'bg-[var(--color-accent)] text-white shadow-sm'
+                          : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-hover)]',
+                      ].join(' ')}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Botones de navegación — parte superior del área de contenido del Paso_Actual (Req. 2.7, 2.8, 2.9, 2.10) */}
@@ -1675,104 +1805,145 @@ export default function Cotizador() {
                           const estadoStock = obtenerEstadoStock(producto);
                           const cantidadRam = ramAgrupada[producto.id]?.cantidad || 0;
                           const maxRam = producto.stock > 0 ? producto.stock : 8;
+                          const specsDetalladas = obtenerSpecsDetalladasProducto(producto, pasoInfo.id);
+                          const yaEnComparador = productosComparar.some((p) => p.id === producto.id);
 
                           return (
-                            <motion.article key={producto.id} layout className={`surface-card flex h-full flex-col p-4 ${seleccionado ? 'ring-2 ring-[var(--color-accent)] ring-offset-1 ring-offset-[var(--color-bg)]' : ''}`}>
+                            <motion.article
+                              key={producto.id}
+                              layout
+                              className={`surface-card flex h-full flex-col p-4 ${seleccionado ? 'ring-2 ring-[var(--color-accent)] ring-offset-1 ring-offset-[var(--color-bg)]' : ''}`}
+                            >
                               <div className="flex items-start justify-between gap-3">
-                                <h3 className="text-base font-semibold text-[var(--color-text)]">{capitalizarPrimeraLetra(producto.nombre)}</h3>
-                                <span className={`inline-flex shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${estadoStock.className}`}>{estadoStock.label}</span>
-                          </div>
-                          <p className="mt-2 text-sm text-[var(--color-text-muted)]">{producto.descripcion_tecnica ? `${producto.descripcion_tecnica.slice(0, 110)}...` : 'Sin descripcion tecnica.'}</p>
+                                <div className="space-y-2">
+                                  <h3 className="text-base font-semibold text-[var(--color-text)]">
+                                    {capitalizarPrimeraLetra(producto.nombre)}
+                                  </h3>
+                                  {vistaDetalladaProductos ? (
+                                    <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-muted)]">
+                                      <span className="inline-flex rounded-full bg-[var(--color-surface-soft)] px-2.5 py-1 font-medium">
+                                        {capitalizarPrimeraLetra(extraerMarca(producto))}
+                                      </span>
+                                      <span className="inline-flex rounded-full bg-[var(--color-surface-soft)] px-2.5 py-1 font-medium">
+                                        {pasoInfo.nombre}
+                                      </span>
+                                    </div>
+                                  ) : null}
+                                </div>
+                                <span className={`inline-flex shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${estadoStock.className}`}>
+                                  {estadoStock.label}
+                                </span>
+                              </div>
 
-                          <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
-                            <p className="text-2xl font-semibold text-[var(--color-accent-text)]">
-                              {esInvitado ? (
-                                <span className="text-base text-[var(--color-text-muted)]">Inicia sesión para ver precio</span>
-                              ) : (
-                                formatearMontoSegunMonedaVista({ montoUsd: producto.precio_base })
-                              )}
-                            </p>
+                              <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+                                {producto.descripcion_tecnica
+                                  ? vistaDetalladaProductos
+                                    ? producto.descripcion_tecnica
+                                    : `${producto.descripcion_tecnica.slice(0, 110)}...`
+                                  : 'Sin descripcion tecnica.'}
+                              </p>
 
-                            {!esRam ? (
-                              <div className="flex flex-wrap items-center gap-2">
-                                {/* Botón Comparar (Req. 6.2, 6.10) */}
-                                {!esPasoExtras && (() => {
-                                  const yaEnComparador = productosComparar.some((p) => p.id === producto.id);
-                                  return (
+                              {vistaDetalladaProductos ? (
+                                <dl className="mt-4 grid gap-2 sm:grid-cols-2">
+                                  {specsDetalladas.map(([etiqueta, valor]) => (
+                                    <div
+                                      key={`${producto.id}-${etiqueta}`}
+                                      className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-3 py-2"
+                                    >
+                                      <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
+                                        {etiqueta}
+                                      </dt>
+                                      <dd className="mt-1 text-sm font-medium text-[var(--color-text)]">{valor}</dd>
+                                    </div>
+                                  ))}
+                                </dl>
+                              ) : null}
+
+                              <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
+                                <p className="text-2xl font-semibold text-[var(--color-accent-text)]">
+                                  {esInvitado ? (
+                                    <span className="text-base text-[var(--color-text-muted)]">Inicia sesión para ver precio</span>
+                                  ) : (
+                                    formatearMontoSegunMonedaVista({ montoUsd: producto.precio_base })
+                                  )}
+                                </p>
+
+                                {!esRam ? (
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    {!esPasoExtras && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (yaEnComparador) {
+                                            quitarDeComparador(producto.id);
+                                          } else {
+                                            agregarAComparador(producto);
+                                          }
+                                        }}
+                                        aria-label={`${yaEnComparador ? 'Quitar de comparación' : 'Comparar'}: ${producto.nombre}`}
+                                        aria-pressed={yaEnComparador}
+                                        className={`min-h-11 min-w-11 rounded-[var(--radius-sm)] px-3 text-sm font-medium transition-colors duration-higFast ${
+                                          yaEnComparador
+                                            ? 'bg-[color:rgba(0,122,255,0.15)] text-[var(--color-accent-text)] ring-1 ring-[var(--color-accent)]'
+                                            : 'bg-[var(--color-surface-soft)] text-[var(--color-text-muted)] hover:bg-[color:rgba(0,122,255,0.08)] hover:text-[var(--color-accent-text)]'
+                                        }`}
+                                      >
+                                        {yaEnComparador ? (
+                                          <span className="flex items-center gap-1.5">
+                                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                              <path d="m5 12 4 4L19 6" />
+                                            </svg>
+                                            Comparando
+                                          </span>
+                                        ) : (
+                                          <span className="flex items-center gap-1.5">
+                                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                              <rect x="3" y="3" width="7" height="18" rx="1" />
+                                              <rect x="14" y="3" width="7" height="18" rx="1" />
+                                            </svg>
+                                            Comparar
+                                          </span>
+                                        )}
+                                      </button>
+                                    )}
+
                                     <button
                                       type="button"
-                                      onClick={() => {
-                                        if (yaEnComparador) {
-                                          quitarDeComparador(producto.id);
-                                        } else {
-                                          agregarAComparador(producto);
-                                        }
-                                      }}
-                                      aria-label={`${yaEnComparador ? 'Quitar de comparación' : 'Comparar'}: ${producto.nombre}`}
-                                      aria-pressed={yaEnComparador}
-                                      className={`min-h-11 min-w-11 rounded-[var(--radius-sm)] px-3 text-sm font-medium transition-colors duration-higFast ${
-                                        yaEnComparador
-                                          ? 'bg-[color:rgba(0,122,255,0.15)] text-[var(--color-accent-text)] ring-1 ring-[var(--color-accent)]'
-                                          : 'bg-[var(--color-surface-soft)] text-[var(--color-text-muted)] hover:bg-[color:rgba(0,122,255,0.08)] hover:text-[var(--color-accent-text)]'
-                                      }`}
+                                      onClick={() => seleccionarProducto(producto)}
+                                      className={`min-h-11 rounded-[var(--radius-sm)] px-4 text-sm font-medium ${seleccionado ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]' : 'bg-[var(--color-surface-soft)] text-[var(--color-text)] hover:bg-[var(--color-accent-soft)]'}`}
+                                      aria-label={`${seleccionado ? 'Deseleccionar producto' : 'Seleccionar'}: ${producto.nombre}`}
                                     >
-                                      {yaEnComparador ? (
-                                        <span className="flex items-center gap-1.5">
-                                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                            <path d="m5 12 4 4L19 6" />
-                                          </svg>
-                                          Comparando
-                                        </span>
-                                      ) : (
-                                        <span className="flex items-center gap-1.5">
-                                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                            <rect x="3" y="3" width="7" height="18" rx="1" />
-                                            <rect x="14" y="3" width="7" height="18" rx="1" />
-                                          </svg>
-                                          Comparar
-                                        </span>
-                                      )}
+                                      {seleccionado ? 'Deseleccionar' : 'Seleccionar'}
                                     </button>
-                                  );
-                                })()}
-
-                                <button
-                                  type="button"
-                                  onClick={() => seleccionarProducto(producto)}
-                                  className={`min-h-11 rounded-[var(--radius-sm)] px-4 text-sm font-medium ${seleccionado ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]' : 'bg-[var(--color-surface-soft)] text-[var(--color-text)] hover:bg-[var(--color-accent-soft)]'}`}
-                                  aria-label={`${seleccionado ? 'Deseleccionar producto' : 'Seleccionar'}: ${producto.nombre}`}
-                                >
-                                  {seleccionado ? 'Deseleccionar' : 'Seleccionar'}
-                                </button>
+                                  </div>
+                                ) : (
+                                  <div className="inline-flex max-w-full items-center gap-2 self-start rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => quitarRam(producto.id)}
+                                      disabled={cantidadRam === 0}
+                                      className="min-h-11 min-w-11 rounded-[var(--radius-sm)] text-lg disabled:opacity-40"
+                                      aria-label={`Quitar un modulo de ${producto.nombre}`}
+                                    >
+                                      -
+                                    </button>
+                                    <span className="w-8 text-center text-sm font-semibold">{cantidadRam}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => seleccionarProducto(producto)}
+                                      disabled={cantidadRam >= maxRam}
+                                      className="min-h-11 min-w-11 rounded-[var(--radius-sm)] text-lg disabled:opacity-40"
+                                      aria-label={`Agregar un modulo de ${producto.nombre}`}
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                )}
                               </div>
-                            ) : (
-                              <div className="inline-flex max-w-full items-center gap-2 self-start rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-1">
-                                <button
-                                  type="button"
-                                  onClick={() => quitarRam(producto.id)}
-                                  disabled={cantidadRam === 0}
-                                  className="min-h-11 min-w-11 rounded-[var(--radius-sm)] text-lg disabled:opacity-40"
-                                  aria-label={`Quitar un modulo de ${producto.nombre}`}
-                                >
-                                  -
-                                </button>
-                                <span className="w-8 text-center text-sm font-semibold">{cantidadRam}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => seleccionarProducto(producto)}
-                                  disabled={cantidadRam >= maxRam}
-                                  className="min-h-11 min-w-11 rounded-[var(--radius-sm)] text-lg disabled:opacity-40"
-                                  aria-label={`Agregar un modulo de ${producto.nombre}`}
-                                >
-                                  +
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </motion.article>
-                      );
-                    })}
-                  </div>
+                            </motion.article>
+                          );
+                        })}
+                      </div>
                 </div>
               ))}
             </div>
@@ -1843,30 +2014,9 @@ export default function Cotizador() {
                   })}
                 </p>
                 <p className="mt-2 text-sm text-[var(--color-text-muted)]">{etiquetaMonedaBase(monedaVista)} • {pasosCompletos} de {PASOS.length} pasos completos</p>
-                <div className="mt-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-xs text-[var(--color-text-muted)]">
-                  <p>
-                    Subtotal neto: {formatearMontoSegunMonedaVista({
-                      montoUsd: resumenFinanciero.subtotal_neto.usd,
-                      montoPen: resumenFinanciero.subtotal_neto.pen
-                    })} / {monedaVista === 'USD'
-                      ? formatearMoneda(resumenFinanciero.subtotal_neto.pen, 'PEN')
-                      : formatearMoneda(resumenFinanciero.subtotal_neto.usd, 'USD')}
-                  </p>
-                  <p>
-                    IGV ({Number(resumenFinanciero.igv.porcentaje || 0).toFixed(2)}%): {formatearMontoSegunMonedaVista({
-                      montoUsd: resumenFinanciero.igv.usd,
-                      montoPen: resumenFinanciero.igv.pen
-                    })} / {monedaVista === 'USD'
-                      ? formatearMoneda(resumenFinanciero.igv.pen, 'PEN')
-                      : formatearMoneda(resumenFinanciero.igv.usd, 'USD')}
-                  </p>
-                  <p>
-                    Total: {formatearMontoSegunMonedaVista({
-                      montoUsd: resumenFinanciero.total.usd,
-                      montoPen: resumenFinanciero.total.pen
-                    })} / {monedaVista === 'USD'
-                      ? formatearMoneda(resumenFinanciero.total.pen, 'PEN')
-                      : formatearMoneda(resumenFinanciero.total.usd, 'USD')}
+                <div className="mt-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3">
+                  <p className="text-xs leading-relaxed text-[var(--color-text-muted)]">
+                    * Los precios mostrados no incluyen los impuestos aplicables. Los precios están sujetos a cambios a discreción de NSG Latinoamerica E.I.R.L. según disponibilidad y condiciones del mercado.
                   </p>
                 </div>
 

@@ -73,6 +73,82 @@ const MAPA_CATEGORIAS = {
 
 const _CLAVES_ORDENADAS = Object.keys(MAPA_CATEGORIAS).sort((a, b) => b.length - a.length);
 
+// §5.1 / §15 — Campos requeridos por categoría principal para determinar si se necesita enriquecimiento IA.
+// Si alguno de estos campos está vacío tras la extracción del CSV, el producto queda como 'pendiente'.
+// Requisitos: 3.1, 3.2, 3.3, 3.4
+const CAMPOS_REQUERIDOS = {
+  procesador:     ['socket', 'arquitectura', 'cpu_nucleos', 'cpu_hilos', 'cpu_frecuencia_base_ghz', 'cpu_frecuencia_boost_ghz', 'cpu_tdp_w'],
+  placa_madre:    ['socket', 'mb_chipset', 'mb_form_factor', 'mb_ram_tipo', 'mb_max_ram_gb', 'mb_m2_slots', 'mb_pcie_version'],
+  ram:            ['ram_tipo', 'ram_capacidad_gb', 'ram_velocidad_mhz'],
+  almacenamiento: ['storage_tipo', 'storage_capacidad_gb', 'storage_interfaz', 'storage_form_factor', 'storage_velocidad_escritura_mbps'],
+  gpu:            ['gpu_chipset', 'gpu_vram_gb', 'gpu_bus_bits', 'gpu_tdp_w', 'gpu_longitud_mm'],
+  fuente:         ['psu_wattage', 'psu_certificacion', 'psu_modular'],
+  case:           ['case_form_factor', 'case_max_gpu_mm'],
+};
+
+/**
+ * Retorna true si algún campo requerido de la categoría está ausente (null o '').
+ * Usado para decidir si el producto necesita enriquecimiento IA.
+ * @param {string} categoria
+ * @param {Object} registro - objeto con los campos de specs ya combinados
+ * @returns {boolean}
+ */
+function tieneSpecsFaltantes(categoria, registro) {
+  const requeridos = CAMPOS_REQUERIDOS[categoria] || [];
+  return requeridos.some((campo) => registro[campo] == null || registro[campo] === '');
+}
+
+// §5.3 — Mapa de tipos esperados por campo para construir la lista de specs faltantes.
+// Usado por calcularSpecsFaltantes() para informar al LLM qué tipo de dato se espera.
+// Requisitos: 3.3, 4.1, 4.2
+const TIPOS_CAMPOS = {
+  socket: 'string',
+  arquitectura: 'string',
+  cpu_nucleos: 'integer',
+  cpu_hilos: 'integer',
+  cpu_frecuencia_base_ghz: 'number',
+  cpu_frecuencia_boost_ghz: 'number',
+  cpu_tdp_w: 'integer',
+  mb_chipset: 'string',
+  mb_form_factor: 'string',
+  mb_ram_tipo: 'string',
+  mb_max_ram_gb: 'integer',
+  mb_m2_slots: 'integer',
+  mb_pcie_version: 'string',
+  ram_tipo: 'string',
+  ram_capacidad_gb: 'integer',
+  ram_velocidad_mhz: 'integer',
+  storage_tipo: 'string',
+  storage_capacidad_gb: 'integer',
+  storage_interfaz: 'string',
+  storage_form_factor: 'string',
+  storage_velocidad_escritura_mbps: 'integer',
+  gpu_chipset: 'string',
+  gpu_vram_gb: 'integer',
+  gpu_bus_bits: 'integer',
+  gpu_tdp_w: 'integer',
+  gpu_longitud_mm: 'integer',
+  psu_wattage: 'integer',
+  psu_certificacion: 'string',
+  psu_modular: 'string',
+  case_form_factor: 'string',
+  case_max_gpu_mm: 'integer',
+};
+
+/**
+ * Construye la lista de campos faltantes con sus tipos esperados para una categoría y registro dados.
+ * Solo incluye los campos requeridos que están ausentes (null o '').
+ * @param {string} categoria
+ * @param {Object} registro - objeto con los campos de specs ya combinados
+ * @returns {Array<{campo: string, tipo: string}>}
+ */
+function calcularSpecsFaltantes(categoria, registro) {
+  const requeridos = CAMPOS_REQUERIDOS[categoria] || [];
+  return requeridos
+    .filter((campo) => registro[campo] == null || registro[campo] === '')
+    .map((campo) => ({ campo, tipo: TIPOS_CAMPOS[campo] || 'string' }));
+}
+
 function mapearCategoria(categoriaCSV) {
   const normalizada = String(categoriaCSV || '').toLowerCase().trim();
   for (const clave of _CLAVES_ORDENADAS) {
@@ -82,7 +158,109 @@ function mapearCategoria(categoriaCSV) {
 }
 
 function limpiarNombre(descripcion) {
-  return normalizarTextoHumano(String(descripcion || '').split('[@@@]')[0]).replace(/\s+/g, ' ').trim();
+  // Mantener compatibilidad: si no conocemos la categoría, devolvemos el texto limpio completo.
+  const texto = String(descripcion || '');
+  const partes = texto.split('[@@@]');
+  const base = partes[0];
+  return normalizarTextoHumano(base)
+    .replace(/\s*\[[@]?[@]?\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 200);
+}
+
+function limpiarDescripcionBase(descripcion) {
+  return limpiarNombre(descripcion)
+    .replace(/^[\s,;:-]+|[\s,;:-]+$/g, '')
+    .trim();
+}
+
+function capitalizarMarca(texto) {
+  return String(texto || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((parte) => parte.charAt(0).toUpperCase() + parte.slice(1).toLowerCase())
+    .join(' ');
+}
+
+function generarNombreComercial(categoria, descripcion, marca) {
+  const texto = limpiarDescripcionBase(descripcion);
+  if (!texto) return '';
+
+  const textoSinSpecs = texto
+    .replace(/\s+\d+(?:\.\d+)?\s*\/\s*\d+(?:\.\d+)?\s*ghz.*$/i, '')
+    .replace(/,\s*\d+(?:\.\d+)?\s*ghz.*$/i, '')
+    .replace(/,\s*\d+\s*cores?.*$/i, '')
+    .replace(/,\s*tdp\s*:\s*\d+\s*w.*$/i, '')
+    .replace(/,\s*\d+\s*w.*$/i, '')
+    .replace(/,\s*\d+\s*gb\s*gddr\w+.*$/i, '')
+    .replace(/,\s*\d+\s*gb\s*ddr\d.*$/i, '')
+    .replace(/,\s*(?:m\.2|2\.5|3\.5|sata|nvme|pcie).*$/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (categoria === 'procesador') {
+    const match = textoSinSpecs.match(/(?:procesador\s+)?((?:amd|intel)\s+(?:ryzen\s+[3579]|athlon|pentium|celeron|core\s+i[3579])[^,]*?(?:\b\d{4,5}[a-z]{0,2}\b))/i);
+    if (match) return capitalizarMarca(match[1]).replace(/Amd/g, 'AMD').replace(/Intel/g, 'Intel');
+  }
+
+  if (categoria === 'gpu') {
+    const match = textoSinSpecs.match(/((?:msi|asus|gigabyte|zotac|sapphire|xfx|asrock|pny|evga|powercolor)\s+)?((?:nvidia\s+geforce\s+)?(?:rtx|gtx)\s*\d{3,4}(?:\s*ti)?|(?:amd\s+radeon\s+)?rx\s*\d{4}(?:\s*xt)?)/i);
+    if (match) return `${capitalizarMarca(match[1] || marca)} ${String(match[2] || '').replace(/\s+/g, ' ').trim()}`.trim();
+  }
+
+  if (categoria === 'ram') {
+    const marcaBase = capitalizarMarca((textoSinSpecs.match(/(?:memoria\s+ram\s+|memoria\s+)?(.+?)(?=\s+\d+\s*gb\b|$)/i) || [])[1] || textoSinSpecs);
+    const capacidad = (texto.match(/(\d+(?:\.\d+)?)\s*gb\b/i) || [])[1] || null;
+    const velocidad = (texto.match(/(\d{3,5})\s*(?:mhz|mt\/s)\b/i) || [])[1] || null;
+    const partes = [marcaBase];
+    if (capacidad) partes.push(`${capacidad}GB`);
+    if (velocidad) partes.push(`${velocidad}MHz`);
+    return partes.join(' ').trim();
+  }
+
+  if (categoria === 'almacenamiento') {
+    const marcaBase = capitalizarMarca((textoSinSpecs.match(/(?:unidad(?:\s+de\s+estado\s+solido)?|disco\s+solido|disco\s+duro)?\s*(.+?)(?=\s+\d+(?:\.\d+)?\s*(?:tb|gb)\b|$)/i) || [])[1] || textoSinSpecs);
+    const capacidad = (texto.match(/(\d+(?:\.\d+)?)\s*(tb|gb)\b/i) || []);
+    const capacidadFormateada = capacidad[1] && capacidad[2]
+      ? `${capacidad[1]}${String(capacidad[2]).toUpperCase()}`
+      : null;
+    return [marcaBase, capacidadFormateada].filter(Boolean).join(' ').trim();
+  }
+
+  if (categoria === 'fuente' || categoria === 'case' || categoria === 'placa_madre') {
+    return capitalizarMarca(textoSinSpecs.replace(/^(fuente|case|placa madre|motherboard)\s+/i, ''));
+  }
+
+  return textoSinSpecs || texto;
+}
+
+/**
+ * Genera la descripción general limpia a partir de la descripción raw de Deltron.
+ * Elimina el sufijo [@@@] y todo lo que sigue, caracteres de control y normaliza espacios.
+ * Trunca a 1000 caracteres. (Req 1.4, 1.9)
+ */
+function limpiarDescripcionGeneral(descripcionRaw) {
+  const textoRaw = String(descripcionRaw || '');
+  const [baseRaw, extraRaw = ''] = textoRaw.split('[@@@]');
+
+  const base = normalizarTextoHumano(String(baseRaw || ''));
+  const extra = normalizarTextoHumano(String(extraRaw || ''));
+
+  const descripcionCompuesta = [base, extra]
+    .map((parte) =>
+      String(parte || '')
+        // eslint-disable-next-line no-control-regex
+        .replace(/[\x00-\x1F\x7F]/g, ' ')
+        .replace(/\s*\[[@]?[@]?\s*$/, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+    )
+    .filter(Boolean)
+    .join('. ');
+
+  return descripcionCompuesta.slice(0, 1000);
 }
 
 function parsearStock(valor) {
@@ -164,7 +342,10 @@ function parsearCSV(buffer) {
 
   const limpiar = (campo) => normalizarTextoHumano(String(campo || '').replace(/^"|"$/g, '').trim());
   const encabezado = parsearLineaCSV(lineas[0]).map((c) => limpiar(c).toLowerCase());
-  const esCSVEstructurado = encabezado.includes('categoria') && encabezado.includes('codigo_proveedor');
+  // Detectar CSV estructurado: tiene 'codigo_proveedor' como columna explícita en el encabezado.
+  // El CSV Deltron raw no tiene encabezado con ese nombre (sus líneas de encabezado son filtradas).
+  // Req 1.1: compatibilidad con el CSV estructurado existente (assets/CSV cotizador/productos.csv).
+  const esCSVEstructurado = encabezado.includes('codigo_proveedor');
 
   if (esCSVEstructurado) {
     const idx = {
@@ -180,6 +361,7 @@ function parsearCSV(buffer) {
       precio_base: encabezado.indexOf('precio_base'),
       garantia: encabezado.indexOf('garantia'),
       socket: encabezado.indexOf('socket'),
+      arquitectura: encabezado.indexOf('arquitectura'),
       cpu_nucleos: encabezado.indexOf('cpu_nucleos'),
       cpu_hilos: encabezado.indexOf('cpu_hilos'),
       cpu_frecuencia_base_ghz: encabezado.indexOf('cpu_frecuencia_base_ghz'),
@@ -195,15 +377,19 @@ function parsearCSV(buffer) {
       ram_tipo: encabezado.indexOf('ram_tipo'),
       ram_capacidad_gb: encabezado.indexOf('ram_capacidad_gb'),
       ram_velocidad_mhz: encabezado.indexOf('ram_velocidad_mhz'),
+      ram_latencia: encabezado.indexOf('ram_latencia'),
       ram_cantidad_modulos: encabezado.indexOf('ram_cantidad_modulos'),
       storage_tipo: encabezado.indexOf('storage_tipo'),
       storage_capacidad_gb: encabezado.indexOf('storage_capacidad_gb'),
       storage_interfaz: encabezado.indexOf('storage_interfaz'),
       storage_form_factor: encabezado.indexOf('storage_form_factor'),
       storage_nvme_gen: encabezado.indexOf('storage_nvme_gen'),
+      storage_velocidad_lectura_mbps: encabezado.indexOf('storage_velocidad_lectura_mbps'),
+      storage_velocidad_escritura_mbps: encabezado.indexOf('storage_velocidad_escritura_mbps'),
       gpu_chipset: encabezado.indexOf('gpu_chipset'),
       gpu_vram_gb: encabezado.indexOf('gpu_vram_gb'),
       gpu_vram_tipo: encabezado.indexOf('gpu_vram_tipo'),
+      gpu_bus_bits: encabezado.indexOf('gpu_bus_bits'),
       gpu_tdp_w: encabezado.indexOf('gpu_tdp_w'),
       gpu_longitud_mm: encabezado.indexOf('gpu_longitud_mm'),
       psu_wattage: encabezado.indexOf('psu_wattage'),
@@ -212,6 +398,7 @@ function parsearCSV(buffer) {
       psu_form_factor: encabezado.indexOf('psu_form_factor'),
       case_form_factor: encabezado.indexOf('case_form_factor'),
       case_color: encabezado.indexOf('case_color'),
+      case_panel_lateral: encabezado.indexOf('case_panel_lateral'),
       case_max_gpu_mm: encabezado.indexOf('case_max_gpu_mm'),
       case_compatibilidad_placa: encabezado.indexOf('case_compatibilidad_placa'),
     };
@@ -237,6 +424,7 @@ function parsearCSV(buffer) {
           garantia: limpiar(campos[idx.garantia]),
           marca: limpiar(campos[idx.marca]),
           socket: limpiar(campos[idx.socket]),
+          arquitectura: limpiar(campos[idx.arquitectura]),
           cpu_nucleos: limpiar(campos[idx.cpu_nucleos]),
           cpu_hilos: limpiar(campos[idx.cpu_hilos]),
           cpu_frecuencia_base_ghz: limpiar(campos[idx.cpu_frecuencia_base_ghz]),
@@ -252,15 +440,19 @@ function parsearCSV(buffer) {
           ram_tipo: limpiar(campos[idx.ram_tipo]),
           ram_capacidad_gb: limpiar(campos[idx.ram_capacidad_gb]),
           ram_velocidad_mhz: limpiar(campos[idx.ram_velocidad_mhz]),
+          ram_latencia: limpiar(campos[idx.ram_latencia]),
           ram_cantidad_modulos: limpiar(campos[idx.ram_cantidad_modulos]),
           storage_tipo: limpiar(campos[idx.storage_tipo]),
           storage_capacidad_gb: limpiar(campos[idx.storage_capacidad_gb]),
           storage_interfaz: limpiar(campos[idx.storage_interfaz]),
           storage_form_factor: limpiar(campos[idx.storage_form_factor]),
           storage_nvme_gen: limpiar(campos[idx.storage_nvme_gen]),
+          storage_velocidad_lectura_mbps: limpiar(campos[idx.storage_velocidad_lectura_mbps]),
+          storage_velocidad_escritura_mbps: limpiar(campos[idx.storage_velocidad_escritura_mbps]),
           gpu_chipset: limpiar(campos[idx.gpu_chipset]),
           gpu_vram_gb: limpiar(campos[idx.gpu_vram_gb]),
           gpu_vram_tipo: limpiar(campos[idx.gpu_vram_tipo]),
+          gpu_bus_bits: limpiar(campos[idx.gpu_bus_bits]),
           gpu_tdp_w: limpiar(campos[idx.gpu_tdp_w]),
           gpu_longitud_mm: limpiar(campos[idx.gpu_longitud_mm]),
           psu_wattage: limpiar(campos[idx.psu_wattage]),
@@ -269,6 +461,7 @@ function parsearCSV(buffer) {
           psu_form_factor: limpiar(campos[idx.psu_form_factor]),
           case_form_factor: limpiar(campos[idx.case_form_factor]),
           case_color: limpiar(campos[idx.case_color]),
+          case_panel_lateral: limpiar(campos[idx.case_panel_lateral]),
           case_max_gpu_mm: limpiar(campos[idx.case_max_gpu_mm]),
           case_compatibilidad_placa: limpiar(campos[idx.case_compatibilidad_placa]),
         };
@@ -276,10 +469,17 @@ function parsearCSV(buffer) {
       .filter((fila) => fila.codigo);
   }
 
-  return lineas.map((linea, indice) => {
+  // Branch Deltron raw: aplicar los tres filtros de descarte antes de procesar cada línea (§13.1)
+  const filasDeltron = [];
+  for (let i = 0; i < lineas.length; i++) {
+    const linea = lineas[i];
+    if (esFilaSeparador(linea)) continue;
+    if (esFilaEncabezado(linea)) continue;
+    if (esFilaMetadata(linea)) continue;
+
     const campos = parsearLineaCSV(linea);
-    return {
-      _fila: indice + 1,
+    filasDeltron.push({
+      _fila: i + 1,
       categoria_proveedor: limpiar(campos[0]),
       codigo: limpiar(campos[1]),
       nombre_descripcion: limpiar(campos[2]),
@@ -287,8 +487,43 @@ function parsearCSV(buffer) {
       precio_usd_raw: String(campos[4] || '').trim(),
       garantia: limpiar(campos[6]),
       marca: limpiar(campos[8]),
-    };
-  });
+    });
+  }
+  return filasDeltron;
+}
+
+// §13.1 — Filtros de descarte para el branch Deltron raw
+
+/**
+ * Detecta líneas de separador de categoría.
+ * Ejemplos: "_______________","_______________","__________________________________","__________"
+ * También cubre la línea de guiones bajos del encabezado del archivo.
+ */
+function esFilaSeparador(linea) {
+  return /^["_,\s]+$/.test(linea);
+}
+
+/**
+ * Detecta líneas de encabezado de columnas repetidas por categoría.
+ * Ejemplos: " ","CODIGO","ACCESORIOS","STOCK","PREC DISTRIB US $","PREC S/.","FLETE ","GARAN","MARCA"
+ */
+function esFilaEncabezado(linea) {
+  const upper = linea.toUpperCase();
+  return upper.includes('CODIGO') && upper.includes('STOCK') && upper.includes('PREC DISTRIB');
+}
+
+/**
+ * Detecta líneas de metadatos del archivo (cabecera del documento).
+ * Ejemplos: ,"LISTA DE PRECIOS DELTRON"  /  ,"Generada el :"  /  ,"Almacen(es) :"  /  ,"TIPO DE CAMBIO :..."
+ */
+function esFilaMetadata(linea) {
+  const upper = linea.toUpperCase();
+  return (
+    upper.includes('LISTA DE PRECIOS') ||
+    upper.includes('GENERADA EL') ||
+    upper.includes('ALMACEN') ||
+    upper.includes('TIPO DE CAMBIO')
+  );
 }
 
 function normalizarSocket(texto) {
@@ -306,9 +541,18 @@ function normalizarRamTipo(texto) {
 
 function normalizarFormFactor(texto) {
   const t = texto.toLowerCase();
-  if (t.includes('e-atx') || t.includes('eatx')) return 'E-ATX';
-  if (t.includes('micro atx') || t.includes('m-atx') || t.includes('matx')) return 'MICRO-ATX';
-  if (t.includes('mini itx') || t.includes('mini-itx')) return 'MINI-ITX';
+  // §14.7: cubrir variantes extendidas de E-ATX
+  if (t.includes('e-atx') || t.includes('eatx') || t.includes('extended atx')) return 'E-ATX';
+  // §14.7: cubrir microatx, micro-atx, matx, m-atx, micro atx
+  if (
+    t.includes('microatx') ||
+    t.includes('micro-atx') ||
+    t.includes('micro atx') ||
+    t.includes('m-atx') ||
+    t.includes('matx')
+  ) return 'MICRO-ATX';
+  // §14.7: cubrir miniitx, mini-itx, mini itx
+  if (t.includes('miniitx') || t.includes('mini-itx') || t.includes('mini itx')) return 'MINI-ITX';
   if (t.includes('atx')) return 'ATX';
   return null;
 }
@@ -321,10 +565,75 @@ function extraerNumero(regex, texto) {
 }
 
 function extraerFrecuencias(texto) {
-  const matches = [...texto.matchAll(/(\d+(?:\.\d+)?)\s*ghz/gi)].map((m) => Number(m[1]));
+  const par = texto.match(/(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*ghz\b/i);
+  if (par) {
+    const base = Number(par[1]);
+    const boost = Number(par[2]);
+    return {
+      base: Number.isFinite(base) ? base : null,
+      boost: Number.isFinite(boost) ? boost : null,
+    };
+  }
+
+  const parSeparado = texto.match(/base\D{0,12}(\d+(?:\.\d+)?)\s*ghz.*boost\D{0,12}(\d+(?:\.\d+)?)\s*ghz/i);
+  if (parSeparado) {
+    const base = Number(parSeparado[1]);
+    const boost = Number(parSeparado[2]);
+    return {
+      base: Number.isFinite(base) ? base : null,
+      boost: Number.isFinite(boost) ? boost : null,
+    };
+  }
+
+  const matches = [...texto.matchAll(/(\d+(?:\.\d+)?)\s*ghz\b/gi)].map((m) => Number(m[1]));
   if (matches.length === 0) return { base: null, boost: null };
   if (matches.length === 1) return { base: matches[0], boost: null };
   return { base: Math.min(...matches), boost: Math.max(...matches) };
+}
+
+function inferirSpecsProcesadorPorModelo(texto) {
+  const t = String(texto || '').toLowerCase();
+
+  const intel = t.match(/core\s+i([3579])[-\s]?(\d{5})([a-z]{0,3})/i);
+  if (intel) {
+    const tier = intel[1];
+    const generacion = intel[2].slice(0, 2);
+    const sku = intel[2];
+    const sufijo = intel[3].toUpperCase();
+
+    if (generacion === '14') {
+      if (tier === '7' && sku === '14700') return { cpu_nucleos: 20, cpu_hilos: 28, arquitectura: 'Raptor Lake Refresh', cpu_graficos_integrados: !sufijo.includes('F') };
+      if (tier === '5' && sku === '14600') return { cpu_nucleos: 14, cpu_hilos: 20, arquitectura: 'Raptor Lake Refresh', cpu_graficos_integrados: !sufijo.includes('F') };
+      if (tier === '9' && sku === '14900') return { cpu_nucleos: 24, cpu_hilos: 32, arquitectura: 'Raptor Lake Refresh', cpu_graficos_integrados: !sufijo.includes('F') };
+    }
+
+    if (generacion === '13') {
+      if (tier === '7' && sku === '13700') return { cpu_nucleos: 16, cpu_hilos: 24, arquitectura: 'Raptor Lake', cpu_graficos_integrados: !sufijo.includes('F') };
+      if (tier === '5' && sku === '13600') return { cpu_nucleos: 14, cpu_hilos: 20, arquitectura: 'Raptor Lake', cpu_graficos_integrados: !sufijo.includes('F') };
+      if (tier === '9' && sku === '13900') return { cpu_nucleos: 24, cpu_hilos: 32, arquitectura: 'Raptor Lake', cpu_graficos_integrados: !sufijo.includes('F') };
+    }
+
+    if (generacion === '12') {
+      if (tier === '7' && sku === '12700') return { cpu_nucleos: 12, cpu_hilos: 20, arquitectura: 'Alder Lake', cpu_graficos_integrados: !sufijo.includes('F') };
+      if (tier === '5' && sku === '12600') return { cpu_nucleos: 10, cpu_hilos: 16, arquitectura: 'Alder Lake', cpu_graficos_integrados: !sufijo.includes('F') };
+      if (tier === '5' && sku === '12400') return { cpu_nucleos: 6, cpu_hilos: 12, arquitectura: 'Alder Lake', cpu_graficos_integrados: !sufijo.includes('F') };
+      if (tier === '9' && sku === '12900') return { cpu_nucleos: 16, cpu_hilos: 24, arquitectura: 'Alder Lake', cpu_graficos_integrados: !sufijo.includes('F') };
+    }
+  }
+
+  const amd = t.match(/ryzen\s+([3579])\s+(\d{4,5})([a-z]{0,3})/i);
+  if (amd) {
+    const tier = amd[1];
+    const sku = amd[2];
+    const sufijo = amd[3].toUpperCase();
+    const arquitectura = sku.startsWith('8') || sku.startsWith('9') ? 'Zen 4' : null;
+
+    if (tier === '5' && sku === '8500' && sufijo.includes('G')) return { cpu_nucleos: 6, cpu_hilos: 12, arquitectura, cpu_graficos_integrados: true };
+    if (tier === '5' && sku === '5600' && (sufijo.includes('G') || sufijo.includes('GT'))) return { cpu_nucleos: 6, cpu_hilos: 12, arquitectura: 'Zen 3', cpu_graficos_integrados: true };
+    if (tier === '7' && sku === '8700' && sufijo.includes('G')) return { cpu_nucleos: 8, cpu_hilos: 16, arquitectura, cpu_graficos_integrados: true };
+  }
+
+  return {};
 }
 
 function extraerCapacidadGb(texto) {
@@ -339,24 +648,61 @@ function extraerSpecs(categoria, nombre, categoriaProveedor) {
 
   if (categoria === 'procesador') {
     const frec = extraerFrecuencias(textoLower);
-    const graficosIntegrados = textoLower.includes(' sin graficos')
-      ? false
-      : (/\bi[3579]-\d{4,5}f\b/i.test(nombre) ? false : (textoLower.includes('radeon graphics') || /\bryzen\s*\d+\s*\d+g\b/i.test(textoLower) || textoLower.includes('intel uhd')));
+    const inferidas = inferirSpecsProcesadorPorModelo(texto);
+    let graficosIntegrados = null;
+    if (
+      textoLower.includes('sin graficos') ||
+      textoLower.includes('sin gráficos') ||
+      /\bi[3579]-\d{4,5}f\b/i.test(nombre)
+    ) {
+      graficosIntegrados = false;
+    } else if (
+      textoLower.includes('radeon graphics') ||
+      /\bryzen\s*\d+\s*\d+g\b/i.test(textoLower) ||
+      /\b\d{4,5}g\b/i.test(textoLower) ||
+      textoLower.includes('intel uhd') ||
+      textoLower.includes('intel iris')
+    ) {
+      graficosIntegrados = true;
+    }
+
+    const nucleosDetectados =
+      extraerNumero(/(\d{1,2})\s*[-]?\s*cores?/i, textoLower) ||
+      extraerNumero(/(\d{1,2})\s*n[uú]cleos?/i, textoLower) ||
+      extraerNumero(/\b(\d{1,2})c\b/i, textoLower);
+
+    const hilosDetectados =
+      extraerNumero(/(\d{1,2})\s*[-]?\s*threads?/i, textoLower) ||
+      extraerNumero(/(\d{1,2})\s*hilos?/i, textoLower) ||
+      extraerNumero(/\b(\d{1,2})t\b/i, textoLower);
+
+    const tdpDetectado = extraerNumero(/tdp\D{0,6}(\d{2,4})\s*w/i, textoLower)
+      || extraerNumero(/(\d{2,4})\s*w\D{0,6}tdp/i, textoLower)
+      || extraerNumero(/,\s*(\d{2,3})\s*w\/?\s*$/i, textoLower)
+      || extraerNumero(/\btdp[:\s]*(\d{2,3})\s*w/i, textoLower)
+      || extraerNumero(/\b(\d{2,3})\s*w\/?(?=\s|,|$)/i, textoLower);
+
     return {
       socket: normalizarSocket(texto),
-      cpu_nucleos: extraerNumero(/(\d{1,2})\s*(?:cores?|nucleos?)/i, textoLower) || extraerNumero(/\b(\d{1,2})c\b/i, textoLower),
-      cpu_hilos: extraerNumero(/(\d{1,2})\s*(?:threads?|hilos?)/i, textoLower) || extraerNumero(/\b(\d{1,2})t\b/i, textoLower),
+      arquitectura: inferidas.arquitectura || null,
+      cpu_nucleos: nucleosDetectados || inferidas.cpu_nucleos || null,
+      cpu_hilos: hilosDetectados || inferidas.cpu_hilos || null,
       cpu_frecuencia_base_ghz: frec.base,
       cpu_frecuencia_boost_ghz: frec.boost,
-      cpu_tdp_w: extraerNumero(/tdp\D{0,6}(\d{2,4})\s*w/i, textoLower) || extraerNumero(/(\d{2,4})\s*w\D{0,6}tdp/i, textoLower),
-      cpu_graficos_integrados: graficosIntegrados,
+      cpu_tdp_w: tdpDetectado,
+      cpu_graficos_integrados: graficosIntegrados ?? inferidas.cpu_graficos_integrados ?? null,
     };
   }
 
   if (categoria === 'placa_madre') {
+    // Req 2.2: chipset — cubre A520/B550/B650/B850/A620/X570/X670/X870/Z790/H610/H770 etc.
+    // Patrón: letra(s) seguida de 3 dígitos con sufijo opcional (E, F, etc.)
+    const chipsetMatch =
+      texto.match(/\b([abxhz][0-9]{3}[a-z]?)\b/i) ||
+      texto.match(/\b(b\d{2,3}[a-z]?)\b/i);
     return {
       socket: normalizarSocket(texto),
-      mb_chipset: (texto.match(/\b([abxh]\d{3}[a-z]?|z\d{3}|b\d{2,3})\b/i) || [])[1]?.toUpperCase() || null,
+      mb_chipset: chipsetMatch ? chipsetMatch[1].toUpperCase() : null,
       mb_form_factor: normalizarFormFactor(texto),
       mb_ram_tipo: normalizarRamTipo(texto),
       mb_max_ram_gb: extraerNumero(/(?:hasta|max)\s*(\d{2,4})\s*gb/i, textoLower),
@@ -368,10 +714,21 @@ function extraerSpecs(categoria, nombre, categoriaProveedor) {
   if (categoria === 'ram') {
     const kit = textoLower.match(/(\d+)\s*x\s*(\d+)\s*gb/);
     const capacidad = kit ? Number(kit[1]) * Number(kit[2]) : extraerCapacidadGb(textoLower);
+    // Req 2.3: latencia — cubre "CL16", "cl16", "16CL", "CAS 16", "CAS16"
+    const latenciaMatch =
+      texto.match(/\bcl[-\s]?(\d{1,2})\b/i) ||
+      texto.match(/\bcas[-\s]?(\d{1,2})\b/i) ||
+      texto.match(/\b(\d{1,2})[-\s]?cl\b/i);
     return {
       ram_tipo: normalizarRamTipo(texto),
       ram_capacidad_gb: capacidad,
-      ram_velocidad_mhz: extraerNumero(/(\d{3,5})\s*mhz/i, textoLower),
+      // Req 2.3: velocidad — cubre "3200MHz" y "3200MT/s" / "4800 MT/s"
+      ram_velocidad_mhz:
+        extraerNumero(/(\d{3,5})\s*mhz/i, textoLower) ||
+        extraerNumero(/(\d{3,5})\s*mt\/s/i, textoLower),
+      // Req 2.3: latencia normalizada a formato "CL16"
+      ram_latencia: latenciaMatch ? `CL${latenciaMatch[1]}` : null,
+      // Req 2.3: cantidad_modulos desde "1x16GB" o "2x8GB"
       ram_cantidad_modulos: kit ? Number(kit[1]) : null,
     };
   }
@@ -379,42 +736,124 @@ function extraerSpecs(categoria, nombre, categoriaProveedor) {
   if (categoria === 'almacenamiento') {
     const tipo = textoLower.includes('nvme') ? 'ssd_nvme' : (textoLower.includes('ssd') ? 'ssd_sata' : (textoLower.includes('hdd') || textoLower.includes('disco duro') ? 'hdd' : null));
     const nvmeGen = (textoLower.match(/gen\s*([345])/i) || textoLower.match(/pcie\s*([345])\.0/i) || [])[1] || null;
+
+    // Req 2.4 — velocidad lectura: "seq read: 7000 MB/s", "7000MB/s read", "550 MB/s" (primer valor)
+    const velocidadLectura =
+      extraerNumero(/(?:seq(?:uential)?\s*)?read[:\s]+(\d{3,5})\s*mb\/s/i, texto) ||
+      extraerNumero(/(\d{3,5})\s*mb\/s\s*(?:read|lectura)/i, texto) ||
+      extraerNumero(/(\d{3,5})\s*mb\/s/i, texto);
+
+    // Req 2.4 — velocidad escritura: "520 MB/s write", "seq write: 520 MB/s"
+    const velocidadEscritura =
+      extraerNumero(/(?:seq(?:uential)?\s*)?writ[e\s]*[:\s]+(\d{3,5})\s*mb\/s/i, texto) ||
+      extraerNumero(/(\d{3,5})\s*mb\/s\s*(?:writ|escritura)/i, texto) ||
+      (() => {
+        const pares = [...texto.matchAll(/(\d{3,5})\s*mb\/s/gi)].map((m) => Number(m[1])).filter(Number.isFinite);
+        return pares.length >= 2 ? pares[1] : null;
+      })();
+
     return {
       storage_tipo: tipo,
       storage_capacidad_gb: extraerCapacidadGb(textoLower),
       storage_interfaz: textoLower.includes('nvme') ? 'NVME' : (textoLower.includes('sata') ? 'SATA' : null),
-      storage_form_factor: textoLower.includes('m.2') ? 'M.2' : (textoLower.includes('2.5') ? '2.5"' : null),
+      // Req 2.4 — form_factor ahora incluye 3.5"
+      storage_form_factor: textoLower.includes('m.2') ? 'M.2' : (textoLower.includes('2.5') ? '2.5"' : (textoLower.includes('3.5') ? '3.5"' : null)),
       storage_nvme_gen: nvmeGen ? `GEN${nvmeGen}` : null,
+      storage_velocidad_lectura_mbps: velocidadLectura,
+      storage_velocidad_escritura_mbps: velocidadEscritura,
     };
   }
 
   if (categoria === 'gpu') {
-    const matchVram = texto.match(/(\d{1,2})\s*gb\s*(gddr\d\w*)/i);
+    const matchVram = texto.match(/(\d{1,2})\s*gb\s*(gddr\s*\d\w*)/i);
+
+    // Req 2.5 — chipset completo: "NVIDIA GeForce RTX 5060 Ti", "AMD Radeon RX 9070 XT"
+    const chipsetCompleto = (() => {
+      const m =
+        texto.match(/(nvidia\s+geforce\s+(?:rtx|gtx)\s*\d{3,4}(?:\s*ti)?)/i) ||
+        texto.match(/(amd\s+radeon\s+rx\s*\d{4}(?:\s*xt)?)/i) ||
+        texto.match(/(rtx\s*\d{3,4}(?:\s*ti)?|gtx\s*\d{3,4}|rx\s*\d{4}(?:\s*xt)?|arc\s*[a-z0-9]+)/i);
+      return m ? m[1].replace(/\s+/g, ' ').trim().toUpperCase() : null;
+    })();
+
+    // Req 2.5 — vram_tipo: normalizar "GDDR 6" → "GDDR6", "gddr6x" → "GDDR6X"
+    const vramTipo = (() => {
+      const m = texto.match(/\bgddr\s*(\d\w*)\b/i);
+      return m ? `GDDR${m[1].toUpperCase()}` : null;
+    })();
+
     return {
-      gpu_chipset: (texto.match(/(rtx\s*\d{3,4}|gtx\s*\d{3,4}|rx\s*\d{3,4}|arc\s*[a-z0-9]+)/i) || [])[1]?.toUpperCase().replace(/\s+/g, ' ') || null,
+      gpu_chipset: chipsetCompleto,
       gpu_vram_gb: matchVram ? Number(matchVram[1]) : extraerNumero(/(\d{1,2})\s*gb/i, textoLower),
-      gpu_vram_tipo: matchVram ? matchVram[2].toUpperCase() : null,
+      gpu_vram_tipo: vramTipo,
+      // Req 2.5 — bus_bits: "256-bit", "256 bit", "256bits"
+      gpu_bus_bits: extraerNumero(/(\d{2,3})\s*[-]?\s*bits?/i, texto),
       gpu_tdp_w: extraerNumero(/tdp\D{0,6}(\d{2,4})\s*w/i, textoLower),
-      gpu_longitud_mm: extraerNumero(/(\d{3})\s*mm/i, textoLower),
+      gpu_longitud_mm: extraerNumero(/(?:length|longitud|largo)[^0-9]{0,12}(\d{3})\s*mm/i, textoLower) || extraerNumero(/(\d{3})\s*mm/i, textoLower),
     };
   }
 
   if (categoria === 'fuente') {
-    let certificacion = null;
-    const cert = texto.match(/80\s*plus\s*(bronze|gold|silver|platinum|titanium)?/i);
-    if (cert) certificacion = `80 PLUS ${String(cert[1] || '').toUpperCase()}`.trim();
+    // Req 2.6 — certificacion mejorada: "80plus gold", "80 plus gold", "80+ Gold" → "80+ Gold"
+    const certificacion = (() => {
+      const m =
+        texto.match(/80\s*[+]?\s*plus\s*(bronze|gold|silver|platinum|titanium)?/i) ||
+        texto.match(/80\s*\+\s*(bronze|gold|silver|platinum|titanium)?/i);
+      if (!m) return null;
+      const nivel = (m[1] || '').trim();
+      if (!nivel) return '80+';
+      return `80+ ${nivel.charAt(0).toUpperCase() + nivel.slice(1).toLowerCase()}`;
+    })();
+
+    // Req 2.6 — modular: valores legibles en lugar de snake_case
+    const modular = (() => {
+      if (textoLower.includes('full modular') || textoLower.includes('fully modular')) return 'Full Modular';
+      if (textoLower.includes('semi') && textoLower.includes('modular')) return 'Semi Modular';
+      if (
+        textoLower.includes('no modular') ||
+        textoLower.includes('non-modular') ||
+        textoLower.includes('no-modular')
+      ) return 'No Modular';
+      if (textoLower.includes('modular')) return 'Modular';
+      return null;
+    })();
+
     return {
       psu_wattage: extraerNumero(/\b(\d{3,4})\s*w\b/i, textoLower),
       psu_certificacion: certificacion,
-      psu_modular: textoLower.includes('full modular') ? 'full_modular' : (textoLower.includes('semi modular') ? 'semi_modular' : (textoLower.includes('modular') ? 'modular' : 'no_modular')),
+      psu_modular: modular,
       psu_form_factor: normalizarFormFactor(texto),
     };
   }
 
   if (categoria === 'case') {
+    // Req 2.7 — color: añadir blue/azul, normalizar a español con mayúscula inicial
+    const color = (() => {
+      const m = texto.match(/\b(black|negro|white|blanco|gris|gray|grey|silver|plateado|red|rojo|blue|azul)\b/i);
+      if (!m) return null;
+      const mapa = {
+        black: 'Negro', negro: 'Negro',
+        white: 'Blanco', blanco: 'Blanco',
+        gris: 'Gris', gray: 'Gris', grey: 'Gris',
+        silver: 'Plateado', plateado: 'Plateado',
+        red: 'Rojo', rojo: 'Rojo',
+        blue: 'Azul', azul: 'Azul',
+      };
+      return mapa[m[1].toLowerCase()] || m[1];
+    })();
+
+    // Req 2.7 — panel_lateral: Vidrio Templado / Malla Metálica / Acrílico Transparente
+    const panelLateral = (() => {
+      if (textoLower.includes('vidrio templado') || textoLower.includes('tempered glass') || textoLower.includes(' tg ') || textoLower.endsWith(' tg')) return 'Vidrio Templado';
+      if (textoLower.includes('mesh') || textoLower.includes('malla')) return 'Malla Metálica';
+      if (textoLower.includes('acril') || textoLower.includes('acryl')) return 'Acrílico Transparente';
+      return null;
+    })();
+
     return {
       case_form_factor: normalizarFormFactor(texto),
-      case_color: (texto.match(/\b(black|negro|white|blanco|gris|silver|plateado|red|rojo)\b/i) || [])[1]?.toLowerCase() || null,
+      case_color: color,
+      case_panel_lateral: panelLateral,
       case_max_gpu_mm: extraerNumero(/(?:gpu|vga)[^0-9]{0,20}(\d{3})\s*mm/i, textoLower),
       case_compatibilidad_placa: [normalizarFormFactor(texto) || 'ATX', 'MICRO-ATX', 'MINI-ITX'].filter(Boolean).join(','),
     };
@@ -438,16 +877,24 @@ function construirRegistroNormalizado(fila) {
     return { error: `precio_usd invalido: "${fila.precio_usd_raw}"` };
   }
 
-  const nombreLimpio = limpiarNombre(fila.nombre_descripcion);
-  if (!nombreLimpio || nombreLimpio.length < 3 || nombreLimpio.includes('[@@@') || nombreLimpio.includes('@@@')) {
+  const descripcionBase = limpiarNombre(fila.nombre_descripcion);
+  if (!descripcionBase || descripcionBase.length < 3) {
     return null;
   }
 
+  // Para filas Deltron raw, derivar descripcion_general desde nombre_descripcion (Req 1.4, 1.9).
+  // Para CSV estructurado, usar el campo descripcion_general explícito si existe.
+  const descripcionGeneral = fila.descripcion_general
+    ? String(fila.descripcion_general).trim()
+    : limpiarDescripcionGeneral(fila.nombre_descripcion);
+
   const stockInfo = parsearStock(fila.stock_raw);
   const subcategoriaFinal = destino.subcategoria || subcategoriaDirecta || '';
-  const specsDetectadas = extraerSpecs(destino.categoria, nombreLimpio, fila.categoria_proveedor || '');
+  const nombreLimpio = generarNombreComercial(destino.categoria, descripcionBase, fila.marca || '');
+  const specsDetectadas = extraerSpecs(destino.categoria, descripcionGeneral || descripcionBase, fila.categoria_proveedor || '');
   const specsDesdeCSV = {
     socket: fila.socket || null,
+    arquitectura: fila.arquitectura || null,
     cpu_nucleos: fila.cpu_nucleos || null,
     cpu_hilos: fila.cpu_hilos || null,
     cpu_frecuencia_base_ghz: fila.cpu_frecuencia_base_ghz || null,
@@ -463,15 +910,19 @@ function construirRegistroNormalizado(fila) {
     ram_tipo: fila.ram_tipo || null,
     ram_capacidad_gb: fila.ram_capacidad_gb || null,
     ram_velocidad_mhz: fila.ram_velocidad_mhz || null,
+    ram_latencia: fila.ram_latencia || null,
     ram_cantidad_modulos: fila.ram_cantidad_modulos || null,
     storage_tipo: fila.storage_tipo || null,
     storage_capacidad_gb: fila.storage_capacidad_gb || null,
     storage_interfaz: fila.storage_interfaz || null,
     storage_form_factor: fila.storage_form_factor || null,
     storage_nvme_gen: fila.storage_nvme_gen || null,
+    storage_velocidad_lectura_mbps: fila.storage_velocidad_lectura_mbps || null,
+    storage_velocidad_escritura_mbps: fila.storage_velocidad_escritura_mbps || null,
     gpu_chipset: fila.gpu_chipset || null,
     gpu_vram_gb: fila.gpu_vram_gb || null,
     gpu_vram_tipo: fila.gpu_vram_tipo || null,
+    gpu_bus_bits: fila.gpu_bus_bits || null,
     gpu_tdp_w: fila.gpu_tdp_w || null,
     gpu_longitud_mm: fila.gpu_longitud_mm || null,
     psu_wattage: fila.psu_wattage || null,
@@ -480,10 +931,20 @@ function construirRegistroNormalizado(fila) {
     psu_form_factor: fila.psu_form_factor || null,
     case_form_factor: fila.case_form_factor || null,
     case_color: fila.case_color || null,
+    case_panel_lateral: fila.case_panel_lateral || null,
     case_max_gpu_mm: fila.case_max_gpu_mm || null,
     case_compatibilidad_placa: fila.case_compatibilidad_placa || null,
   };
   const specs = { ...specsDetectadas, ...Object.fromEntries(Object.entries(specsDesdeCSV).filter(([, v]) => String(v || '').trim() !== '')) };
+
+  // §5.2 — Asignar estado_enriquecimiento según si la categoría es principal y si tiene specs completas.
+  // Requisitos: 3.1, 3.2, 3.3, 3.4
+  let estadoEnriquecimiento = 'no_aplica';
+  if (esCategoriaPrincipal(destino.categoria)) {
+    estadoEnriquecimiento = tieneSpecsFaltantes(destino.categoria, specs)
+      ? 'pendiente'
+      : 'csv';
+  }
 
   return {
     categoria: destino.categoria,
@@ -492,13 +953,14 @@ function construirRegistroNormalizado(fila) {
     codigo_proveedor: String(fila.codigo || '').trim().toLowerCase(),
     marca: (fila.marca || '').trim(),
     nombre: nombreLimpio,
-    descripcion_general: (fila.descripcion_general || '').trim(),
+    descripcion_general: descripcionGeneral,
     stock: stockInfo.stock,
     disponible_a_pedido: stockInfo.disponible_a_pedido,
     precio_base: Number(precio.toFixed(2)),
     garantia: fila.garantia || '',
     flete: '',
     es_componente_principal: esCategoriaPrincipal(destino.categoria),
+    estado_enriquecimiento: estadoEnriquecimiento,
     ...specs,
   };
 }
@@ -536,6 +998,7 @@ async function upsertSpecs(db, categoria, idProducto, registro) {
       tabla: 'specs_procesador',
       campos: {
         socket: registro.socket,
+        arquitectura: registro.arquitectura,
         nucleos: registro.cpu_nucleos,
         hilos: registro.cpu_hilos,
         frecuencia_base_ghz: registro.cpu_frecuencia_base_ghz,
@@ -562,6 +1025,7 @@ async function upsertSpecs(db, categoria, idProducto, registro) {
         ram_tipo: registro.ram_tipo,
         capacidad_gb: registro.ram_capacidad_gb,
         velocidad_mhz: registro.ram_velocidad_mhz,
+        latencia: registro.ram_latencia,
         cantidad_modulos: registro.ram_cantidad_modulos,
       },
     },
@@ -573,6 +1037,8 @@ async function upsertSpecs(db, categoria, idProducto, registro) {
         interfaz: registro.storage_interfaz,
         form_factor: registro.storage_form_factor,
         nvme_gen: registro.storage_nvme_gen,
+        velocidad_lectura_mbps: registro.storage_velocidad_lectura_mbps,
+        velocidad_escritura_mbps: registro.storage_velocidad_escritura_mbps,
       },
     },
     gpu: {
@@ -581,6 +1047,7 @@ async function upsertSpecs(db, categoria, idProducto, registro) {
         chipset: registro.gpu_chipset,
         vram_gb: registro.gpu_vram_gb,
         vram_tipo: registro.gpu_vram_tipo,
+        bus_bits: registro.gpu_bus_bits,
         tdp_w: registro.gpu_tdp_w,
         longitud_mm: registro.gpu_longitud_mm,
       },
@@ -599,6 +1066,7 @@ async function upsertSpecs(db, categoria, idProducto, registro) {
       campos: {
         form_factor: registro.case_form_factor,
         color: registro.case_color,
+        panel_lateral: registro.case_panel_lateral,
         max_gpu_mm: registro.case_max_gpu_mm,
         compatibilidad_placa: registro.case_compatibilidad_placa,
       },
@@ -611,7 +1079,11 @@ async function upsertSpecs(db, categoria, idProducto, registro) {
   const columnas = Object.keys(definicion.campos);
   const valores = columnas.map((c) => definicion.campos[c] ?? null);
   const placeholders = columnas.map((_, i) => `$${i + 2}`);
-  const updates = columnas.map((c) => `${c} = EXCLUDED.${c}`).join(', ');
+  // Conserva el valor ya existente cuando la escritura trae null/undefined.
+  // Esto evita que una actualización parcial de IA borre specs válidas detectadas desde CSV.
+  const updates = columnas
+    .map((c) => `${c} = COALESCE(EXCLUDED.${c}, ${definicion.tabla}.${c})`)
+    .join(', ');
 
   await db(
     `INSERT INTO ${definicion.tabla} (id_producto, ${columnas.join(', ')})
@@ -627,11 +1099,31 @@ async function importar(filas, db) {
   let omitidos = 0;
   let errores = 0;
   const detalle_errores = [];
+  // §5.3 — Acumular productos que necesitan enriquecimiento IA (Req 3.3, 4.1, 4.2)
+  const itemsParaIA = [];
 
   const cacheCategorias = new Map();
   const cacheMarcas = new Map();
 
   for (const fila of filas) {
+    // Req 1.11: omitir silenciosamente filas con codigo_proveedor vacío o solo espacios
+    const codigoRaw = String(fila.codigo || '').trim();
+    if (!codigoRaw) {
+      omitidos++;
+      continue;
+    }
+
+    // Req 1.10: registrar error para filas con precio_usd_raw no parseable como número positivo
+    const precioValidacion = parsearPrecio(fila.precio_usd_raw);
+    if (!Number.isFinite(precioValidacion) || precioValidacion <= 0) {
+      errores++;
+      detalle_errores.push({
+        fila: fila._fila,
+        mensaje: `precio_usd inválido: "${fila.precio_usd_raw}"`,
+      });
+      continue;
+    }
+
     const registro = construirRegistroNormalizado(fila);
     if (!registro) {
       omitidos++;
@@ -650,8 +1142,9 @@ async function importar(filas, db) {
       const upsertProducto = await db(
         `INSERT INTO productos (
           id_categoria, id_marca, subcategoria, categoria_proveedor, codigo_proveedor,
-          nombre, descripcion_general, precio_base, stock, disponible_a_pedido, garantia, flete
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+          nombre, descripcion_general, precio_base, stock, disponible_a_pedido, garantia, flete,
+          estado_enriquecimiento
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
         ON CONFLICT (codigo_proveedor) DO UPDATE SET
           id_categoria = EXCLUDED.id_categoria,
           id_marca = EXCLUDED.id_marca,
@@ -663,7 +1156,8 @@ async function importar(filas, db) {
           stock = EXCLUDED.stock,
           disponible_a_pedido = EXCLUDED.disponible_a_pedido,
           garantia = EXCLUDED.garantia,
-          flete = EXCLUDED.flete
+          flete = EXCLUDED.flete,
+          estado_enriquecimiento = EXCLUDED.estado_enriquecimiento
         RETURNING id, (xmax = 0) AS es_insercion`,
         [
           idCategoria,
@@ -678,12 +1172,24 @@ async function importar(filas, db) {
           registro.disponible_a_pedido,
           registro.garantia || null,
           null,
+          registro.estado_enriquecimiento,
         ]
       );
 
       const idProducto = upsertProducto.rows[0].id;
       if (registro.es_componente_principal) {
         await upsertSpecs(db, registro.categoria, idProducto, registro);
+      }
+
+      // §5.3 — Si el producto quedó pendiente de enriquecimiento IA, acumularlo para encolar (Req 3.3, 4.2)
+      if (registro.estado_enriquecimiento === 'pendiente') {
+        itemsParaIA.push({
+          id_producto: idProducto,
+          categoria: registro.categoria,
+          nombre: registro.nombre,
+          descripcion_general: registro.descripcion_general,
+          specs_faltantes: calcularSpecsFaltantes(registro.categoria, registro),
+        });
       }
 
       if (upsertProducto.rows[0].es_insercion) insertados++;
@@ -694,7 +1200,19 @@ async function importar(filas, db) {
     }
   }
 
-  return { insertados, actualizados, omitidos, errores, detalle_errores };
+  // §5.3 — Encolar productos para enriquecimiento IA al finalizar el loop (sin bloquear la respuesta HTTP).
+  // Se usa require dinámico con try/catch para no crashear si el módulo aún no existe (Req 4.1, 4.2).
+  if (itemsParaIA.length > 0) {
+    try {
+      const servicioEnriquecimientoIA = require('./servicioEnriquecimientoIA');
+      servicioEnriquecimientoIA.encolarProductos(itemsParaIA);
+    } catch (err) {
+      // El módulo aún no existe (se crea en tarea 6.1). Advertir sin bloquear.
+      console.warn('[ImportacionCSV] servicioEnriquecimientoIA no disponible:', err.message);
+    }
+  }
+
+  return { insertados, actualizados, omitidos, errores, detalle_errores, pendientes_enriquecimiento: itemsParaIA.length };
 }
 
 function normalizarFilasParaCSV(filas) {
@@ -718,11 +1236,24 @@ function normalizarFilasParaCSV(filas) {
 
 module.exports = {
   MAPA_CATEGORIAS,
+  CAMPOS_REQUERIDOS,
   mapearCategoria,
   limpiarNombre,
+  limpiarDescripcionGeneral,
+  generarNombreComercial,
   parsearStock,
   parsearLineaCSV,
   parsearCSV,
   importar,
   normalizarFilasParaCSV,
+  tieneSpecsFaltantes,
+  calcularSpecsFaltantes,
+  upsertSpecs,
+  extraerSpecs,
+  // §13.1 — exportadas para pruebas unitarias (tarea 2.4)
+  esFilaSeparador,
+  esFilaEncabezado,
+  esFilaMetadata,
+  // exportada para pruebas unitarias (tarea 4.4) y validación de checkpoint
+  construirRegistroNormalizado,
 };

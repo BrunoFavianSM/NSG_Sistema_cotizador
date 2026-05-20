@@ -1,0 +1,29 @@
+{
+  "ryzen5600gt": [
+    {
+      "nombre": "procesador amd ryzen 5 5600gt, 3.60 / 4.60 ghz, 16mb l3, 6 core, am4, 7nm, 65w.",
+      "estado_enriquecimiento": "csv",
+      "socket": "AM4",
+      "nucleos": 6,
+      "hilos": null,
+      "frecuencia_base_ghz": "4.60",
+      "frecuencia_boost_ghz": null,
+      "tdp_w": null,
+      "graficos_integrados": null,
+      "arquitectura": null
+    }
+  ],
+  "columnas_specs_procesador": [
+    "id_producto",
+    "socket",
+    "arquitectura",
+    "nucleos",
+    "hilos",
+    "frecuencia_base_ghz",
+    "frecuencia_boost_ghz",
+    "tdp_w",
+    "graficos_integrados",
+    "created_at",
+    "updated_at"
+  ]
+}

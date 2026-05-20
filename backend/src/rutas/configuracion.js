@@ -9,18 +9,20 @@ const {
   actualizarModelosIA,
   obtenerApiKeysIA,
   actualizarApiKeysIA,
+  obtenerModelosIAEnriquecimiento,
+  actualizarModelosIAEnriquecimiento,
 } = require('../controladores/controladorConfiguracion');
 
 router.get('/margen', obtenerMargen);
 router.put('/margen', verificarToken, actualizarMargen);
 router.put('/tipo-cambio', verificarToken, actualizarModoTipoCambio);
 
-// ── Configuración de modelos de IA ──
 router.get('/modelos-ia', verificarTokenAdmin, obtenerModelosIA);
 router.put('/modelos-ia', verificarTokenAdmin, actualizarModelosIA);
-
-// ── Configuración de claves API de IA ──
 router.get('/api-keys-ia', verificarTokenAdmin, obtenerApiKeysIA);
 router.put('/api-keys-ia', verificarTokenAdmin, actualizarApiKeysIA);
+
+router.get('/modelos-ia-enriquecimiento', verificarTokenAdmin, obtenerModelosIAEnriquecimiento);
+router.put('/modelos-ia-enriquecimiento', verificarTokenAdmin, actualizarModelosIAEnriquecimiento);
 
 module.exports = router;

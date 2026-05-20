@@ -2,65 +2,97 @@
  * Página de Importación de CSV
  * 
  * Permite a administradores importar catálogos de productos desde archivos CSV.
- * Features: drag & drop, previsualización, spinner, resumen de resultados.
+ * Features: drag & drop, previsualización, spinner, resumen de resultados,
+ *           sección de estado de enriquecimiento IA con auto-refresh.
  * 
  * Ruta: /admin/importar-csv (protegida)
- * Requisitos: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7
+ * Requisitos: 6.1–6.7, 7.1–7.9
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../componentes/feedback/LoadingSpinner';
+import { useToast } from '../componentes/feedback/ToastProvider';
 import { useAppContext } from '../contexto/AppContext';
 import * as api from '../servicios/api';
 
-const COLUMNAS_PREVIEW = ['Categoría', 'Código', 'Nombre', 'Stock', 'Precio USD', 'Garantía', 'Flete', 'Marca'];
-const INDICES_COLUMNAS = {
-  'Categoría': 0,
-  'Código': 3,
-  'Nombre': 5,
-  'Stock': 8,
-  'Precio USD': 11,
-  'Garantía': 20,
-  'Flete': 14,
-  'Marca': 16,
-};
+const LIMITE_FILAS_PREVIEW = 10;
+
+function parsearLineaCSV(linea) {
+  const campos = [];
+  let actual = '';
+  let dentroComillas = false;
+
+  for (let i = 0; i < linea.length; i++) {
+    const c = linea[i];
+    if (c === '"') {
+      if (dentroComillas && linea[i + 1] === '"') {
+        actual += '"';
+        i++;
+      } else {
+        dentroComillas = !dentroComillas;
+      }
+    } else if (c === ',' && !dentroComillas) {
+      campos.push(actual.trim());
+      actual = '';
+    } else {
+      actual += c;
+    }
+  }
+
+  campos.push(actual.trim());
+  return campos;
+}
 
 function parsearCSV(texto) {
   const lineas = texto.split(/\r?\n/).filter(l => l.trim());
   if (lineas.length < 2) return [];
-
-  return lineas.slice(1).map(linea => {
-    const campos = [];
-    let actual = '';
-    let dentroComillas = false;
-    for (let i = 0; i < linea.length; i++) {
-      const c = linea[i];
-      if (c === '"') {
-        dentroComillas = !dentroComillas;
-      } else if (c === ',' && !dentroComillas) {
-        campos.push(actual.trim());
-        actual = '';
-      } else {
-        actual += c;
-      }
-    }
-    campos.push(actual.trim());
-    return campos;
-  });
+  return lineas.slice(1).map(parsearLineaCSV);
 }
+
+// Detectar preferencia de movimiento reducido una sola vez al cargar el módulo
+const prefersReducedMotion =
+  typeof window !== 'undefined' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Formateador de fecha/hora en español peruano (Req 7.6)
+const fmt = new Intl.DateTimeFormat('es-PE', { dateStyle: 'medium', timeStyle: 'short' });
 
 export default function ImportarCSV() {
   const { autenticado, cargandoAuth } = useAppContext();
+  const toast = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
   const [archivo, setArchivo] = useState(null);
-  const [preview, setPreview] = useState([]);
+  const [preview, setPreview] = useState({ columnas: [], filas: [] });
   const [importando, setImportando] = useState(false);
   const [resultado, setResultado] = useState(null);
   const [error, setError] = useState('');
   const [arrastrando, setArrastrando] = useState(false);
+
+  // ── Estado de enriquecimiento IA (Req 7.2) ───────────────────────────────
+  const [estadoIA, setEstadoIA] = useState(null);
+  const [reintentando, setReintentando] = useState(false);
+
+  // ── Auto-refresh del estado de enriquecimiento IA (Req 7.2, 7.3, 7.8) ────
+  useEffect(() => {
+    if (!resultado) return;
+
+    const consultar = async () => {
+      try {
+        const data = await api.obtenerEstadoEnriquecimiento();
+        setEstadoIA(data);
+      } catch { /* silencioso — no interrumpir la UI por un fallo de polling */ }
+    };
+
+    consultar(); // consulta inmediata al mostrar resultado
+
+    if (!estadoIA?.en_proceso) return; // no iniciar intervalo si ya terminó
+
+    const intervalo = setInterval(consultar, 10_000);
+    return () => clearInterval(intervalo);
+  }, [resultado, estadoIA?.en_proceso]);
 
   // Protección de autenticación
   if (!cargandoAuth && !autenticado) {
@@ -77,21 +109,22 @@ export default function ImportarCSV() {
     setError('');
     setResultado(null);
 
-    // Leer primeras 11 líneas (encabezado + 10 filas) para previsualización
+    // Leer encabezado + primeras filas completas para previsualización desplazable.
     const reader = new FileReader();
     reader.onload = (e) => {
       const texto = e.target.result;
-      const todas = parsearCSV(texto);
-      const primeras10 = todas.slice(0, 10);
+      const lineas = texto.split(/\r?\n/).filter(l => l.trim());
+      if (lineas.length < 2) {
+        setPreview({ columnas: [], filas: [] });
+        return;
+      }
 
-      const filasFormateadas = primeras10.map(campos => {
-        return COLUMNAS_PREVIEW.map(col => {
-          const idx = INDICES_COLUMNAS[col];
-          return campos[idx] || '—';
-        });
-      });
+      const columnas = parsearLineaCSV(lineas[0]);
+      const filas = parsearCSV(texto).slice(0, LIMITE_FILAS_PREVIEW).map((campos) =>
+        columnas.map((_, idx) => campos[idx] || '—')
+      );
 
-      setPreview(filasFormateadas);
+      setPreview({ columnas, filas });
     };
     reader.readAsText(file, 'utf-8');
   }, []);
@@ -137,10 +170,32 @@ export default function ImportarCSV() {
 
   const reiniciar = () => {
     setArchivo(null);
-    setPreview([]);
+    setPreview({ columnas: [], filas: [] });
     setResultado(null);
+    setEstadoIA(null);
     setError('');
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // ── Reintentar productos fallidos (Req 7.4, 7.5) ─────────────────────────
+  const handleReintentar = async () => {
+    setReintentando(true);
+    try {
+      const respuesta = await api.reintentarFallidos();
+      const msg = respuesta?.reintentados > 0
+        ? `${respuesta.reintentados} productos encolados para reintento.`
+        : respuesta?.mensaje || 'No hay productos fallidos para reintentar.';
+      toast.success('Reintento iniciado', msg);
+      // Forzar refresh inmediato del estado IA
+      try {
+        const data = await api.obtenerEstadoEnriquecimiento();
+        setEstadoIA(data);
+      } catch { /* silencioso */ }
+    } catch (err) {
+      toast.error('Error al reintentar', err?.mensaje || 'No se pudo encolar los productos fallidos.');
+    } finally {
+      setReintentando(false);
+    }
   };
 
   if (cargandoAuth) {
@@ -217,29 +272,32 @@ export default function ImportarCSV() {
       </section>
 
       {/* Previsualización */}
-      {preview.length > 0 && (
+      {preview.filas.length > 0 && (
         <section className="surface-card overflow-hidden">
           <div className="border-b border-[var(--color-border)] px-4 py-3">
             <h2 className="text-sm font-semibold text-[var(--color-text)]">
-              Previsualización ({preview.length} filas)
+              Previsualización ({preview.filas.length} filas)
             </h2>
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+              Desplázate horizontal y verticalmente para revisar todas las columnas sin cambiar el tamaño del panel.
+            </p>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface)]">
-                  {COLUMNAS_PREVIEW.map(col => (
-                    <th key={col} className="whitespace-nowrap px-3 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-                      {col}
+          <div className="max-h-[22rem] overflow-auto">
+            <table className="min-w-max text-left text-sm">
+              <thead className="sticky top-0 z-10 bg-[var(--color-surface)]">
+                <tr className="border-b border-[var(--color-border)]">
+                  {preview.columnas.map((col, idx) => (
+                    <th key={`${col || 'columna'}-${idx}`} className="whitespace-nowrap px-3 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+                      {col || `Columna ${idx + 1}`}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {preview.map((fila, i) => (
+                {preview.filas.map((fila, i) => (
                   <tr key={i} className="border-b border-[var(--color-border)] last:border-b-0">
                     {fila.map((celda, j) => (
-                      <td key={j} className="whitespace-nowrap px-3 py-2 text-sm text-[var(--color-text)]">
+                      <td key={j} className="max-w-[18rem] whitespace-nowrap px-3 py-2 text-sm text-[var(--color-text)]">
                         {celda}
                       </td>
                     ))}
@@ -296,7 +354,8 @@ export default function ImportarCSV() {
         <section className="surface-card space-y-4 p-5">
           <h2 className="text-base font-bold text-[var(--color-text)]">Resultado de la importación</h2>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {/* Grid de resultados — 5 tarjetas (Req 7.1) */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             <div className="rounded-[var(--radius-sm)] bg-[color:rgba(48,209,88,0.1)] p-3 text-center">
               <p className="text-2xl font-bold text-[var(--color-success)]">{resultado.insertados ?? 0}</p>
               <p className="text-xs font-medium text-[var(--color-text-muted)]">Insertados</p>
@@ -312,6 +371,13 @@ export default function ImportarCSV() {
             <div className="rounded-[var(--radius-sm)] bg-[color:rgba(255,69,58,0.1)] p-3 text-center">
               <p className="text-2xl font-bold text-[var(--color-danger)]">{resultado.errores ?? 0}</p>
               <p className="text-xs font-medium text-[var(--color-text-muted)]">Errores</p>
+            </div>
+            {/* Tarjeta Pendientes IA */}
+            <div className="rounded-[var(--radius-sm)] bg-[color:rgba(175,82,222,0.1)] p-3 text-center">
+              <p className="text-2xl font-bold" style={{ color: 'var(--color-warning, #af52de)' }}>
+                {resultado.pendientes_enriquecimiento ?? 0}
+              </p>
+              <p className="text-xs font-medium text-[var(--color-text-muted)]">Pendientes IA</p>
             </div>
           </div>
 
@@ -329,6 +395,84 @@ export default function ImportarCSV() {
               </div>
             </div>
           )}
+
+          {/* ── Sección Estado del enriquecimiento IA (Req 7.2–7.9) ─────────── */}
+          <div className="surface-card rounded-[var(--radius-md)] border border-[var(--color-border)] p-4 space-y-4">
+            <h3 className="text-sm font-semibold text-[var(--color-text)]">Estado del enriquecimiento IA</h3>
+
+            {/* Skeleton en primera carga */}
+            {estadoIA === null ? (
+              <div className="space-y-2 animate-pulse" aria-busy="true" aria-label="Cargando estado de enriquecimiento">
+                <div className="h-4 w-48 rounded bg-[var(--color-border)]" />
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="h-14 rounded bg-[var(--color-border)]" />
+                  <div className="h-14 rounded bg-[var(--color-border)]" />
+                  <div className="h-14 rounded bg-[var(--color-border)]" />
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Indicador de progreso animado (Req 7.3, 7.9) */}
+                {estadoIA.en_proceso && (
+                  <div className="flex items-center gap-2" role="status" aria-live="polite">
+                    <span
+                      className={`inline-block h-2 w-2 rounded-full bg-[var(--color-warning)]${!prefersReducedMotion ? ' animate-pulse' : ''}`}
+                      aria-hidden="true"
+                    />
+                    <span className="text-sm text-[var(--color-text-muted)]">Enriqueciendo datos con IA...</span>
+                  </div>
+                )}
+
+                {/* Contadores (Req 7.2) */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-[var(--radius-sm)] bg-[color:rgba(255,214,10,0.1)] p-3 text-center">
+                    <p className="text-xl font-bold text-[var(--color-warning)]">{estadoIA.pendientes ?? 0}</p>
+                    <p className="text-xs font-medium text-[var(--color-text-muted)]">Pendientes</p>
+                  </div>
+                  <div className="rounded-[var(--radius-sm)] bg-[color:rgba(0,122,255,0.1)] p-3 text-center">
+                    <p className="text-xl font-bold text-[var(--color-accent)]">{estadoIA.completados ?? 0}</p>
+                    <p className="text-xs font-medium text-[var(--color-text-muted)]">Completados</p>
+                  </div>
+                  <div className="rounded-[var(--radius-sm)] bg-[color:rgba(255,69,58,0.1)] p-3 text-center">
+                    <p className="text-xl font-bold text-[var(--color-danger)]">{estadoIA.fallidos ?? 0}</p>
+                    <p className="text-xs font-medium text-[var(--color-text-muted)]">Fallidos</p>
+                  </div>
+                </div>
+
+                {/* Última actualización (Req 7.6) */}
+                {estadoIA.ultima_actualizacion && (
+                  <p className="text-xs text-[var(--color-text-muted)]">
+                    Última actualización:{' '}
+                    <time dateTime={estadoIA.ultima_actualizacion}>
+                      {fmt.format(new Date(estadoIA.ultima_actualizacion))}
+                    </time>
+                  </p>
+                )}
+
+                {/* Botón Reintentar productos fallidos (Req 7.4, 7.5) */}
+                {!estadoIA.en_proceso && (estadoIA.fallidos ?? 0) > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleReintentar}
+                    disabled={reintentando}
+                    className="min-h-11 rounded-[var(--radius-sm)] border border-[var(--color-danger)] px-4 text-sm font-medium text-[var(--color-danger)] transition-opacity hover:bg-[color:rgba(255,69,58,0.08)] disabled:opacity-50"
+                  >
+                    {reintentando ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                          <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                          <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+                        </svg>
+                        Reintentando...
+                      </span>
+                    ) : (
+                      'Reintentar productos fallidos'
+                    )}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
 
           <div className="flex gap-3">
             <button
