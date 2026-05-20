@@ -50,8 +50,13 @@ const SELECT_PRODUCTO_NORMALIZADO = `
     sp.graficos_integrados,
     -- specs_placa_madre
     sm.chipset,
+    sg.chipset AS chipset_gpu,
     COALESCE(sm.ram_tipo, sr.ram_tipo) AS ram_type,
     COALESCE(sm.form_factor, sc.form_factor, sf.form_factor, sa.form_factor) AS form_factor,
+    sm.form_factor AS mb_form_factor,
+    sf.form_factor AS psu_form_factor,
+    sc.form_factor AS case_form_factor,
+    sa.form_factor AS storage_form_factor,
     sm.max_ram_gb,
     sm.slots_ram,
     sm.pcie_version,
@@ -70,7 +75,6 @@ const SELECT_PRODUCTO_NORMALIZADO = `
     sa.velocidad_escritura_mbps,
     sa.nvme_gen,
     -- specs_gpu
-    sg.chipset AS chipset_gpu,
     sg.vram_gb,
     sg.vram_tipo,
     sg.bus_bits,
@@ -90,6 +94,8 @@ const SELECT_PRODUCTO_NORMALIZADO = `
     sc.ventiladores_incluidos,
     sc.color,
     sc.panel_lateral,
+    -- estado de enriquecimiento IA (Req. 3.8)
+    p.estado_enriquecimiento,
     -- indicador de historial de precios (Req. 3.9)
     COALESCE(hp.cnt, 0)::INTEGER > 0 AS tiene_historial
   FROM productos p
@@ -211,11 +217,13 @@ function resolverDestinoOperacion(categoriaEntrada, subcategoriaEntrada = null) 
     subcategoriaFinal = String(subcategoriaEntrada || '').trim().toLowerCase() || null;
   }
 
-  if (requiereSubcategoria(destino.categoria) && !subcategoriaFinal) {
-    throw new Error(`Subcategoria requerida para categoria "${destino.categoria}"`);
-  }
+  // Si la categoría requiere subcategoría pero no se especificó, permitir null
+  // La validación se hace contra la DB en la query
+  const esValida = subcategoriaFinal === null
+    ? true // Permitir null cuando no se especificó (se usará la del producto)
+    : subcategoriaValida(destino.categoria, subcategoriaFinal);
 
-  if (!subcategoriaValida(destino.categoria, subcategoriaFinal)) {
+  if (!esValida) {
     throw new Error(`Subcategoria invalida para categoria "${destino.categoria}"`);
   }
 

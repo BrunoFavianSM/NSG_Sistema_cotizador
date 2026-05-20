@@ -323,6 +323,21 @@ class ServicioPDF {
         color: '#4B5563',
         fontSize: 8
       },
+      politicaWrap: {
+        marginTop: 8,
+        borderWidth: 1,
+        borderColor: '#FEF3C7',
+        borderRadius: 6,
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        backgroundColor: '#FFFBEB'
+      },
+      politicaTexto: {
+        textAlign: 'center',
+        color: '#92400E',
+        fontSize: 7,
+        lineHeight: 1.4
+      },
       referenciaMoneda: {
         textAlign: 'center',
         marginTop: 2,
@@ -455,7 +470,12 @@ class ServicioPDF {
           h(Text, { style: estilos.notaItem }, '2. Validaremos disponibilidad y precio vigente.'),
           h(Text, { style: estilos.notaItem }, '3. Los componentes a pedido se confirman al cerrar venta.')
         ),
-        h(Text, { style: estilos.pie }, 'Valido por 3 dias. Precios sujetos a cambio por disponibilidad.'),
+        h(
+          View,
+          { style: estilos.politicaWrap },
+          h(Text, { style: estilos.politicaTexto }, '* Los precios mostrados no incluyen los impuestos aplicables. Los precios están sujetos a cambios a discreción de NSG Latinoamerica E.I.R.L. según disponibilidad y condiciones del mercado.')
+        ),
+        h(Text, { style: estilos.pie }, 'Válido por 3 días. Precios sujetos a cambio por disponibilidad.'),
         qrDataUrl
           ? h(
               View,

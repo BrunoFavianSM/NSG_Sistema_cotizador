@@ -1,6 +1,6 @@
 const { ejecutarQuery } = require('../configuracion/baseDatos');
-const { CLAVES } = require('../asistente/servicioConfigIA');
-const { encriptar, desencriptar } = require('../utilidades/encriptacion');
+const { CLAVES, DEFAULTS_ENRIQUECIMIENTO, parsearBooleanoConfiguracion } = require('../asistente/servicioConfigIA');
+const { encriptar } = require('../utilidades/encriptacion');
 
 function parseMargen(valor) {
   const numero = Number(valor);
@@ -62,8 +62,6 @@ function construirPayloadConfiguracion(mapa) {
   const margenPorDefecto = parseMargen(mapa.margen_ganancia_default?.valor ?? mapa.margen_ganancia?.valor);
   const tasaIgv = parsePorcentaje(mapa.tasa_igv?.valor);
   const tipoCambio = parseTipoCambio(mapa.tipo_cambio_usd_pen?.valor);
-
-  // Validar que el modo almacenado sea uno de los valores permitidos
   const modoRaw = mapa.modo_tipo_cambio?.valor;
   const modoCambio = (modoRaw === 'manual' || modoRaw === 'automatico') ? modoRaw : 'manual';
 
@@ -71,7 +69,7 @@ function construirPayloadConfiguracion(mapa) {
     mapa.margen_ganancia_default?.updated_at,
     mapa.margen_ganancia?.updated_at,
     mapa.tasa_igv?.updated_at,
-    mapa.tipo_cambio_usd_pen?.updated_at
+    mapa.tipo_cambio_usd_pen?.updated_at,
   ].find(Boolean);
 
   return {
@@ -81,7 +79,7 @@ function construirPayloadConfiguracion(mapa) {
     tasa_igv: tasaIgv ?? 18,
     tipo_cambio_usd_pen: tipoCambio ?? 3.75,
     modo_tipo_cambio: modoCambio,
-    updated_at: updatedAt ?? null
+    updated_at: updatedAt ?? null,
   };
 }
 
@@ -93,7 +91,7 @@ async function obtenerMargen(req, res) {
     console.error('Error al obtener margen:', error);
     return res.status(500).json({
       error: 'Error interno',
-      mensaje: 'No se pudo obtener la configuracion de margen'
+      mensaje: 'No se pudo obtener la configuracion de margen',
     });
   }
 }
@@ -113,7 +111,7 @@ async function actualizarMargen(req, res) {
     if (nuevoMargen === null || (req.body?.tasa_igv !== undefined && nuevaTasaIgv === null) || (req.body?.tipo_cambio_usd_pen !== undefined && nuevoTipoCambio === null)) {
       return res.status(400).json({
         error: 'Dato invalido',
-        mensaje: 'margen_ganancia_default/tasa_igv deben estar entre 0 y 100 y tipo_cambio_usd_pen debe ser mayor a 0'
+        mensaje: 'margen_ganancia_default/tasa_igv deben estar entre 0 y 100 y tipo_cambio_usd_pen debe ser mayor a 0',
       });
     }
 
@@ -132,23 +130,17 @@ async function actualizarMargen(req, res) {
     const payload = construirPayloadConfiguracion(mapaConfiguracion);
     return res.json({
       mensaje: 'Margen actualizado correctamente',
-      ...payload
+      ...payload,
     });
   } catch (error) {
     console.error('Error al actualizar margen:', error);
     return res.status(500).json({
       error: 'Error interno',
-      mensaje: 'No se pudo actualizar la configuracion de margen'
+      mensaje: 'No se pudo actualizar la configuracion de margen',
     });
   }
 }
 
-/**
- * PUT /configuracion/tipo-cambio
- * Actualiza el modo de obtención del tipo de cambio USD/PEN.
- * Body: { modo: "manual" | "automatico" }
- * Requiere: verificarToken
- */
 async function actualizarModoTipoCambio(req, res) {
   try {
     const { modo } = req.body ?? {};
@@ -156,7 +148,7 @@ async function actualizarModoTipoCambio(req, res) {
     if (modo !== 'manual' && modo !== 'automatico') {
       return res.status(400).json({
         error: 'Dato inválido',
-        mensaje: "El modo debe ser 'manual' o 'automatico'"
+        mensaje: "El modo debe ser 'manual' o 'automatico'",
       });
     }
 
@@ -169,60 +161,72 @@ async function actualizarModoTipoCambio(req, res) {
     return res.json({
       exito: true,
       modo_tipo_cambio: modo,
-      mensaje: 'Modo de tipo de cambio actualizado correctamente'
+      mensaje: 'Modo de tipo de cambio actualizado correctamente',
     });
   } catch (error) {
     console.error('Error al actualizar modo de tipo de cambio:', error);
     return res.status(500).json({
       error: 'Error interno',
-      mensaje: 'No se pudo actualizar el modo de tipo de cambio'
+      mensaje: 'No se pudo actualizar el modo de tipo de cambio',
     });
   }
 }
 
-// ── Configuración de modelos IA ──
-
 const MODOS_VALIDOS = ['pipeline', 'nvidia', 'gemini'];
-
-// Modelos requeridos según el modo activo
 const MODELOS_REQUERIDOS_POR_MODO = {
   pipeline: ['nvidia_classifier_model', 'nvidia_embedding_model', 'nvidia_reranker_model'],
-  nvidia:   ['nvidia_model'],
-  gemini:   ['gemini_model'],
+  nvidia: ['nvidia_model'],
+  gemini: ['gemini_model'],
 };
 
-// Defaults desde .env para fallback en lectura
 const DEFAULTS_IA = {
-  modo_activo:             process.env.AGENT_PIPELINE_ENABLED !== 'false' ? 'pipeline' : 'gemini',
-  gemini_model:            process.env.GEMINI_MODEL             || 'gemini-2.5-flash',
-  nvidia_model:            process.env.NVIDIA_MODEL             || 'mistralai/mistral-small-4-119b-2603',
-  nvidia_classifier_model: process.env.NVIDIA_CLASSIFIER_MODEL  || 'meta/llama-3.2-3b-instruct',
-  nvidia_embedding_model:  process.env.NVIDIA_EMBEDDING_MODEL   || 'nvidia/nv-embed-v1',
-  nvidia_reranker_model:   process.env.NVIDIA_RERANKER_MODEL    || 'nvidia/rerank-qa-mistral-4b',
+  modo_activo: process.env.AGENT_PIPELINE_ENABLED !== 'false' ? 'pipeline' : 'gemini',
+  gemini_model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+  nvidia_model: process.env.NVIDIA_MODEL || 'mistralai/mistral-small-4-119b-2603',
+  nvidia_classifier_model: process.env.NVIDIA_CLASSIFIER_MODEL || 'meta/llama-3.2-3b-instruct',
+  nvidia_embedding_model: process.env.NVIDIA_EMBEDDING_MODEL || 'nvidia/nv-embed-v1',
+  nvidia_reranker_model: process.env.NVIDIA_RERANKER_MODEL || 'nvidia/rerank-qa-mistral-4b',
 };
 
-/**
- * GET /api/configuracion/modelos-ia
- * Retorna la configuración actual de modo y modelos de IA.
- * Requiere: verificarTokenAdmin
- */
+const PROVEEDORES_ENRIQUECIMIENTO_VALIDOS = ['nvidia', 'gemini'];
+
+function normalizarPrioridadEnriquecimiento(valor) {
+  const prioridad = String(valor || '')
+    .split(',')
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+
+  const deduplicada = prioridad.filter((proveedor, indice) =>
+    PROVEEDORES_ENRIQUECIMIENTO_VALIDOS.includes(proveedor) && prioridad.indexOf(proveedor) === indice
+  );
+
+  return deduplicada;
+}
+
 async function obtenerModelosIA(req, res) {
   try {
     const { rows } = await ejecutarQuery(
       `SELECT clave, valor FROM configuracion WHERE clave = ANY($1)`,
-      [Object.values(CLAVES)]
+      [[
+        CLAVES.MODO_ACTIVO,
+        CLAVES.GEMINI_MODEL,
+        CLAVES.NVIDIA_MODEL,
+        CLAVES.NVIDIA_CLASSIFIER_MODEL,
+        CLAVES.NVIDIA_EMBEDDING_MODEL,
+        CLAVES.NVIDIA_RERANKER_MODEL,
+      ]]
     );
 
     const mapa = Object.fromEntries(rows.map((r) => [r.clave, r.valor]));
 
     return res.json({
       exito: true,
-      modo_activo:             mapa[CLAVES.MODO_ACTIVO]             || DEFAULTS_IA.modo_activo,
-      gemini_model:            mapa[CLAVES.GEMINI_MODEL]            || DEFAULTS_IA.gemini_model,
-      nvidia_model:            mapa[CLAVES.NVIDIA_MODEL]            || DEFAULTS_IA.nvidia_model,
+      modo_activo: mapa[CLAVES.MODO_ACTIVO] || DEFAULTS_IA.modo_activo,
+      gemini_model: mapa[CLAVES.GEMINI_MODEL] || DEFAULTS_IA.gemini_model,
+      nvidia_model: mapa[CLAVES.NVIDIA_MODEL] || DEFAULTS_IA.nvidia_model,
       nvidia_classifier_model: mapa[CLAVES.NVIDIA_CLASSIFIER_MODEL] || DEFAULTS_IA.nvidia_classifier_model,
-      nvidia_embedding_model:  mapa[CLAVES.NVIDIA_EMBEDDING_MODEL]  || DEFAULTS_IA.nvidia_embedding_model,
-      nvidia_reranker_model:   mapa[CLAVES.NVIDIA_RERANKER_MODEL]   || DEFAULTS_IA.nvidia_reranker_model,
+      nvidia_embedding_model: mapa[CLAVES.NVIDIA_EMBEDDING_MODEL] || DEFAULTS_IA.nvidia_embedding_model,
+      nvidia_reranker_model: mapa[CLAVES.NVIDIA_RERANKER_MODEL] || DEFAULTS_IA.nvidia_reranker_model,
     });
   } catch (error) {
     console.error('[ConfigIA] Error al obtener modelos IA:', error);
@@ -233,15 +237,6 @@ async function obtenerModelosIA(req, res) {
   }
 }
 
-/**
- * PUT /api/configuracion/modelos-ia
- * Actualiza el modo activo y los modelos de IA.
- * Requiere: verificarTokenAdmin
- *
- * Validaciones:
- * - modo_activo ∈ ['pipeline', 'nvidia', 'gemini'] → 400 MODO_INVALIDO
- * - modelos requeridos por modo no vacíos → 400 MODELO_INVALIDO
- */
 async function actualizarModelosIA(req, res) {
   try {
     const {
@@ -253,7 +248,6 @@ async function actualizarModelosIA(req, res) {
       nvidia_reranker_model,
     } = req.body || {};
 
-    // Validar modo_activo
     if (!modo_activo || !MODOS_VALIDOS.includes(modo_activo)) {
       return res.status(400).json({
         error: 'Dato inválido',
@@ -262,7 +256,6 @@ async function actualizarModelosIA(req, res) {
       });
     }
 
-    // Construir mapa de valores recibidos para validar modelos requeridos
     const valoresRecibidos = {
       gemini_model,
       nvidia_model,
@@ -271,7 +264,6 @@ async function actualizarModelosIA(req, res) {
       nvidia_reranker_model,
     };
 
-    // Validar que los modelos requeridos por el modo no estén vacíos
     const camposRequeridos = MODELOS_REQUERIDOS_POR_MODO[modo_activo];
     for (const campo of camposRequeridos) {
       const valor = valoresRecibidos[campo];
@@ -285,17 +277,15 @@ async function actualizarModelosIA(req, res) {
       }
     }
 
-    // Mapa de campo → clave BD
     const mapaClaveBD = {
-      modo_activo:             CLAVES.MODO_ACTIVO,
-      gemini_model:            CLAVES.GEMINI_MODEL,
-      nvidia_model:            CLAVES.NVIDIA_MODEL,
+      modo_activo: CLAVES.MODO_ACTIVO,
+      gemini_model: CLAVES.GEMINI_MODEL,
+      nvidia_model: CLAVES.NVIDIA_MODEL,
       nvidia_classifier_model: CLAVES.NVIDIA_CLASSIFIER_MODEL,
-      nvidia_embedding_model:  CLAVES.NVIDIA_EMBEDDING_MODEL,
-      nvidia_reranker_model:   CLAVES.NVIDIA_RERANKER_MODEL,
+      nvidia_embedding_model: CLAVES.NVIDIA_EMBEDDING_MODEL,
+      nvidia_reranker_model: CLAVES.NVIDIA_RERANKER_MODEL,
     };
 
-    // Guardar todas las claves con INSERT ... ON CONFLICT DO UPDATE
     const entradas = [
       ['modo_activo', modo_activo],
       ['gemini_model', gemini_model],
@@ -316,22 +306,28 @@ async function actualizarModelosIA(req, res) {
       }
     }
 
-    // Retornar config guardada
     const { rows } = await ejecutarQuery(
       `SELECT clave, valor FROM configuracion WHERE clave = ANY($1)`,
-      [Object.values(CLAVES)]
+      [[
+        CLAVES.MODO_ACTIVO,
+        CLAVES.GEMINI_MODEL,
+        CLAVES.NVIDIA_MODEL,
+        CLAVES.NVIDIA_CLASSIFIER_MODEL,
+        CLAVES.NVIDIA_EMBEDDING_MODEL,
+        CLAVES.NVIDIA_RERANKER_MODEL,
+      ]]
     );
     const mapa = Object.fromEntries(rows.map((r) => [r.clave, r.valor]));
 
     return res.json({
       exito: true,
       mensaje: 'Configuración de IA actualizada correctamente',
-      modo_activo:             mapa[CLAVES.MODO_ACTIVO]             || DEFAULTS_IA.modo_activo,
-      gemini_model:            mapa[CLAVES.GEMINI_MODEL]            || DEFAULTS_IA.gemini_model,
-      nvidia_model:            mapa[CLAVES.NVIDIA_MODEL]            || DEFAULTS_IA.nvidia_model,
+      modo_activo: mapa[CLAVES.MODO_ACTIVO] || DEFAULTS_IA.modo_activo,
+      gemini_model: mapa[CLAVES.GEMINI_MODEL] || DEFAULTS_IA.gemini_model,
+      nvidia_model: mapa[CLAVES.NVIDIA_MODEL] || DEFAULTS_IA.nvidia_model,
       nvidia_classifier_model: mapa[CLAVES.NVIDIA_CLASSIFIER_MODEL] || DEFAULTS_IA.nvidia_classifier_model,
-      nvidia_embedding_model:  mapa[CLAVES.NVIDIA_EMBEDDING_MODEL]  || DEFAULTS_IA.nvidia_embedding_model,
-      nvidia_reranker_model:   mapa[CLAVES.NVIDIA_RERANKER_MODEL]   || DEFAULTS_IA.nvidia_reranker_model,
+      nvidia_embedding_model: mapa[CLAVES.NVIDIA_EMBEDDING_MODEL] || DEFAULTS_IA.nvidia_embedding_model,
+      nvidia_reranker_model: mapa[CLAVES.NVIDIA_RERANKER_MODEL] || DEFAULTS_IA.nvidia_reranker_model,
     });
   } catch (error) {
     console.error('[ConfigIA] Error al actualizar modelos IA:', error);
@@ -342,11 +338,6 @@ async function actualizarModelosIA(req, res) {
   }
 }
 
-/**
- * GET /api/configuracion/api-keys-ia
- * Retorna si las claves API de IA están configuradas, sin revelar sus valores.
- * Requiere: verificarTokenAdmin
- */
 async function obtenerApiKeysIA(req, res) {
   try {
     const { rows } = await ejecutarQuery(
@@ -358,8 +349,8 @@ async function obtenerApiKeysIA(req, res) {
 
     return res.json({
       exito: true,
-      gemini_configurada: !!(mapa[CLAVES.GEMINI_API_KEY_ENC]),
-      nvidia_configurada: !!(mapa[CLAVES.NVIDIA_API_KEY_ENC]),
+      gemini_configurada: !!mapa[CLAVES.GEMINI_API_KEY_ENC],
+      nvidia_configurada: !!mapa[CLAVES.NVIDIA_API_KEY_ENC],
     });
   } catch (error) {
     console.error('[ConfigIA] Error al obtener estado de API keys:', error);
@@ -370,23 +361,12 @@ async function obtenerApiKeysIA(req, res) {
   }
 }
 
-/**
- * PUT /api/configuracion/api-keys-ia
- * Encripta y almacena las claves API de IA en la tabla configuracion.
- * Solo actualiza las claves que vienen en el body (no vacías).
- * Requiere: verificarTokenAdmin
- *
- * Body: { gemini_api_key?: string, nvidia_api_key?: string }
- * Respuesta: { exito: true }
- */
 async function actualizarApiKeysIA(req, res) {
   try {
     const { gemini_api_key, nvidia_api_key } = req.body || {};
 
     const geminiValida = gemini_api_key && typeof gemini_api_key === 'string' && gemini_api_key.trim() !== '';
     const nvidiaValida = nvidia_api_key && typeof nvidia_api_key === 'string' && nvidia_api_key.trim() !== '';
-
-    // Validar que al menos una clave viene en el body
     const geminiEnviada = 'gemini_api_key' in (req.body || {});
     const nvidiaEnviada = 'nvidia_api_key' in (req.body || {});
 
@@ -398,7 +378,6 @@ async function actualizarApiKeysIA(req, res) {
       });
     }
 
-    // Validar que los campos enviados no estén vacíos
     if (geminiEnviada && !geminiValida) {
       return res.status(400).json({
         error: 'Dato inválido',
@@ -417,7 +396,6 @@ async function actualizarApiKeysIA(req, res) {
       });
     }
 
-    // Encriptar y guardar cada clave presente
     if (geminiValida) {
       const encriptada = encriptar(gemini_api_key.trim());
       await ejecutarQuery(
@@ -448,6 +426,122 @@ async function actualizarApiKeysIA(req, res) {
   }
 }
 
+async function obtenerModelosIAEnriquecimiento(req, res) {
+  try {
+    const { rows } = await ejecutarQuery(
+      `SELECT clave, valor FROM configuracion WHERE clave = ANY($1)`,
+      [[
+        CLAVES.ENRIQUECIMIENTO_PRIORIDAD,
+        CLAVES.ENRIQUECIMIENTO_GEMINI_MODEL,
+        CLAVES.ENRIQUECIMIENTO_NVIDIA_MODEL,
+        CLAVES.ENRIQUECIMIENTO_GEMINI_HABILITADO,
+        CLAVES.ENRIQUECIMIENTO_NVIDIA_HABILITADO,
+      ]]
+    );
+
+    const mapa = Object.fromEntries(rows.map((r) => [r.clave, r.valor]));
+    const prioridad = mapa[CLAVES.ENRIQUECIMIENTO_PRIORIDAD] || DEFAULTS_ENRIQUECIMIENTO.prioridad;
+
+    return res.json({
+      exito: true,
+      prioridad_proveedores: prioridad,
+      gemini_model: mapa[CLAVES.ENRIQUECIMIENTO_GEMINI_MODEL] || DEFAULTS_ENRIQUECIMIENTO.gemini_model,
+      nvidia_model: mapa[CLAVES.ENRIQUECIMIENTO_NVIDIA_MODEL] || DEFAULTS_ENRIQUECIMIENTO.nvidia_model,
+      gemini_habilitado: parsearBooleanoConfiguracion(mapa[CLAVES.ENRIQUECIMIENTO_GEMINI_HABILITADO], DEFAULTS_ENRIQUECIMIENTO.gemini_habilitado),
+      nvidia_habilitado: parsearBooleanoConfiguracion(mapa[CLAVES.ENRIQUECIMIENTO_NVIDIA_HABILITADO], DEFAULTS_ENRIQUECIMIENTO.nvidia_habilitado),
+    });
+  } catch (error) {
+    console.error('[ConfigIA] Error al obtener modelos de enriquecimiento IA:', error);
+    return res.status(500).json({
+      error: 'Error interno',
+      mensaje: 'No se pudo obtener la configuración de enriquecimiento de IA',
+    });
+  }
+}
+
+async function actualizarModelosIAEnriquecimiento(req, res) {
+  try {
+    const {
+      prioridad_proveedores,
+      gemini_model,
+      nvidia_model,
+      gemini_habilitado,
+      nvidia_habilitado,
+    } = req.body || {};
+
+    const prioridadNormalizada = normalizarPrioridadEnriquecimiento(prioridad_proveedores);
+    const geminiHabilitadoNormalizado = parsearBooleanoConfiguracion(gemini_habilitado, DEFAULTS_ENRIQUECIMIENTO.gemini_habilitado);
+    const nvidiaHabilitadoNormalizado = parsearBooleanoConfiguracion(nvidia_habilitado, DEFAULTS_ENRIQUECIMIENTO.nvidia_habilitado);
+
+    if (!prioridad_proveedores || prioridadNormalizada.length === 0) {
+      return res.status(400).json({
+        error: 'Dato inválido',
+        codigo: 'PRIORIDAD_INVALIDA',
+        mensaje: 'La prioridad debe incluir al menos un proveedor válido: nvidia, gemini',
+      });
+    }
+
+    if (!geminiHabilitadoNormalizado && !nvidiaHabilitadoNormalizado) {
+      return res.status(400).json({
+        error: 'Dato inválido',
+        codigo: 'PROVEEDORES_DESHABILITADOS',
+        mensaje: 'Debe haber al menos un proveedor habilitado para el enriquecimiento',
+      });
+    }
+
+    if (nvidiaHabilitadoNormalizado && (!nvidia_model || typeof nvidia_model !== 'string' || nvidia_model.trim() === '')) {
+      return res.status(400).json({
+        error: 'Dato inválido',
+        codigo: 'MODELO_INVALIDO',
+        mensaje: "El campo 'nvidia_model' es requerido cuando NVIDIA está habilitado",
+        campo: 'nvidia_model',
+      });
+    }
+
+    if (geminiHabilitadoNormalizado && (!gemini_model || typeof gemini_model !== 'string' || gemini_model.trim() === '')) {
+      return res.status(400).json({
+        error: 'Dato inválido',
+        codigo: 'MODELO_INVALIDO',
+        mensaje: "El campo 'gemini_model' es requerido cuando Gemini está habilitado",
+        campo: 'gemini_model',
+      });
+    }
+
+    const entradas = [
+      [CLAVES.ENRIQUECIMIENTO_PRIORIDAD, prioridadNormalizada.join(',')],
+      [CLAVES.ENRIQUECIMIENTO_NVIDIA_HABILITADO, String(nvidiaHabilitadoNormalizado)],
+      [CLAVES.ENRIQUECIMIENTO_GEMINI_HABILITADO, String(geminiHabilitadoNormalizado)],
+      [CLAVES.ENRIQUECIMIENTO_NVIDIA_MODEL, (nvidia_model || DEFAULTS_ENRIQUECIMIENTO.nvidia_model).trim()],
+      [CLAVES.ENRIQUECIMIENTO_GEMINI_MODEL, (gemini_model || DEFAULTS_ENRIQUECIMIENTO.gemini_model).trim()],
+    ];
+
+    for (const [clave, valor] of entradas) {
+      await ejecutarQuery(
+        `INSERT INTO configuracion (clave, valor)
+         VALUES ($1, $2)
+         ON CONFLICT (clave) DO UPDATE SET valor = EXCLUDED.valor, updated_at = NOW()`,
+        [clave, valor]
+      );
+    }
+
+    return res.json({
+      exito: true,
+      mensaje: 'Configuración de enriquecimiento IA actualizada correctamente',
+      prioridad_proveedores: prioridadNormalizada.join(','),
+      gemini_model: (gemini_model || DEFAULTS_ENRIQUECIMIENTO.gemini_model).trim(),
+      nvidia_model: (nvidia_model || DEFAULTS_ENRIQUECIMIENTO.nvidia_model).trim(),
+      gemini_habilitado: geminiHabilitadoNormalizado,
+      nvidia_habilitado: nvidiaHabilitadoNormalizado,
+    });
+  } catch (error) {
+    console.error('[ConfigIA] Error al actualizar modelos de enriquecimiento IA:', error);
+    return res.status(500).json({
+      error: 'Error interno',
+      mensaje: 'No se pudo actualizar la configuración de enriquecimiento de IA',
+    });
+  }
+}
+
 module.exports = {
   obtenerMargen,
   actualizarMargen,
@@ -456,4 +550,6 @@ module.exports = {
   actualizarModelosIA,
   obtenerApiKeysIA,
   actualizarApiKeysIA,
+  obtenerModelosIAEnriquecimiento,
+  actualizarModelosIAEnriquecimiento,
 };

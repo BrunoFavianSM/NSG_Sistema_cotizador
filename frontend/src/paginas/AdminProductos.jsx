@@ -1,4 +1,5 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminPageHeader from '../componentes/admin/AdminPageHeader';
 import ProductForm, { CATEGORIAS, PRODUCTO_INICIAL } from '../componentes/admin/ProductForm';
 import EmptyState from '../componentes/feedback/EmptyState';
@@ -6,6 +7,7 @@ import ErrorState from '../componentes/feedback/ErrorState';
 import LoadingSpinner from '../componentes/feedback/LoadingSpinner';
 import { useToast } from '../componentes/feedback/ToastProvider';
 import Badge from '../componentes/ui/Badge';
+import BadgeEnriquecimiento from '../componentes/ui/BadgeEnriquecimiento';
 import Button from '../componentes/ui/Button';
 import DataTable from '../componentes/ui/DataTable';
 import Modal from '../componentes/ui/Modal';
@@ -35,7 +37,7 @@ function parseProducto(producto) {
     // Placa madre / GPU (chipset compartido)
     chipset: producto.chipset || producto.chipset_gpu || '',
     ram_type: producto.ram_type || '',
-    form_factor: producto.form_factor || '',
+    form_factor: producto.form_factor || producto.mb_form_factor || producto.storage_form_factor || producto.psu_form_factor || producto.case_form_factor || '',
     max_ram_gb: producto.max_ram_gb ? String(producto.max_ram_gb) : '',
     slots_ram: producto.slots_ram ? String(producto.slots_ram) : '',
     pcie_version: producto.pcie_version || '',
@@ -161,14 +163,146 @@ function serializarFormulario(formulario) {
   };
 }
 
+function formatearCategoria(categoria) {
+  return String(categoria || '').replace(/_/g, ' ');
+}
+
+function formatearValorSpec(valor, sufijo = '') {
+  if (valor === null || valor === undefined || valor === '') return 'Sin dato';
+  if (typeof valor === 'boolean') return valor ? 'Sí' : 'No';
+  return `${valor}${sufijo}`;
+}
+
+function obtenerSpecsPorCategoria(producto) {
+  switch (producto.categoria) {
+    case 'procesador':
+      return [
+        ['Socket', formatearValorSpec(producto.socket)],
+        ['Arquitectura', formatearValorSpec(producto.arquitectura)],
+        ['Núcleos', formatearValorSpec(producto.nucleos)],
+        ['Hilos', formatearValorSpec(producto.hilos)],
+        ['Frecuencia base', formatearValorSpec(producto.frecuencia_base_ghz, ' GHz')],
+        ['Frecuencia boost', formatearValorSpec(producto.frecuencia_boost_ghz, ' GHz')],
+        ['TDP', formatearValorSpec(producto.tdp, ' W')],
+        ['Gráficos integrados', formatearValorSpec(producto.graficos_integrados)],
+      ];
+    case 'placa_madre':
+      return [
+        ['Socket', formatearValorSpec(producto.socket)],
+        ['Chipset', formatearValorSpec(producto.chipset)],
+        ['Form factor', formatearValorSpec(producto.mb_form_factor || producto.form_factor)],
+        ['Tipo de RAM', formatearValorSpec(producto.ram_type)],
+        ['RAM máxima', formatearValorSpec(producto.max_ram_gb, ' GB')],
+        ['Slots RAM', formatearValorSpec(producto.slots_ram)],
+        ['Versión PCIe', formatearValorSpec(producto.pcie_version)],
+        ['Slots M.2', formatearValorSpec(producto.m2_slots)],
+      ];
+    case 'ram':
+      return [
+        ['Tipo de RAM', formatearValorSpec(producto.ram_type)],
+        ['Capacidad', formatearValorSpec(producto.capacidad_gb, ' GB')],
+        ['Velocidad', formatearValorSpec(producto.velocidad_mhz, ' MHz')],
+        ['Latencia', formatearValorSpec(producto.latencia)],
+        ['Módulos', formatearValorSpec(producto.modulos)],
+        ['Cantidad de módulos', formatearValorSpec(producto.cantidad_modulos)],
+        ['RGB', formatearValorSpec(producto.rgb)],
+      ];
+    case 'almacenamiento':
+      return [
+        ['Tipo', formatearValorSpec(producto.tipo_almacenamiento)],
+        ['Capacidad', formatearValorSpec(producto.capacidad_gb, ' GB')],
+        ['Interfaz', formatearValorSpec(producto.interfaz)],
+        ['Form factor', formatearValorSpec(producto.storage_form_factor || producto.form_factor)],
+        ['Lectura', formatearValorSpec(producto.velocidad_lectura_mbps, ' MB/s')],
+        ['Escritura', formatearValorSpec(producto.velocidad_escritura_mbps, ' MB/s')],
+        ['Generación NVMe', formatearValorSpec(producto.nvme_gen)],
+      ];
+    case 'gpu':
+      return [
+        ['Chipset', formatearValorSpec(producto.chipset || producto.chipset_gpu)],
+        ['VRAM', formatearValorSpec(producto.vram_gb, ' GB')],
+        ['Tipo de VRAM', formatearValorSpec(producto.vram_tipo)],
+        ['Bus', formatearValorSpec(producto.bus_bits, ' bits')],
+        ['Boost clock', formatearValorSpec(producto.boost_mhz, ' MHz')],
+        ['TDP', formatearValorSpec(producto.tdp, ' W')],
+        ['Longitud', formatearValorSpec(producto.longitud_mm, ' mm')],
+        ['Fuente recomendada', formatearValorSpec(producto.fuente_recomendada_w, ' W')],
+      ];
+    case 'fuente':
+      return [
+        ['Potencia', formatearValorSpec(producto.wattage, ' W')],
+        ['Certificación', formatearValorSpec(producto.certificacion)],
+        ['Modularidad', formatearValorSpec(producto.modular)],
+        ['Form factor', formatearValorSpec(producto.psu_form_factor || producto.form_factor)],
+        ['Conectores PCIe', formatearValorSpec(producto.pcie_conectores)],
+        ['Conectores SATA', formatearValorSpec(producto.sata_conectores)],
+      ];
+    case 'case':
+      return [
+        ['Form factor', formatearValorSpec(producto.case_form_factor || producto.form_factor)],
+        ['Compatibilidad placa', formatearValorSpec(producto.compatibilidad_placa)],
+        ['GPU máxima', formatearValorSpec(producto.max_gpu_mm, ' mm')],
+        ['Cooler máximo', formatearValorSpec(producto.max_cooler_mm, ' mm')],
+        ['Ventiladores incluidos', formatearValorSpec(producto.ventiladores_incluidos)],
+        ['Color', formatearValorSpec(producto.color)],
+        ['Panel lateral', formatearValorSpec(producto.panel_lateral)],
+      ];
+    default:
+      return [];
+  }
+}
+
+function SelectorVista({ vistaDetallada, onChange }) {
+  const opciones = [
+    { valor: 'compacta', etiqueta: 'Vista compacta' },
+    { valor: 'detallada', etiqueta: 'Vista detallada' },
+  ];
+
+  return (
+    <div
+      role="radiogroup"
+      aria-label="Modo de visualización de productos"
+      className="inline-flex min-h-11 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-0.5"
+    >
+      {opciones.map(({ valor, etiqueta }) => {
+        const activo = vistaDetallada ? valor === 'detallada' : valor === 'compacta';
+        return (
+          <button
+            key={valor}
+            type="button"
+            role="radio"
+            aria-checked={activo}
+            onClick={() => onChange(valor === 'detallada')}
+            className={[
+              'min-h-11 min-w-[44px] rounded-[calc(var(--radius-sm)-2px)] px-4 py-2 text-sm font-medium transition-colors',
+              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]',
+              activo
+                ? 'bg-[var(--color-accent)] text-white shadow-sm'
+                : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]',
+            ].join(' ')}
+          >
+            {etiqueta}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function AdminProductos() {
   const { autenticado } = useAppContext();
   const toast = useToast();
+  const navigate = useNavigate();
 
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [errorPantalla, setErrorPantalla] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState('');
+  const [vistaDetallada, setVistaDetallada] = useState(false);
+  // Task 10.2 — filtro por estado de enriquecimiento
+  const [filtroEstado, setFiltroEstado] = useState('');
+  // Task 10.2 — tooltip para badge ia_fallido (almacena id del producto o null)
+  const [tooltipFallido, setTooltipFallido] = useState(null);
 
   // Historial de precios: { [idProducto]: { precio_anterior, total } }
   const [historialPrecios, setHistorialPrecios] = useState({});
@@ -308,9 +442,15 @@ export default function AdminProductos() {
   };
 
   const productosFiltrados = useMemo(() => {
-    if (!filtroCategoria) return productos;
-    return productos.filter((producto) => (producto.subcategoria || producto.categoria) === filtroCategoria);
-  }, [productos, filtroCategoria]);
+    let lista = productos;
+    if (filtroCategoria) {
+      lista = lista.filter((producto) => (producto.subcategoria || producto.categoria) === filtroCategoria);
+    }
+    if (filtroEstado) {
+      lista = lista.filter((producto) => (producto.estado_enriquecimiento || 'no_aplica') === filtroEstado);
+    }
+    return lista;
+  }, [productos, filtroCategoria, filtroEstado]);
 
   const columnas = [
     { key: 'id', label: 'ID', sortable: true },
@@ -378,6 +518,33 @@ export default function AdminProductos() {
           : <Badge variant="neutral">No</Badge>
       ),
     },
+    // Task 10.1 — columna Estado IA con BadgeEnriquecimiento
+    {
+      key: 'estado_enriquecimiento',
+      label: 'Estado IA',
+      render: (row) => {
+        const estado = row.estado_enriquecimiento || 'no_aplica';
+        return (
+          <div className="relative">
+            <BadgeEnriquecimiento
+              estado={estado}
+              onClick={estado === 'ia_fallido'
+                ? () => setTooltipFallido((prev) => (prev === row.id ? null : row.id))
+                : undefined}
+            />
+            {/* Task 10.2 — tooltip para ia_fallido */}
+            {estado === 'ia_fallido' && tooltipFallido === row.id && (
+              <div
+                role="tooltip"
+                className="absolute z-10 left-0 top-full mt-1 w-64 rounded-lg surface-card border border-[var(--color-border)] p-3 shadow-lg text-xs text-[var(--color-text-muted)] leading-relaxed"
+              >
+                Los datos técnicos no pudieron completarse automáticamente. Puedes editar el producto manualmente o usar &ldquo;Reintentar IA&rdquo; en el panel de importación.
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
     {
       key: 'acciones',
       label: 'Acciones',
@@ -414,6 +581,9 @@ export default function AdminProductos() {
     );
   }
 
+  // Task 10.3 — conteo de productos pendientes de enriquecimiento IA
+  const pendientesCount = productos.filter((p) => p.estado_enriquecimiento === 'pendiente').length;
+
   return (
     <div className="space-y-6">
       <AdminPageHeader
@@ -421,6 +591,7 @@ export default function AdminProductos() {
         description="Administra catálogo, stock y disponibilidad con feedback claro en cada acción."
         actions={(
           <>
+            <SelectorVista vistaDetallada={vistaDetallada} onChange={setVistaDetallada} />
             <Button variant="secondary" onClick={cargarProductos} loading={cargando}>
               Actualizar
             </Button>
@@ -438,42 +609,239 @@ export default function AdminProductos() {
         />
       ) : null}
 
-      <DataTable
-        caption="Tabla administrativa de productos"
-        columns={columnas}
-        data={productosFiltrados}
-        loading={cargando}
-        rowKey="id"
-        searchKeys={['nombre', 'categoria', 'socket', 'ram_type', 'form_factor']}
-        searchPlaceholder="Busca por nombre, categoría o especificación..."
-        defaultSort={{ key: 'nombre', direction: 'asc' }}
-        leftToolbar={(
-          <SelectField
-            id="filtro-categoria-productos"
-            label="Categoría"
-            value={filtroCategoria}
-            onChange={(event) => setFiltroCategoria(event.target.value)}
-            className="sm:max-w-[15rem]"
-            options={[
-              { value: '', label: 'Todas' },
-              ...categoriasDisponibles.map((categoria) => ({
-                value: categoria,
-                label: categoria.replace('_', ' '),
-              })),
-            ]}
-          />
-        )}
-        rightToolbar={<p className="text-xs text-[var(--color-text-muted)]">{productosFiltrados.length} resultados</p>}
-        loadingState={<LoadingSpinner label="Cargando catálogo de productos..." />}
-        emptyState={(
-          <EmptyState
-            title="No hay productos para mostrar"
-            description="Ajusta filtros o crea un producto nuevo para completar el catálogo."
-            actionLabel="Crear producto"
-            onAction={abrirCrear}
-          />
-        )}
-      />
+      {/* Task 10.3 — banner de productos pendientes de enriquecimiento IA */}
+      {pendientesCount > 0 && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="surface-card border-l-4 border-[var(--color-warning)] p-3 flex items-center justify-between"
+        >
+          <p className="text-sm text-[var(--color-text)]">
+            <strong>{pendientesCount}</strong> productos pendientes de enriquecimiento IA
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/admin/importar-csv')}
+            className="min-h-11 text-sm font-medium text-[var(--color-accent)] hover:opacity-80 transition-opacity"
+          >
+            Ver estado →
+          </button>
+        </div>
+      )}
+
+      {vistaDetallada ? (
+        <section className="space-y-4" aria-label="Vista detallada de productos">
+          <div className="surface-elevated border border-[var(--color-border)] p-4">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="flex flex-wrap items-end gap-3">
+                <SelectField
+                  id="filtro-categoria-productos"
+                  label="Categoría"
+                  value={filtroCategoria}
+                  onChange={(event) => setFiltroCategoria(event.target.value)}
+                  className="sm:max-w-[15rem]"
+                  options={[
+                    { value: '', label: 'Todas' },
+                    ...categoriasDisponibles.map((categoria) => ({
+                      value: categoria,
+                      label: formatearCategoria(categoria),
+                    })),
+                  ]}
+                />
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="filtro-estado-enriquecimiento"
+                    className="text-xs font-medium text-[var(--color-text-muted)]"
+                  >
+                    Estado IA
+                  </label>
+                  <select
+                    id="filtro-estado-enriquecimiento"
+                    value={filtroEstado}
+                    onChange={(e) => setFiltroEstado(e.target.value)}
+                    aria-label="Filtrar por estado de enriquecimiento"
+                    className="min-h-11 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] sm:max-w-[15rem]"
+                  >
+                    <option value="">Todos los estados</option>
+                    <option value="csv">Datos CSV</option>
+                    <option value="ia_completado">Completado IA</option>
+                    <option value="ia_fallido">IA Falló</option>
+                    <option value="pendiente">Pendiente IA</option>
+                    <option value="no_aplica">Sin enriquecimiento</option>
+                  </select>
+                </div>
+              </div>
+              <p className="text-sm text-[var(--color-text-muted)]">{productosFiltrados.length} productos visibles</p>
+            </div>
+          </div>
+
+          {cargando ? (
+            <div className="surface-elevated p-10 text-center">
+              <LoadingSpinner label="Cargando catálogo de productos..." />
+            </div>
+          ) : productosFiltrados.length === 0 ? (
+            <EmptyState
+              title="No hay productos para mostrar"
+              description="Ajusta filtros o crea un producto nuevo para completar el catálogo."
+              actionLabel="Crear producto"
+              onAction={abrirCrear}
+            />
+          ) : (
+            <div className="grid gap-4 xl:grid-cols-2">
+              {productosFiltrados.map((producto) => {
+                const historial = historialPrecios[producto.id];
+                const estado = producto.estado_enriquecimiento || 'no_aplica';
+                const specs = obtenerSpecsPorCategoria(producto);
+
+                return (
+                  <article
+                    key={producto.id}
+                    className="surface-elevated border border-[var(--color-border)] p-5"
+                  >
+                    <div className="flex flex-col gap-4">
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant="neutral">{formatearCategoria(producto.categoria)}</Badge>
+                            <BadgeEnriquecimiento estado={estado} />
+                            {producto.tiene_historial ? <Badge variant="warning">Historial de precio</Badge> : null}
+                          </div>
+                          <div>
+                            <h2 className="text-lg font-semibold text-[var(--color-text)]">{producto.nombre}</h2>
+                            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                              ID {producto.id} · Stock {producto.stock}
+                              {producto.disponible_a_pedido
+                                ? ` · Pedido en ${producto.tiempo_entrega_dias || 0} días`
+                                : ' · Entrega inmediata'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-start gap-3 lg:items-end">
+                          <div className="text-left lg:text-right">
+                            <p className="text-xs uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Precio base</p>
+                            <p className="text-2xl font-semibold text-[var(--color-text)]">S/ {Number(producto.precio_base).toFixed(2)}</p>
+                            {historial ? (
+                              <p className="text-xs text-[var(--color-text-muted)] line-through">
+                                Antes: S/ {historial.precio_anterior.toFixed(2)}
+                              </p>
+                            ) : null}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => abrirEditar(producto)}
+                              aria-label={`Editar producto ${producto.nombre}`}
+                            >
+                              Editar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="danger"
+                              onClick={() => confirmarEliminar(producto)}
+                              aria-label={`Eliminar producto ${producto.nombre}`}
+                            >
+                              Eliminar
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {producto.descripcion_tecnica ? (
+                        <p className="rounded-xl bg-[var(--color-surface-soft)] px-4 py-3 text-sm leading-6 text-[var(--color-text-muted)]">
+                          {producto.descripcion_tecnica}
+                        </p>
+                      ) : null}
+
+                      <div>
+                        <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
+                          Especificaciones técnicas
+                        </h3>
+                        <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+                          {specs.map(([etiqueta, valor]) => (
+                            <div
+                              key={`${producto.id}-${etiqueta}`}
+                              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-4 py-3"
+                            >
+                              <dt className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
+                                {etiqueta}
+                              </dt>
+                              <dd className="mt-1 text-sm font-medium text-[var(--color-text)]">{valor}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      ) : (
+        <DataTable
+          caption="Tabla administrativa de productos"
+          columns={columnas}
+          data={productosFiltrados}
+          loading={cargando}
+          rowKey="id"
+          searchKeys={['nombre', 'categoria', 'socket', 'ram_type', 'form_factor']}
+          searchPlaceholder="Busca por nombre, categoría o especificación..."
+          defaultSort={{ key: 'nombre', direction: 'asc' }}
+          leftToolbar={(
+            <div className="flex flex-wrap items-end gap-3">
+              <SelectField
+                id="filtro-categoria-productos"
+                label="Categoría"
+                value={filtroCategoria}
+                onChange={(event) => setFiltroCategoria(event.target.value)}
+                className="sm:max-w-[15rem]"
+                options={[
+                  { value: '', label: 'Todas' },
+                  ...categoriasDisponibles.map((categoria) => ({
+                    value: categoria,
+                    label: categoria.replace('_', ' '),
+                  })),
+                ]}
+              />
+              {/* Task 10.2 — filtro por estado de enriquecimiento */}
+              <div className="flex flex-col gap-1">
+                <label
+                  htmlFor="filtro-estado-enriquecimiento"
+                  className="text-xs font-medium text-[var(--color-text-muted)]"
+                >
+                  Estado IA
+                </label>
+                <select
+                  id="filtro-estado-enriquecimiento"
+                  value={filtroEstado}
+                  onChange={(e) => setFiltroEstado(e.target.value)}
+                  aria-label="Filtrar por estado de enriquecimiento"
+                  className="min-h-11 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] sm:max-w-[15rem]"
+                >
+                  <option value="">Todos los estados</option>
+                  <option value="csv">Datos CSV</option>
+                  <option value="ia_completado">Completado IA</option>
+                  <option value="ia_fallido">IA Falló</option>
+                  <option value="pendiente">Pendiente IA</option>
+                  <option value="no_aplica">Sin enriquecimiento</option>
+                </select>
+              </div>
+            </div>
+          )}
+          rightToolbar={<p className="text-xs text-[var(--color-text-muted)]">{productosFiltrados.length} resultados</p>}
+          loadingState={<LoadingSpinner label="Cargando catálogo de productos..." />}
+          emptyState={(
+            <EmptyState
+              title="No hay productos para mostrar"
+              description="Ajusta filtros o crea un producto nuevo para completar el catálogo."
+              actionLabel="Crear producto"
+              onAction={abrirCrear}
+            />
+          )}
+        />
+      )}
 
       <Modal
         open={modalFormulario.open}

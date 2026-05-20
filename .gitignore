@@ -50,6 +50,7 @@ Thumbs.db
 # Herramientas de agentes (Claude / Kiro) - no versionar
 .claude/skills/
 .kiro/skills/
+.claude/
 
 # Carpetas internas de trabajo - no versionar
 _basura/

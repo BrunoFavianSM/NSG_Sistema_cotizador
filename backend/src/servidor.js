@@ -87,6 +87,15 @@ const limitadorGeneral = rateLimit({
   ...mensajeRateLimit,
 });
 
+/** Reintento IA: 10 req / 15 min — operación administrativa que reactiva la cola de enriquecimiento */
+const limitadorReintento = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10 * devMultiplier,
+  standardHeaders: true,
+  legacyHeaders: false,
+  ...mensajeRateLimit,
+});
+
 // Aplicar limitadores específicos antes del general (Express los evalúa en orden)
 app.use('/api/auth', limitadorAuth);
 app.use('/api/asistente', limitadorAsistente);
@@ -110,10 +119,20 @@ app.use('/api/compatibilidad', require('./rutas/compatibilidad'));
 app.use('/api/auth', require('./rutas/auth'));
 app.use('/api/configuracion', require('./rutas/configuracion'));
 app.use('/api/tipo-cambio', require('./rutas/tipoCambio'));
-app.use('/api/importacion', require('./rutas/importacion'));
+const rutasImportacion = require('./rutas/importacion');
+rutasImportacion.setLimitadorReintento(limitadorReintento);
+app.use('/api/importacion', rutasImportacion);
 app.use('/api/notificaciones', require('./rutas/notificaciones'));
 // app.use('/api/asistente', require('./rutas/rutasAsistente')); // movido a _asistente_legacy/back_3
 app.use('/api/asistente', require('./asistente/rutasAsistente'));
+
+// Recuperar productos pendientes de enriquecimiento IA al arrancar (diseño §4.5)
+// No bloquea el inicio del servidor; fallo se registra como advertencia.
+const servicioEnriquecimientoIA = require('./servicios/servicioEnriquecimientoIA');
+const { ejecutarQuery } = require('./configuracion/baseDatos');
+servicioEnriquecimientoIA.reactivarDesdeDB(ejecutarQuery).catch((err) =>
+  console.warn('[EnriquecimientoIA] Cola pendiente no recuperada:', err.message)
+);
 
 // Servir imágenes subidas
 app.use('/uploads', express.static('uploads'));
