@@ -15,7 +15,46 @@ import SelectField from '../componentes/ui/SelectField';
 import { useAppContext } from '../contexto/AppContext';
 import * as api from '../servicios/api';
 
+function normalizarValorFormulario(valor, mapa = {}) {
+  const texto = String(valor || '').trim();
+  if (!texto) return '';
+  return mapa[texto.toUpperCase()] || mapa[texto] || texto;
+}
+
 function parseProducto(producto) {
+  const formFactorNormalizado = normalizarValorFormulario(
+    producto.form_factor || producto.mb_form_factor || producto.storage_form_factor || producto.psu_form_factor || producto.case_form_factor,
+    {
+      'MICRO-ATX': 'Micro-ATX',
+      'MINI-ITX': 'Mini-ITX',
+      'E-ATX': 'E-ATX',
+      'ATX': 'ATX',
+      'FULL-TOWER': 'Full-Tower',
+    }
+  );
+
+  const tipoAlmacenamientoNormalizado = normalizarValorFormulario(producto.tipo_almacenamiento, {
+    SSD_NVME: 'NVMe',
+    SSD_SATA: 'SSD',
+    HDD: 'HDD',
+    NVME: 'NVMe',
+    SSD: 'SSD',
+  });
+
+  const interfazNormalizada = normalizarValorFormulario(producto.interfaz, {
+    NVME: 'NVMe',
+    SATA: 'SATA III',
+    GEN3: 'NVMe PCIe 3.0',
+    GEN4: 'NVMe PCIe 4.0',
+    GEN5: 'NVMe PCIe 5.0',
+  });
+
+  const nvmeGenNormalizado = normalizarValorFormulario(producto.nvme_gen, {
+    GEN3: 'Gen 3',
+    GEN4: 'Gen 4',
+    GEN5: 'Gen 5',
+  });
+
   return {
     nombre: producto.nombre || '',
     categoria: producto.subcategoria || producto.categoria || 'procesador',
@@ -37,7 +76,7 @@ function parseProducto(producto) {
     // Placa madre / GPU (chipset compartido)
     chipset: producto.chipset || producto.chipset_gpu || '',
     ram_type: producto.ram_type || '',
-    form_factor: producto.form_factor || producto.mb_form_factor || producto.storage_form_factor || producto.psu_form_factor || producto.case_form_factor || '',
+    form_factor: formFactorNormalizado,
     max_ram_gb: producto.max_ram_gb ? String(producto.max_ram_gb) : '',
     slots_ram: producto.slots_ram ? String(producto.slots_ram) : '',
     pcie_version: producto.pcie_version || '',
@@ -50,11 +89,11 @@ function parseProducto(producto) {
     cantidad_modulos: producto.cantidad_modulos ? String(producto.cantidad_modulos) : '',
     rgb: Boolean(producto.rgb),
     // Almacenamiento
-    tipo_almacenamiento: producto.tipo_almacenamiento || '',
-    interfaz: producto.interfaz || '',
+    tipo_almacenamiento: tipoAlmacenamientoNormalizado,
+    interfaz: interfazNormalizada,
     velocidad_lectura_mbps: producto.velocidad_lectura_mbps ? String(producto.velocidad_lectura_mbps) : '',
     velocidad_escritura_mbps: producto.velocidad_escritura_mbps ? String(producto.velocidad_escritura_mbps) : '',
-    nvme_gen: producto.nvme_gen || '',
+    nvme_gen: nvmeGenNormalizado,
     // GPU
     vram_gb: producto.vram_gb ? String(producto.vram_gb) : '',
     vram_tipo: producto.vram_tipo || '',

@@ -62,7 +62,7 @@ const SELECT_PRODUCTO_NORMALIZADO = `
     sm.pcie_version,
     sm.m2_slots,
     -- specs_ram
-    sr.capacidad_gb,
+    COALESCE(sr.capacidad_gb, sa.capacidad_gb) AS capacidad_gb,
     sr.velocidad_mhz,
     sr.latencia,
     sr.modulos,
@@ -70,6 +70,7 @@ const SELECT_PRODUCTO_NORMALIZADO = `
     sr.rgb,
     -- specs_almacenamiento
     sa.tipo_almacenamiento,
+    sa.capacidad_gb AS storage_capacidad_gb,
     sa.interfaz,
     sa.velocidad_lectura_mbps,
     sa.velocidad_escritura_mbps,
@@ -254,6 +255,18 @@ async function obtenerIdMarcaSiExiste(marca) {
   return r.rows[0].id;
 }
 
+function generarCodigoProveedorTemporal(nombre, categoria) {
+  const base = String(nombre || categoria || 'producto')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 32) || 'producto';
+
+  return `${base}-${Date.now()}`;
+}
+
 async function upsertSpecsProducto(idProducto, categoria, datosSanitizados) {
   const def = MAPA_SPECS_POR_CATEGORIA[categoria];
   if (!def) return;
@@ -394,8 +407,12 @@ async function crearProducto(req, res) {
     const datosSanitizados = sanitizarObjeto(req.body);
     const destino = resolverDestinoOperacion(datosSanitizados.categoria, datosSanitizados.subcategoria);
 
-    if (!datosSanitizados.nombre || !datosSanitizados.codigo_proveedor) {
-      return res.status(400).json({ error: 'Datos invalidos', mensaje: 'nombre y codigo_proveedor son obligatorios' });
+    if (!datosSanitizados.nombre) {
+      return res.status(400).json({ error: 'Datos invalidos', mensaje: 'nombre es obligatorio' });
+    }
+
+    if (!datosSanitizados.codigo_proveedor) {
+      datosSanitizados.codigo_proveedor = generarCodigoProveedorTemporal(datosSanitizados.nombre, destino.categoriaCanonica);
     }
 
     const precio = Number(datosSanitizados.precio_base);

@@ -5,7 +5,7 @@ const { parsearCSV, importar } = require('./src/servicios/servicioImportacion');
 const servicioEnriquecimientoIA = require('./src/servicios/servicioEnriquecimientoIA');
 const { ejecutarQuery, pool } = require('./src/configuracion/baseDatos');
 
-const ARCHIVO = path.join(__dirname, 'tmp_importacion_7_componentes.csv');
+const ARCHIVO = path.join(__dirname, 'assets', 'DCW_20260407094705_7_componentes_auditoria.csv');
 const ESPERA_MS = 2000;
 const MAX_INTENTOS = 45;
 
