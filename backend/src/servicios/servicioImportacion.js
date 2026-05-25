@@ -1,5 +1,7 @@
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
 const { resolverCategoria, esCategoriaPrincipal } = require('../configuracion/catalogoProductos');
 
 const MAPA_CATEGORIAS = {
@@ -78,12 +80,12 @@ const _CLAVES_ORDENADAS = Object.keys(MAPA_CATEGORIAS).sort((a, b) => b.length -
 // Requisitos: 3.1, 3.2, 3.3, 3.4
 const CAMPOS_REQUERIDOS = {
   procesador:     ['socket', 'arquitectura', 'cpu_nucleos', 'cpu_hilos', 'cpu_frecuencia_base_ghz', 'cpu_frecuencia_boost_ghz', 'cpu_tdp_w'],
-  placa_madre:    ['socket', 'mb_chipset', 'mb_form_factor', 'mb_ram_tipo', 'mb_max_ram_gb', 'mb_m2_slots', 'mb_pcie_version'],
+  placa_madre:    ['socket', 'mb_chipset', 'mb_form_factor', 'mb_ram_tipo', 'mb_max_ram_gb', 'mb_slots_ram', 'mb_m2_slots', 'mb_pcie_version'],
   ram:            ['ram_tipo', 'ram_capacidad_gb', 'ram_velocidad_mhz'],
-  almacenamiento: ['storage_tipo', 'storage_capacidad_gb', 'storage_interfaz', 'storage_form_factor', 'storage_velocidad_escritura_mbps'],
-  gpu:            ['gpu_chipset', 'gpu_vram_gb', 'gpu_bus_bits', 'gpu_tdp_w', 'gpu_longitud_mm'],
-  fuente:         ['psu_wattage', 'psu_certificacion', 'psu_modular'],
-  case:           ['case_form_factor', 'case_max_gpu_mm'],
+  almacenamiento: ['storage_tipo', 'storage_capacidad_gb', 'storage_interfaz', 'storage_form_factor', 'storage_velocidad_lectura_mbps', 'storage_velocidad_escritura_mbps'],
+  gpu:            ['gpu_chipset', 'gpu_vram_gb', 'gpu_bus_bits', 'gpu_boost_mhz', 'gpu_tdp_w', 'gpu_longitud_mm', 'gpu_fuente_recomendada_w'],
+  fuente:         ['psu_wattage', 'psu_certificacion', 'psu_modular', 'psu_pcie_conectores', 'psu_sata_conectores'],
+  case:           ['case_form_factor', 'case_max_gpu_mm', 'case_max_cooler_mm'],
 };
 
 /**
@@ -113,6 +115,7 @@ const TIPOS_CAMPOS = {
   mb_form_factor: 'string',
   mb_ram_tipo: 'string',
   mb_max_ram_gb: 'integer',
+  mb_slots_ram: 'integer',
   mb_m2_slots: 'integer',
   mb_pcie_version: 'string',
   ram_tipo: 'string',
@@ -122,17 +125,25 @@ const TIPOS_CAMPOS = {
   storage_capacidad_gb: 'integer',
   storage_interfaz: 'string',
   storage_form_factor: 'string',
+  storage_nvme_gen: 'string',
+  storage_velocidad_lectura_mbps: 'integer',
   storage_velocidad_escritura_mbps: 'integer',
   gpu_chipset: 'string',
   gpu_vram_gb: 'integer',
   gpu_bus_bits: 'integer',
+  gpu_boost_mhz: 'integer',
   gpu_tdp_w: 'integer',
   gpu_longitud_mm: 'integer',
+  gpu_fuente_recomendada_w: 'integer',
   psu_wattage: 'integer',
   psu_certificacion: 'string',
   psu_modular: 'string',
+  psu_pcie_conectores: 'integer',
+  psu_sata_conectores: 'integer',
   case_form_factor: 'string',
   case_max_gpu_mm: 'integer',
+  case_max_cooler_mm: 'integer',
+  case_ventiladores_incluidos: 'integer',
 };
 
 /**
@@ -372,6 +383,7 @@ function parsearCSV(buffer) {
       mb_form_factor: encabezado.indexOf('mb_form_factor'),
       mb_ram_tipo: encabezado.indexOf('mb_ram_tipo'),
       mb_max_ram_gb: encabezado.indexOf('mb_max_ram_gb'),
+      mb_slots_ram: encabezado.indexOf('mb_slots_ram'),
       mb_m2_slots: encabezado.indexOf('mb_m2_slots'),
       mb_pcie_version: encabezado.indexOf('mb_pcie_version'),
       ram_tipo: encabezado.indexOf('ram_tipo'),
@@ -390,16 +402,22 @@ function parsearCSV(buffer) {
       gpu_vram_gb: encabezado.indexOf('gpu_vram_gb'),
       gpu_vram_tipo: encabezado.indexOf('gpu_vram_tipo'),
       gpu_bus_bits: encabezado.indexOf('gpu_bus_bits'),
+      gpu_boost_mhz: encabezado.indexOf('gpu_boost_mhz'),
       gpu_tdp_w: encabezado.indexOf('gpu_tdp_w'),
       gpu_longitud_mm: encabezado.indexOf('gpu_longitud_mm'),
+      gpu_fuente_recomendada_w: encabezado.indexOf('gpu_fuente_recomendada_w'),
       psu_wattage: encabezado.indexOf('psu_wattage'),
       psu_certificacion: encabezado.indexOf('psu_certificacion'),
       psu_modular: encabezado.indexOf('psu_modular'),
       psu_form_factor: encabezado.indexOf('psu_form_factor'),
+      psu_pcie_conectores: encabezado.indexOf('psu_pcie_conectores'),
+      psu_sata_conectores: encabezado.indexOf('psu_sata_conectores'),
       case_form_factor: encabezado.indexOf('case_form_factor'),
       case_color: encabezado.indexOf('case_color'),
       case_panel_lateral: encabezado.indexOf('case_panel_lateral'),
       case_max_gpu_mm: encabezado.indexOf('case_max_gpu_mm'),
+      case_max_cooler_mm: encabezado.indexOf('case_max_cooler_mm'),
+      case_ventiladores_incluidos: encabezado.indexOf('case_ventiladores_incluidos'),
       case_compatibilidad_placa: encabezado.indexOf('case_compatibilidad_placa'),
     };
 
@@ -435,6 +453,7 @@ function parsearCSV(buffer) {
           mb_form_factor: limpiar(campos[idx.mb_form_factor]),
           mb_ram_tipo: limpiar(campos[idx.mb_ram_tipo]),
           mb_max_ram_gb: limpiar(campos[idx.mb_max_ram_gb]),
+          mb_slots_ram: limpiar(campos[idx.mb_slots_ram]),
           mb_m2_slots: limpiar(campos[idx.mb_m2_slots]),
           mb_pcie_version: limpiar(campos[idx.mb_pcie_version]),
           ram_tipo: limpiar(campos[idx.ram_tipo]),
@@ -453,16 +472,22 @@ function parsearCSV(buffer) {
           gpu_vram_gb: limpiar(campos[idx.gpu_vram_gb]),
           gpu_vram_tipo: limpiar(campos[idx.gpu_vram_tipo]),
           gpu_bus_bits: limpiar(campos[idx.gpu_bus_bits]),
+          gpu_boost_mhz: limpiar(campos[idx.gpu_boost_mhz]),
           gpu_tdp_w: limpiar(campos[idx.gpu_tdp_w]),
           gpu_longitud_mm: limpiar(campos[idx.gpu_longitud_mm]),
+          gpu_fuente_recomendada_w: limpiar(campos[idx.gpu_fuente_recomendada_w]),
           psu_wattage: limpiar(campos[idx.psu_wattage]),
           psu_certificacion: limpiar(campos[idx.psu_certificacion]),
           psu_modular: limpiar(campos[idx.psu_modular]),
           psu_form_factor: limpiar(campos[idx.psu_form_factor]),
+          psu_pcie_conectores: limpiar(campos[idx.psu_pcie_conectores]),
+          psu_sata_conectores: limpiar(campos[idx.psu_sata_conectores]),
           case_form_factor: limpiar(campos[idx.case_form_factor]),
           case_color: limpiar(campos[idx.case_color]),
           case_panel_lateral: limpiar(campos[idx.case_panel_lateral]),
           case_max_gpu_mm: limpiar(campos[idx.case_max_gpu_mm]),
+          case_max_cooler_mm: limpiar(campos[idx.case_max_cooler_mm]),
+          case_ventiladores_incluidos: limpiar(campos[idx.case_ventiladores_incluidos]),
           case_compatibilidad_placa: limpiar(campos[idx.case_compatibilidad_placa]),
         };
       })
@@ -642,6 +667,100 @@ function extraerCapacidadGb(texto) {
   return extraerNumero(/(\d+)\s*gb/i, texto);
 }
 
+let _catalogoLocalGPU = null;
+
+function parsearEnteroSeguro(valor) {
+  const numero = Number.parseInt(String(valor ?? '').trim(), 10);
+  return Number.isFinite(numero) ? numero : null;
+}
+
+function parsearLineaCSVSimple(linea) {
+  const columnas = [];
+  let actual = '';
+  let entreComillas = false;
+
+  for (let i = 0; i < linea.length; i++) {
+    const char = linea[i];
+
+    if (char === '"') {
+      if (entreComillas && linea[i + 1] === '"') {
+        actual += '"';
+        i++;
+      } else {
+        entreComillas = !entreComillas;
+      }
+      continue;
+    }
+
+    if (char === ',' && !entreComillas) {
+      columnas.push(actual);
+      actual = '';
+      continue;
+    }
+
+    actual += char;
+  }
+
+  columnas.push(actual);
+  return columnas;
+}
+
+function cargarCatalogoLocalGPU() {
+  if (_catalogoLocalGPU) return _catalogoLocalGPU;
+
+  const basePath = path.join(__dirname, '..', '..', 'assets', 'CSV cotizador');
+  const productosPath = path.join(basePath, 'productos.csv');
+  const specsPath = path.join(basePath, 'specs_gpu.csv');
+
+  const porCodigo = new Map();
+  const porNombre = new Map();
+
+  try {
+    const productos = fs.readFileSync(productosPath, 'utf8').split(/\r?\n/).slice(1);
+    const specs = fs.readFileSync(specsPath, 'utf8').split(/\r?\n/).slice(1);
+
+    const specsPorId = new Map();
+    for (const linea of specs) {
+      if (!linea.trim()) continue;
+      const [idProducto, chipset, vramGb, vramTipo, busBits, boostMhz, tdpW, longitudMm, fuenteRecomendadaW] = linea.split(',');
+      specsPorId.set(String(idProducto).trim(), {
+        gpu_chipset: String(chipset || '').trim() || null,
+        gpu_vram_gb: parsearEnteroSeguro(vramGb),
+        gpu_vram_tipo: String(vramTipo || '').trim() || null,
+        gpu_bus_bits: parsearEnteroSeguro(busBits),
+        gpu_boost_mhz: parsearEnteroSeguro(boostMhz),
+        gpu_tdp_w: parsearEnteroSeguro(tdpW),
+        gpu_longitud_mm: parsearEnteroSeguro(longitudMm),
+        gpu_fuente_recomendada_w: parsearEnteroSeguro(fuenteRecomendadaW),
+      });
+    }
+
+    for (const linea of productos) {
+      if (!linea.trim()) continue;
+      const columnas = parsearLineaCSVSimple(linea);
+      const idProducto = String(columnas[0] || '').trim();
+      const codigoProveedor = String(columnas[5] || '').trim().toLowerCase();
+      const nombre = String(columnas[6] || '').trim();
+      const spec = specsPorId.get(idProducto);
+      if (!spec) continue;
+      if (codigoProveedor) porCodigo.set(codigoProveedor, spec);
+      if (nombre) porNombre.set(nombre.toLowerCase(), spec);
+    }
+  } catch (error) {
+    console.warn('[ImportacionCSV] No se pudo cargar catálogo local GPU:', error.message);
+  }
+
+  _catalogoLocalGPU = { porCodigo, porNombre };
+  return _catalogoLocalGPU;
+}
+
+function obtenerSpecsGpuCatalogoLocal(fila, nombreDetectado) {
+  const { porCodigo, porNombre } = cargarCatalogoLocalGPU();
+  const codigo = String(fila?.codigo || '').trim().toLowerCase();
+  const nombre = String(nombreDetectado || fila?.descripcion_general || fila?.nombre_descripcion || '').trim().toLowerCase();
+  return porCodigo.get(codigo) || porNombre.get(nombre) || {};
+}
+
 function extraerSpecs(categoria, nombre, categoriaProveedor) {
   const texto = `${nombre} ${categoriaProveedor}`;
   const textoLower = texto.toLowerCase();
@@ -706,8 +825,9 @@ function extraerSpecs(categoria, nombre, categoriaProveedor) {
       mb_form_factor: normalizarFormFactor(texto),
       mb_ram_tipo: normalizarRamTipo(texto),
       mb_max_ram_gb: extraerNumero(/(?:hasta|max)\s*(\d{2,4})\s*gb/i, textoLower),
+      mb_slots_ram: extraerNumero(/(\d)\s*(?:slots?|ranuras?)\s*(?:ram|ddr)?/i, textoLower),
       mb_m2_slots: extraerNumero(/(\d)\s*x?\s*m\.?2/i, textoLower) || (textoLower.includes('m.2') ? 1 : null),
-      mb_pcie_version: (texto.match(/pcie\s*(\d(?:\.\d)?)/i) || [])[1] || null,
+      mb_pcie_version: (texto.match(/pcie\s*(\d(?:\.\d)?)/i) || texto.match(/pci\s*express\s*(\d(?:\.\d)?)/i) || [])[1] || null,
     };
   }
 
@@ -734,7 +854,9 @@ function extraerSpecs(categoria, nombre, categoriaProveedor) {
   }
 
   if (categoria === 'almacenamiento') {
-    const tipo = textoLower.includes('nvme') ? 'ssd_nvme' : (textoLower.includes('ssd') ? 'ssd_sata' : (textoLower.includes('hdd') || textoLower.includes('disco duro') ? 'hdd' : null));
+    const esNvme = textoLower.includes('nvme');
+    const esSsd = textoLower.includes('ssd');
+    const esHdd = textoLower.includes('hdd') || textoLower.includes('disco duro');
     const nvmeGen = (textoLower.match(/gen\s*([345])/i) || textoLower.match(/pcie\s*([345])\.0/i) || [])[1] || null;
 
     // Req 2.4 — velocidad lectura: "seq read: 7000 MB/s", "7000MB/s read", "550 MB/s" (primer valor)
@@ -753,12 +875,12 @@ function extraerSpecs(categoria, nombre, categoriaProveedor) {
       })();
 
     return {
-      storage_tipo: tipo,
+      storage_tipo: esNvme ? 'NVMe' : (esSsd ? 'SSD' : (esHdd ? 'HDD' : null)),
       storage_capacidad_gb: extraerCapacidadGb(textoLower),
-      storage_interfaz: textoLower.includes('nvme') ? 'NVME' : (textoLower.includes('sata') ? 'SATA' : null),
+      storage_interfaz: esNvme ? (nvmeGen ? `NVMe PCIe ${nvmeGen}.0` : 'NVMe') : (textoLower.includes('sata') ? 'SATA III' : (textoLower.includes('usb') ? 'USB' : null)),
       // Req 2.4 — form_factor ahora incluye 3.5"
       storage_form_factor: textoLower.includes('m.2') ? 'M.2' : (textoLower.includes('2.5') ? '2.5"' : (textoLower.includes('3.5') ? '3.5"' : null)),
-      storage_nvme_gen: nvmeGen ? `GEN${nvmeGen}` : null,
+      storage_nvme_gen: nvmeGen ? `Gen ${nvmeGen}` : null,
       storage_velocidad_lectura_mbps: velocidadLectura,
       storage_velocidad_escritura_mbps: velocidadEscritura,
     };
@@ -788,8 +910,10 @@ function extraerSpecs(categoria, nombre, categoriaProveedor) {
       gpu_vram_tipo: vramTipo,
       // Req 2.5 — bus_bits: "256-bit", "256 bit", "256bits"
       gpu_bus_bits: extraerNumero(/(\d{2,3})\s*[-]?\s*bits?/i, texto),
+      gpu_boost_mhz: extraerNumero(/boost[^0-9]{0,15}(\d{3,5})\s*mhz/i, textoLower) || extraerNumero(/(\d{3,5})\s*mhz\s*boost/i, textoLower),
       gpu_tdp_w: extraerNumero(/tdp\D{0,6}(\d{2,4})\s*w/i, textoLower),
       gpu_longitud_mm: extraerNumero(/(?:length|longitud|largo)[^0-9]{0,12}(\d{3})\s*mm/i, textoLower) || extraerNumero(/(\d{3})\s*mm/i, textoLower),
+      gpu_fuente_recomendada_w: extraerNumero(/(?:fuente|psu)[^0-9]{0,20}(\d{3,4})\s*w\s*(?:recomendada|sugerida|min(?:ima)?)/i, textoLower) || extraerNumero(/(?:recomendada|sugerida|min(?:ima)?)\D{0,20}(\d{3,4})\s*w/i, textoLower),
     };
   }
 
@@ -823,6 +947,8 @@ function extraerSpecs(categoria, nombre, categoriaProveedor) {
       psu_certificacion: certificacion,
       psu_modular: modular,
       psu_form_factor: normalizarFormFactor(texto),
+      psu_pcie_conectores: extraerNumero(/(\d{1,2})\s*(?:conectores?|salidas?)\s*pcie/i, textoLower),
+      psu_sata_conectores: extraerNumero(/(\d{1,2})\s*(?:conectores?|salidas?)\s*sata/i, textoLower),
     };
   }
 
@@ -855,6 +981,8 @@ function extraerSpecs(categoria, nombre, categoriaProveedor) {
       case_color: color,
       case_panel_lateral: panelLateral,
       case_max_gpu_mm: extraerNumero(/(?:gpu|vga)[^0-9]{0,20}(\d{3})\s*mm/i, textoLower),
+      case_max_cooler_mm: extraerNumero(/(?:cooler|cpu cooler|altura)[^0-9]{0,20}(\d{2,3})\s*mm/i, textoLower),
+      case_ventiladores_incluidos: extraerNumero(/(\d{1,2})\s*(?:ventiladores?|fans?)(?:\s*incluidos?)?/i, textoLower),
       case_compatibilidad_placa: [normalizarFormFactor(texto) || 'ATX', 'MICRO-ATX', 'MINI-ITX'].filter(Boolean).join(','),
     };
   }
@@ -892,6 +1020,9 @@ function construirRegistroNormalizado(fila) {
   const subcategoriaFinal = destino.subcategoria || subcategoriaDirecta || '';
   const nombreLimpio = generarNombreComercial(destino.categoria, descripcionBase, fila.marca || '');
   const specsDetectadas = extraerSpecs(destino.categoria, descripcionGeneral || descripcionBase, fila.categoria_proveedor || '');
+  const specsCatalogoLocal = destino.categoria === 'gpu'
+    ? obtenerSpecsGpuCatalogoLocal(fila, descripcionGeneral || descripcionBase)
+    : {};
   const specsDesdeCSV = {
     socket: fila.socket || null,
     arquitectura: fila.arquitectura || null,
@@ -905,6 +1036,7 @@ function construirRegistroNormalizado(fila) {
     mb_form_factor: fila.mb_form_factor || null,
     mb_ram_tipo: fila.mb_ram_tipo || null,
     mb_max_ram_gb: fila.mb_max_ram_gb || null,
+    mb_slots_ram: fila.mb_slots_ram || null,
     mb_m2_slots: fila.mb_m2_slots || null,
     mb_pcie_version: fila.mb_pcie_version || null,
     ram_tipo: fila.ram_tipo || null,
@@ -923,19 +1055,29 @@ function construirRegistroNormalizado(fila) {
     gpu_vram_gb: fila.gpu_vram_gb || null,
     gpu_vram_tipo: fila.gpu_vram_tipo || null,
     gpu_bus_bits: fila.gpu_bus_bits || null,
+    gpu_boost_mhz: fila.gpu_boost_mhz || null,
     gpu_tdp_w: fila.gpu_tdp_w || null,
     gpu_longitud_mm: fila.gpu_longitud_mm || null,
+    gpu_fuente_recomendada_w: fila.gpu_fuente_recomendada_w || null,
     psu_wattage: fila.psu_wattage || null,
     psu_certificacion: fila.psu_certificacion || null,
     psu_modular: fila.psu_modular || null,
     psu_form_factor: fila.psu_form_factor || null,
+    psu_pcie_conectores: fila.psu_pcie_conectores || null,
+    psu_sata_conectores: fila.psu_sata_conectores || null,
     case_form_factor: fila.case_form_factor || null,
     case_color: fila.case_color || null,
     case_panel_lateral: fila.case_panel_lateral || null,
     case_max_gpu_mm: fila.case_max_gpu_mm || null,
+    case_max_cooler_mm: fila.case_max_cooler_mm || null,
+    case_ventiladores_incluidos: fila.case_ventiladores_incluidos || null,
     case_compatibilidad_placa: fila.case_compatibilidad_placa || null,
   };
-  const specs = { ...specsDetectadas, ...Object.fromEntries(Object.entries(specsDesdeCSV).filter(([, v]) => String(v || '').trim() !== '')) };
+  const specs = {
+    ...specsDetectadas,
+    ...specsCatalogoLocal,
+    ...Object.fromEntries(Object.entries(specsDesdeCSV).filter(([, v]) => String(v || '').trim() !== '')),
+  };
 
   // §5.2 — Asignar estado_enriquecimiento según si la categoría es principal y si tiene specs completas.
   // Requisitos: 3.1, 3.2, 3.3, 3.4
@@ -1015,6 +1157,7 @@ async function upsertSpecs(db, categoria, idProducto, registro) {
         form_factor: registro.mb_form_factor,
         ram_tipo: registro.mb_ram_tipo,
         max_ram_gb: registro.mb_max_ram_gb,
+        slots_ram: registro.mb_slots_ram,
         m2_slots: registro.mb_m2_slots,
         pcie_version: registro.mb_pcie_version,
       },
@@ -1048,8 +1191,10 @@ async function upsertSpecs(db, categoria, idProducto, registro) {
         vram_gb: registro.gpu_vram_gb,
         vram_tipo: registro.gpu_vram_tipo,
         bus_bits: registro.gpu_bus_bits,
+        boost_mhz: registro.gpu_boost_mhz,
         tdp_w: registro.gpu_tdp_w,
         longitud_mm: registro.gpu_longitud_mm,
+        fuente_recomendada_w: registro.gpu_fuente_recomendada_w,
       },
     },
     fuente: {
@@ -1059,6 +1204,8 @@ async function upsertSpecs(db, categoria, idProducto, registro) {
         certificacion: registro.psu_certificacion,
         modular: registro.psu_modular,
         form_factor: registro.psu_form_factor,
+        pcie_conectores: registro.psu_pcie_conectores,
+        sata_conectores: registro.psu_sata_conectores,
       },
     },
     case: {
@@ -1068,6 +1215,8 @@ async function upsertSpecs(db, categoria, idProducto, registro) {
         color: registro.case_color,
         panel_lateral: registro.case_panel_lateral,
         max_gpu_mm: registro.case_max_gpu_mm,
+        max_cooler_mm: registro.case_max_cooler_mm,
+        ventiladores_incluidos: registro.case_ventiladores_incluidos,
         compatibilidad_placa: registro.case_compatibilidad_placa,
       },
     },
