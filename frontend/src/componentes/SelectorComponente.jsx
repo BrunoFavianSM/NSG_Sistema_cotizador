@@ -15,6 +15,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import PropTypes from 'prop-types';
+import { formatearCategoria } from '../dominio/categorias';
 import { useAppContext } from '../contexto/AppContext';
 import { useToast } from './feedback/ToastProvider';
 import { obtenerFavoritos, agregarFavorito, eliminarFavorito } from '../servicios/api';
@@ -240,22 +241,6 @@ const SelectorComponente = ({
         icono: '�o-'
       };
     }
-  };
-
-  /**
-   * Formatea el nombre de la categoría
-   */
-  const formatearCategoria = (cat) => {
-    const mapa = {
-      procesador: 'Procesador',
-      placa_madre: 'Placa Madre',
-      ram: 'RAM',
-      almacenamiento: 'Almacenamiento',
-      gpu: 'GPU',
-      fuente: 'Fuente de Poder',
-      case: 'Case'
-    };
-    return mapa[cat] || cat;
   };
 
   // Variantes de animación

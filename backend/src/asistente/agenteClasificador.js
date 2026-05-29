@@ -29,7 +29,7 @@ Analiza el mensaje del usuario y extrae la siguiente información en JSON válid
   "preferencia_ruido": "silenciosa|indiferente|null",
   "perfil": "basico|intermedio|avanzado|gamer_full|null",
   "tiene_presupuesto_explicito": true|false,
-  "pregunta_especifica": "cotizar|recomendar|presupuesto|componente|informacion|saludo|otro",
+  "pregunta_especifica": "cotizacion|recomendacion|compatibilidad|comparacion|especificacion|presupuesto|componente|informacion|saludo|otro",
   "confianza": 0.0,
   "productos_mencionados": []
 }
@@ -38,6 +38,11 @@ Reglas:
 - Si menciona un monto en S/ seguido de números (ej: S/4000, 3000 soles), extraer como presupuesto_pen
 - Si menciona uso (gaming, video, oficina, render), clasificar uso_principal
 - "confianza" indica qué tan seguro estás de la clasificación (0.0 a 1.0)
+- Si pide armar/cotizar una PC, devolver pregunta_especifica: "cotizacion"
+- Si pide recomendación según uso o presupuesto, devolver pregunta_especifica: "recomendacion"
+- Si pregunta si dos componentes funcionan juntos, devolver pregunta_especifica: "compatibilidad"
+- Si pide comparar dos productos, devolver pregunta_especifica: "comparacion"
+- Si pregunta por capacidad, watts, almacenamiento o especificaciones técnicas, devolver pregunta_especifica: "especificacion"
 - Si es un saludo o pregunta general, devolver pregunta_especifica: "saludo"
 - Perfil se calcula: básico=S/2000-3000 sin GPU, intermedio=S/3000-5000 GPU mid, avanzado=S/5000-8000 GPU high, gamer_full=S/8000+
 - No inventes datos. Si no hay suficiente información, usa null.
@@ -118,13 +123,29 @@ async function clasificar(mensaje, historial = [], configIA) {
 const USOS_VALIDOS = ['gaming', 'edicion_video', 'diseno_3d', 'oficina'];
 const PERFILES_VALIDOS = ['basico', 'intermedio', 'avanzado', 'gamer_full'];
 const RESOLUCIONES_VALIDAS = ['1080p', '1440p', '4k'];
-const PREGUNTAS_VALIDAS = ['cotizar', 'recomendar', 'presupuesto', 'componente', 'informacion', 'saludo', 'otro'];
+const PREGUNTAS_VALIDAS = [
+  'cotizacion',
+  'recomendacion',
+  'compatibilidad',
+  'comparacion',
+  'especificacion',
+  'presupuesto',
+  'componente',
+  'informacion',
+  'saludo',
+  'otro',
+];
+const ALIAS_PREGUNTAS = {
+  cotizar: 'cotizacion',
+  recomendar: 'recomendacion',
+};
 
 function normalizarClasificacion(json) {
   const uso = USOS_VALIDOS.includes(json.uso_principal) ? json.uso_principal : null;
   const perfil = PERFILES_VALIDOS.includes(json.perfil) ? json.perfil : null;
   const resolucion = RESOLUCIONES_VALIDAS.includes(json.resolucion) ? json.resolucion : null;
-  const pregunta = PREGUNTAS_VALIDAS.includes(json.pregunta_especifica) ? json.pregunta_especifica : 'otro';
+  const preguntaNormalizada = ALIAS_PREGUNTAS[json.pregunta_especifica] || json.pregunta_especifica;
+  const pregunta = PREGUNTAS_VALIDAS.includes(preguntaNormalizada) ? preguntaNormalizada : 'otro';
 
   const presupuesto = typeof json.presupuesto_pen === 'number' && json.presupuesto_pen >= 500 && json.presupuesto_pen <= 50000
     ? json.presupuesto_pen

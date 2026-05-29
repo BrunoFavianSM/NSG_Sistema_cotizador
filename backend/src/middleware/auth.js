@@ -15,7 +15,15 @@ const { ejecutarQuery } = require('../configuracion/baseDatos');
 
 function extraerToken(req) {
   const authHeader = req.headers['authorization'];
-  return authHeader && authHeader.split(' ')[1];
+  if (authHeader) return authHeader.split(' ')[1];
+
+  // EventSource nativo no permite headers Authorization.
+  // Se acepta token por query solo para streams protegidos; mantener rutas normales con header.
+  if ((req.originalUrl || req.path || '').includes('/estado/stream') && typeof req.query?.token === 'string') {
+    return req.query.token;
+  }
+
+  return null;
 }
 
 function decodificarToken(token) {

@@ -5,6 +5,7 @@
  *
  * POST /csv                    — Importar catálogo desde CSV de Deltron.
  * GET  /estado-enriquecimiento — Consultar estado del proceso de enriquecimiento IA.
+ * GET  /estado/stream          — Stream SSE del estado de enriquecimiento IA.
  * POST /reintentar-fallidos    — Mover productos ia_fallido → pendiente y reactivar cola.
  *
  * Requisitos: 5.1, 5.3, 5.10, 5.12, Restricción Seg 3
@@ -57,6 +58,17 @@ router.get(
   '/estado-enriquecimiento',
   verificarTokenAdmin,
   ctrl.obtenerEstadoEnriquecimiento
+);
+
+/**
+ * GET /api/importacion/estado/stream
+ * Auth: verificarTokenAdmin
+ * Requisitos: monitoreo tiempo real de enriquecimiento IA
+ */
+router.get(
+  '/estado/stream',
+  verificarTokenAdmin,
+  ctrl.transmitirEstadoEnriquecimiento
 );
 
 /**

@@ -14,6 +14,7 @@
  */
 
 import { useCallback, useEffect, useRef } from 'react';
+import { formatearCategoria } from '../../dominio/categorias';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -31,7 +32,7 @@ function extraerEspecificaciones(producto) {
 
   // Campos comunes a todos los productos
   if (producto.nombre) specs['Nombre'] = producto.nombre;
-  if (producto.categoria) specs['Categoría'] = capitalizarCategoria(producto.categoria);
+  if (producto.categoria) specs['Categoría'] = formatearCategoria(producto.categoria);
   if (producto.precio_base != null) specs['Precio base (USD)'] = `$${Number(producto.precio_base).toFixed(2)}`;
   if (producto.descripcion_tecnica) specs['Descripción'] = producto.descripcion_tecnica;
 
@@ -62,13 +63,6 @@ function extraerEspecificaciones(producto) {
   }
 
   return specs;
-}
-
-function capitalizarCategoria(cat) {
-  if (!cat) return '';
-  return cat
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 /**

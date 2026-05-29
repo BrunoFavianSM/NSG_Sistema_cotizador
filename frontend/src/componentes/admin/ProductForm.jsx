@@ -4,9 +4,10 @@ import InputField from '../ui/InputField';
 import SelectField from '../ui/SelectField';
 import SwitchField from '../ui/SwitchField';
 import TextAreaField from '../ui/TextAreaField';
+import { CATEGORIAS_PRODUCTO, formatearCategoria } from '../../dominio/categorias';
 import FormSection from './FormSection';
 
-export const CATEGORIAS = ['procesador', 'placa_madre', 'ram', 'almacenamiento', 'gpu', 'fuente', 'case'];
+export const CATEGORIAS = CATEGORIAS_PRODUCTO;
 
 const RAM_TYPES = ['DDR4', 'DDR5', 'DDR3'];
 const FORM_FACTORS_MB = ['ATX', 'Micro-ATX', 'Mini-ITX', 'E-ATX'];
@@ -142,7 +143,7 @@ export default function ProductForm({
           required
           value={value.categoria}
           onChange={(e) => setCampo('categoria', e.target.value)}
-          options={categoriasDisponibles.map((c) => ({ value: c, label: c.replace(/_/g, ' ') }))}
+          options={categoriasDisponibles.map((c) => ({ value: c, label: formatearCategoria(c) }))}
         />
 
         <InputField

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import AsistenteIA from '../componentes/AsistenteIA';
@@ -17,6 +17,8 @@ import AnalizadorPresupuesto from '../componentes/cotizador/AnalizadorPresupuest
 import BalanceFinal from '../componentes/cotizador/BalanceFinal';
 import { useAppContext } from '../contexto/AppContext';
 import { useComparador } from '../hooks/useComparador';
+import { useClienteAutocompletado } from '../hooks/useClienteAutocompletado';
+import { useEmailsRegistrados } from '../hooks/useEmailsRegistrados';
 import usePersistenciaSeleccion from '../hooks/usePersistenciaSeleccion';
 import * as api from '../servicios/api';
 import { etiquetaMonedaBase, formatearMoneda } from '../utilidades/moneda';
@@ -699,8 +701,9 @@ export default function Cotizador() {
 
   const [pasoActual, setPasoActual] = useState(0);
   const [vistaDetalladaProductos, setVistaDetalladaProductos] = useState(false);
-  // soloDisponibles: true → muestra solo productos con stock > 0 o disponible_a_pedido === true
-  const [soloDisponibles, setSoloDisponibles] = useState(true);
+  // soloCompatibles: true → muestra solo productos compatibles con la configuración actual
+  // false → muestra todos los productos (incluyendo incompatibles con badge de advertencia)
+  const [soloCompatibles, setSoloCompatibles] = useState(true);
   // ordenPrecio: 'relevancia' | 'menor' | 'mayor' — persiste entre pasos (Req. 10.9)
   const [ordenPrecio, setOrdenPrecio] = useState('relevancia');
   const [filtrosPaso, setFiltrosPaso] = useState({
@@ -726,6 +729,79 @@ export default function Cotizador() {
   const [emailCliente, setEmailCliente] = useState('');
   const [telefonoCliente, setTelefonoCliente] = useState('');
   const [intentoGenerar, setIntentoGenerar] = useState(false);
+
+  // ── Estados para combobox de emails ───────────────────────────────────────
+  const [mostrarDropdownEmails, setMostrarDropdownEmails] = useState(false);
+  const [emailSeleccionadoIndex, setEmailSeleccionadoIndex] = useState(-1);
+  const dropdownEmailsRef = useRef(null);
+
+  // ── Lista de emails registrados para combobox ─────────────────────────────
+  const { emails: emailsRegistrados } = useEmailsRegistrados();
+
+  // Filtrar emails según lo que el usuario escribe
+  const emailsFiltrados = useMemo(() => {
+    if (!emailCliente || emailCliente.length < 1) return emailsRegistrados;
+    const busqueda = emailCliente.toLowerCase();
+    return emailsRegistrados.filter(email =>
+      email.toLowerCase().includes(busqueda)
+    );
+  }, [emailCliente, emailsRegistrados]);
+
+  // Scroll automático cuando cambia la selección con teclado
+  useEffect(() => {
+    if (emailSeleccionadoIndex >= 0 && dropdownEmailsRef.current) {
+      const selectedElement = dropdownEmailsRef.current.children[emailSeleccionadoIndex];
+      if (selectedElement) {
+        selectedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+  }, [emailSeleccionadoIndex]);
+
+  // ── Autocompletado de datos del cliente ──────────────────────────────────
+  // Buscar por email o teléfono cuando el usuario escribe en cualquiera de los dos campos
+  const valorBusquedaEmail = emailCliente.trim();
+  const valorBusquedaTelefono = telefonoCliente.trim();
+
+  // Activar búsqueda si hay al menos 3 caracteres en email O en teléfono
+  const debeActivarBusqueda = esAdmin && (
+    (valorBusquedaEmail.length >= 3) || (valorBusquedaTelefono.length >= 3)
+  );
+
+  // Priorizar el campo que tiene contenido válido (≥3 caracteres)
+  // Si ambos tienen contenido, priorizar email
+  const valorBusqueda = valorBusquedaEmail.length >= 3
+    ? valorBusquedaEmail
+    : valorBusquedaTelefono;
+
+  const { cliente: clienteEncontrado, buscando: buscandoCliente } = useClienteAutocompletado(
+    valorBusqueda,
+    debeActivarBusqueda
+  );
+
+  // Autocompletar campos cuando se encuentra un cliente
+  useEffect(() => {
+    if (clienteEncontrado) {
+      // Solo autocompletar nombre y teléfono (NO email, porque ya lo tiene el usuario)
+      if (!nombreCliente && clienteEncontrado.nombre) {
+        setNombreCliente(clienteEncontrado.nombre);
+      }
+      if (!telefonoCliente && clienteEncontrado.telefono) {
+        setTelefonoCliente(clienteEncontrado.telefono);
+      }
+    }
+  }, [clienteEncontrado, nombreCliente, telefonoCliente]);
+
+  // Limpiar campos cuando el usuario cambia el email manualmente
+  const emailAnteriorRef = useRef(emailCliente);
+  useEffect(() => {
+    // Si el email cambió y no es por autocompletado
+    if (emailAnteriorRef.current !== emailCliente && emailCliente !== '') {
+      // Limpiar nombre y teléfono para que se autocompleten con el nuevo cliente
+      setNombreCliente('');
+      setTelefonoCliente('');
+    }
+    emailAnteriorRef.current = emailCliente;
+  }, [emailCliente]);
 
   // ── Estados de embalaje y flete (Requisitos 5.3, 6.3) ────────────────────
   const [embalaje, setEmbalaje] = useState({
@@ -789,17 +865,21 @@ export default function Cotizador() {
   const emailClienteLimpio = emailCliente.trim().toLowerCase();
   const telefonoClienteLimpio = telefonoCliente.trim();
   const emailClienteEsValido = emailClienteLimpio ? esEmailValido(emailClienteLimpio) : false;
-  const telefonoClienteEsValido = telefonoClienteLimpio ? normalizarTelefono(telefonoClienteLimpio).length >= 7 : true;
-  const faltanDatosClientePublico = !esAdmin && (!nombreClienteLimpio || !emailClienteLimpio);
+  const telefonoClienteEsValido = telefonoClienteLimpio ? normalizarTelefono(telefonoClienteLimpio).length >= 7 : false;
+
+  // Validaciones de campos obligatorios (nombre, email, teléfono)
+  const faltanDatosClientePublico = !esAdmin && (!nombreClienteLimpio || !emailClienteLimpio || !telefonoClienteLimpio);
   const hayErrorNombreCliente = !esAdmin && intentoGenerar && !nombreClienteLimpio;
   const hayErrorEmailCliente = (!esAdmin && intentoGenerar && !emailClienteLimpio)
     || (emailClienteLimpio && !emailClienteEsValido);
-  const hayErrorTelefonoCliente = telefonoClienteLimpio && !telefonoClienteEsValido;
+  const hayErrorTelefonoCliente = (!esAdmin && intentoGenerar && !telefonoClienteLimpio)
+    || (telefonoClienteLimpio && !telefonoClienteEsValido);
+
   // Para usuario autenticado (no admin): sus datos ya están en el token, no necesita formulario
   const datosClienteValidos = autenticado && !esAdmin
     ? true  // usuario registrado — el backend usa su id del token
     : esAdmin
-      ? (!emailClienteLimpio || emailClienteEsValido) && telefonoClienteEsValido
+      ? (!emailClienteLimpio || emailClienteEsValido) && (!telefonoClienteLimpio || telefonoClienteEsValido)
       : Boolean(nombreClienteLimpio && emailClienteEsValido && telefonoClienteEsValido);
   const procesadorTieneGraficosIntegrados = useMemo(() => {
     const procesador = configuracionSeleccionada.procesador;
@@ -884,43 +964,80 @@ export default function Cotizador() {
     return lista;
   }, [configuracionSeleccionada, ramAgrupada]);
 
-  const productosPasoBase = useMemo(() => {
-    let lista = productos.filter((p) => p.categoria === pasoInfo.categoria);
-
+  // Función para verificar si un producto es compatible con la configuración actual
+  const esProductoCompatible = useCallback((producto) => {
     if (pasoInfo.id === 'placa_madre' && configuracionSeleccionada.procesador?.socket) {
       const socket = configuracionSeleccionada.procesador.socket;
-      const compatibles = lista.filter((p) => !p.socket || p.socket === socket);
-      if (compatibles.length > 0) lista = compatibles;
+      if (producto.socket && producto.socket !== socket) {
+        return { compatible: false, razon: `Requiere socket ${socket}` };
+      }
     }
 
     if (pasoInfo.id === 'ram' && configuracionSeleccionada.placa_madre?.ram_type) {
       const ramType = configuracionSeleccionada.placa_madre.ram_type;
-      const compatibles = lista.filter((p) => !p.ram_type || p.ram_type === ramType);
-      if (compatibles.length > 0) lista = compatibles;
+      if (producto.ram_type && producto.ram_type !== ramType) {
+        return { compatible: false, razon: `Requiere ${ramType}` };
+      }
     }
 
     if (pasoInfo.id === 'almacenamiento' && configuracionSeleccionada.placa_madre) {
-      const compatibles = lista.filter((p) => placaSoportaAlmacenamiento(configuracionSeleccionada.placa_madre, p));
-      if (compatibles.length > 0) lista = compatibles;
+      if (!placaSoportaAlmacenamiento(configuracionSeleccionada.placa_madre, producto)) {
+        return { compatible: false, razon: 'Placa no soporta este almacenamiento' };
+      }
     }
 
     if (pasoInfo.id === 'case' && configuracionSeleccionada.placa_madre?.form_factor) {
       const ffPlaca = normalizarFormFactor(configuracionSeleccionada.placa_madre.form_factor);
       if (ffPlaca) {
-        const compatibles = lista.filter((p) => {
-          const soportados = parsearFormFactors(p.descripcion_tecnica);
-          return soportados.includes(ffPlaca);
-        });
-        if (compatibles.length > 0) lista = compatibles;
+        const soportados = parsearFormFactors(producto.descripcion_tecnica);
+        if (!soportados.includes(ffPlaca)) {
+          return { compatible: false, razon: `No soporta ${ffPlaca}` };
+        }
       }
     }
 
-    if (soloDisponibles) {
-      lista = lista.filter((p) => p.stock > 0 || p.disponible_a_pedido === true);
+    return { compatible: true, razon: null };
+  }, [pasoInfo.id, configuracionSeleccionada]);
+
+  const productosPasoBase = useMemo(() => {
+    let lista = productos.filter((p) => p.categoria === pasoInfo.categoria);
+
+    // Aplicar filtros de compatibilidad solo si soloCompatibles está activo
+    if (soloCompatibles) {
+      if (pasoInfo.id === 'placa_madre' && configuracionSeleccionada.procesador?.socket) {
+        const socket = configuracionSeleccionada.procesador.socket;
+        const compatibles = lista.filter((p) => !p.socket || p.socket === socket);
+        if (compatibles.length > 0) lista = compatibles;
+      }
+
+      if (pasoInfo.id === 'ram' && configuracionSeleccionada.placa_madre?.ram_type) {
+        const ramType = configuracionSeleccionada.placa_madre.ram_type;
+        const compatibles = lista.filter((p) => !p.ram_type || p.ram_type === ramType);
+        if (compatibles.length > 0) lista = compatibles;
+      }
+
+      if (pasoInfo.id === 'almacenamiento' && configuracionSeleccionada.placa_madre) {
+        const compatibles = lista.filter((p) => placaSoportaAlmacenamiento(configuracionSeleccionada.placa_madre, p));
+        if (compatibles.length > 0) lista = compatibles;
+      }
+
+      if (pasoInfo.id === 'case' && configuracionSeleccionada.placa_madre?.form_factor) {
+        const ffPlaca = normalizarFormFactor(configuracionSeleccionada.placa_madre.form_factor);
+        if (ffPlaca) {
+          const compatibles = lista.filter((p) => {
+            const soportados = parsearFormFactors(p.descripcion_tecnica);
+            return soportados.includes(ffPlaca);
+          });
+          if (compatibles.length > 0) lista = compatibles;
+        }
+      }
     }
 
+    // Filtro de stock (siempre aplicar)
+    lista = lista.filter((p) => p.stock > 0 || p.disponible_a_pedido === true);
+
     return lista;
-  }, [productos, pasoInfo, configuracionSeleccionada, soloDisponibles]);
+  }, [productos, pasoInfo, configuracionSeleccionada, soloCompatibles]);
 
   const opcionesFiltrosPaso = useMemo(() => {
     switch (pasoInfo.id) {
@@ -1600,61 +1717,67 @@ export default function Cotizador() {
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <section className="surface-elevated space-y-5 p-5 sm:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Paso {pasoActual + 1} de {PASOS.length}</p>
-              <h2 className="mt-1 text-2xl font-semibold text-[var(--color-text)]">{pasoInfo.nombre}</h2>
-            </div>
+        <section className="surface-elevated space-y-5 p-5 sm:p-6 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto scrollbar-thin">          {/* Header del paso */}
+          <div>
+            <p className="text-xs uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Paso {pasoActual + 1} de {PASOS.length}</p>
+            <h2 className="mt-1 text-2xl font-semibold text-[var(--color-text)]">{pasoInfo.nombre}</h2>
+          </div>
 
-            <div className="flex flex-wrap items-center justify-end gap-3">
-              {!esPasoExtras ? (
-                <SelectorVistaProductos
-                  vistaDetallada={vistaDetalladaProductos}
-                  onChange={setVistaDetalladaProductos}
-                />
-              ) : null}
+          {/* Toolbar unificada de controles de visualización (Apple HIG) */}
+          {!esPasoExtras && (
+            <div
+              className="flex flex-wrap items-center justify-between gap-4 mt-4 px-4 py-3 bg-[var(--color-surface-soft)] rounded-[12px] border border-[var(--color-border)]"
+              role="toolbar"
+              aria-label="Controles de visualización de productos"
+            >
+              {/* Grupo izquierdo: Vista */}
+              <SelectorVistaProductos
+                vistaDetallada={vistaDetalladaProductos}
+                onChange={setVistaDetalladaProductos}
+              />
 
-              {/* Switch_Disponibilidad — Compatibles/Todos (Req. 2.4, 2.5, 2.6) */}
-              <button
-                type="button"
-                role="switch"
-                aria-checked={soloDisponibles}
-                aria-label="Filtrar por compatibilidad"
-                onClick={() => setSoloDisponibles((prev) => !prev)}
-                className={[
-                  'inline-flex min-h-[44px] w-[148px] shrink-0 items-center gap-2 rounded-[var(--radius-md)]',
-                  'border px-4 text-sm font-medium',
-                  'transition-colors duration-higNormal ease-hig',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
-                  'active:scale-[0.97]',
-                  soloDisponibles
-                    ? 'border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]'
-                    : 'border-[var(--color-border)] bg-[var(--color-surface-soft)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text)]',
-                ].join(' ')}
-              >
-                <span
-                  aria-hidden="true"
+              {/* Grupo derecho: Compatibilidad + Orden */}
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Switch_Compatibilidad — Compatibles/Todos (Req. 2.4, 2.5, 2.6) */}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={soloCompatibles}
+                  aria-label="Filtrar por compatibilidad"
+                  onClick={() => setSoloCompatibles((prev) => !prev)}
                   className={[
-                    'relative inline-flex h-5 w-9 shrink-0 items-center rounded-full',
-                    'transition-colors duration-higNormal',
-                    soloDisponibles ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]',
+                    'inline-flex min-h-[44px] w-[148px] shrink-0 items-center gap-2 rounded-[var(--radius-md)]',
+                    'border px-4 text-sm font-medium',
+                    'transition-colors duration-higNormal ease-hig',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
+                    'active:scale-[0.97]',
+                    soloCompatibles
+                      ? 'border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]'
+                      : 'border-[var(--color-border)] bg-[var(--color-surface-soft)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text)]',
                   ].join(' ')}
                 >
                   <span
+                    aria-hidden="true"
                     className={[
-                      'inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm',
-                      'transition-transform duration-higNormal',
-                      soloDisponibles ? 'translate-x-4' : 'translate-x-1',
+                      'relative inline-flex h-5 w-9 shrink-0 items-center rounded-full',
+                      'transition-colors duration-higNormal',
+                      soloCompatibles ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]',
                     ].join(' ')}
-                  />
-                </span>
-                <span className="flex-1 text-left">
-                  {soloDisponibles ? 'Compatibles' : 'Todos'}
-                </span>
-              </button>
+                  >
+                    <span
+                      className={[
+                        'inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm',
+                        'transition-transform duration-higNormal',
+                        soloCompatibles ? 'translate-x-4' : 'translate-x-1',
+                      ].join(' ')}
+                    />
+                  </span>
+                  <span className="flex-1 text-left">
+                    {soloCompatibles ? 'Compatibles' : 'Todos'}
+                  </span>
+                </button>
 
-              {!esPasoExtras && (
+                {/* Ordenamiento por precio */}
                 <div
                   role="group"
                   aria-label="Ordenar por precio"
@@ -1683,9 +1806,9 @@ export default function Cotizador() {
                     </button>
                   ))}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Botones de navegación — parte superior del área de contenido del Paso_Actual (Req. 2.7, 2.8, 2.9, 2.10) */}
           <div className="flex items-center justify-between gap-3">
@@ -1809,11 +1932,15 @@ export default function Cotizador() {
                           const specsDetalladas = obtenerSpecsDetalladasProducto(producto, pasoInfo.id);
                           const yaEnComparador = productosComparar.some((p) => p.id === producto.id);
 
+                          // Verificar compatibilidad cuando soloCompatibles está desactivado
+                          const infoCompatibilidad = !soloCompatibles ? esProductoCompatible(producto) : { compatible: true, razon: null };
+                          const esIncompatible = !infoCompatibilidad.compatible;
+
                           return (
                             <motion.article
                               key={producto.id}
                               layout
-                              className={`surface-card flex h-full flex-col p-4 ${seleccionado ? 'ring-2 ring-[var(--color-accent)] ring-offset-1 ring-offset-[var(--color-bg)]' : ''}`}
+                              className={`surface-card flex h-full flex-col p-4 ${seleccionado ? 'ring-2 ring-[var(--color-accent)] ring-offset-1 ring-offset-[var(--color-bg)]' : ''} ${esIncompatible ? 'opacity-60' : ''}`}
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="space-y-2">
@@ -1831,9 +1958,19 @@ export default function Cotizador() {
                                     </div>
                                   ) : null}
                                 </div>
-                                <span className={`inline-flex shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${estadoStock.className}`}>
-                                  {estadoStock.label}
-                                </span>
+                                <div className="flex flex-col items-end gap-2">
+                                  <span className={`inline-flex shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${estadoStock.className}`}>
+                                    {estadoStock.label}
+                                  </span>
+                                  {esIncompatible && (
+                                    <span
+                                      className="inline-flex shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                                      title={infoCompatibilidad.razon}
+                                    >
+                                      Incompatible
+                                    </span>
+                                  )}
+                                </div>
                               </div>
 
                               <p className="mt-2 text-sm text-[var(--color-text-muted)]">
@@ -1911,8 +2048,16 @@ export default function Cotizador() {
                                     <button
                                       type="button"
                                       onClick={() => seleccionarProducto(producto)}
-                                      className={`min-h-11 rounded-[var(--radius-sm)] px-4 text-sm font-medium ${seleccionado ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]' : 'bg-[var(--color-surface-soft)] text-[var(--color-text)] hover:bg-[var(--color-accent-soft)]'}`}
+                                      disabled={esIncompatible}
+                                      className={`min-h-11 rounded-[var(--radius-sm)] px-4 text-sm font-medium transition-colors duration-higFast ${
+                                        esIncompatible
+                                          ? 'bg-[var(--color-surface-soft)] text-[var(--color-text-muted)] opacity-50 cursor-not-allowed'
+                                          : seleccionado
+                                            ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]'
+                                            : 'bg-[var(--color-surface-soft)] text-[var(--color-text)] hover:bg-[var(--color-accent-soft)]'
+                                      }`}
                                       aria-label={`${seleccionado ? 'Deseleccionar producto' : 'Seleccionar'}: ${producto.nombre}`}
+                                      title={esIncompatible ? infoCompatibilidad.razon : ''}
                                     >
                                       {seleccionado ? 'Deseleccionar' : 'Seleccionar'}
                                     </button>
@@ -1922,9 +2067,10 @@ export default function Cotizador() {
                                     <button
                                       type="button"
                                       onClick={() => quitarRam(producto.id)}
-                                      disabled={cantidadRam === 0}
-                                      className="min-h-11 min-w-11 rounded-[var(--radius-sm)] text-lg disabled:opacity-40"
+                                      disabled={cantidadRam === 0 || esIncompatible}
+                                      className="min-h-11 min-w-11 rounded-[var(--radius-sm)] text-lg disabled:opacity-40 disabled:cursor-not-allowed"
                                       aria-label={`Quitar un modulo de ${producto.nombre}`}
+                                      title={esIncompatible ? infoCompatibilidad.razon : ''}
                                     >
                                       -
                                     </button>
@@ -1932,9 +2078,10 @@ export default function Cotizador() {
                                     <button
                                       type="button"
                                       onClick={() => seleccionarProducto(producto)}
-                                      disabled={cantidadRam >= maxRam}
-                                      className="min-h-11 min-w-11 rounded-[var(--radius-sm)] text-lg disabled:opacity-40"
+                                      disabled={cantidadRam >= maxRam || esIncompatible}
+                                      className="min-h-11 min-w-11 rounded-[var(--radius-sm)] text-lg disabled:opacity-40 disabled:cursor-not-allowed"
                                       aria-label={`Agregar un modulo de ${producto.nombre}`}
+                                      title={esIncompatible ? infoCompatibilidad.razon : ''}
                                     >
                                       +
                                     </button>
@@ -1964,8 +2111,8 @@ export default function Cotizador() {
             </div>
           </section>
 
-          {/* Embalaje — solo para admin */}
-          {esAdmin && (
+          {/* Embalaje — solo para usuarios autenticados */}
+          {!esInvitado && (
             <SeccionEmbalaje
               activo={embalaje.activo}
               opcion={embalaje.opcion}
@@ -1977,8 +2124,8 @@ export default function Cotizador() {
             />
           )}
 
-          {/* Flete — solo para admin */}
-          {esAdmin && (
+          {/* Flete — solo para usuarios autenticados */}
+          {!esInvitado && (
             <SeccionFlete
               activo={flete.activo}
               precio={flete.precio}
@@ -1987,8 +2134,8 @@ export default function Cotizador() {
             />
           )}
 
-          {/* Resumen financiero admin — solo para admin */}
-          {esAdmin && (
+          {/* Resumen financiero admin — solo para usuarios autenticados */}
+          {!esInvitado && (
             cargandoTipoCambio ? (
               <section className="surface-card p-4" aria-label="Cargando tipo de cambio">
                 <LoadingSpinner label="Obteniendo tipo de cambio..." />
@@ -2109,14 +2256,14 @@ export default function Cotizador() {
               <p className="mt-2 text-sm text-[var(--color-text-muted)]">
                 {esAdmin
                   ? 'Modo admin: estos datos son opcionales para generar la cotizacion.'
-                  : 'Completa nombre y correo antes de generar la cotizacion. Telefono es opcional.'}
+                  : 'Completa nombre, correo y teléfono antes de generar la cotización.'}
               </p>
             </div>
 
             <div className="space-y-3">
               <label htmlFor="nombre-cliente" className="flex min-w-0 flex-col gap-1.5">
                 <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
-                  Nombre completo {!esAdmin ? '(obligatorio)' : '(opcional)'}
+                  Nombre completo
                 </span>
                 <input
                   id="nombre-cliente"
@@ -2137,22 +2284,124 @@ export default function Cotizador() {
                 ) : null}
               </label>
 
-              <label htmlFor="email-cliente" className="flex min-w-0 flex-col gap-1.5">
+              <label htmlFor="email-cliente" className="flex min-w-0 flex-col gap-1.5 relative">
                 <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
-                  Correo {!esAdmin ? '(obligatorio)' : '(opcional)'}
+                  Correo
                 </span>
-                <input
-                  id="email-cliente"
-                  type="email"
-                  value={emailCliente}
-                  onChange={(event) => setEmailCliente(event.target.value)}
-                  placeholder="Ingrese su correo electronico"
-                  autoComplete="email"
-                  aria-invalid={hayErrorEmailCliente ? 'true' : 'false'}
-                  aria-describedby={hayErrorEmailCliente ? 'error-email-cliente' : undefined}
-                  className={`min-h-11 rounded-[var(--radius-sm)] border bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none transition-shadow duration-higNormal ease-hig focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] ${hayErrorEmailCliente ? 'border-[var(--color-danger)]' : 'border-[var(--color-border)]'
-                    }`}
-                />
+                <div className="relative">
+                  <input
+                    id="email-cliente"
+                    type="email"
+                    value={emailCliente}
+                    onChange={(event) => {
+                      setEmailCliente(event.target.value);
+                      setEmailSeleccionadoIndex(-1);
+                      if (esAdmin && emailsRegistrados.length > 0) {
+                        setMostrarDropdownEmails(true);
+                      }
+                    }}
+                    onFocus={() => {
+                      if (esAdmin && emailsRegistrados.length > 0) {
+                        setMostrarDropdownEmails(true);
+                      }
+                    }}
+                    onBlur={() => {
+                      setTimeout(() => setMostrarDropdownEmails(false), 300);
+                    }}
+                    onKeyDown={(event) => {
+                      if (!mostrarDropdownEmails || emailsFiltrados.length === 0) return;
+
+                      if (event.key === 'ArrowDown') {
+                        event.preventDefault();
+                        setEmailSeleccionadoIndex(prev =>
+                          prev < emailsFiltrados.length - 1 ? prev + 1 : prev
+                        );
+                      } else if (event.key === 'ArrowUp') {
+                        event.preventDefault();
+                        setEmailSeleccionadoIndex(prev => prev > 0 ? prev - 1 : -1);
+                      } else if (event.key === 'Enter' && emailSeleccionadoIndex >= 0) {
+                        event.preventDefault();
+                        setNombreCliente('');
+                        setTelefonoCliente('');
+                        setEmailCliente(emailsFiltrados[emailSeleccionadoIndex]);
+                        setMostrarDropdownEmails(false);
+                        setEmailSeleccionadoIndex(-1);
+                      } else if (event.key === 'Escape') {
+                        setMostrarDropdownEmails(false);
+                        setEmailSeleccionadoIndex(-1);
+                      }
+                    }}
+                    placeholder="Ingrese su correo electronico"
+                    autoComplete="off"
+                    aria-invalid={hayErrorEmailCliente ? 'true' : 'false'}
+                    aria-describedby={hayErrorEmailCliente ? 'error-email-cliente' : undefined}
+                    aria-expanded={mostrarDropdownEmails}
+                    aria-controls="email-dropdown"
+                    aria-activedescendant={emailSeleccionadoIndex >= 0 ? `email-option-${emailSeleccionadoIndex}` : undefined}
+                    role="combobox"
+                    className={`min-h-11 rounded-[var(--radius-sm)] border bg-[var(--color-surface)] px-3 pr-9 text-sm text-[var(--color-text)] outline-none transition-shadow duration-higNormal ease-hig focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] ${hayErrorEmailCliente ? 'border-[var(--color-danger)]' : 'border-[var(--color-border)]'
+                      }`}
+                  />
+                  {esAdmin && emailsRegistrados.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setMostrarDropdownEmails(!mostrarDropdownEmails)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-[var(--radius-sm)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+                      aria-label="Mostrar emails registrados"
+                    >
+                      <svg
+                        className={`w-4 h-4 transition-transform duration-200 ${mostrarDropdownEmails ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  )}
+                  {esAdmin && mostrarDropdownEmails && emailsFiltrados.length > 0 && (
+                    <div
+                      id="email-dropdown"
+                      role="listbox"
+                      ref={dropdownEmailsRef}
+                      className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] dark:bg-[#1c1c1e] shadow-lg"
+                    >
+                      {emailsFiltrados.map((email, index) => (
+                        <button
+                          key={email}
+                          id={`email-option-${index}`}
+                          type="button"
+                          role="option"
+                          aria-selected={index === emailSeleccionadoIndex}
+                          onMouseDown={(event) => {
+                            event.preventDefault();
+                            setNombreCliente('');
+                            setTelefonoCliente('');
+                            setEmailCliente(email);
+                            setMostrarDropdownEmails(false);
+                            setEmailSeleccionadoIndex(-1);
+                          }}
+                          className={`w-full px-3 py-2.5 text-left text-sm transition-colors duration-higNormal ${
+                            index === emailSeleccionadoIndex
+                              ? 'bg-[var(--color-accent)] text-white'
+                              : 'text-[var(--color-text)] hover:bg-[var(--color-surface-soft)]'
+                          }`}
+                        >
+                          {email}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {buscandoCliente && (
+                  <span className="text-xs text-[var(--color-text-muted)] flex items-center gap-1.5">
+                    <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Buscando cliente...
+                  </span>
+                )}
                 {hayErrorEmailCliente ? (
                   <span id="error-email-cliente" className="text-xs text-[var(--color-danger)]">
                     Ingresa un correo valido.
@@ -2161,7 +2410,9 @@ export default function Cotizador() {
               </label>
 
               <label htmlFor="telefono-cliente" className="flex min-w-0 flex-col gap-1.5">
-                <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Telefono (opcional)</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
+                  Teléfono
+                </span>
                 <input
                   id="telefono-cliente"
                   type="tel"
@@ -2176,7 +2427,7 @@ export default function Cotizador() {
                 />
                 {hayErrorTelefonoCliente ? (
                   <span id="error-telefono-cliente" className="text-xs text-[var(--color-danger)]">
-                    El telefono debe tener al menos 7 digitos.
+                    {!telefonoClienteLimpio ? 'El teléfono es obligatorio.' : 'El teléfono debe tener al menos 7 dígitos.'}
                   </span>
                 ) : null}
               </label>

@@ -67,15 +67,15 @@ export default function QuickReplies({ opciones = [], onSeleccionar }) {
           aria-label={`Respuesta rápida: ${texto}`}
           className={[
             // Dimensiones y forma
-            'flex-shrink-0 min-h-[44px] px-4 py-2 rounded-[20px]',
+            'flex-shrink-0 min-h-11 rounded-full px-4 py-2',
             // Colores y borde
-            'border border-[var(--color-accent)] text-[var(--color-accent)]',
-            'bg-transparent hover:bg-[var(--color-accent-soft)]',
+            'border border-[color:color-mix(in_srgb,var(--color-accent)_40%,var(--color-border))] text-[var(--color-accent)]',
+            'bg-[var(--color-surface)] hover:bg-[var(--color-accent-soft)]',
             // Tipografía
-            'text-sm font-medium whitespace-nowrap',
+            'text-sm font-medium whitespace-nowrap shadow-[var(--shadow-1)]',
             // Interacción
             'cursor-pointer select-none',
-            'transition-colors duration-150',
+            'transition-colors duration-higFast ease-hig',
             // Foco accesible
             'focus-visible:outline-none focus-visible:ring-2',
             'focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-2',

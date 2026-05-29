@@ -6,6 +6,7 @@
 const {
   ejecutarPipeline,
   generarRespuestaConversacional,
+  detectarIntencionDeterministica,
 } = require('../../src/asistente/orquestadorAgentes');
 
 // Mock de agentes
@@ -28,8 +29,11 @@ const agenteBuscador = require('../../src/asistente/agenteBuscador');
 const agenteReranker = require('../../src/asistente/agenteReranker');
 
 const PRODUCTOS_EJEMPLO = [
-  { id: 1, nombre: 'Ryzen 5 7600X', nombre_categoria: 'procesador', precio_usd: 200 },
-  { id: 2, nombre: 'B650', nombre_categoria: 'placa_madre', precio_usd: 150 },
+  { id: 1, nombre: 'Ryzen 5 7600X', nombre_categoria: 'procesador', precio_usd: 200, socket: 'AM5' },
+  { id: 2, nombre: 'B650', nombre_categoria: 'placa_madre', precio_usd: 150, socket: 'AM5' },
+  { id: 3, nombre: 'RTX 4060', nombre_categoria: 'gpu', precio_usd: 300 },
+  { id: 4, nombre: 'RX 7600', nombre_categoria: 'gpu', precio_usd: 280 },
+  { id: 5, nombre: 'Kingston Fury 32GB DDR5', nombre_categoria: 'ram', precio_usd: 90, ram_type: 'DDR5' },
 ];
 
 const CUESTIONARIO_COMPLETO = {
@@ -71,7 +75,7 @@ describe('orquestadorAgentes', () => {
         preferencia_ruido: 'indiferente',
         perfil: 'avanzado',
         confianza: 0.8,
-        pregunta_especifica: 'cotizar',
+        pregunta_especifica: 'cotizacion',
         tiene_presupuesto_explicito: true,
         productos_mencionados: [],
       });
@@ -168,6 +172,110 @@ describe('orquestadorAgentes', () => {
     });
   });
 
+  describe('detección y rutas especializadas', () => {
+    test('detecta intenciones principales por texto', () => {
+      expect(detectarIntencionDeterministica('¿Es compatible Ryzen 5 7600X con B650?')).toBe('compatibilidad');
+      expect(detectarIntencionDeterministica('Compara RTX 4060 vs RX 7600')).toBe('comparacion');
+      expect(detectarIntencionDeterministica('¿Cuánta RAM necesito para edición de video?')).toBe('especificacion');
+      expect(detectarIntencionDeterministica('Arma una PC para gaming')).toBe('cotizacion');
+    });
+
+    test('ruta comparación sin ejecutar buscador ni reranker', async () => {
+      agenteClasificador.clasificar.mockResolvedValue({
+        uso_principal: null,
+        presupuesto_pen: null,
+        resolucion: null,
+        multitarea_stream: null,
+        preferencia_ruido: null,
+        perfil: null,
+        confianza: 0.9,
+        pregunta_especifica: 'comparacion',
+        tiene_presupuesto_explicito: false,
+        productos_mencionados: [],
+      });
+
+      const result = await ejecutarPipeline({
+        mensaje: 'Compara RTX 4060 vs RX 7600',
+        historial: [],
+        productos: PRODUCTOS_EJEMPLO,
+        tipoCambio: 3.7,
+        margen: 15,
+        igv: 18,
+        contextoConversacion: {},
+        cuestionario: CUESTIONARIO_INCOMPLETO,
+        ejecutarQuery: jest.fn(),
+      });
+
+      expect(result.respuesta).toContain('RTX 4060');
+      expect(result.respuesta).toContain('RX 7600');
+      expect(agenteBuscador.buscarProductos).not.toHaveBeenCalled();
+      expect(agenteReranker.rerank).not.toHaveBeenCalled();
+    });
+
+    test('ruta compatibilidad responde con reglas técnicas del catálogo', async () => {
+      agenteClasificador.clasificar.mockResolvedValue({
+        uso_principal: null,
+        presupuesto_pen: null,
+        resolucion: null,
+        multitarea_stream: null,
+        preferencia_ruido: null,
+        perfil: null,
+        confianza: 0.9,
+        pregunta_especifica: 'compatibilidad',
+        tiene_presupuesto_explicito: false,
+        productos_mencionados: [],
+      });
+
+      const result = await ejecutarPipeline({
+        mensaje: '¿Es compatible Ryzen 5 7600X con B650?',
+        historial: [],
+        productos: PRODUCTOS_EJEMPLO,
+        tipoCambio: 3.7,
+        margen: 15,
+        igv: 18,
+        contextoConversacion: {},
+        cuestionario: CUESTIONARIO_INCOMPLETO,
+        ejecutarQuery: jest.fn(),
+      });
+
+      expect(result.respuesta).toContain('compatibles');
+      expect(result.respuesta).toContain('Ryzen 5 7600X');
+      expect(result.respuesta).toContain('B650');
+      expect(agenteBuscador.buscarProductos).not.toHaveBeenCalled();
+    });
+
+    test('ruta especificación responde recomendación de RAM', async () => {
+      agenteClasificador.clasificar.mockResolvedValue({
+        uso_principal: 'edicion_video',
+        presupuesto_pen: null,
+        resolucion: null,
+        multitarea_stream: null,
+        preferencia_ruido: null,
+        perfil: null,
+        confianza: 0.9,
+        pregunta_especifica: 'especificacion',
+        tiene_presupuesto_explicito: false,
+        productos_mencionados: [],
+      });
+
+      const result = await ejecutarPipeline({
+        mensaje: '¿Cuánta RAM necesito para edición de video?',
+        historial: [],
+        productos: PRODUCTOS_EJEMPLO,
+        tipoCambio: 3.7,
+        margen: 15,
+        igv: 18,
+        contextoConversacion: {},
+        cuestionario: CUESTIONARIO_INCOMPLETO,
+        ejecutarQuery: jest.fn(),
+      });
+
+      expect(result.respuesta).toContain('32 GB');
+      expect(result.respuesta).toContain('Kingston Fury 32GB DDR5');
+      expect(agenteBuscador.buscarProductos).not.toHaveBeenCalled();
+    });
+  });
+
   describe('generarRespuestaConversacional', () => {
     test('sin uso detectado → pregunta uso', () => {
       const clasificacion = { uso_principal: null, presupuesto_pen: null, resolucion: null };
@@ -181,6 +289,27 @@ describe('orquestadorAgentes', () => {
       const result = generarRespuestaConversacional(clasificacion, null, 3.7, 15, 18, false);
       expect(result.respuesta).toContain('presupuesto');
       expect(result.quick_replies.length).toBeGreaterThan(0);
+    });
+
+    test('con uso y presupuesto pero sin config → no devuelve mensaje de espera como respuesta final', () => {
+      const clasificacion = { uso_principal: 'gaming', presupuesto_pen: 5000, resolucion: null };
+      const result = generarRespuestaConversacional(clasificacion, null, 3.7, 15, 18, false);
+      expect(result.respuesta).not.toContain('Estoy buscando');
+      expect(result.respuesta).toContain('no pude armar una configuración confiable');
+    });
+
+    test('config parcial → muestra configuración sin pedir Ver mi configuración', () => {
+      const clasificacion = { uso_principal: 'gaming', presupuesto_pen: 5000, resolucion: null };
+      const config = {
+        procesador: { nombre: 'Ryzen 5 7600X', precio_usd: 200 },
+        gpu: { nombre: 'RTX 4060', precio_usd: 300 },
+        precio_total_pen: 4800,
+      };
+      const result = generarRespuestaConversacional(clasificacion, config, 3.7, 15, 18, false);
+      expect(result.respuesta).toContain('Ryzen 5 7600X');
+      expect(result.respuesta).toContain('RTX 4060');
+      expect(result.respuesta).not.toContain('¿Quieres que te la muestre?');
+      expect(result.quick_replies).toContain('Aplicar al cotizador');
     });
 
     test('cuestionario completo con config → muestra configuración', () => {

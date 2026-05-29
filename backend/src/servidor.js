@@ -117,6 +117,7 @@ app.use('/api/cotizaciones', require('./rutas/cotizaciones'));
 app.use('/api/compatibilidad', require('./rutas/compatibilidad'));
 // app.use('/api/ia', require('./rutas/ia'));           // movido a _asistente_legacy/back_3
 app.use('/api/auth', require('./rutas/auth'));
+app.use('/api/clientes', require('./rutas/clientes'));
 app.use('/api/configuracion', require('./rutas/configuracion'));
 app.use('/api/tipo-cambio', require('./rutas/tipoCambio'));
 const rutasImportacion = require('./rutas/importacion');

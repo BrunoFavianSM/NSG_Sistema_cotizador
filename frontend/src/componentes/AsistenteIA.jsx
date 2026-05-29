@@ -67,6 +67,16 @@ const IconoAsistente = () => (
   </svg>
 );
 
+const IconoCerrar = () => (
+  <svg
+    viewBox="0 0 24 24"
+    className="h-4 w-4 fill-none stroke-current stroke-[2]"
+    aria-hidden="true"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6 6 18" />
+  </svg>
+);
+
 // Icono de historial �?" SF Symbol equivalente: clock.arrow.circlepath
 const IconoHistorial = () => (
   <svg
@@ -473,9 +483,9 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
               aria-modal="true"
               aria-label="Asistente IA NSG Concierge"
               className={[
-                'fixed inset-3 z-50 flex max-h-[calc(100vh-1.5rem)] flex-col',
-                'rounded-[var(--radius-lg)] border border-[var(--color-border)]',
-                'bg-[var(--color-surface)] shadow-hig2',
+                'fixed inset-3 z-50 flex max-h-[calc(100vh-1.5rem)] flex-col overflow-hidden',
+                'rounded-[18px] border border-[var(--color-border)]',
+                'bg-[color:color-mix(in_srgb,var(--color-surface)_94%,transparent)] shadow-hig2 backdrop-blur-md',
                 'md:inset-auto md:bottom-6 md:right-6 md:h-[48rem] md:w-[34rem]',
               ].join(' ')}
               initial={reducedMotion ? false : { opacity: 0, y: 16, scale: 0.98 }}
@@ -484,20 +494,22 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
               transition={{ duration: reducedMotion ? 0 : 0.2 }}
             >
               {/* �"?�"? Header �"?�"? */}
-              <header className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-4 py-3 flex-shrink-0">
-                <div className="flex items-center gap-2 min-w-0">
-                  <IconoAsistente />
+              <header className="flex flex-shrink-0 items-center justify-between gap-3 border-b border-[var(--color-border)] px-6 py-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-accent)] text-white shadow-[var(--shadow-1)]">
+                    <IconoAsistente />
+                  </span>
                   <div className="min-w-0">
-                    <h2 className="text-base font-semibold text-[var(--color-text)] leading-tight">
+                    <h2 className="text-lg font-semibold leading-tight text-[var(--color-text)]">
                       NSG Concierge
                     </h2>
-                    <p className="text-xs text-[var(--color-text-muted)] truncate">
-                      {cargando ? 'Procesando...' : 'Hardware Concierge · NSG Latinoamérica'}
+                    <p className="truncate text-xs text-[var(--color-text-muted)]">
+                      {cargando ? 'Procesando tu solicitud...' : 'Asistente de configuración de PC'}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 flex-shrink-0">
+                <div className="flex flex-shrink-0 items-center gap-1">
                   {/* TODO: ELIMINAR EN PRODUCCION - boton de debug temporal */}
                   <button
                     type="button"
@@ -543,13 +555,13 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                     onClick={cerrarModal}
                     aria-label="Cerrar asistente"
                     className={[
-                      'min-h-11 min-w-11 flex items-center justify-center rounded-[var(--radius-sm)]',
-                      'text-[var(--color-text-muted)] text-lg leading-none',
+                      'flex min-h-11 min-w-11 items-center justify-center rounded-full',
+                      'text-[var(--color-text-muted)]',
                       'hover:bg-[var(--color-surface-soft)] transition-colors',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]',
                     ].join(' ')}
                   >
-                    �-
+                    <IconoCerrar />
                   </button>
                 </div>
               </header>
@@ -557,7 +569,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
               {/* �"?�"? Área de chat �"?�"? */}
               <div
                 ref={chatContainerRef}
-                className="flex-1 overflow-y-auto bg-[var(--color-surface-soft)] p-3 flex flex-col gap-3"
+                className="flex flex-1 flex-col gap-4 overflow-y-auto bg-[var(--color-surface-soft)] px-4 py-5"
                 aria-live="polite"
                 aria-label="Conversación con el asistente"
               >
@@ -698,11 +710,11 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
               )}
 
               {/* �"?�"? Footer: input de texto �"?�"? */}
-              <footer className="border-t border-[var(--color-border)] bg-[var(--color-surface)] p-3 flex-shrink-0">
-                <p className="mb-2 px-1 text-[11px] text-[var(--color-text-muted)]">
-                  Indica uso, presupuesto en soles y preferencias. Te responderé con una propuesta clara.
+              <footer className="flex-shrink-0 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-6 py-4">
+                <p className="mb-3 px-1 text-xs text-[var(--color-text-muted)]">
+                  Describe tu PC ideal, pregunta por compatibilidad o pide una recomendación.
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <label htmlFor="asistente-input" className="sr-only">
                     Escribe tu mensaje al asistente
                   </label>
@@ -713,19 +725,18 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                     value={textoInput}
                     onChange={manejarCambioInput}
                     onKeyDown={manejarKeyDown}
-                    placeholder="Escribe tu mensaje..."
+                    placeholder="Describe tu PC ideal o pregunta sobre componentes..."
                     disabled={cargando}
                     autoComplete="off"
                     aria-label="Mensaje para el asistente"
                     className={[
-                      'flex-1 min-h-[44px] px-4 text-sm',
+                      'min-h-11 flex-1 rounded-[12px] px-4 py-3 text-sm',
                       'border border-[var(--color-border)]',
                       'bg-[var(--color-surface)] text-[var(--color-text)]',
                       'placeholder:text-[var(--color-text-muted)]',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]',
-                      'disabled:opacity-60 transition-opacity',
+                      'disabled:opacity-60 transition-opacity duration-higFast ease-hig',
                     ].join(' ')}
-                    style={{ borderRadius: '24px' }}
                   />
 
                   <button
@@ -735,10 +746,10 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                     aria-label="Enviar mensaje"
                     className={[
                       'flex items-center justify-center',
-                      'min-h-[44px] min-w-[44px] rounded-full',
-                      'bg-[var(--color-accent)] text-white',
+                      'min-h-11 min-w-11 rounded-full',
+                      'bg-[var(--color-accent)] text-white shadow-[var(--shadow-1)]',
                       'hover:opacity-90 active:opacity-80',
-                      'disabled:opacity-40 transition-opacity',
+                      'disabled:opacity-40 transition-opacity duration-higFast ease-hig',
                       'focus-visible:outline-none focus-visible:ring-2',
                       'focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-2',
                       'focus-visible:ring-offset-[var(--color-surface)]',

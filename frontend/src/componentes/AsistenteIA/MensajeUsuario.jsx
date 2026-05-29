@@ -34,16 +34,14 @@ export default function MensajeUsuario({ contenido, timestamp }) {
   const hora = formatearHora(timestamp);
 
   return (
-    <div className="flex flex-col items-end gap-1 max-w-[80%] self-end">
+    <div className="flex max-w-[82%] flex-col items-end gap-1.5 self-end">
       {/* Burbuja principal */}
       <div
         className={[
-          'px-4 py-3',
-          'bg-[var(--color-accent)]',
-          'text-white',
+          'rounded-[18px] rounded-br-md px-4 py-3',
+          'bg-[var(--color-accent)] text-white shadow-[var(--shadow-1)]',
           'text-sm leading-relaxed',
         ].join(' ')}
-        style={{ borderRadius: '24px 24px 4px 24px' }}
       >
         <p className="whitespace-pre-wrap break-words">{contenido}</p>
       </div>

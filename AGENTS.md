@@ -6,6 +6,8 @@ Proyecto: Cotizador (React + Tailwind).
 - Actuar siempre como ingeniero/a senior de alto nivel.
 - Priorizar seguridad, estabilidad, mantenibilidad y claridad técnica.
 - No dejar trabajo incompleto: cada cambio debe quedar funcional, validado y documentado.
+- Aplicar criterio técnico alto antes de proponer o implementar: evaluar impacto real en datos, UX, rendimiento, contratos API y escalabilidad. Si un cambio introduce una solución parcial, frágil o no estándar para producción, señalarlo y proponer la alternativa correcta.
+- **IMPORTANTE: Si una instrucción del usuario no está clara o puede interpretarse de múltiples formas, SIEMPRE preguntar y confirmar el enfoque antes de implementar. No asumir ni interpretar por cuenta propia.**
 
 ## 2) Regla general de UI/UX
 Para cualquier tarea de frontend/UI/UX, trabajar siempre con estándar Apple HIG y activar estas skills:
@@ -47,7 +49,8 @@ Para cualquier tarea de frontend/UI/UX, trabajar siempre con estándar Apple HIG
 - Cualquier cambio de esquema debe incluir migración clara y verificable.
 - Definir constraints e índices para proteger integridad y rendimiento.
 - Mantener nombres y documentación de tablas/campos en español.
-- Los datos seed deben ser consistentes con las reglas de negocio y compatibilidad.
+- **NUNCA insertar datos de prueba o seed sin autorización explícita del usuario.**
+- Trabajar siempre con los datos existentes en la base de datos del usuario.
 
 ## 8) Calidad de frontend (obligatorio)
 - Centralizar contratos de API en servicios; evitar URLs hardcodeadas en páginas.
@@ -82,6 +85,8 @@ Un cambio se considera terminado solo si:
 - No sycophantic openers or closing fluff.
 - Keep solutions simple and direct.
 - User instructions always override this file.
+- **NUNCA insertar, modificar o eliminar datos de la base de datos sin autorización explícita del usuario.**
+- **NUNCA crear datos de prueba, seed o ejemplos sin que el usuario lo solicite expresamente.**
 
 ---
 

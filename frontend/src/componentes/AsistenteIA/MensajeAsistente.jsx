@@ -79,16 +79,14 @@ export default function MensajeAsistente({ contenido, timestamp, children }) {
   const hora = formatearHora(timestamp);
 
   return (
-    <div className="flex flex-col items-start gap-1 max-w-[80%]">
+    <div className="flex max-w-[82%] flex-col items-start gap-1.5">
       <div
         className={[
-          'px-4 py-3',
-          'bg-[var(--color-surface-soft)]',
-          'text-[var(--color-text)]',
+          'rounded-[18px] rounded-bl-md px-4 py-3',
+          'border border-[var(--color-border)] bg-[var(--color-surface)]',
+          'text-[var(--color-text)] shadow-[var(--shadow-1)]',
           'text-sm leading-relaxed',
-          'shadow-[var(--shadow-2)]',
         ].join(' ')}
-        style={{ borderRadius: '24px 24px 24px 4px' }}
       >
         {contenido && (
           <div className="break-words text-sm">{renderContenidoFormateado(contenido)}</div>

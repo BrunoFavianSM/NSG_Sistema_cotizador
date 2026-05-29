@@ -77,34 +77,35 @@ async function importarCSV(req, res) {
  * @param {Object} req
  * @param {Object} res
  */
+async function construirEstadoEnriquecimiento() {
+  const estadoMemoria = servicioEnriquecimientoIA.obtenerEstadoMemoria();
+  const sql = `
+    SELECT estado_enriquecimiento, COUNT(*) AS total
+    FROM productos
+    WHERE estado_enriquecimiento IN ('pendiente', 'ia_completado', 'ia_fallido')
+    GROUP BY estado_enriquecimiento
+  `;
+  const resultado = await ejecutarQuery(sql);
+  const filas = resultado.rows || [];
+  const conteos = { pendiente: 0, ia_completado: 0, ia_fallido: 0 };
+
+  for (const fila of filas) {
+    conteos[fila.estado_enriquecimiento] = parseInt(fila.total, 10);
+  }
+
+  return {
+    en_proceso: estadoMemoria.en_proceso,
+    pendientes: conteos.pendiente,
+    pendientes_en_memoria: estadoMemoria.pendientes_en_memoria || 0,
+    completados: conteos.ia_completado,
+    fallidos: conteos.ia_fallido,
+    ultima_actualizacion: estadoMemoria.ultima_actualizacion,
+  };
+}
+
 async function obtenerEstadoEnriquecimiento(req, res) {
   try {
-    // Estado en memoria: en_proceso y ultima_actualizacion
-    const estadoMemoria = servicioEnriquecimientoIA.obtenerEstadoMemoria();
-
-    // Conteos reales desde BD (diseño §6.1)
-    const sql = `
-      SELECT estado_enriquecimiento, COUNT(*) AS total
-      FROM productos
-      WHERE estado_enriquecimiento IN ('pendiente', 'ia_completado', 'ia_fallido')
-      GROUP BY estado_enriquecimiento
-    `;
-    const resultado = await ejecutarQuery(sql);
-    const filas = resultado.rows || [];
-
-    // Construir mapa de conteos con valores por defecto en 0
-    const conteos = { pendiente: 0, ia_completado: 0, ia_fallido: 0 };
-    for (const fila of filas) {
-      conteos[fila.estado_enriquecimiento] = parseInt(fila.total, 10);
-    }
-
-    return res.json({
-      en_proceso:          estadoMemoria.en_proceso,
-      pendientes:          conteos.pendiente,
-      completados:         conteos.ia_completado,
-      fallidos:            conteos.ia_fallido,
-      ultima_actualizacion: estadoMemoria.ultima_actualizacion,
-    });
+    return res.json(await construirEstadoEnriquecimiento());
   } catch (error) {
     console.error('Error al obtener estado de enriquecimiento:', error);
     return res.status(500).json({
@@ -112,6 +113,40 @@ async function obtenerEstadoEnriquecimiento(req, res) {
       mensaje: error.message || 'No se pudo consultar el estado',
     });
   }
+}
+
+async function transmitirEstadoEnriquecimiento(req, res) {
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  if (typeof res.flushHeaders === 'function') res.flushHeaders();
+
+  let cerrado = false;
+  const enviar = async () => {
+    if (cerrado) return;
+    try {
+      const estado = await construirEstadoEnriquecimiento();
+      res.write(`event: estado\n`);
+      res.write(`data: ${JSON.stringify(estado)}\n\n`);
+    } catch (error) {
+      res.write(`event: error\n`);
+      res.write(`data: ${JSON.stringify({ mensaje: 'No se pudo consultar el estado de enriquecimiento' })}\n\n`);
+    }
+  };
+
+  await enviar();
+  const intervalo = setInterval(enviar, 2000);
+  const mantenerVivo = setInterval(() => {
+    if (!cerrado) res.write(': keep-alive\n\n');
+  }, 15000);
+
+  req.on('close', () => {
+    cerrado = true;
+    clearInterval(intervalo);
+    clearInterval(mantenerVivo);
+    res.end();
+  });
 }
 
 /**
@@ -176,4 +211,10 @@ async function reintentarFallidos(req, res) {
   }
 }
 
-module.exports = { importarCSV, obtenerEstadoEnriquecimiento, reintentarFallidos };
+module.exports = {
+  importarCSV,
+  obtenerEstadoEnriquecimiento,
+  transmitirEstadoEnriquecimiento,
+  reintentarFallidos,
+  construirEstadoEnriquecimiento,
+};

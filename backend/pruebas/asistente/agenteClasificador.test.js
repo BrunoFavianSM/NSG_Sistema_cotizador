@@ -30,9 +30,21 @@ describe('agenteClasificador', () => {
       expect(result.multitarea_stream).toBe(true);
       expect(result.preferencia_ruido).toBe('silenciosa');
       expect(result.perfil).toBe('avanzado');
-      expect(result.pregunta_especifica).toBe('cotizar');
+      expect(result.pregunta_especifica).toBe('cotizacion');
       expect(result.confianza).toBe(0.8);
       expect(result.productos_mencionados).toEqual(['RTX 4070']);
+    });
+
+    test('acepta nuevas intenciones especializadas', () => {
+      expect(normalizarClasificacion({ pregunta_especifica: 'compatibilidad' }).pregunta_especifica).toBe('compatibilidad');
+      expect(normalizarClasificacion({ pregunta_especifica: 'comparacion' }).pregunta_especifica).toBe('comparacion');
+      expect(normalizarClasificacion({ pregunta_especifica: 'especificacion' }).pregunta_especifica).toBe('especificacion');
+      expect(normalizarClasificacion({ pregunta_especifica: 'recomendacion' }).pregunta_especifica).toBe('recomendacion');
+    });
+
+    test('normaliza aliases legacy de cotización y recomendación', () => {
+      expect(normalizarClasificacion({ pregunta_especifica: 'cotizar' }).pregunta_especifica).toBe('cotizacion');
+      expect(normalizarClasificacion({ pregunta_especifica: 'recomendar' }).pregunta_especifica).toBe('recomendacion');
     });
 
     test('normaliza uso_principal inválido a null', () => {

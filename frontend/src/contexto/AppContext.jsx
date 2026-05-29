@@ -311,7 +311,7 @@ const AppProviderInternal = ({ children }) => {
     setErrorProductos(null);
     
     try {
-      const data = await api.obtenerProductos(filtros);
+      const data = await api.obtenerProductos({ limit: 1000, ...filtros });
       // Backend returns { exito, cantidad, productos: [...] }
       const productosObtenidos = Array.isArray(data) ? data : (data.productos || []);
       setProductos(productosObtenidos);

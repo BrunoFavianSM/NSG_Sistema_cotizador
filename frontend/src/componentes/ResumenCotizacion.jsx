@@ -13,6 +13,7 @@
 
 import { motion } from 'framer-motion';
 import PropTypes from 'prop-types';
+import { formatearCategoria } from '../dominio/categorias';
 
 const ResumenCotizacion = ({
   configuracion,
@@ -20,22 +21,6 @@ const ResumenCotizacion = ({
   mostrarMargen = false,
   className = ''
 }) => {
-  /**
-   * Formatea el nombre de la categoría
-   */
-  const formatearCategoria = (cat) => {
-    const mapa = {
-      procesador: 'Procesador',
-      placa_madre: 'Placa Madre',
-      ram: 'RAM',
-      almacenamiento: 'Almacenamiento',
-      gpu: 'GPU',
-      fuente: 'Fuente de Poder',
-      case: 'Case'
-    };
-    return mapa[cat] || cat;
-  };
-
   /**
    * Obtiene todos los componentes seleccionados como array
    */

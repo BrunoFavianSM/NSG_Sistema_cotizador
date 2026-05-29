@@ -1,7 +1,8 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminPageHeader from '../componentes/admin/AdminPageHeader';
-import ProductForm, { CATEGORIAS, PRODUCTO_INICIAL } from '../componentes/admin/ProductForm';
+import ProductForm, { PRODUCTO_INICIAL } from '../componentes/admin/ProductForm';
+import { CATEGORIAS_PRODUCTO, formatearCategoria } from '../dominio/categorias';
 import EmptyState from '../componentes/feedback/EmptyState';
 import ErrorState from '../componentes/feedback/ErrorState';
 import LoadingSpinner from '../componentes/feedback/LoadingSpinner';
@@ -12,7 +13,9 @@ import Button from '../componentes/ui/Button';
 import DataTable from '../componentes/ui/DataTable';
 import Modal from '../componentes/ui/Modal';
 import SelectField from '../componentes/ui/SelectField';
+import Paginacion from '../componentes/ui/Paginacion';
 import { useAppContext } from '../contexto/AppContext';
+import { useEnriquecimientoTiempoReal } from '../hooks/useEnriquecimientoTiempoReal';
 import * as api from '../servicios/api';
 
 function normalizarValorFormulario(valor, mapa = {}) {
@@ -202,10 +205,6 @@ function serializarFormulario(formulario) {
   };
 }
 
-function formatearCategoria(categoria) {
-  return String(categoria || '').replace(/_/g, ' ');
-}
-
 function formatearValorSpec(valor, sufijo = '') {
   if (valor === null || valor === undefined || valor === '') return 'Sin dato';
   if (typeof valor === 'boolean') return valor ? 'Sí' : 'No';
@@ -343,6 +342,12 @@ export default function AdminProductos() {
   // Task 10.2 — tooltip para badge ia_fallido (almacena id del producto o null)
   const [tooltipFallido, setTooltipFallido] = useState(null);
 
+  // Paginación
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [totalPaginas, setTotalPaginas] = useState(1);
+  const [totalProductos, setTotalProductos] = useState(0);
+  const limite = 50;
+
   // Historial de precios: { [idProducto]: { precio_anterior, total } }
   const [historialPrecios, setHistorialPrecios] = useState({});
 
@@ -357,9 +362,24 @@ export default function AdminProductos() {
     setCargando(true);
     setErrorPantalla('');
     try {
-      const data = await api.obtenerProductos();
+      const params = {
+        page: paginaActual,
+        limit: limite,
+      };
+
+      if (filtroCategoria) {
+        params.categoria = filtroCategoria;
+      }
+
+      const data = await api.obtenerProductos(params);
       const lista = Array.isArray(data) ? data : data.productos || [];
       setProductos(lista);
+
+      // Actualizar metadata de paginación
+      if (data.total !== undefined) {
+        setTotalProductos(data.total);
+        setTotalPaginas(data.totalPaginas || 1);
+      }
 
       // Cargar historial de precios para productos que lo tienen (Req. 3.7, 3.9)
       const conHistorial = lista.filter((p) => p.tiene_historial);
@@ -386,21 +406,20 @@ export default function AdminProductos() {
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [paginaActual, filtroCategoria, limite]);
 
-  const categoriasDisponibles = useMemo(() => {
-    const categoriasCatalogo = productos
-      .map((producto) => producto.subcategoria || producto.categoria)
-      .filter(Boolean);
-
-    return Array.from(new Set([...CATEGORIAS, ...categoriasCatalogo]));
-  }, [productos]);
+  const categoriasDisponibles = useMemo(() => CATEGORIAS_PRODUCTO, []);
 
   useEffect(() => {
     if (autenticado) {
       cargarProductos();
     }
   }, [autenticado, cargarProductos]);
+
+  // Resetear página cuando cambia la categoría
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [filtroCategoria]);
 
   const abrirCrear = () => {
     setFormulario(PRODUCTO_INICIAL);
@@ -498,7 +517,7 @@ export default function AdminProductos() {
       key: 'categoria',
       label: 'Categoría',
       sortable: true,
-      render: (row) => <span className="capitalize">{row.categoria.replace('_', ' ')}</span>,
+      render: (row) => <span>{formatearCategoria(row.subcategoria || row.categoria)}</span>,
     },
     {
       key: 'precio_base',
@@ -620,8 +639,13 @@ export default function AdminProductos() {
     );
   }
 
-  // Task 10.3 — conteo de productos pendientes de enriquecimiento IA
-  const pendientesCount = productos.filter((p) => p.estado_enriquecimiento === 'pendiente').length;
+  // Task 10.3 — conteo de productos pendientes de enriquecimiento IA en tiempo real.
+  const { estado: estadoEnriquecimiento, conectado: sseConectado, modo: modoEnriquecimiento } = useEnriquecimientoTiempoReal({ activo: autenticado });
+  const pendientesLocales = productos.filter((p) => p.estado_enriquecimiento === 'pendiente').length;
+  const pendientesCount = estadoEnriquecimiento?.pendientes ?? pendientesLocales;
+  const enProcesoCount = estadoEnriquecimiento?.en_proceso
+    ? Math.max(estadoEnriquecimiento?.pendientes_en_memoria || 0, 1)
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -649,19 +673,39 @@ export default function AdminProductos() {
       ) : null}
 
       {/* Task 10.3 — banner de productos pendientes de enriquecimiento IA */}
-      {pendientesCount > 0 && (
+      {(pendientesCount > 0 || enProcesoCount > 0) && (
         <div
           role="status"
           aria-live="polite"
-          className="surface-card border-l-4 border-[var(--color-warning)] p-3 flex items-center justify-between"
+          className="surface-card border-l-4 border-[var(--color-warning)] p-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
         >
-          <p className="text-sm text-[var(--color-text)]">
-            <strong>{pendientesCount}</strong> productos pendientes de enriquecimiento IA
-          </p>
+          <div className="flex items-start gap-3">
+            {sseConectado && enProcesoCount > 0 ? (
+              <span className="mt-1.5 h-2.5 w-2.5 rounded-full bg-[var(--color-success)] motion-safe:animate-pulse" aria-hidden="true" />
+            ) : null}
+            <div className="space-y-1">
+              <p className="text-sm text-[var(--color-text)]">
+                {enProcesoCount > 0 ? (
+                  <span className="font-semibold text-[var(--color-success)]">
+                    {enProcesoCount} en enriquecimiento
+                  </span>
+                ) : null}
+                {enProcesoCount > 0 && pendientesCount > 0 ? ' • ' : ''}
+                {pendientesCount > 0 ? (
+                  <span>
+                    <strong>{pendientesCount}</strong> pendientes de enriquecimiento IA
+                  </span>
+                ) : null}
+              </p>
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Actualización {modoEnriquecimiento === 'sse' && sseConectado ? 'en tiempo real' : 'periódica'}.
+              </p>
+            </div>
+          </div>
           <button
             type="button"
             onClick={() => navigate('/admin/importar-csv')}
-            className="min-h-11 text-sm font-medium text-[var(--color-accent)] hover:opacity-80 transition-opacity"
+            className="min-h-11 text-left text-sm font-medium text-[var(--color-accent)] transition-opacity hover:opacity-80 sm:text-right"
           >
             Ver estado →
           </button>
@@ -674,7 +718,7 @@ export default function AdminProductos() {
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div className="flex flex-wrap items-end gap-3">
                 <SelectField
-                  id="filtro-categoria-productos"
+                  id="filtro-categoria-productos-detallada"
                   label="Categoría"
                   value={filtroCategoria}
                   onChange={(event) => setFiltroCategoria(event.target.value)}
@@ -831,7 +875,7 @@ export default function AdminProductos() {
           leftToolbar={(
             <div className="flex flex-wrap items-end gap-3">
               <SelectField
-                id="filtro-categoria-productos"
+                id="filtro-categoria-productos-tabla"
                 label="Categoría"
                 value={filtroCategoria}
                 onChange={(event) => setFiltroCategoria(event.target.value)}
@@ -840,7 +884,7 @@ export default function AdminProductos() {
                   { value: '', label: 'Todas' },
                   ...categoriasDisponibles.map((categoria) => ({
                     value: categoria,
-                    label: categoria.replace('_', ' '),
+                    label: formatearCategoria(categoria),
                   })),
                 ]}
               />
@@ -880,6 +924,17 @@ export default function AdminProductos() {
             />
           )}
         />
+      )}
+
+      {/* Paginación */}
+      {!cargando && productos.length > 0 && (
+        <div className="surface-elevated border border-[var(--color-border)] p-4">
+          <Paginacion
+            paginaActual={paginaActual}
+            totalPaginas={totalPaginas}
+            onCambioPagina={setPaginaActual}
+          />
+        </div>
       )}
 
       <Modal

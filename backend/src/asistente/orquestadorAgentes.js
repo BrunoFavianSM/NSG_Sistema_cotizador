@@ -9,6 +9,9 @@ const agenteClasificador = require('./agenteClasificador');
 const agenteBuscador = require('./agenteBuscador');
 const agenteReranker = require('./agenteReranker');
 const servicioCuestionario = require('./servicioCuestionario');
+const { compararProductos } = require('./agenteComparador');
+const { consultarCompatibilidad } = require('./agenteConsultorCompatibilidad');
+const { responderEspecificacion } = require('./agenteConsultorEspecificacion');
 
 const ENABLED = process.env.AGENT_PIPELINE_ENABLED !== 'false';
 const TIMEOUT_TOTAL_MS = parseInt(process.env.AGENT_PIPELINE_TIMEOUT_MS || '45000', 10);
@@ -18,8 +21,12 @@ const TIMEOUT_RERANKER_MS = 5000;
 
 // Keywords que indican el usuario quiere ver su configuración
 const KEYWORDS_COTIZAR = ['ver mi configuracion', 'ver mi configuración', 'mostrar configuracion', 'mostrar configuración',
-  'armar pc', 'cotizar', 'ver config', 'ver propuesta', 'mostrar propuesta', 'generar configuracion',
-  'generar configuración', 'que me recomiendas', 'qué me recomiendas', 'ver la config', 'ver mi pc'];
+  'armar pc', 'arma una pc', 'cotizar', 'cotizacion', 'cotización', 'ver config', 'ver propuesta', 'mostrar propuesta', 'generar configuracion',
+  'generar configuración', 'ver la config', 'ver mi pc'];
+const KEYWORDS_RECOMENDACION = ['que me recomiendas', 'qué me recomiendas', 'recomiendame', 'recomiéndame', 'recomendar'];
+const KEYWORDS_COMPATIBILIDAD = ['compatible', 'compatibilidad', 'funciona con', 'sirve con', 'soporta'];
+const KEYWORDS_COMPARACION = ['compara', 'comparar', 'vs', 'versus', 'diferencia entre'];
+const KEYWORDS_ESPECIFICACION = ['cuanta ram', 'cuánta ram', 'cuantos gb', 'cuántos gb', 'watts', 'wattage', 'almacenamiento', 'ssd', 'nvme', 'fuente necesito'];
 
 const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY;
 
@@ -66,8 +73,8 @@ function generarRespuestaConversacional(clasificacion, configPropuesta, tipoCamb
       partes.push(`Perfecto, para **${mapUsos[uso] || uso}**. ¿Cuál es tu presupuesto estimado en soles?`);
       quickReplies.push('S/ 2000-3000', 'S/ 3000-5000', 'S/ 5000-8000', 'S/ 8000+');
     } else {
-      partes.push('Estoy buscando los mejores componentes para tu presupuesto...');
-      quickReplies.push('Ver mi configuración', 'Cambiar presupuesto', 'Hablar con asesor');
+      partes.push('Tengo el uso y presupuesto, pero no pude armar una configuración confiable con el catálogo disponible. Puedo ajustar el presupuesto o derivarte con un asesor para revisar disponibilidad real.');
+      quickReplies.push('Cambiar presupuesto', 'Hablar con asesor', 'Intentar otra configuración');
     }
     return {
       respuesta: partes.join(' '),
@@ -75,32 +82,17 @@ function generarRespuestaConversacional(clasificacion, configPropuesta, tipoCamb
     };
   }
 
-  // ── Con configuración disponible ──
-  if (!cuestionarioCompleto) {
+  // ── Con configuración disponible → mostrar sin pedir otro mensaje ──
+  if (!cuestionarioCompleto && !resolucion && (uso === 'gaming' || uso === 'edicion_video' || uso === 'diseno_3d')) {
     const mapUsos = { gaming: 'gaming', edicion_video: 'edición de video', diseno_3d: 'diseño 3D', oficina: 'oficina' };
-
-    if (!resolucion && (uso === 'gaming' || uso === 'edicion_video' || uso === 'diseno_3d')) {
-      partes.push(`Genial, para **${mapUsos[uso] || uso}** con **S/${presupuesto.toLocaleString('es-PE')}**.`);
-      partes.push(' ¿A qué resolución piensas jugar o trabajar?');
-      quickReplies.push('1080p', '1440p', '4K', 'No estoy seguro');
-      quickReplies.push('Ver mi configuración');
-    } else {
-      partes.push(`Gracias por la información. Tengo lista una configuración para **${mapUsos[uso] || uso}**`);
-      if (resolucion) partes.push(` a **${resolucion}**`);
-      partes.push('. ¿Quieres que te la muestre?');
-      quickReplies.push('Ver mi configuración', 'Cambiar presupuesto', 'Hablar con asesor');
-    }
-    return {
-      respuesta: partes.join(' '),
-      quick_replies: quickReplies.slice(0, 5),
-    };
+    partes.push(`Con **${mapUsos[uso] || uso}** y **S/${presupuesto.toLocaleString('es-PE')}**, preparé una base equilibrada. Si me dices la resolución, puedo afinar GPU, monitor y margen de upgrade.`);
   }
 
-  // ── Cuestionario completo → mostrar configuración ──
+  // ── Mostrar configuración ──
   const mapUsos = { gaming: 'gaming', edicion_video: 'edición de video', diseno_3d: 'diseño 3D', oficina: 'oficina' };
-  partes.push(`Basado en tu necesidad de **${mapUsos[uso] || uso}**`);
-  if (presupuesto) partes.push(`con un presupuesto de **S/${presupuesto.toLocaleString('es-PE')}**`);
-  partes.push(', armé esta configuración:');
+  partes.push(`Para **${mapUsos[uso] || uso}**`);
+  if (presupuesto) partes.push(`con presupuesto de **S/${presupuesto.toLocaleString('es-PE')}**`);
+  partes.push(', te recomiendo esta configuración inicial del catálogo:');
 
   const listar = (label, data) => {
     if (!data) return '';
@@ -132,7 +124,7 @@ function generarRespuestaConversacional(clasificacion, configPropuesta, tipoCamb
     }
   }
 
-  quickReplies.push('Aplicar al cotizador', 'Ver otra opción', 'Cambiar presupuesto');
+  quickReplies.push('Aplicar al cotizador', 'Ajustar presupuesto', 'Comparar alternativas', 'Hablar con asesor');
 
   return {
     respuesta: partes.join(' '),
@@ -172,7 +164,7 @@ async function _ejecutarPipelineInterno({ mensaje, historial, productos, tipoCam
             'Clasificador'
         );
         // Sobreescribir si la detección determinística es más confiable
-        if (intencionDetectada && clasificacion.pregunta_especifica !== 'cotizar' && clasificacion.pregunta_especifica !== 'recomendar') {
+        if (intencionDetectada) {
             clasificacion.pregunta_especifica = intencionDetectada;
         }
     } catch (errorClasificador) {
@@ -182,6 +174,29 @@ async function _ejecutarPipelineInterno({ mensaje, historial, productos, tipoCam
             clasificacion.pregunta_especifica = intencionDetectada;
         }
     }
+
+  const respuestaEspecializada = await resolverIntencionEspecializada(clasificacion.pregunta_especifica, {
+    pregunta: mensaje,
+    productos,
+  });
+
+  if (respuestaEspecializada) {
+    return {
+      ...respuestaEspecializada,
+      configuracion_propuesta: null,
+      perfil_usuario: clasificacion.perfil || null,
+      _pipeline_metadatos: {
+        clasificacion,
+        agentes_ejecutados: {
+          clasificador: !!clasificacion,
+          consultor_especializado: clasificacion.pregunta_especifica,
+          buscador: false,
+          reranker: false,
+        },
+        confianza_clasificacion: clasificacion.confianza,
+      },
+    };
+  }
 
   // Enriquecer clasificación con datos del cuestionario determinístico
   if (!clasificacion.uso_principal && cuestionario.uso) {
@@ -239,12 +254,8 @@ async function _ejecutarPipelineInterno({ mensaje, historial, productos, tipoCam
   }
 
   // ── Construir respuesta final ──
-  // Incluir configuracion_propuesta cuando:
-  //   a) El cuestionario determinístico está completo, O
-  //   b) El usuario pidió explícitamente ver la configuración (clasificador)
-    const listoParaCotizarDeterministico = cuestionario?.uso && cuestionario?.presupuestoPen;
-    const pideCotizar = clasificacion?.pregunta_especifica === 'cotizar' || clasificacion?.pregunta_especifica === 'recomendar';
-    const mostrarConfig = cuestionario?.completo === true || pideCotizar || (listoParaCotizarDeterministico && intencionDetectada);
+  // Si ya hay datos mínimos, se muestra la configuración en la misma respuesta.
+    const mostrarConfig = listoParaCotizar;
 
   const configEnriquecida = configPropuesta?.configuracion_propuesta && mostrarConfig
     ? enriquecerConfigPropuesta(
@@ -339,7 +350,7 @@ function fallbackClasificador(cuestionario, historial) {
     preferencia_ruido: cuestionario.ruido || null,
     perfil: null,
     tiene_presupuesto_explicito: cuestionario.presupuestoPen !== null,
-    pregunta_especifica: cuestionario.completo ? 'cotizar' : 'informacion',
+    pregunta_especifica: cuestionario.completo ? 'cotizacion' : 'informacion',
     confianza: 0.3,
     productos_mencionados: [],
   };
@@ -347,12 +358,25 @@ function fallbackClasificador(cuestionario, historial) {
 
 // ── Detección determinística de intención ──
 
+function normalizarTextoIntencion(mensaje) {
+    return String(mensaje || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
 function detectarIntencionDeterministica(mensaje) {
     if (!mensaje || typeof mensaje !== 'string') return null;
-    const t = mensaje.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-    if (KEYWORDS_COTIZAR.some((kw) => t.includes(kw))) {
-        return 'cotizar';
-    }
+    const t = normalizarTextoIntencion(mensaje);
+    if (KEYWORDS_COMPATIBILIDAD.some((kw) => t.includes(kw))) return 'compatibilidad';
+    if (KEYWORDS_COMPARACION.some((kw) => t.includes(kw))) return 'comparacion';
+    if (KEYWORDS_ESPECIFICACION.some((kw) => t.includes(kw))) return 'especificacion';
+    if (KEYWORDS_COTIZAR.some((kw) => t.includes(kw))) return 'cotizacion';
+    if (KEYWORDS_RECOMENDACION.some((kw) => t.includes(kw))) return 'recomendacion';
+    return null;
+}
+
+async function resolverIntencionEspecializada(intencion, contexto) {
+    if (intencion === 'compatibilidad') return consultarCompatibilidad(contexto);
+    if (intencion === 'comparacion') return compararProductos(contexto);
+    if (intencion === 'especificacion') return responderEspecificacion(contexto);
     return null;
 }
 
@@ -360,4 +384,5 @@ function detectarIntencionDeterministica(mensaje) {
 module.exports = {
   ejecutarPipeline,
   generarRespuestaConversacional,
+  detectarIntencionDeterministica,
 };

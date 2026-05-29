@@ -320,7 +320,7 @@ function construirWhereDestino(destino, params, indiceInicial = 1) {
 
 async function obtenerProductos(req, res) {
   try {
-    const { categoria, socket, marca, busqueda, subcategoria } = req.query;
+    const { categoria, socket, marca, busqueda, subcategoria, page, limit } = req.query;
     const params = [];
     let i = 1;
     let where = ' WHERE (p.stock > 0 OR p.disponible_a_pedido = true)';
@@ -343,13 +343,35 @@ async function obtenerProductos(req, res) {
     if (busqueda) {
       where += ` AND (p.nombre ILIKE $${i} OR COALESCE(p.descripcion_general, '') ILIKE $${i})`;
       params.push(`%${busqueda}%`);
+      i++;
     }
 
+    // Paginación
+    const paginaActual = parseInt(page) || 1;
+    const limite = parseInt(limit) || 50;
+    const offset = (paginaActual - 1) * limite;
+
+    // Contar total de productos (sin paginación)
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM productos p
+      LEFT JOIN categorias c ON p.id_categoria = c.id
+      LEFT JOIN marcas m ON p.id_marca = m.id
+      LEFT JOIN specs_procesador sp ON p.id = sp.id_producto
+      LEFT JOIN specs_placa_madre sm ON p.id = sm.id_producto
+      ${where}
+    `;
+    const countResult = await ejecutarQuery(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
+    const totalPaginas = Math.ceil(total / limite);
+
+    // Obtener productos con paginación
     const resultado = await ejecutarQuery(
       `${SELECT_PRODUCTO_NORMALIZADO}
        ${where}
-       ORDER BY c.nombre, p.subcategoria, p.nombre`,
-      params
+       ORDER BY c.nombre, p.subcategoria, p.nombre
+       LIMIT $${i++} OFFSET $${i++}`,
+      [...params, limite, offset]
     );
 
     // Strip de precio_base para invitados (no autenticados)
@@ -357,7 +379,14 @@ async function obtenerProductos(req, res) {
       ? resultado.rows.map(({ precio_base, ...rest }) => rest)
       : resultado.rows;
 
-    return res.json({ exito: true, cantidad: productosFinales.length, productos: productosFinales });
+    return res.json({
+      exito: true,
+      productos: productosFinales,
+      total,
+      pagina: paginaActual,
+      totalPaginas,
+      limite
+    });
   } catch (error) {
     if (error.message.includes('Categoria') || error.message.includes('Subcategoria')) {
       return res.status(400).json({ error: 'Categoria invalida', mensaje: error.message });
