@@ -1600,7 +1600,8 @@ export default function Cotizador() {
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <section className="surface-elevated space-y-5 p-5 sm:p-6 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto scrollbar-thin">          <div className="flex flex-wrap items-start justify-between gap-3">
+        <section className="surface-elevated space-y-5 p-5 sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Paso {pasoActual + 1} de {PASOS.length}</p>
               <h2 className="mt-1 text-2xl font-semibold text-[var(--color-text)]">{pasoInfo.nombre}</h2>
@@ -1963,8 +1964,8 @@ export default function Cotizador() {
             </div>
           </section>
 
-          {/* Embalaje — solo para usuarios autenticados */}
-          {!esInvitado && (
+          {/* Embalaje — solo para admin */}
+          {esAdmin && (
             <SeccionEmbalaje
               activo={embalaje.activo}
               opcion={embalaje.opcion}
@@ -1976,8 +1977,8 @@ export default function Cotizador() {
             />
           )}
 
-          {/* Flete — solo para usuarios autenticados */}
-          {!esInvitado && (
+          {/* Flete — solo para admin */}
+          {esAdmin && (
             <SeccionFlete
               activo={flete.activo}
               precio={flete.precio}
@@ -1986,8 +1987,8 @@ export default function Cotizador() {
             />
           )}
 
-          {/* Resumen financiero admin — solo para usuarios autenticados */}
-          {!esInvitado && (
+          {/* Resumen financiero admin — solo para admin */}
+          {esAdmin && (
             cargandoTipoCambio ? (
               <section className="surface-card p-4" aria-label="Cargando tipo de cambio">
                 <LoadingSpinner label="Obteniendo tipo de cambio..." />
