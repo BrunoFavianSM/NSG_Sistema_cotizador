@@ -127,12 +127,12 @@ app.use('/api/notificaciones', require('./rutas/notificaciones'));
 // app.use('/api/asistente', require('./rutas/rutasAsistente')); // movido a _asistente_legacy/back_3
 app.use('/api/asistente', require('./asistente/rutasAsistente'));
 
-// Recuperar productos pendientes de enriquecimiento IA al arrancar (diseño §4.5)
+// Recuperar productos pendientes de enriquecimiento (Icecat/Deltron) al arrancar.
 // No bloquea el inicio del servidor; fallo se registra como advertencia.
-const servicioEnriquecimientoIA = require('./servicios/servicioEnriquecimientoIA');
+const servicioEnriquecimiento = require('./servicios/servicioEnriquecimiento');
 const { ejecutarQuery } = require('./configuracion/baseDatos');
-servicioEnriquecimientoIA.reactivarDesdeDB(ejecutarQuery).catch((err) =>
-  console.warn('[EnriquecimientoIA] Cola pendiente no recuperada:', err.message)
+servicioEnriquecimiento.reactivarDesdeDB(ejecutarQuery).catch((err) =>
+  console.warn('[Enriquecimiento] Cola pendiente no recuperada:', err.message)
 );
 
 // Servir imágenes subidas
