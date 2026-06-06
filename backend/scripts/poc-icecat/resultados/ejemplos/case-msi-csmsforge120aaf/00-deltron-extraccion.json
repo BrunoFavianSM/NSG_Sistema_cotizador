@@ -1,0 +1,19 @@
+{
+  "producto": {
+    "codigo_deltron": "csmsforge120aaf",
+    "categoria": "Case",
+    "marca_csv": "msi",
+    "marca_normalizada": "MSI",
+    "nombre_esperado": "case msi mag forge 120a airflow, mid tower"
+  },
+  "resultado": {
+    "codigo_consultado": "csmsforge120aaf",
+    "url": "https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=csmsforge120aaf",
+    "sku_encontrado": "csmsforge120aaf",
+    "sku_coincide": true,
+    "mpn": "MAG FORGE 120A AIRFLOW",
+    "mpn_metodo": "part-number",
+    "titulo_h1": "Case MSI MAG FORGE 120A AIRFLOW, Mid Tower",
+    "timestamp": "2026-06-06T01:49:59.831Z"
+  }
+}

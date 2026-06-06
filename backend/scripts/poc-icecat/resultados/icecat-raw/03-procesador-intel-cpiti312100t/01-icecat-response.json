@@ -1,0 +1,18 @@
+{
+  "ok": false,
+  "status": 403,
+  "consulta": {
+    "mpn": "CM8071504651012",
+    "marca": "Intel",
+    "lang": "ES"
+  },
+  "data": {
+    "StatusCode": 9,
+    "Code": 403,
+    "Error": "Forbidden",
+    "Message": "Para acceder al contenido completo de Icecat, se requiere un app_key. Los usuarios de Full Icecat pueden encontrarlo en su página Mi Perfil."
+  },
+  "mpn_usado": "CM8071504651012",
+  "mpn_original": "IN-CM8071504651012",
+  "variante_indice": 1
+}

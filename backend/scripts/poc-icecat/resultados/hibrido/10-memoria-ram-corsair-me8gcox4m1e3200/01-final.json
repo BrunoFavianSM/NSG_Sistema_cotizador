@@ -1,0 +1,182 @@
+{
+  "ok": true,
+  "fuente": "deltron-scraping",
+  "status": 200,
+  "consulta": {
+    "codigo": "me8gcox4m1e3200",
+    "marca": "Corsair"
+  },
+  "data": {
+    "msg": "OK",
+    "StatusCode": 0,
+    "source": "deltron-scraping",
+    "data": {
+      "GeneralInfo": {
+        "Title": "Memoria UDIMM Corsair Vengeance LPX 8GB (1x8GB) DDR4-3200 PC4-25600, CL16, 1.35V, Black",
+        "Brand": "Corsair",
+        "BrandPartCode": "me8gcox4m1e3200",
+        "SummaryDescription": {
+          "ShortSummaryDescription": "id=\"home\"> MEM RAM 8G COR VENG 3.20G DDR4 Consideraciones Tipo de Producto : Componente Tipo Operatividad : (NV) Nuevo Foto referencial"
+        }
+      },
+      "FeaturesGroups": [
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "General"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "USO RECOMENDADO"
+                }
+              },
+              "PresentationValue": "PC"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "MEMORIA RAM"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "MARCA"
+                }
+              },
+              "PresentationValue": "CORSAIR"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "MODELO"
+                }
+              },
+              "PresentationValue": "VENGEANCE LPX"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "NUMERO DE PARTE"
+                }
+              },
+              "PresentationValue": "CMK8GX4M1E3200C16"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "DESCRIPCION"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CAPACIDAD"
+                }
+              },
+              "PresentationValue": "8 GB"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "TIPO"
+                }
+              },
+              "PresentationValue": "DDR4"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "VOLTAJE"
+                }
+              },
+              "PresentationValue": "1.35V"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "FRECUENCIA"
+                }
+              },
+              "PresentationValue": "3200 MHZ"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "ESTANDAR"
+                }
+              },
+              "PresentationValue": "PC4-25600"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "NUMERO DE MODULOS"
+                }
+              },
+              "PresentationValue": "1"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "CONFIGURACION"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "FORMATO"
+                }
+              },
+              "PresentationValue": "UDIMM"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "LATENCIA"
+                }
+              },
+              "PresentationValue": "CL16"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "TIMING"
+                }
+              },
+              "PresentationValue": "20-20-38"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "TECNOLOGIA"
+                }
+              },
+              "PresentationValue": "DRAM"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "INFORMACION ADICIONAL"
+            }
+          },
+          "Features": []
+        }
+      ]
+    }
+  }
+}

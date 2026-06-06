@@ -1,0 +1,21 @@
+{
+  "producto": {
+    "codigo_deltron": "csasa31pbkargb",
+    "categoria": "Case",
+    "marca_csv": "asus",
+    "marca_normalizada": "ASUS",
+    "nombre_esperado": "case asus a31 plus case black",
+    "indice": 27,
+    "carpeta": "27-case-asus-csasa31pbkargb"
+  },
+  "resultado": {
+    "codigo_consultado": "csasa31pbkargb",
+    "url": "https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=csasa31pbkargb",
+    "sku_encontrado": "csasa31pbkargb",
+    "sku_coincide": true,
+    "mpn": "A31 PLUS/BK/TG/ARGB",
+    "mpn_metodo": "part-number",
+    "titulo_h1": "Case ASUS A31 PLUS Case Black",
+    "timestamp": "2026-06-05T23:42:16.962Z"
+  }
+}

@@ -1,0 +1,2106 @@
+{
+  "ok": true,
+  "status": 200,
+  "consulta": {
+    "mpn": "GV-N5070AERO OC-12GD",
+    "marca": "Gigabyte",
+    "lang": "ES"
+  },
+  "data": {
+    "msg": "OK",
+    "data": {
+      "GeneralInfo": {
+        "IcecatId": 125097810,
+        "ReleaseDate": "",
+        "EndOfLifeDate": "",
+        "Title": "GIGABYTE GeForce RTX 5070 AERO OC 12G Tarjeta Gráfica - 12GB GDDR7, 192 bits, PCI-E 5.0, 2625 MHz Core Clock, 3 x DP 2.1a, 1 x HDMI 2.1b, NVIDIA DLSS 4, GV-N5070AERO OC-12GD",
+        "TitleInfo": {
+          "GeneratedIntTitle": "GIGABYTE GeForce RTX 5070 AERO OC 12G",
+          "GeneratedLocalTitle": {
+            "Value": "GIGABYTE GeForce RTX 5070 AERO OC 12G",
+            "Language": "ES"
+          },
+          "BrandLocalTitle": {
+            "Value": "GIGABYTE GeForce RTX 5070 AERO OC 12G Tarjeta Gráfica - 12GB GDDR7, 192 bits, PCI-E 5.0, 2625 MHz Core Clock, 3 x DP 2.1a, 1 x HDMI 2.1b, NVIDIA DLSS 4, GV-N5070AERO OC-12GD",
+            "Language": "ES"
+          }
+        },
+        "Brand": "GIGABYTE",
+        "BrandID": "739",
+        "BrandLogo": "https://images.icecat.biz/img/brand/thumb/739_aa2abbe6aded43bdabf4df493efecca8.jpg",
+        "BrandInfo": {
+          "BrandName": "GIGABYTE",
+          "BrandLocalName": "",
+          "BrandLogo": "https://images.icecat.biz/img/brand/thumb/739_aa2abbe6aded43bdabf4df493efecca8.jpg"
+        },
+        "ProductName": "GeForce RTX 5070 AERO OC 12G Tarjeta Gráfica - 12GB GDDR7, 192 bits, PCI-E 5.0, 2625 MHz Core Clock, 3 x DP 2.1a, 1 x HDMI 2.1b, NVIDIA DLSS 4, GV-N5070AERO OC-12GD",
+        "ProductNameInfo": {
+          "ProductIntName": "GeForce RTX 5070 AERO OC 12G",
+          "ProductLocalName": {
+            "Value": "GeForce RTX 5070 AERO OC 12G Tarjeta Gráfica - 12GB GDDR7, 192 bits, PCI-E 5.0, 2625 MHz Core Clock, 3 x DP 2.1a, 1 x HDMI 2.1b, NVIDIA DLSS 4, GV-N5070AERO OC-12GD",
+            "Language": "ES"
+          }
+        },
+        "BrandPartCode": "GV-N5070AERO OC-12GD",
+        "GTIN": [
+          "4719331355852",
+          "0889523048511",
+          "889523048511"
+        ],
+        "Category": {
+          "CategoryID": "170",
+          "Name": {
+            "Value": "Tarjetas gráficas",
+            "Language": "ES"
+          }
+        },
+        "ProductFamily": {},
+        "ProductSeries": {
+          "SeriesID": "1"
+        },
+        "Description": {
+          "ID": "98047355",
+          "LongDesc": "Desbloquea habilidades de juego incomparables con las tarjetas gráficas NVIDIA de GIGABYTE. Diseñadas para ofrecer el máximo rendimiento y excelencia visual, nuestras GPU redefinen los estándares del gaming. Con soluciones de refrigeración avanzadas y tecnologías de vanguardia, las tarjetas gráficas NVIDIA de GIGABYTE ofrecen imágenes impresionantes y experiencias de juego fluidas, permitiendo a los jugadores dominar cada campo de batalla virtual con confianza y precisión.",
+          "LongProductName": "GeForce RTX 5070 AERO OC 12G Tarjeta Gráfica - 12GB GDDR7, 192 bits, PCI-E 5.0, 2625 MHz Core Clock, 3 x DP 2.1a, 1 x HDMI 2.1b, NVIDIA DLSS 4, GV-N5070AERO OC-12GD",
+          "MiddleDesc": "",
+          "Disclaimer": "",
+          "ManualPDFURL": "",
+          "ManualPDFSize": "0",
+          "LeafletPDFURL": "",
+          "PDFSize": "0",
+          "URL": "https://www.gigabyte.com/",
+          "WarrantyInfo": "4 años",
+          "Updated": "2025-02-28 13:59:21",
+          "Language": "ES"
+        },
+        "SEOs": {
+          "Title": "",
+          "Description": "",
+          "Keywords": ""
+        },
+        "SummaryDescription": {
+          "ShortSummaryDescription": "GIGABYTE GeForce RTX 5070 AERO OC 12G Tarjeta Gráfica - 12GB GDDR7, 192 bits, PCI-E 5.0, 2625 MHz Core Clock, 3 x DP 2.1a, 1 x HDMI 2.1b, NVIDIA DLSS 4, GV-N5070AERO OC-12GD, GeForce RTX 5070, 12 GB, GDDR7, 192 bit, 7680 x 4320 Pixeles, PCI Express x16 5.0",
+          "LongSummaryDescription": "GIGABYTE GeForce RTX 5070 AERO OC 12G Tarjeta Gráfica - 12GB GDDR7, 192 bits, PCI-E 5.0, 2625 MHz Core Clock, 3 x DP 2.1a, 1 x HDMI 2.1b, NVIDIA DLSS 4, GV-N5070AERO OC-12GD. Familia de procesadores de gráficos: NVIDIA, Procesador gráfico: GeForce RTX 5070, Frecuencia del procesador: 2625 MHz. Capacidad memoria de adaptador gráfico: 12 GB, Tipo de memoria de adaptador gráfico: GDDR7, Ancho de datos: 192 bit, Velocidad de memoria del reloj: 28000 MHz. Máxima resolución: 7680 x 4320 Pixeles. Versión DirectX: 12.0, Versión OpenGL: 4.6. Tipo de interfaz: PCI Express x16 5.0. Tipo de enfriamiento: Activo, Número de ventiladores: 3 Ventilador(es)"
+        },
+        "BulletPoints": {
+          "BulletPointsId": "10782557",
+          "Language": "ES",
+          "Values": [
+            "Impulsada por GeForce RTX 5070",
+            "Integrada con 12GB GDDR7 interfaz de memoria de 192 bits",
+            "Sistema de enfriamiento WINDFORCE",
+            "Iluminación RGB",
+            "Dual BIOS (Rendimiento / Silencio)",
+            "Estructura reforzada y soporte VGA versátil",
+            "4 Años de Garantía (se requiere registro en línea)"
+          ],
+          "Updated": "2025-01-13 21:17:55"
+        },
+        "GeneratedBulletPoints": {
+          "Language": "ES",
+          "Values": [
+            "NVIDIA GeForce RTX 5070 12 GB GDDR7",
+            "7680 x 4320 Pixeles 192 bit 28000 MHz PCI Express x16 5.0",
+            "Número de puertos HDMI: 1 Cantidad de DisplayPorts: 3",
+            "Versión DirectX: 12.0 Versión OpenGL: 4.6",
+            "1x 16-pin"
+          ]
+        },
+        "GTINs": [
+          {
+            "GTIN": "4719331355852",
+            "IsApproved": true
+          },
+          {
+            "GTIN": "0889523048511",
+            "IsApproved": true
+          },
+          {
+            "GTIN": "889523048511",
+            "IsApproved": true
+          }
+        ]
+      },
+      "Image": {
+        "HighPic": "https://images.icecat.biz/img/gallery/14d0922ed63dcdd1cf15db110f1cf95d3eb91620.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "HighPicSize": "915328",
+        "HighPicHeight": "1912",
+        "HighPicWidth": "2060",
+        "LowPic": "https://images.icecat.biz/img/gallery_lows/bbf0ea6d46a440efd84f3c6d7a8fe39e35f15b2a.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "LowPicSize": "20854",
+        "LowPicHeight": "186",
+        "LowPicWidth": "200",
+        "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/d9dafb4d0011e3562ccb5bd285faa4090bdda608.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "Pic500x500Size": "88439",
+        "Pic500x500Height": "464",
+        "Pic500x500Width": "500",
+        "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/993a03f8548d2c6b08a8169ae55042e85971667a.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "ThumbPicSize": "4935"
+      },
+      "Multimedia": [
+        {
+          "ID": "00000000-0000-0000-0000-000000000000",
+          "URL": "https://icecat.biz/rest/product-pdf?productId=125097810&lang=es",
+          "Type": "leaflet",
+          "ContentType": "application/pdf",
+          "KeepAsUrl": "0",
+          "Description": "Brochure GIGABYTE GV-N5070AERO OC-12GD",
+          "Size": "0",
+          "IsPrivate": "0",
+          "Updated": "2025-02-03 11:25:55",
+          "Language": "ES",
+          "IsVideo": 0
+        }
+      ],
+      "Gallery": [
+        {
+          "ID": "100334234",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/bbf0ea6d46a440efd84f3c6d7a8fe39e35f15b2a.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "20854",
+          "LowHeight": "186",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/993a03f8548d2c6b08a8169ae55042e85971667a.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "4935",
+          "Pic": "https://images.icecat.biz/img/gallery/14d0922ed63dcdd1cf15db110f1cf95d3eb91620.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "915328",
+          "PicHeight": "1912",
+          "PicWidth": "2060",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/d9dafb4d0011e3562ccb5bd285faa4090bdda608.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "88439",
+          "Pic500x500Height": "464",
+          "Pic500x500Width": "500",
+          "No": "1",
+          "IsMain": "Y",
+          "Updated": "2025-02-27 00:58:37",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "100334267",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/e4302133428f39e2ea990fa825370ae631bcee0b.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "14476",
+          "LowHeight": "96",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/14327e8e75d6e7cb6e5a2e003df33a4c45fb661e.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "3354",
+          "Pic": "https://images.icecat.biz/img/gallery/5f6b5f32715104dcd76c47c8f76833cab74c72d5.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "860511",
+          "PicHeight": "917",
+          "PicWidth": "1907",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/86098097183b8d30bf6eb0b03e968f862016b4ca.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "71359",
+          "Pic500x500Height": "240",
+          "Pic500x500Width": "500",
+          "No": "2",
+          "IsMain": "N",
+          "Updated": "2025-02-27 00:58:48",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "100334316",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/e7d63030bcb1651238d0efb6de05142a7270ed2c.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "15753",
+          "LowHeight": "117",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/45cfcd55eb971d8893fc5a049c65a11ef929e6c4.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "3578",
+          "Pic": "https://images.icecat.biz/img/gallery/d96b1aa41375cafdfd3e8fbc40c65e4e17dcaa24.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "903073",
+          "PicHeight": "1105",
+          "PicWidth": "1886",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/2a33deed70336a5a63980188d13ffe79cdfc881b.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "75146",
+          "Pic500x500Height": "293",
+          "Pic500x500Width": "500",
+          "No": "3",
+          "IsMain": "N",
+          "Updated": "2025-02-27 00:58:54",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "100334317",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/18cc440d8b2a2e87f0de50d4a399a51d2640593f.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "22844",
+          "LowHeight": "200",
+          "LowWidth": "199",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/3a412a04332ba4047d8aa8227f0b0c435f172ddf.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "4739",
+          "Pic": "https://images.icecat.biz/img/gallery/ad9cf3b34959dc67490819ff7ac67e512298ff92.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "924770",
+          "PicHeight": "1615",
+          "PicWidth": "1608",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/520205bade71e41bde9ee6d1843ff79285bb992a.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "107814",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "498",
+          "No": "4",
+          "IsMain": "N",
+          "Updated": "2025-02-27 00:59:02",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "100334318",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/399b47e6fc19f95b34db226b2a75020905b5c21a.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "17005",
+          "LowHeight": "149",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/67c69a1538e25dd0aef8ffdd47db0f17daec50a5.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "3841",
+          "Pic": "https://images.icecat.biz/img/gallery/69bdaeb5378b5871125d36283191f6872af27027.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "976474",
+          "PicHeight": "1406",
+          "PicWidth": "1883",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/4e9e43514b0086b86b2c8c3f16df7a149c17b749.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "82578",
+          "Pic500x500Height": "373",
+          "Pic500x500Width": "500",
+          "No": "5",
+          "IsMain": "N",
+          "Updated": "2025-02-27 00:59:08",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "100334319",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/ed9b7411bf105d1d7a2a8a994d421a5a71e571d7.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "10873",
+          "LowHeight": "96",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/7e7596f9debc3cf4fb6310021e93d9d4292e0d9a.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "2848",
+          "Pic": "https://images.icecat.biz/img/gallery/d68e0683dd99f312efeff16d9c84bcbb44393f78.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "934611",
+          "PicHeight": "937",
+          "PicWidth": "1953",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/ff62f736d0f7776acca27baab236ebe1c576f1e8.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "59306",
+          "Pic500x500Height": "240",
+          "Pic500x500Width": "500",
+          "No": "6",
+          "IsMain": "N",
+          "Updated": "2025-02-27 00:59:16",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "100334320",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/3b7fc0339f2214c49164a182182d19ce33b7ee6b.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "6417",
+          "LowHeight": "49",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/4cdabcda3874f3c743d99ef68b4b5e9ba4af3ca7.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "2033",
+          "Pic": "https://images.icecat.biz/img/gallery/1d0268de560ac245500f67f9183f9133a1c0083c.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "441284",
+          "PicHeight": "467",
+          "PicWidth": "1899",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/79b0ae1f4f69aae524f12270b43c0130ee0e81ce.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "35180",
+          "Pic500x500Height": "123",
+          "Pic500x500Width": "500",
+          "No": "7",
+          "IsMain": "N",
+          "Updated": "2025-02-27 00:59:22",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "100334321",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/42a67612f642c1a68fc9e93d6262ab79e0431fc1.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "11853",
+          "LowHeight": "91",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/ff9467de1cba604df4605976b87b99d129f23e67.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "2933",
+          "Pic": "https://images.icecat.biz/img/gallery/74082d63f89171e6e71086e2dd4f682e747a2b9d.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "397051",
+          "PicHeight": "579",
+          "PicWidth": "1278",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/67088d667f786627434142cf5030c61509f58b27.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "61547",
+          "Pic500x500Height": "227",
+          "Pic500x500Width": "500",
+          "No": "8",
+          "IsMain": "N",
+          "Updated": "2025-02-27 00:59:28",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        }
+      ],
+      "FeaturesGroups": [
+        {
+          "ID": 790,
+          "SortNo": "60",
+          "FeatureGroup": {
+            "ID": "1",
+            "Name": {
+              "Value": "Procesador",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 723576105,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "Y",
+              "CategoryFeatureId": "33178",
+              "CategoryFeatureGroupID": "790",
+              "SortNo": "10000040",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "CUDA (aka Compute Unified Device Architecture) is a parallel computing platform and programming model created by NVIDIA and implemented by the graphics processing units (GPUs) that they produce. CUDA gives program developers direct access to the virtual instruction set and memory of the parallel computational elements in CUDA GPUs.",
+              "Mandatory": "1",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "6583",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "CUDA",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576106,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "6144",
+              "CategoryFeatureId": "47613",
+              "CategoryFeatureGroupID": "790",
+              "SortNo": "10000039",
+              "PresentationValue": "6144",
+              "RawValue": "6144",
+              "LocalValue": "6144",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7991",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Núcleos CUDA",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576142,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "NVIDIA",
+              "CategoryFeatureId": "57857",
+              "CategoryFeatureGroupID": "790",
+              "SortNo": "70",
+              "PresentationValue": "NVIDIA",
+              "RawValue": "NVIDIA",
+              "LocalValue": "NVIDIA",
+              "Description": "The category to which the graphics processor (GPU) belongs e.g. Southern Islands family of Radeon processors (made by AMD)",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "9787",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Familia de procesadores de gráficos",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576141,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "GeForce RTX 5070",
+              "CategoryFeatureId": "6464",
+              "CategoryFeatureGroupID": "790",
+              "SortNo": "61",
+              "PresentationValue": "GeForce RTX 5070",
+              "RawValue": "GeForce RTX 5070",
+              "LocalValue": "GeForce RTX 5070",
+              "Description": "Also known as a graphics processing unit (GPU)",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1654",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Procesador gráfico",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576102,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "2625",
+              "CategoryFeatureId": "16152",
+              "CategoryFeatureGroupID": "790",
+              "SortNo": "58",
+              "PresentationValue": "2625 MHz",
+              "RawValue": "2625",
+              "LocalValue": "2625",
+              "Description": "The clock rate is the fundamental rate in cycles per second (measured in hertz) at which a computer performs its most basic operations such as adding two numbers. There are more factors",
+              "Mandatory": "1",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "5",
+                "Sign": "",
+                "Measure": {
+                  "ID": "18",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7430",
+                    "_": "MHz",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Frecuencia del procesador",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576140,
+              "LocalID": 0,
+              "Type": "2d",
+              "Value": "7680 x 4320",
+              "CategoryFeatureId": "6450",
+              "CategoryFeatureGroupID": "790",
+              "SortNo": "44",
+              "PresentationValue": "7680 x 4320 Pixeles",
+              "RawValue": "7680 x 4320",
+              "LocalValue": "7680 x 4320",
+              "Description": "The maximum number of pixels that can be displayed in the image. It is usually quoted as width × height",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1659",
+                "Sign": "",
+                "Measure": {
+                  "ID": "39",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7448",
+                    "_": "Pixeles",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Máxima resolución",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576103,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "Not supported",
+              "CategoryFeatureId": "17007",
+              "CategoryFeatureGroupID": "790",
+              "SortNo": "0",
+              "PresentationValue": "No compatible",
+              "RawValue": "Not supported",
+              "LocalValue": "No compatible",
+              "Description": "Parallel processing technology is the simultaneous use of more than one CPU or processor core to execute a program or multiple computational threads. Ideally",
+              "Mandatory": "1",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "2926",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Soporte para proceso paralelo",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576104,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "4",
+              "CategoryFeatureId": "32880",
+              "CategoryFeatureGroupID": "790",
+              "SortNo": "0",
+              "PresentationValue": "4",
+              "RawValue": "4",
+              "LocalValue": "4",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "6554",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Máximas pantallas por tarjeta de video",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 1634,
+          "SortNo": "57",
+          "FeatureGroup": {
+            "ID": "3",
+            "Name": {
+              "Value": "Memoria",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 723576150,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "12",
+              "CategoryFeatureId": "107911",
+              "CategoryFeatureGroupID": "1634",
+              "SortNo": "60",
+              "PresentationValue": "12 GB",
+              "RawValue": "12",
+              "LocalValue": "12",
+              "Description": "",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "18403",
+                "Sign": "",
+                "Measure": {
+                  "ID": "20",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7432",
+                    "_": "GB",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Capacidad memoria de adaptador gráfico",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576147,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "GDDR7",
+              "CategoryFeatureId": "6452",
+              "CategoryFeatureGroupID": "1634",
+              "SortNo": "56",
+              "PresentationValue": "GDDR7",
+              "RawValue": "GDDR7",
+              "LocalValue": "GDDR7",
+              "Description": "The type of memory used by the video card. Often a combination of dedicated memory (Video RAM or VRAM) and dynamic system memory is used. UMA stands for Unified Memory Architecture",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "958",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tipo de memoria de adaptador gráfico",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576148,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "192",
+              "CategoryFeatureId": "6463",
+              "CategoryFeatureGroupID": "1634",
+              "SortNo": "30",
+              "PresentationValue": "192 bit",
+              "RawValue": "192",
+              "LocalValue": "192",
+              "Description": "Hardware and software that connects the main memory to the memory controller in computer systems. Originally",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1630",
+                "Sign": "",
+                "Measure": {
+                  "ID": "50",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "18889",
+                    "_": "bit",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Ancho de datos",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576144,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "28000",
+              "CategoryFeatureId": "16881",
+              "CategoryFeatureGroupID": "1634",
+              "SortNo": "8",
+              "PresentationValue": "28000 MHz",
+              "RawValue": "28000",
+              "LocalValue": "28000",
+              "Description": "The frequency at which the memory (e.g. RAM) runs.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "2900",
+                "Sign": "",
+                "Measure": {
+                  "ID": "18",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7430",
+                    "_": "MHz",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Velocidad de memoria del reloj",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576146,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "28",
+              "CategoryFeatureId": "31313",
+              "CategoryFeatureGroupID": "1634",
+              "SortNo": "0",
+              "PresentationValue": "28 GB/s",
+              "RawValue": "28",
+              "LocalValue": "28",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "5945",
+                "Sign": "",
+                "Measure": {
+                  "ID": "160",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7560",
+                    "_": "GB/s",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Ancho de banda de memoria (max)",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 2351,
+          "SortNo": "53",
+          "FeatureGroup": {
+            "ID": "12",
+            "Name": {
+              "Value": "Puertos e Interfaces",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 723576154,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "PCI Express x16 5.0",
+              "CategoryFeatureId": "6449",
+              "CategoryFeatureGroupID": "2351",
+              "SortNo": "45",
+              "PresentationValue": "PCI Express x16 5.0",
+              "RawValue": "PCI Express x16 5.0",
+              "LocalValue": "PCI Express x16 5.0",
+              "Description": "",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "990",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tipo de interfaz",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576184,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "1",
+              "CategoryFeatureId": "33427",
+              "CategoryFeatureGroupID": "2351",
+              "SortNo": "10",
+              "PresentationValue": "1",
+              "RawValue": "1",
+              "LocalValue": "1",
+              "Description": "The number of sockets (ports) for HDMI connections. HDMI (High-Definition Multimedia Interface) is a compact audio/video interface for transferring uncompressed video data and compressed/uncompressed digital audio data from a HDMI-compliant device (\"the source device\") to a compatible computer monitor",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "3566",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Número de puertos HDMI",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576152,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "2.1b",
+              "CategoryFeatureId": "27264",
+              "CategoryFeatureGroupID": "2351",
+              "SortNo": "7",
+              "PresentationValue": "2.1b",
+              "RawValue": "2.1b",
+              "LocalValue": "2.1b",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "5452",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Versión HDMI",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576188,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "3",
+              "CategoryFeatureId": "33432",
+              "CategoryFeatureGroupID": "2351",
+              "SortNo": "0",
+              "PresentationValue": "3",
+              "RawValue": "3",
+              "LocalValue": "3",
+              "Description": "Number of DisplayPorts. A DisplayPort is a digital display interface developed by the Video Electronics Standards Association (VESA). The interface is primarily used to connect a video source to a display device such as a computer monitor",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "6611",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Cantidad de DisplayPorts",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576153,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "2.1a",
+              "CategoryFeatureId": "71157",
+              "CategoryFeatureGroupID": "2351",
+              "SortNo": "0",
+              "PresentationValue": "2.1a",
+              "RawValue": "2.1a",
+              "LocalValue": "2.1a",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "11111",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Versión de DisplayPort",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 10768,
+          "SortNo": "50",
+          "FeatureGroup": {
+            "ID": "184",
+            "Name": {
+              "Value": "Desempeño",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 723576244,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "N",
+              "CategoryFeatureId": "12268",
+              "CategoryFeatureGroupID": "10768",
+              "SortNo": "100",
+              "PresentationValue": "No",
+              "RawValue": "N",
+              "LocalValue": "No",
+              "Description": "Device has an in-built TV tuner.",
+              "Mandatory": "1",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "2252",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Sintonizador de TV integrado",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576245,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "12.0",
+              "CategoryFeatureId": "17008",
+              "CategoryFeatureGroupID": "10768",
+              "SortNo": "99",
+              "PresentationValue": "12.0",
+              "RawValue": "12.0",
+              "LocalValue": "12.0",
+              "Description": "DirectX is a collection of APIs (application programming interfaces) for easily handling tasks related to game programming on the Microsoft Windows operating system.",
+              "Mandatory": "1",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "2927",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Versión DirectX",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576246,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "4.6",
+              "CategoryFeatureId": "17009",
+              "CategoryFeatureGroupID": "10768",
+              "SortNo": "97",
+              "PresentationValue": "4.6",
+              "RawValue": "4.6",
+              "LocalValue": "4.6",
+              "Description": "OpenGL (Open Graphics Library) is a specification defining a cross-language cross-platform API for writing applications that produce 3D computer graphics (and 2D computer graphics as well). The interface consists of over 250 different function calls which can be used to draw complex three-dimensional scenes from simple primitives.",
+              "Mandatory": "1",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "2928",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Versión OpenGL",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576248,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "N",
+              "CategoryFeatureId": "17264",
+              "CategoryFeatureGroupID": "10768",
+              "SortNo": "70",
+              "PresentationValue": "No",
+              "RawValue": "N",
+              "LocalValue": "No",
+              "Description": "A dual-link DVI interface sends data over both of the DVI links to the monitor",
+              "Mandatory": "1",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "2968",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Dual Link DVI",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576249,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "Y",
+              "CategoryFeatureId": "123168",
+              "CategoryFeatureGroupID": "10768",
+              "SortNo": "44",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "20783",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "NVIDIA G-SYNC",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576278,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "Y",
+              "CategoryFeatureId": "974083",
+              "CategoryFeatureGroupID": "10768",
+              "SortNo": "0",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "48411",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Edición sobreacelerada (OC, Overclocked)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723539210,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "4",
+              "CategoryFeatureId": "921305",
+              "CategoryFeatureGroupID": "10768",
+              "SortNo": "-500",
+              "PresentationValue": "4 año(s)",
+              "RawValue": "4",
+              "LocalValue": "4",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "45898",
+                "Sign": "",
+                "Measure": {
+                  "ID": "75",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "18892",
+                    "_": "año(s)",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Periodo de garantía",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 10769,
+          "SortNo": "48",
+          "FeatureGroup": {
+            "ID": "148",
+            "Name": {
+              "Value": "Diseño",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 723576243,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "Active",
+              "CategoryFeatureId": "32232",
+              "CategoryFeatureGroupID": "10769",
+              "SortNo": "105",
+              "PresentationValue": "Activo",
+              "RawValue": "Active",
+              "LocalValue": "Activo",
+              "Description": "The method used to cool the device or to cool the air around the device.",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "6392",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tipo de enfriamiento",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576240,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "GIGABYTE WINDFORCE 3X",
+              "CategoryFeatureId": "330658",
+              "CategoryFeatureGroupID": "10769",
+              "SortNo": "104",
+              "PresentationValue": "GIGABYTE WINDFORCE 3X",
+              "RawValue": "GIGABYTE WINDFORCE 3X",
+              "LocalValue": "GIGABYTE WINDFORCE 3X",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "40807",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tecnología  de enfriamiento",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576238,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "3",
+              "CategoryFeatureId": "196665",
+              "CategoryFeatureGroupID": "10769",
+              "SortNo": "103",
+              "PresentationValue": "3 Ventilador(es)",
+              "RawValue": "3",
+              "LocalValue": "3",
+              "Description": "The quantity of fans (apparatus with rotating blades that creates a current of air for cooling or ventilation).",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "4539",
+                "Sign": "",
+                "Measure": {
+                  "ID": "378",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "35238",
+                    "_": "Ventilador(es)",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Número de ventiladores",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576205,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "Full-Height/Full-Length (FH/FL)",
+              "CategoryFeatureId": "26613",
+              "CategoryFeatureGroupID": "10769",
+              "SortNo": "99",
+              "PresentationValue": "Full-Height/Full-Length (FH/FL)",
+              "RawValue": "Full-Height/Full-Length (FH/FL)",
+              "LocalValue": "Full-Height/Full-Length (FH/FL)",
+              "Description": "Description of visible characteristics of the product.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "771",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Factor de forma",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576225,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "2",
+              "CategoryFeatureId": "56865",
+              "CategoryFeatureGroupID": "10769",
+              "SortNo": "98",
+              "PresentationValue": "2",
+              "RawValue": "2",
+              "LocalValue": "2",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1229",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Número de ranuras",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576239,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "Y",
+              "CategoryFeatureId": "196671",
+              "CategoryFeatureGroupID": "10769",
+              "SortNo": "0",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "The device has illumination.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1861",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Iluminación",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576237,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "White",
+              "CategoryFeatureId": "71520",
+              "CategoryFeatureGroupID": "10769",
+              "SortNo": "-1",
+              "PresentationValue": "Blanco",
+              "RawValue": "White",
+              "LocalValue": "Blanco",
+              "Description": "The colour e.g. red",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1766",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Color del producto",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 3256,
+          "SortNo": "45",
+          "FeatureGroup": {
+            "ID": "27",
+            "Name": {
+              "Value": "Control de energía",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 723576194,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "750",
+              "CategoryFeatureId": "19534",
+              "CategoryFeatureGroupID": "3256",
+              "SortNo": "20",
+              "PresentationValue": "750 W",
+              "RawValue": "750",
+              "LocalValue": "750",
+              "Description": "The lowest power that is needed.",
+              "Mandatory": "1",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "3462",
+                "Sign": "",
+                "Measure": {
+                  "ID": "44",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7453",
+                    "_": "W",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Suministro de energía al sistema mínimo",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576196,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "1x 16-pin",
+              "CategoryFeatureId": "47615",
+              "CategoryFeatureGroupID": "3256",
+              "SortNo": "0",
+              "PresentationValue": "1x 16-pin",
+              "RawValue": "1x 16-pin",
+              "LocalValue": "1x 16-pin",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7992",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Conectores de energia suplementario",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 788,
+          "SortNo": "10",
+          "FeatureGroup": {
+            "ID": "14",
+            "Name": {
+              "Value": "Peso y dimensiones",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 723539197,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "2000",
+              "CategoryFeatureId": "6455",
+              "CategoryFeatureGroupID": "788",
+              "SortNo": "42",
+              "PresentationValue": "2 kg",
+              "RawValue": "2000",
+              "LocalValue": "2",
+              "Description": "Peso del producto sin embalaje (peso neto). Si es posible, se da el peso neto incluyendo los accesorios y suministros estándar. Tenga en cuenta que a veces el fabricante deja de lado el peso de los accesorios y / o suministros.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "94",
+                "Sign": "",
+                "Measure": {
+                  "ID": "38",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7447",
+                    "_": "g",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Peso",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576192,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "324",
+              "CategoryFeatureId": "961349",
+              "CategoryFeatureGroupID": "788",
+              "SortNo": "10",
+              "PresentationValue": "324 mm",
+              "RawValue": "324",
+              "LocalValue": "324",
+              "Description": "The measurement or extent of something from end to end.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "2738",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Longitud",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576190,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "56",
+              "CategoryFeatureId": "27171",
+              "CategoryFeatureGroupID": "788",
+              "SortNo": "8",
+              "PresentationValue": "56 mm",
+              "RawValue": "56",
+              "LocalValue": "56",
+              "Description": "The distance from the front to the back of something.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1650",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Profundidad",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576191,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "130",
+              "CategoryFeatureId": "27172",
+              "CategoryFeatureGroupID": "788",
+              "SortNo": "6",
+              "PresentationValue": "130 mm",
+              "RawValue": "130",
+              "LocalValue": "130",
+              "Description": "Height of the product",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1464",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Altura",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 4458,
+          "SortNo": "8",
+          "FeatureGroup": {
+            "ID": "67",
+            "Name": {
+              "Value": "Empaquetado",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 723576200,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "230",
+              "CategoryFeatureId": "27176",
+              "CategoryFeatureGroupID": "4458",
+              "SortNo": "-11",
+              "PresentationValue": "230 mm",
+              "RawValue": "230",
+              "LocalValue": "230",
+              "Description": "The distance from one side of the packaging to the other.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "3808",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Ancho del paquete",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576198,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "435",
+              "CategoryFeatureId": "27174",
+              "CategoryFeatureGroupID": "4458",
+              "SortNo": "-12",
+              "PresentationValue": "435 mm",
+              "RawValue": "435",
+              "LocalValue": "435",
+              "Description": "The distance from the front to the back of the packaging.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "3806",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Profundidad del paquete",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576199,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "90",
+              "CategoryFeatureId": "27175",
+              "CategoryFeatureGroupID": "4458",
+              "SortNo": "-13",
+              "PresentationValue": "90 mm",
+              "RawValue": "90",
+              "LocalValue": "90",
+              "Description": "The distance from the top to the bottom of the packaging.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "3807",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Altura del paquete",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723539202,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "3000",
+              "CategoryFeatureId": "27173",
+              "CategoryFeatureGroupID": "4458",
+              "SortNo": "-20",
+              "PresentationValue": "3 kg",
+              "RawValue": "3000",
+              "LocalValue": "3",
+              "Description": "Weight of the packaged product.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "762",
+                "Sign": "",
+                "Measure": {
+                  "ID": "38",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7447",
+                    "_": "g",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Peso del paquete",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576201,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "Box",
+              "CategoryFeatureId": "206819",
+              "CategoryFeatureGroupID": "4458",
+              "SortNo": "-25",
+              "PresentationValue": "Caja",
+              "RawValue": "Box",
+              "LocalValue": "Caja",
+              "Description": "The type of product package e.g. box.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "4463",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tipo de embalaje",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 33585,
+          "SortNo": "5",
+          "FeatureGroup": {
+            "ID": "116",
+            "Name": {
+              "Value": "Contenido del embalaje",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 723576204,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "Y",
+              "CategoryFeatureId": "327074",
+              "CategoryFeatureGroupID": "33585",
+              "SortNo": "15",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "4921",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Guía de instalación rápida",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 723576203,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "Power",
+              "CategoryFeatureId": "61741",
+              "CategoryFeatureGroupID": "33585",
+              "SortNo": "0",
+              "PresentationValue": "Poder",
+              "RawValue": "Power",
+              "LocalValue": "Poder",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1830",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Cables incluidos",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 35799,
+          "SortNo": "-200",
+          "FeatureGroup": {
+            "ID": "198",
+            "Name": {
+              "Value": "Datos logísticos",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 723539207,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "1",
+              "CategoryFeatureId": "416900",
+              "CategoryFeatureGroupID": "35799",
+              "SortNo": "0",
+              "PresentationValue": "1 pieza(s)",
+              "RawValue": "1",
+              "LocalValue": "1",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "1",
+              "Feature": {
+                "ID": "22664",
+                "Sign": "",
+                "Measure": {
+                  "ID": "144",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7549",
+                    "_": "pieza(s)",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Cantidad por caja de envío",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "FeatureLogos": [],
+      "ReasonsToBuy": [],
+      "Reviews": [],
+      "ProductRelated": [],
+      "CatalogObjectCloud": {
+        "ProductPage": {
+          "QRCodeURL": "https://qr.icecat.biz/coc/d35f31a4-b6c7-49a1-a056-76225c0b40be",
+          "URL": "https://coc.icecat.biz/d35f31a4-b6c7-49a1-a056-76225c0b40be"
+        }
+      },
+      "Variants": [],
+      "ProductStory": [],
+      "Dictionary": {
+        "eu_energy_label": "EU Energy Label",
+        "pdf_url": "User manual",
+        "reviews_head_name": "Reviews",
+        "zoom_panel_dragg": "Mouse dragging",
+        "demo_msg_part2": "Su nombre de usuario de Icecat",
+        "zoom_panel_out": "Zoom out",
+        "zoom_panel_in": "Zoom in",
+        "demo_msg_part1": "Ahora est&aacute; usando una cuenta demo. Por favor, utilice su propia cuenta Icecat",
+        "zoom_panel_init": "Original size",
+        "demo_insert_desc": "Esta es una demo de una inserci&oacute;n de ficha de producto Icecat LIVE en su sitio web. Imagine que esta ficha t&eacute;cnica est&aacute; incluida en la p&aacute;gina del producto de su tienda online.",
+        "options_head_name": "Options",
+        "demo_msg_part3": "Si no tiene una cuenta en Icecat, reg&iacute;strese aqu&iacute; de forma gratuita",
+        "pdf_specs": "Folleto",
+        "product_family": "Familia de productos",
+        "supplier_name": "Marca",
+        "flash360": "3D tour",
+        "product_series": "Series de Productos",
+        "desc": "Descripci&oacute;n",
+        "ean_code": "C&oacute;digo EAN/UPC",
+        "specs": "Especificaciones",
+        "marketing_text": "Descripción",
+        "reasons_to_buy": "Razones para comprar",
+        "release_date": "Release date",
+        "html_content": "",
+        "eu_product_fiche": "EU Product Fiche",
+        "cat_name": "Categor&iacute;a",
+        "prod_code": "C&oacute;digo del producto",
+        "back_to_top": "Volver arriba",
+        "model_name": "Nombre de producto",
+        "repairability_index": "Repairability index",
+        "video": "Video",
+        "link_integrate_desk": "How to integrate Icecat LIVE JavaScript."
+      },
+      "DemoAccount": false
+    }
+  },
+  "mpn_usado": "GV-N5070AERO OC-12GD",
+  "mpn_original": "GV-N5070AERO OC-12GD",
+  "variante_indice": 0,
+  "fuente": "icecat"
+}

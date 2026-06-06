@@ -1,0 +1,67 @@
+{
+  "ok": true,
+  "fuente": "deltron-scraping",
+  "status": 200,
+  "consulta": {
+    "codigo": "actlsr42ubkd",
+    "marca": "Tripp Lite"
+  },
+  "data": {
+    "msg": "OK",
+    "StatusCode": 0,
+    "source": "deltron-scraping",
+    "data": {
+      "GeneralInfo": {
+        "Title": "TrippLIte SR42UBKD, Juego de Gabinete de Profundidad Estándar desensamblado de 42U.",
+        "Brand": "Tripp Lite",
+        "BrandPartCode": "actlsr42ubkd",
+        "SummaryDescription": {
+          "ShortSummaryDescription": "id=\"home\"> GABINETE 42U DESENSAMBLADO SmartRack. Consideraciones Tipo de Producto : Producto Final Tipo Operatividad : (NV) Nuevo Foto referencial"
+        }
+      },
+      "FeaturesGroups": [
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "General"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "ACCESORIO"
+                }
+              },
+              "PresentationValue": "JUEGO DE GABINETE DE PROFUNDIDAD ESTÁNDAR DESENSAMBLADO DE 42U SMARTRACK"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "MARCA"
+                }
+              },
+              "PresentationValue": "TRIPP-LITE"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "MODELO"
+                }
+              },
+              "PresentationValue": "SR42UBKD"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "CARACTERISTICAS"
+            }
+          },
+          "Features": []
+        }
+      ]
+    }
+  }
+}

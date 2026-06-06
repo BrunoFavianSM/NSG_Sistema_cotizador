@@ -1,0 +1,750 @@
+{
+  "ok": true,
+  "status": 200,
+  "consulta": {
+    "mpn": "AX4U320016G16A-CBK20",
+    "marca": "ADATA",
+    "lang": "ES"
+  },
+  "data": {
+    "msg": "OK",
+    "data": {
+      "GeneralInfo": {
+        "IcecatId": 92019845,
+        "ReleaseDate": "",
+        "EndOfLifeDate": "",
+        "Title": "XPG GAMMIX D20 módulo de memoria 16 GB 1 x 16 GB DDR4 288-pin DIMM",
+        "TitleInfo": {
+          "GeneratedIntTitle": "XPG GAMMIX D20 memory module",
+          "GeneratedLocalTitle": {
+            "Value": "XPG GAMMIX D20 módulo de memoria 16 GB 1 x 16 GB DDR4 288-pin DIMM",
+            "Language": "ES"
+          },
+          "BrandLocalTitle": {
+            "Value": "",
+            "Language": "ES"
+          }
+        },
+        "Brand": "XPG",
+        "BrandID": "32301",
+        "BrandLogo": "https://images.icecat.biz/img/brand/thumb/32301_3243df0daeb740f998efd0a01bc129bb.jpg",
+        "BrandInfo": {
+          "BrandName": "XPG",
+          "BrandLocalName": "",
+          "BrandLogo": "https://images.icecat.biz/img/brand/thumb/32301_3243df0daeb740f998efd0a01bc129bb.jpg"
+        },
+        "ProductName": "GAMMIX D20",
+        "ProductNameInfo": {
+          "ProductIntName": "GAMMIX D20",
+          "ProductLocalName": {
+            "Value": "",
+            "Language": "ES"
+          }
+        },
+        "BrandPartCode": "AX4U320016G16A-CBK20",
+        "GTIN": [
+          "4711085931733"
+        ],
+        "Category": {
+          "CategoryID": "911",
+          "Name": {
+            "Value": "Módulos de memoria",
+            "Language": "ES"
+          }
+        },
+        "ProductFamily": {},
+        "ProductSeries": {
+          "SeriesID": "1"
+        },
+        "Description": {},
+        "SEOs": {},
+        "SummaryDescription": {
+          "ShortSummaryDescription": "XPG GAMMIX D20, 16 GB, 1 x 16 GB, DDR4, 3200 MHz, 288-pin DIMM",
+          "LongSummaryDescription": "XPG GAMMIX D20. Componente para: PC/servidor, Memoria interna: 16 GB, Diseño de memoria (módulos x tamaño): 1 x 16 GB, Tipo de memoria interna: DDR4, Velocidad de memoria del reloj: 3200 MHz, Forma de factor de memoria: 288-pin DIMM, Latencia CAS: 16"
+        },
+        "BulletPoints": {},
+        "GeneratedBulletPoints": {
+          "Language": "ES",
+          "Values": [
+            "PC/servidor 16 GB DDR4",
+            "288-pin DIMM 1 x 16 GB",
+            "Latencia CAS: 16",
+            "1.35,1.4 V",
+            "Intel® Extreme Memory Profile (XMP) 2.0"
+          ]
+        },
+        "GTINs": [
+          {
+            "GTIN": "4711085931733",
+            "IsApproved": true
+          }
+        ]
+      },
+      "Image": {
+        "HighPic": "https://images.icecat.biz/img/gallery/87939318_0640792557.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "HighPicSize": "306986",
+        "HighPicHeight": "1500",
+        "HighPicWidth": "1500",
+        "LowPic": "https://images.icecat.biz/img/gallery_lows/87939318_0640792557.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "LowPicSize": "7520",
+        "LowPicHeight": "200",
+        "LowPicWidth": "200",
+        "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/87939318_0640792557.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "Pic500x500Size": "36173",
+        "Pic500x500Height": "500",
+        "Pic500x500Width": "500",
+        "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/87939318_0640792557.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "ThumbPicSize": "2071"
+      },
+      "Multimedia": [
+        {
+          "ID": "00000000-0000-0000-0000-000000000000",
+          "URL": "https://icecat.biz/rest/product-pdf?productId=92019845&lang=es",
+          "Type": "leaflet",
+          "ContentType": "application/pdf",
+          "KeepAsUrl": "0",
+          "Description": "Brochure XPG AX4U320016G16A-CBK20",
+          "Size": "0",
+          "IsPrivate": "0",
+          "Updated": "2024-08-10 10:50:04",
+          "Language": "ES",
+          "IsVideo": 0
+        }
+      ],
+      "Gallery": [
+        {
+          "ID": "53179057",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/87939318_0640792557.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "7520",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/87939318_0640792557.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "2071",
+          "Pic": "https://images.icecat.biz/img/gallery/87939318_0640792557.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "306986",
+          "PicHeight": "1500",
+          "PicWidth": "1500",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/87939318_0640792557.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "36173",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "1",
+          "IsMain": "Y",
+          "Updated": "2024-03-10 10:10:44",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "53179058",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/88596516_2030783246.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "21860",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/88596516_2030783246.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "6074",
+          "Pic": "https://images.icecat.biz/img/gallery/88596516_2030783246.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "442697",
+          "PicHeight": "1500",
+          "PicWidth": "1500",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/88596516_2030783246.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "80213",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "2",
+          "IsMain": "N",
+          "Updated": "2024-03-10 10:10:44",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        }
+      ],
+      "FeaturesGroups": [
+        {
+          "ID": 27909,
+          "SortNo": "5",
+          "FeatureGroup": {
+            "ID": "185",
+            "Name": {
+              "Value": "Características",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 420028105,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "16",
+              "CategoryFeatureId": "6141",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "10009035",
+              "PresentationValue": "16",
+              "RawValue": "16",
+              "LocalValue": "16",
+              "Description": "Column Address Strobe (CAS) latency",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1635",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Latencia CAS",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 420028100,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "16",
+              "CategoryFeatureId": "73748",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "9999",
+              "PresentationValue": "16 GB",
+              "RawValue": "16",
+              "LocalValue": "16",
+              "Description": "A computer's memory which is directly accessible to the CPU.",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "11381",
+                "Sign": "",
+                "Measure": {
+                  "ID": "20",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7432",
+                    "_": "GB",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Memoria interna",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 420028103,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "1 x 16",
+              "CategoryFeatureId": "93088",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "9998",
+              "PresentationValue": "1 x 16 GB",
+              "RawValue": "1 x 16",
+              "LocalValue": "1 x 16",
+              "Description": "How the overall memory of the product is put together, defined by the number of modules and the size.",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "16023",
+                "Sign": "",
+                "Measure": {
+                  "ID": "20",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7432",
+                    "_": "GB",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Diseño de memoria (módulos x tamaño)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 420028220,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "DDR4",
+              "CategoryFeatureId": "6137",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "9980",
+              "PresentationValue": "DDR4",
+              "RawValue": "DDR4",
+              "LocalValue": "DDR4",
+              "Description": "The type of internal memory such as RAM",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "427",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tipo de memoria interna",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 420028104,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "3200",
+              "CategoryFeatureId": "29552",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "9070",
+              "PresentationValue": "3200 MHz",
+              "RawValue": "3200",
+              "LocalValue": "3200",
+              "Description": "The frequency at which the memory (e.g. RAM) runs.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "2900",
+                "Sign": "",
+                "Measure": {
+                  "ID": "18",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7430",
+                    "_": "MHz",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Velocidad de memoria del reloj",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 420028249,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "PC/server",
+              "CategoryFeatureId": "73714",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "9060",
+              "PresentationValue": "PC/servidor",
+              "RawValue": "PC/server",
+              "LocalValue": "PC/servidor",
+              "Description": "What this product is used as a part of (component for).",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "9163",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Componente para",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 420029118,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "288-pin DIMM",
+              "CategoryFeatureId": "45866",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "9050",
+              "PresentationValue": "288-pin DIMM",
+              "RawValue": "288-pin DIMM",
+              "LocalValue": "288-pin DIMM",
+              "Description": "Design of the memory e.g. 240-pin DIMM",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7696",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Forma de factor de memoria",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 420028959,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "Unregistered (unbuffered)",
+              "CategoryFeatureId": "301234",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "994",
+              "PresentationValue": "Unregistered (unbuffered)",
+              "RawValue": "Unregistered (unbuffered)",
+              "LocalValue": "Unregistered (unbuffered)",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "38209",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tipo de memoria con búfer",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 420029167,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "1.35,1.4",
+              "CategoryFeatureId": "36754",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "992",
+              "PresentationValue": "1.35,1.4 V",
+              "RawValue": "1.35,1.4",
+              "LocalValue": "1.35,1.4",
+              "Description": "The voltage (V) of the memory in the device.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "6266",
+                "Sign": "",
+                "Measure": {
+                  "ID": "42",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7451",
+                    "_": "V",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Voltaje de memoria",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 420029223,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "Y",
+              "CategoryFeatureId": "132047",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "100",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "21116",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Intel® Extreme Memory Profile (XMP)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 420029224,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "2.0",
+              "CategoryFeatureId": "215340",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "99",
+              "PresentationValue": "2.0",
+              "RawValue": "2.0",
+              "LocalValue": "2.0",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "31816",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Versión del perfil Intel XMP (Extreme Memory Profile)",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 1551,
+          "SortNo": "2",
+          "FeatureGroup": {
+            "ID": "28",
+            "Name": {
+              "Value": "Condiciones ambientales",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 420029080,
+              "LocalID": 0,
+              "Type": "range",
+              "Value": "0 - 85",
+              "CategoryFeatureId": "6146",
+              "CategoryFeatureGroupID": "1551",
+              "SortNo": "95",
+              "PresentationValue": "0 - 85 °C",
+              "RawValue": "0 - 85",
+              "LocalValue": "0 - 85",
+              "Description": "The minimum and maximum temperatures at which the product can be safely operated.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1112",
+                "Sign": "",
+                "Measure": {
+                  "ID": "65",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7473",
+                    "_": "°C",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Intervalo de temperatura operativa",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 420029083,
+              "LocalID": 0,
+              "Type": "range",
+              "Value": "-55 - 100",
+              "CategoryFeatureId": "48926",
+              "CategoryFeatureGroupID": "1551",
+              "SortNo": "92",
+              "PresentationValue": "-55 - 100 °C",
+              "RawValue": "-55 - 100",
+              "LocalValue": "-55 - 100",
+              "Description": "The minimum and maximum temperatures at which the product can be safely stored.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "757",
+                "Sign": "",
+                "Measure": {
+                  "ID": "65",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7473",
+                    "_": "°C",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Intervalo de temperatura de almacenaje",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 76696,
+          "SortNo": "0",
+          "FeatureGroup": {
+            "ID": "279",
+            "Name": {
+              "Value": "Sostenibilidad",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 652043425,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "RoHS",
+              "CategoryFeatureId": "953206",
+              "CategoryFeatureGroupID": "76696",
+              "SortNo": "0",
+              "PresentationValue": "RoHS",
+              "RawValue": "RoHS",
+              "LocalValue": "RoHS",
+              "Description": "Indicates which regulatory, safety, and environmental standards the product complies with, as verified by recognized authorities or certification bodies.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "48024",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Certificados de conformidad",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "FeatureLogos": [
+        {
+          "LogoPic": "https://images.icecat.biz/img/feature_logo/8-2276.png",
+          "Width": "200",
+          "Height": "200",
+          "Size": "0",
+          "ThumbPic": "https://images.icecat.biz/img/feature_logo_thumbs/8-2276.png",
+          "FeatureID": "48024",
+          "Value": "RoHS",
+          "KeyLogo": 0,
+          "Description": {
+            "Value": "Los productos eléctricos o electrónicos pueden contener pequeñas cantidades de sustancias peligrosas (RoHS de las siglas en inglés Restriction of Hazardous Substances). Según la normativa RoHS para cada producto se verifica la presencia de plomo (Pb), cadmio (Cd), mercurio (Hg), cromo hexavalente (Cr o  Cr(VI)), polibromobifenilos o bifenilos polibromados (PBB) y polibromodifenil éteres (PBDE). PBB y PBDE son retardantes de llamas de fuego utilizados en varios plásticos. Para cadmio y cromo hexavalente se permite una presencia con una concentración máxima de 0,01% del peso del producto. Para Pb, PBB y PBDE no debe haber más del 0,1% del material. Según la normativa RoHS, cada producto puede tener hasta 100 ppm o menos de mercurio y el mercurio, no debe haber sido añadido deliberadamente al componente.",
+            "Language": "ES"
+          }
+        }
+      ],
+      "ReasonsToBuy": [],
+      "Reviews": [],
+      "ProductRelated": [],
+      "CatalogObjectCloud": {
+        "ProductPage": {
+          "QRCodeURL": "https://qr.icecat.biz/coc/1f76255c-42fb-4dca-8f26-87363929de30",
+          "URL": "https://coc.icecat.biz/1f76255c-42fb-4dca-8f26-87363929de30"
+        }
+      },
+      "Variants": [],
+      "ProductStory": [],
+      "Dictionary": {
+        "eu_energy_label": "EU Energy Label",
+        "pdf_url": "User manual",
+        "reviews_head_name": "Reviews",
+        "zoom_panel_dragg": "Mouse dragging",
+        "demo_msg_part2": "Su nombre de usuario de Icecat",
+        "zoom_panel_out": "Zoom out",
+        "zoom_panel_in": "Zoom in",
+        "demo_msg_part1": "Ahora est&aacute; usando una cuenta demo. Por favor, utilice su propia cuenta Icecat",
+        "zoom_panel_init": "Original size",
+        "demo_insert_desc": "Esta es una demo de una inserci&oacute;n de ficha de producto Icecat LIVE en su sitio web. Imagine que esta ficha t&eacute;cnica est&aacute; incluida en la p&aacute;gina del producto de su tienda online.",
+        "options_head_name": "Options",
+        "demo_msg_part3": "Si no tiene una cuenta en Icecat, reg&iacute;strese aqu&iacute; de forma gratuita",
+        "pdf_specs": "Folleto",
+        "product_family": "Familia de productos",
+        "supplier_name": "Marca",
+        "flash360": "3D tour",
+        "product_series": "Series de Productos",
+        "desc": "Descripci&oacute;n",
+        "ean_code": "C&oacute;digo EAN/UPC",
+        "specs": "Especificaciones",
+        "marketing_text": "Descripción",
+        "reasons_to_buy": "Razones para comprar",
+        "release_date": "Release date",
+        "html_content": "",
+        "eu_product_fiche": "EU Product Fiche",
+        "cat_name": "Categor&iacute;a",
+        "prod_code": "C&oacute;digo del producto",
+        "back_to_top": "Volver arriba",
+        "model_name": "Nombre de producto",
+        "repairability_index": "Repairability index",
+        "video": "Video",
+        "link_integrate_desk": "How to integrate Icecat LIVE JavaScript."
+      },
+      "DemoAccount": false
+    }
+  },
+  "mpn_usado": "AX4U320016G16A-CBK20",
+  "mpn_original": "AX4U320016G16A-CBK20",
+  "variante_indice": 0
+}

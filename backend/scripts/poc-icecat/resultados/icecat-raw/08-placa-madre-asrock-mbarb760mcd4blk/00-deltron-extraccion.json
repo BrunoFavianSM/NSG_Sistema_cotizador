@@ -1,0 +1,21 @@
+{
+  "producto": {
+    "codigo_deltron": "mbarb760mcd4blk",
+    "categoria": "Placa madre",
+    "marca_csv": "asrock",
+    "marca_normalizada": "ASRock",
+    "nombre_esperado": "motherboard asrock b760m-c/d4, chipset intel b760, lga1700, matx",
+    "indice": 8,
+    "carpeta": "08-placa-madre-asrock-mbarb760mcd4blk"
+  },
+  "resultado": {
+    "codigo_consultado": "mbarb760mcd4blk",
+    "url": "https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=mbarb760mcd4blk",
+    "sku_encontrado": "mbarb760mcd4blk",
+    "sku_coincide": true,
+    "mpn": "B760M-C/D4 (BULK)",
+    "mpn_metodo": "part-number",
+    "titulo_h1": "Motherboard ASROCK B760M-C/D4, Chipset Intel B760, LGA1700, mATX",
+    "timestamp": "2026-06-05T23:40:40.358Z"
+  }
+}

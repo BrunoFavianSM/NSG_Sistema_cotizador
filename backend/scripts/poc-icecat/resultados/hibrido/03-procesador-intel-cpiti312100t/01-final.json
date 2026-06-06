@@ -1,0 +1,223 @@
+{
+  "ok": true,
+  "fuente": "deltron-scraping",
+  "status": 200,
+  "consulta": {
+    "codigo": "cpiti312100t",
+    "marca": "Intel"
+  },
+  "data": {
+    "msg": "OK",
+    "StatusCode": 0,
+    "source": "deltron-scraping",
+    "data": {
+      "GeneralInfo": {
+        "Title": "Procesador Intel Core i3-12100 3.30 / 4.30GHz, 12 MB Intel Smart Caché, LGA 1700",
+        "Brand": "Intel",
+        "BrandPartCode": "cpiti312100t",
+        "SummaryDescription": {
+          "ShortSummaryDescription": "id=\"home\"> PROC INT CORE I3-12100 3.3G OE Incluye Controlador Grafico Intel / Presentacion OEM (Tray) No inlcluye fan cooler 14 unid. por Bandeja Consideraciones Tipo de Producto : Componente Tipo Operatividad : (NV) Nuevo Foto referencial"
+        }
+      },
+      "FeaturesGroups": [
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "General"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "MARCA"
+                }
+              },
+              "PresentationValue": "INTEL"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "LINEA INTEL"
+                }
+              },
+              "PresentationValue": "Procesador Core i3 S1700 12XXX-Doceava Generacion"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "NOMBRE DEL PROCESADOR"
+                }
+              },
+              "PresentationValue": "12100"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "SOCKET"
+                }
+              },
+              "PresentationValue": "LGA1700 INTEL"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "LITOGRAFIA INTEL"
+                }
+              },
+              "PresentationValue": "INTEL 7"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "INCORPORA CONTROLADOR GRAFICO"
+                }
+              },
+              "PresentationValue": "SI"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "PROCESADOR GRAFICO"
+                }
+              },
+              "PresentationValue": "INTEL GRAPHICS 730"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "PRESENTACION"
+                }
+              },
+              "PresentationValue": "OEM (TRAY)"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CODIGO DEL FABRICANTE"
+                }
+              },
+              "PresentationValue": "IN-CM8071504651012"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "NUCLEOS"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CANTIDAD DE NUCLEOS"
+                }
+              },
+              "PresentationValue": "4"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CANTIDAD DE PERFORMANCE-CORES"
+                }
+              },
+              "PresentationValue": "4"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CANTIDAD DE SUBPROCESOS"
+                }
+              },
+              "PresentationValue": "18"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "FRECUENCIAS"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "FRECUENCIA TURBO MAXIMA"
+                }
+              },
+              "PresentationValue": "4.30 GHz"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "FRECUENCIA BASE DE PERFORMANCE-CORE"
+                }
+              },
+              "PresentationValue": "3.30 GHz"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "FRECUENCIA TURBO MAXIMA DEL PERFORMANCE-CORE"
+                }
+              },
+              "PresentationValue": "4.30 GHz"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "CACHE"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "INTEL SMART CACHE"
+                }
+              },
+              "PresentationValue": "12 MB"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CACHE L2 TOTAL"
+                }
+              },
+              "PresentationValue": "5 MB"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "POTENCIA"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "POTENCIA BASE"
+                }
+              },
+              "PresentationValue": "60 Watt"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "POTENCIA TURBO MAXIMA"
+                }
+              },
+              "PresentationValue": "89 Watt"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

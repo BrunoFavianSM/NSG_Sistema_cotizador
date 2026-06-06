@@ -1,0 +1,21 @@
+{
+  "producto": {
+    "codigo_deltron": "psarsl-1200gw",
+    "categoria": "Fuente de poder",
+    "marca_csv": "asrock",
+    "marca_normalizada": "ASRock",
+    "nombre_esperado": "fuente de alimentaciï¿½n asrock, sl-1200gw, 1200w, atx, 80 plus gold.",
+    "indice": 23,
+    "carpeta": "23-fuente-de-poder-asrock-psarsl-1200gw"
+  },
+  "resultado": {
+    "codigo_consultado": "psarsl-1200gw",
+    "url": "https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=psarsl-1200gw",
+    "sku_encontrado": "psarsl-1200gw",
+    "sku_coincide": true,
+    "mpn": "SL-1200GW",
+    "mpn_metodo": "part-number",
+    "titulo_h1": "Fuente de alimentación Asrock, SL-1200GW, 1200W, ATX, 80 Plus Gold.",
+    "timestamp": "2026-06-05T23:41:53.744Z"
+  }
+}

@@ -1,0 +1,370 @@
+{
+  "ok": true,
+  "fuente": "deltron-scraping",
+  "status": 200,
+  "consulta": {
+    "codigo": "cscme301kgnns00",
+    "marca": "Cooler Master"
+  },
+  "data": {
+    "msg": "OK",
+    "StatusCode": 0,
+    "source": "deltron-scraping",
+    "data": {
+      "GeneralInfo": {
+        "Title": "Case Cooler Master Elite 301, MiniTower, Negro, ATX, USB 3.2 Gen 1 Tipo-C / Tipo-A, Audio",
+        "Brand": "Cooler Master",
+        "BrandPartCode": "cscme301kgnns00",
+        "SummaryDescription": {
+          "ShortSummaryDescription": "id=\"home\"> CASE GAM CM ELITE 301 MIC ATX Motherboard - Factor de Forma soportados: Micro-ATX / Mini-ITX. Consideraciones Tipo de Producto : Componente Tipo Operatividad : (NV) Nuevo Foto referencial"
+        }
+      },
+      "FeaturesGroups": [
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "General"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "MARCA"
+                }
+              },
+              "PresentationValue": "COOLER MASTER"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "MODELO"
+                }
+              },
+              "PresentationValue": "ELITE 301"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "NUMERO DE PARTE"
+                }
+              },
+              "PresentationValue": "E301-KGNN-S00"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "FACTOR DE FORMA"
+                }
+              },
+              "PresentationValue": "Mini Tower"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "MOTHERBOARDS SOPORTADAS FF"
+                }
+              },
+              "PresentationValue": "Micro-ATX Mini-ITX"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "ORIENTACION"
+                }
+              },
+              "PresentationValue": "VERTICAL"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "INCLUYE FUENTE DE PODER"
+                }
+              },
+              "PresentationValue": "NO"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "SLOTS DE EXPANSION"
+                }
+              },
+              "PresentationValue": "4"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "PULSADORES"
+                }
+              },
+              "PresentationValue": "POWER"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "COLOR"
+                }
+              },
+              "PresentationValue": "NEGRO"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "FORMATO DE FUENTE"
+                }
+              },
+              "PresentationValue": "ATX"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "DIMESIONES"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "LARGO"
+                }
+              },
+              "PresentationValue": "390 mm"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "ANCHO"
+                }
+              },
+              "PresentationValue": "203.5 mm"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "ALTO"
+                }
+              },
+              "PresentationValue": "430 mm"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "BAHIAS"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "INTERNAS"
+                }
+              },
+              "PresentationValue": "2.5"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "2.5/3.5 COMBO"
+                }
+              },
+              "PresentationValue": "1"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "MEDIDAS MAXIMAS"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "ALTO FAN COOLER CPU"
+                }
+              },
+              "PresentationValue": "163.5 mm"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "LARGO TARJETA DE VIDEO"
+                }
+              },
+              "PresentationValue": "365 mm"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "LARGO FUENTE POWER"
+                }
+              },
+              "PresentationValue": "160 mm"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "PUERTOS"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "USB 3.2 GEN 1 TIPO-A"
+                }
+              },
+              "PresentationValue": "1"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "USB 3.2 GEN 1 TIPO-C"
+                }
+              },
+              "PresentationValue": "1"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "HEADPHONE / MICROPHONE"
+                }
+              },
+              "PresentationValue": "1"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "VENTILADORES"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "SOPORTA FRONT (NO INCLUYE)"
+                }
+              },
+              "PresentationValue": "3 x 120 mm"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "SOPORTA REAR (NO INCLUYE)"
+                }
+              },
+              "PresentationValue": "1 x 120 mm"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "SOPORTA TOP (NO INCLUYE)"
+                }
+              },
+              "PresentationValue": "2 x 120 mm 2 x 140 mm"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "PRE INSTALADO FRONT ARGB"
+                }
+              },
+              "PresentationValue": "3 x 120 mm"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "SOPORTE DE RADIADOR"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "FRONT"
+                }
+              },
+              "PresentationValue": "120 mm 240 mm"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "REAR"
+                }
+              },
+              "PresentationValue": "120 mm"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "TOP"
+                }
+              },
+              "PresentationValue": "120 mm 140 mm 240 mm 280 mm"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "SOPORTA RADIADOR"
+                }
+              },
+              "PresentationValue": "SI"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "GLASS Y DUST FILTER"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "TEMPERED GLASS"
+                }
+              },
+              "PresentationValue": "Lado Izquierdo"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "DUST FILTER FRONT"
+                }
+              },
+              "PresentationValue": "1"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "DUST FILTER TOP"
+                }
+              },
+              "PresentationValue": "1"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "DUST FILTER BOTTOM"
+                }
+              },
+              "PresentationValue": "1"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

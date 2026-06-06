@@ -1,0 +1,1272 @@
+{
+  "ok": true,
+  "status": 200,
+  "consulta": {
+    "mpn": "MZ-77E500E",
+    "marca": "Samsung",
+    "lang": "ES"
+  },
+  "data": {
+    "msg": "OK",
+    "data": {
+      "GeneralInfo": {
+        "IcecatId": 89314809,
+        "ReleaseDate": "",
+        "EndOfLifeDate": "",
+        "Title": "Samsung 870 EVO 500GB 2.5\" SATA V-NAND MLC",
+        "TitleInfo": {
+          "GeneratedIntTitle": "Samsung 870 EVO 500GB",
+          "GeneratedLocalTitle": {
+            "Value": "Samsung 870 EVO 500GB 2.5\" SATA V-NAND MLC",
+            "Language": "ES"
+          },
+          "BrandLocalTitle": {
+            "Value": "",
+            "Language": "ES"
+          }
+        },
+        "Brand": "Samsung",
+        "BrandID": "26",
+        "BrandLogo": "https://images.icecat.biz/img/brand/thumb/26_c012d76b332e4624b88a05c9932c9266.jpg",
+        "BrandInfo": {
+          "BrandName": "Samsung",
+          "BrandLocalName": "",
+          "BrandLogo": "https://images.icecat.biz/img/brand/thumb/26_c012d76b332e4624b88a05c9932c9266.jpg"
+        },
+        "ProductName": "870 EVO 500GB",
+        "ProductNameInfo": {
+          "ProductIntName": "870 EVO 500GB",
+          "ProductLocalName": {
+            "Value": "",
+            "Language": "ES"
+          }
+        },
+        "BrandPartCode": "MZ-77E500E",
+        "GTIN": [
+          "0887276433189",
+          "887276433189"
+        ],
+        "Category": {
+          "CategoryID": "1563",
+          "Name": {
+            "Value": "Unidades internas de estado sólido",
+            "Language": "ES"
+          }
+        },
+        "ProductFamily": {},
+        "ProductSeries": {
+          "SeriesID": "1"
+        },
+        "Description": {},
+        "SEOs": {},
+        "SummaryDescription": {
+          "ShortSummaryDescription": "Samsung 870 EVO 500GB, 500 GB, 2.5\", 560 MB/s, 6 Gbit/s",
+          "LongSummaryDescription": "Samsung 870 EVO 500GB. SDD, capacidad: 500 GB, Factor de forma de disco SSD: 2.5\", Velocidad de lectura: 560 MB/s, Velocidad de escritura: 530 MB/s, Velocidad de transferencia de datos: 6 Gbit/s, Componente para: PC"
+        },
+        "BulletPoints": {},
+        "GeneratedBulletPoints": {
+          "Language": "ES",
+          "Values": [
+            "500 GB 2.5\" SATA",
+            "Velocidad de lectura: 560 MB/s",
+            "Velocidad de escritura: 530 MB/s",
+            "V-NAND MLC",
+            "Encriptación de hardware 256-bit AES",
+            "Soporte S.M.A.R.T. Soporte TRIM",
+            "Componente para: PC"
+          ]
+        },
+        "GTINs": [
+          {
+            "GTIN": "0887276433189",
+            "IsApproved": true
+          },
+          {
+            "GTIN": "887276433189",
+            "IsApproved": true
+          }
+        ]
+      },
+      "Image": {
+        "HighPic": "https://images.icecat.biz/img/gallery/89314809_5250229125.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "HighPicSize": "85051",
+        "HighPicHeight": "600",
+        "HighPicWidth": "800",
+        "LowPic": "https://images.icecat.biz/img/gallery_lows/89314809_5250229125.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "LowPicSize": "5820",
+        "LowPicHeight": "150",
+        "LowPicWidth": "200",
+        "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/89314809_5250229125.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "Pic500x500Size": "32778",
+        "Pic500x500Height": "375",
+        "Pic500x500Width": "500",
+        "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/89314809_5250229125.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "ThumbPicSize": "1675"
+      },
+      "Multimedia": [
+        {
+          "ID": "00000000-0000-0000-0000-000000000000",
+          "URL": "https://icecat.biz/rest/product-pdf?productId=89314809&lang=es",
+          "Type": "leaflet",
+          "ContentType": "application/pdf",
+          "KeepAsUrl": "0",
+          "Description": "Brochure Samsung MZ-77E500E",
+          "Size": "0",
+          "IsPrivate": "0",
+          "Updated": "2023-12-15 10:43:06",
+          "Language": "ES",
+          "IsVideo": 0
+        }
+      ],
+      "Gallery": [
+        {
+          "ID": "54743715",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/89314809_5250229125.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "5820",
+          "LowHeight": "150",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/89314809_5250229125.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "1675",
+          "Pic": "https://images.icecat.biz/img/gallery/89314809_5250229125.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "85051",
+          "PicHeight": "600",
+          "PicWidth": "800",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/89314809_5250229125.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "32778",
+          "Pic500x500Height": "375",
+          "Pic500x500Width": "500",
+          "No": "1",
+          "IsMain": "Y",
+          "Updated": "2021-07-22 09:27:24",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "54743717",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/89314809_8640927457.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "8598",
+          "LowHeight": "150",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/89314809_8640927457.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "2432",
+          "Pic": "https://images.icecat.biz/img/gallery/89314809_8640927457.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "93190",
+          "PicHeight": "600",
+          "PicWidth": "800",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/89314809_8640927457.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "40198",
+          "Pic500x500Height": "375",
+          "Pic500x500Width": "500",
+          "No": "2",
+          "IsMain": "N",
+          "Updated": "2021-07-22 09:27:30",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "54743720",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/89314809_6944474290.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "6241",
+          "LowHeight": "150",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/89314809_6944474290.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "1677",
+          "Pic": "https://images.icecat.biz/img/gallery/89314809_6944474290.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "81465",
+          "PicHeight": "600",
+          "PicWidth": "800",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/89314809_6944474290.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "32015",
+          "Pic500x500Height": "375",
+          "Pic500x500Width": "500",
+          "No": "3",
+          "IsMain": "N",
+          "Updated": "2021-07-22 09:27:36",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "54743722",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/89314812_6501846057.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "5907",
+          "LowHeight": "150",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/89314812_6501846057.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "1641",
+          "Pic": "https://images.icecat.biz/img/gallery/89314812_6501846057.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "79841",
+          "PicHeight": "600",
+          "PicWidth": "800",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/89314812_6501846057.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "31511",
+          "Pic500x500Height": "375",
+          "Pic500x500Width": "500",
+          "No": "4",
+          "IsMain": "N",
+          "Updated": "2024-03-10 10:10:44",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "54743723",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/89314809_5706503381.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "5890",
+          "LowHeight": "150",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/89314809_5706503381.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "1748",
+          "Pic": "https://images.icecat.biz/img/gallery/89314809_5706503381.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "62737",
+          "PicHeight": "600",
+          "PicWidth": "800",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/89314809_5706503381.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "26738",
+          "Pic500x500Height": "375",
+          "Pic500x500Width": "500",
+          "No": "5",
+          "IsMain": "N",
+          "Updated": "2021-07-22 09:27:48",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        }
+      ],
+      "FeaturesGroups": [
+        {
+          "ID": 30690,
+          "SortNo": "50",
+          "FeatureGroup": {
+            "ID": "185",
+            "Name": {
+              "Value": "Características",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 430001129,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "256-bit AES",
+              "CategoryFeatureId": "48376",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "10000294",
+              "PresentationValue": "256-bit AES",
+              "RawValue": "256-bit AES",
+              "LocalValue": "256-bit AES",
+              "Description": "Security algorithms are used to provide authentication",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "454",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Algoritmos de seguridad soportados",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430000936,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "500",
+              "CategoryFeatureId": "32368",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "1010",
+              "PresentationValue": "500 GB",
+              "RawValue": "500",
+              "LocalValue": "500",
+              "Description": "The Solid State Drive's data storage capacity.",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "5586",
+                "Sign": "",
+                "Measure": {
+                  "ID": "20",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7432",
+                    "_": "GB",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "SDD, capacidad",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430000933,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "2.5\"",
+              "CategoryFeatureId": "131586",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "1000",
+              "PresentationValue": "2.5\"",
+              "RawValue": "2.5\"",
+              "LocalValue": "2.5\"",
+              "Description": "The size of the solid-state drive, given in inches",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "21731",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Factor de forma de disco SSD",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001059,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "Serial ATA",
+              "CategoryFeatureId": "296483",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "980",
+              "PresentationValue": "SATA",
+              "RawValue": "Serial ATA",
+              "LocalValue": "SATA",
+              "Description": "Interface ports to connect pieces of equipment. USB (Universal Serial Bus) has become the most popular wired interface to connect peripherals. USB 2.0 supports speeds up to 480 Mbit/s (USB 1: 12 Mbit/s). The interface FireWire is also known as the IEEE 1394 standard. Enhanced IDE (EIDE)is sometimes referred to as Fast ATA",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "21",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Interfaz",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430000967,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "V-NAND MLC",
+              "CategoryFeatureId": "35583",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "500",
+              "PresentationValue": "V-NAND MLC",
+              "RawValue": "V-NAND MLC",
+              "LocalValue": "V-NAND MLC",
+              "Description": "Type of memory in the device e.g. DDR3",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "642",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tipo de memoria",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001063,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "PC",
+              "CategoryFeatureId": "194639",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "297",
+              "PresentationValue": "PC",
+              "RawValue": "PC",
+              "LocalValue": "PC",
+              "Description": "What this product is used as a part of (component for).",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "9163",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Componente para",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001105,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "Y",
+              "CategoryFeatureId": "65789",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "295",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "10340",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Encriptación de hardware",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001135,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "6",
+              "CategoryFeatureId": "35279",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "268",
+              "PresentationValue": "6 Gbit/s",
+              "RawValue": "6",
+              "LocalValue": "6",
+              "Description": "Rate at which data can be transferred MC; expressed in units per second; may vary on network configurations",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1551",
+                "Sign": "",
+                "Measure": {
+                  "ID": "68",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7476",
+                    "_": "Gbit/s",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Velocidad de transferencia de datos",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001110,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "560",
+              "CategoryFeatureId": "32365",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "263",
+              "PresentationValue": "560 MB/s",
+              "RawValue": "560",
+              "LocalValue": "560",
+              "Description": "The speed at which a device can read data.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1644",
+                "Sign": "",
+                "Measure": {
+                  "ID": "40",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7449",
+                    "_": "MB/s",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Velocidad de lectura",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001114,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "530",
+              "CategoryFeatureId": "32366",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "262",
+              "PresentationValue": "530 MB/s",
+              "RawValue": "530",
+              "LocalValue": "530",
+              "Description": "Write speed for type of media; expressed in bytes per second",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1645",
+                "Sign": "",
+                "Measure": {
+                  "ID": "40",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7449",
+                    "_": "MB/s",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Velocidad de escritura",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001300,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "Y",
+              "CategoryFeatureId": "218542",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "227",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "32365",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Función DevSleep",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001116,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "Y",
+              "CategoryFeatureId": "32375",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "226",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "6466",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Soporte S.M.A.R.T.",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001119,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "Y",
+              "CategoryFeatureId": "48379",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "226",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8098",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Soporte TRIM",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001182,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "1500000",
+              "CategoryFeatureId": "32372",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "19",
+              "PresentationValue": "1500000 h",
+              "RawValue": "1500000",
+              "LocalValue": "1500000",
+              "Description": "Statistical model used to indicate product/mechanism reliability; expressed in hours and percentage of duty cycle. This number (in hours) does not indicate the mean time before failure for a single unit/mechanism",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "533",
+                "Sign": "",
+                "Measure": {
+                  "ID": "46",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7455",
+                    "_": "h",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tiempo medio entre fallos",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001392,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "Windows 10,Windows 7,Windows 8,Windows Vista,Windows XP",
+              "CategoryFeatureId": "48362",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "5",
+              "PresentationValue": "Windows 10, Windows 7, Windows 8, Windows Vista, Windows XP",
+              "RawValue": "Windows 10,Windows 7,Windows 8,Windows Vista,Windows XP",
+              "LocalValue": "Windows 10, Windows 7, Windows 8, Windows Vista, Windows XP",
+              "Description": "Windows vesions wich can be used with the device.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7986",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Sistema operativo Windows soportado",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001395,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "Y",
+              "CategoryFeatureId": "48363",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "4",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "Mac operating systems e.g. OS X can be used with the device.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7987",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Sistema operativo MAC soportado",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001400,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "Y",
+              "CategoryFeatureId": "48364",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "3",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "8 RT. Linux (9.4, 9.5), Red Hat Enterprise Linux 5.0 (supported with a pre-built package); SUSE Linux (10.3, 11.0, 11, 11.1, 11.2), Fedora (9, 9.0, 10, 10.0, 11.0, 11, 12, 12.0), Ubuntu (8.04, 8.04.1, 8.04.2, 8.10, 9.04, 9.10, 10.04), Debian (5.0, 5.0.1, 5.0.2, 5.0.3)",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7988",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Sistema operativo Linux soportado",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001408,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "Windows Server 2003",
+              "CategoryFeatureId": "120008",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "2",
+              "PresentationValue": "Windows Server 2003",
+              "RawValue": "Windows Server 2003",
+              "LocalValue": "Windows Server 2003",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7989",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Sistema operativo de servidor soportado",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001757,
+              "LocalID": 0,
+              "Type": "textarea",
+              "Value": "CE, FCC",
+              "CategoryFeatureId": "32386",
+              "CategoryFeatureGroupID": "30690",
+              "SortNo": "-56",
+              "PresentationValue": "CE, FCC",
+              "RawValue": "CE, FCC",
+              "LocalValue": "CE, FCC",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "249",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Certificación",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 4235,
+          "SortNo": "40",
+          "FeatureGroup": {
+            "ID": "27",
+            "Name": {
+              "Value": "Control de energía",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 430001162,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "2.2",
+              "CategoryFeatureId": "32384",
+              "CategoryFeatureGroupID": "4235",
+              "SortNo": "18",
+              "PresentationValue": "2,2 W",
+              "RawValue": "2.2",
+              "LocalValue": "2,2",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "6468",
+                "Sign": "",
+                "Measure": {
+                  "ID": "44",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7453",
+                    "_": "W",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Consumo de energía (lectura)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001165,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "3.5",
+              "CategoryFeatureId": "152090",
+              "CategoryFeatureGroupID": "4235",
+              "SortNo": "15",
+              "PresentationValue": "3,5 W",
+              "RawValue": "3.5",
+              "LocalValue": "3,5",
+              "Description": "The maximum amount of power used by the device.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "9137",
+                "Sign": "",
+                "Measure": {
+                  "ID": "44",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7453",
+                    "_": "W",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Consumo de energía (max)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001166,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "0.03",
+              "CategoryFeatureId": "64543",
+              "CategoryFeatureGroupID": "4235",
+              "SortNo": "10",
+              "PresentationValue": "0,03 W",
+              "RawValue": "0.03",
+              "LocalValue": "0,03",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "6467",
+                "Sign": "",
+                "Measure": {
+                  "ID": "44",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7453",
+                    "_": "W",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Consumo de energía (espera)",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 4231,
+          "SortNo": "10",
+          "FeatureGroup": {
+            "ID": "14",
+            "Name": {
+              "Value": "Peso y dimensiones",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 430002359,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "100",
+              "CategoryFeatureId": "32362",
+              "CategoryFeatureGroupID": "4231",
+              "SortNo": "10",
+              "PresentationValue": "100 mm",
+              "RawValue": "100",
+              "LocalValue": "100",
+              "Description": "The measurement or extent of something from side to side.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1649",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Ancho",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430002486,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "6.8",
+              "CategoryFeatureId": "32361",
+              "CategoryFeatureGroupID": "4231",
+              "SortNo": "9",
+              "PresentationValue": "6,8 mm",
+              "RawValue": "6.8",
+              "LocalValue": "6,8",
+              "Description": "The distance from the front to the back of something.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1650",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Profundidad",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430002444,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "70",
+              "CategoryFeatureId": "32363",
+              "CategoryFeatureGroupID": "4231",
+              "SortNo": "8",
+              "PresentationValue": "70 mm",
+              "RawValue": "70",
+              "LocalValue": "70",
+              "Description": "Height of the product",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1464",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Altura",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 430001664,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "86.18",
+              "CategoryFeatureId": "32360",
+              "CategoryFeatureGroupID": "4231",
+              "SortNo": "0",
+              "PresentationValue": "86,18 g",
+              "RawValue": "86.18",
+              "LocalValue": "86,2",
+              "Description": "Peso del producto sin embalaje (peso neto). Si es posible, se da el peso neto incluyendo los accesorios y suministros estándar. Tenga en cuenta que a veces el fabricante deja de lado el peso de los accesorios y / o suministros.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "94",
+                "Sign": "",
+                "Measure": {
+                  "ID": "38",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7447",
+                    "_": "g",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Peso",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 4233,
+          "SortNo": "1",
+          "FeatureGroup": {
+            "ID": "28",
+            "Name": {
+              "Value": "Condiciones ambientales",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 430001291,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "1500",
+              "CategoryFeatureId": "32371",
+              "CategoryFeatureGroupID": "4233",
+              "SortNo": "3",
+              "PresentationValue": "1500 G",
+              "RawValue": "1500",
+              "LocalValue": "1500",
+              "Description": "Environmental requirements for optimal protection from impact in operating mode",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1637",
+                "Sign": "",
+                "Measure": {
+                  "ID": "72",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7480",
+                    "_": "G",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Golpes en funcionamiento",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "FeatureLogos": [],
+      "ReasonsToBuy": [],
+      "Reviews": [],
+      "ProductRelated": [],
+      "CatalogObjectCloud": {
+        "ProductPage": {
+          "QRCodeURL": "https://qr.icecat.biz/coc/20007e2d-a2be-460c-b973-e53543ba7d67",
+          "URL": "https://coc.icecat.biz/20007e2d-a2be-460c-b973-e53543ba7d67"
+        }
+      },
+      "Variants": [],
+      "ProductStory": [],
+      "Dictionary": {
+        "eu_energy_label": "EU Energy Label",
+        "pdf_url": "User manual",
+        "reviews_head_name": "Reviews",
+        "zoom_panel_dragg": "Mouse dragging",
+        "demo_msg_part2": "Su nombre de usuario de Icecat",
+        "zoom_panel_out": "Zoom out",
+        "zoom_panel_in": "Zoom in",
+        "demo_msg_part1": "Ahora est&aacute; usando una cuenta demo. Por favor, utilice su propia cuenta Icecat",
+        "zoom_panel_init": "Original size",
+        "demo_insert_desc": "Esta es una demo de una inserci&oacute;n de ficha de producto Icecat LIVE en su sitio web. Imagine que esta ficha t&eacute;cnica est&aacute; incluida en la p&aacute;gina del producto de su tienda online.",
+        "options_head_name": "Options",
+        "demo_msg_part3": "Si no tiene una cuenta en Icecat, reg&iacute;strese aqu&iacute; de forma gratuita",
+        "pdf_specs": "Folleto",
+        "product_family": "Familia de productos",
+        "supplier_name": "Marca",
+        "flash360": "3D tour",
+        "product_series": "Series de Productos",
+        "desc": "Descripci&oacute;n",
+        "ean_code": "C&oacute;digo EAN/UPC",
+        "specs": "Especificaciones",
+        "marketing_text": "Descripción",
+        "reasons_to_buy": "Razones para comprar",
+        "release_date": "Release date",
+        "html_content": "",
+        "eu_product_fiche": "EU Product Fiche",
+        "cat_name": "Categor&iacute;a",
+        "prod_code": "C&oacute;digo del producto",
+        "back_to_top": "Volver arriba",
+        "model_name": "Nombre de producto",
+        "repairability_index": "Repairability index",
+        "video": "Video",
+        "link_integrate_desk": "How to integrate Icecat LIVE JavaScript."
+      },
+      "DemoAccount": false
+    }
+  },
+  "mpn_usado": "MZ-77E500E",
+  "mpn_original": "MZ-77E500E",
+  "variante_indice": 0
+}

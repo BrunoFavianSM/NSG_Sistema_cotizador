@@ -1,0 +1,223 @@
+{
+  "ok": true,
+  "fuente": "deltron-scraping",
+  "status": 200,
+  "consulta": {
+    "codigo": "cpam4r55500",
+    "marca": "AMD"
+  },
+  "data": {
+    "msg": "OK",
+    "StatusCode": 0,
+    "source": "deltron-scraping",
+    "data": {
+      "GeneralInfo": {
+        "Title": "Procesador AMD Ryzen 5 5500, 3.60 / 4.20 GHz, 16MB L3 Cache, 6-Cores, AM4, 7nm, 65W.",
+        "Brand": "AMD",
+        "BrandPartCode": "cpam4r55500",
+        "SummaryDescription": {
+          "ShortSummaryDescription": "id=\"home\"> PROC AMD RYZEN 5 5500 3.60GHZ No incluye Controlador Grafico Integrado. Consideraciones Tipo de Producto : Componente Tipo Operatividad : (NV) Nuevo Foto referencial"
+        }
+      },
+      "FeaturesGroups": [
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "General"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "MARCA"
+                }
+              },
+              "PresentationValue": "AMD"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "FAMILIA"
+                }
+              },
+              "PresentationValue": "Serie 5000 Ryzen 5"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "LINEA AMD"
+                }
+              },
+              "PresentationValue": "Procesador AMD Ryzen 5 SAM4 5XXX"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "NOMBRE DEL PROCESADOR"
+                }
+              },
+              "PresentationValue": "Ryzen 5 5500"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "SOCKET"
+                }
+              },
+              "PresentationValue": "AM4 AMD"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "LITOGRAFIA AMD"
+                }
+              },
+              "PresentationValue": "TSMC 7nm FinFET"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "INCORPORA CONTROLADOR GRAFICO"
+                }
+              },
+              "PresentationValue": "NO"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "INCLUYE FAN COOLER"
+                }
+              },
+              "PresentationValue": "SI"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "PRESENTACION"
+                }
+              },
+              "PresentationValue": "CAJA"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CODIGO DEL FABRICANTE"
+                }
+              },
+              "PresentationValue": "100-100000457BOX"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "NUCLEOS"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CANTIDAD DE NUCLEOS"
+                }
+              },
+              "PresentationValue": "6"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CANTIDAD DE SUBPROCESOS"
+                }
+              },
+              "PresentationValue": "12"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "FRECUENCIAS"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "FRECUENCIA BASE"
+                }
+              },
+              "PresentationValue": "3.60 GHz"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "FRECUENCIA DE AUMENTO MAXIMA HASTA"
+                }
+              },
+              "PresentationValue": "4.20 GHz"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "DESBLOQUEADO"
+                }
+              },
+              "PresentationValue": "SI"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "CACHE"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CACHE L1 TOTAL"
+                }
+              },
+              "PresentationValue": "384 KB"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CACHE L2 TOTAL"
+                }
+              },
+              "PresentationValue": "3 MB"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CACHE L3 TOTAL"
+                }
+              },
+              "PresentationValue": "16 MB"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "POTENCIA"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "TDP"
+                }
+              },
+              "PresentationValue": "65 Watt"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "producto": {
+    "codigo_deltron": "cpam4nat3000g",
+    "categoria": "Procesador",
+    "marca_csv": "amd-advanced micro device",
+    "marca_normalizada": "AMD",
+    "nombre_esperado": "procesador amd athlon 3000g, 3.50ghz, 4mb l3 cache, 2-cores, am4, 14nm, tdp: 35w.",
+    "indice": 2,
+    "carpeta": "02-procesador-amd-cpam4nat3000g"
+  },
+  "resultado": {
+    "codigo_consultado": "cpam4nat3000g",
+    "url": "https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=cpam4nat3000g",
+    "sku_encontrado": "cpam4nat3000g",
+    "sku_coincide": true,
+    "mpn": "YD3000C6FHSBX",
+    "mpn_metodo": "part-number",
+    "titulo_h1": "Procesador AMD Athlon 3000G, 3.50GHz, 4MB L3 Cache, 2-Cores, AM4, 14nm, TDP: 35W.",
+    "timestamp": "2026-06-05T23:40:05.833Z"
+  }
+}
