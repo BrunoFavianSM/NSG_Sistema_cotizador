@@ -2,6 +2,10 @@
 node_modules/
 **/node_modules/
 
+# Respaldos de base de datos (no commitear: pueden contener datos/PII)
+base-datos/respaldos/
+*.dump
+
 # Variables de entorno (Seguridad)
 .env
 .env.local

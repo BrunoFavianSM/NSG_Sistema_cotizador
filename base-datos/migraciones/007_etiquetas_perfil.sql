@@ -7,6 +7,10 @@
 -- ============================================================
 BEGIN;
 
+-- Garantiza que los acentos (Básico) se guarden como UTF-8 aunque el cliente
+-- psql tenga otro encoding por defecto (Windows).
+SET client_encoding TO 'UTF8';
+
 CREATE TABLE IF NOT EXISTS etiquetas (
   id         SERIAL PRIMARY KEY,
   nombre     VARCHAR(40) NOT NULL UNIQUE,
