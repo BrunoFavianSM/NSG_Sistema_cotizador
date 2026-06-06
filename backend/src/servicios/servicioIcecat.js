@@ -12,8 +12,7 @@
  * ICECAT_SHOPNAME y (opcional, solo Full Icecat) ICECAT_APP_KEY.
  */
 
-const axios = require('axios');
-
+// Usa fetch nativo (Node 18+). No requiere dependencias externas.
 const URL_API = 'https://live.icecat.biz/api';
 const TIMEOUT_MS = Number(process.env.ICECAT_TIMEOUT_MS || 15000);
 
@@ -48,21 +47,24 @@ async function consultarIcecat({ mpn, marca, lang }) {
   });
   if (config.appKey) params.set('app_key', config.appKey);
 
+  const controlador = new AbortController();
+  const timer = setTimeout(() => controlador.abort(), TIMEOUT_MS);
   try {
-    const respuesta = await axios.get(`${URL_API}?${params.toString()}`, {
+    const respuesta = await fetch(`${URL_API}?${params.toString()}`, {
       headers: {
         'api-token': config.apiToken,
         'content-token': config.contentToken,
       },
-      timeout: TIMEOUT_MS,
-      validateStatus: () => true,
+      signal: controlador.signal,
     });
+    let data = null;
+    try { data = await respuesta.json(); } catch (_) { data = null; }
     return {
       ok: respuesta.status === 200,
       status: respuesta.status,
       fuente: 'icecat',
       consulta: { mpn, marca, lang: idioma },
-      data: respuesta.data,
+      data,
     };
   } catch (err) {
     return {
@@ -70,8 +72,10 @@ async function consultarIcecat({ mpn, marca, lang }) {
       status: null,
       fuente: 'icecat',
       consulta: { mpn, marca, lang: idioma },
-      error: err.code === 'ECONNABORTED' ? 'timeout' : (err.message || 'error_desconocido'),
+      error: err.name === 'AbortError' ? 'timeout' : (err.message || 'error_desconocido'),
     };
+  } finally {
+    clearTimeout(timer);
   }
 }
 

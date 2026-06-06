@@ -10,8 +10,7 @@
  * (scripts/poc-icecat/scraper-deltron.js + scraper-deltron-specs.js).
  */
 
-const axios = require('axios');
-
+// Usa fetch nativo (Node 18+). No requiere dependencias externas.
 const URL_BASE = 'https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=';
 const TIMEOUT_MS = Number(process.env.DELTRON_TIMEOUT_MS || 12000);
 
@@ -30,15 +29,16 @@ function urlProducto(codigo) {
 /** Descarga el HTML de la ficha (una sola petición). No lanza excepción. */
 async function descargarHtmlDeltron(codigo) {
   const url = urlProducto(codigo);
+  const controlador = new AbortController();
+  const timer = setTimeout(() => controlador.abort(), TIMEOUT_MS);
   try {
-    const { data: html, status } = await axios.get(url, {
-      headers: HEADERS,
-      timeout: TIMEOUT_MS,
-      validateStatus: () => true,
-    });
-    return { html: status >= 400 ? null : html, status, url };
+    const resp = await fetch(url, { headers: HEADERS, signal: controlador.signal });
+    const html = resp.status >= 400 ? null : await resp.text();
+    return { html, status: resp.status, url };
   } catch (err) {
-    return { html: null, status: null, url, error: err.code === 'ECONNABORTED' ? 'timeout' : (err.message || 'error_desconocido') };
+    return { html: null, status: null, url, error: err.name === 'AbortError' ? 'timeout' : (err.message || 'error_desconocido') };
+  } finally {
+    clearTimeout(timer);
   }
 }
 

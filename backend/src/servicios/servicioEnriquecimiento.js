@@ -91,6 +91,11 @@ function pTexto(v) {
   const s = String(v ?? '').trim();
   return s || null;
 }
+function pPcie(v) {
+  // Versión PCIe: "PCIe 4.0", "Gen5", "5.0" -> "4.0"/"5.0". Evita conteos sueltos.
+  const m = String(v ?? '').match(/(?:gen\s*)?([2-6])(?:\.0)?\b/i);
+  return m ? `${m[1]}.0` : null;
+}
 
 // ---------------------------------------------------------------------------
 // Aplana las FeaturesGroups a [{label, labelNorm, valor, grupo}]
@@ -128,7 +133,7 @@ const MAPEO = {
     ['mb_ram_tipo', (l) => l.includes('tipos de memoria') || l.includes('tipo de memoria') || l.includes('tecnologia de memoria'), pRamTipo],
     ['mb_max_ram_gb', (l) => l.includes('memoria interna maxima') || l.includes('maximo de memoria') || (l.includes('memoria') && l.includes('maxima')), pCapacidadGb],
     ['mb_slots_ram', (l) => l.includes('ranuras de memoria') || (l.includes('numero') && l.includes('ranura')), pInt],
-    ['mb_pcie_version', (l) => l.includes('pci express') || l.includes('version de pci') || l.includes('pcie'), pTexto],
+    ['mb_pcie_version', (l) => (l.includes('pci express') || l.includes('pcie') || l.includes('version de pci')) && (l.includes('version') || l.includes('gen')) && !l.includes('ranura') && !l.includes('cantidad') && !l.includes('numero'), pPcie],
     ['mb_m2_slots', (l) => l.includes('m.2') || l.includes('m2'), pInt],
   ],
   ram: [
