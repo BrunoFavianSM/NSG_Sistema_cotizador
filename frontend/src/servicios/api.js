@@ -56,11 +56,16 @@ api.interceptors.response.use(
 
     switch (status) {
       case 401:
-        // Token inválido o expirado
+        // Token inválido o expirado: limpiar SIEMPRE todo rastro de sesión
+        // y avisar a la app para resetear el estado (evita que la cuenta
+        // anterior "reviva"). El guard de ruta decide la redirección.
         localStorage.removeItem('token');
         localStorage.removeItem('usuario');
-        if (window.location.pathname.startsWith('/admin')) {
-          window.location.href = '/login';
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('sesion:expirada'));
+          if (window.location.pathname.startsWith('/admin')) {
+            window.location.href = '/login';
+          }
         }
         break;
       case 403:

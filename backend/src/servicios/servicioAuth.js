@@ -356,7 +356,7 @@ function verificarToken(token) {
         id: payload.id,
         username: payload.username,
         nombre: payload.nombre,
-        rol: payload.rol || 'admin'
+        rol: payload.rol || 'usuario' // SEGURIDAD: sin rol => minimo privilegio
       }
     };
   } catch (error) {

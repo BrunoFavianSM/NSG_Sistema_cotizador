@@ -32,7 +32,7 @@ function decodificarToken(token) {
     id: decoded.id,
     username: decoded.username,
     nombre: decoded.nombre,
-    rol: decoded.rol || 'admin' // tokens legacy sin rol se tratan como admin
+    rol: decoded.rol || 'usuario' // SEGURIDAD: sin rol => minimo privilegio (nunca admin)
   };
 }
 

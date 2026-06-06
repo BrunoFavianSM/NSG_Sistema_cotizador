@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const servicioAuth = require('../servicios/servicioAuth');
-const { verificarToken } = require('../middleware/auth');
+const { verificarToken, verificarTokenUsuario } = require('../middleware/auth');
 
 // Rate limiter para registro (5 intentos / 15 min)
 const limitadorRegistro = rateLimit({
@@ -60,7 +60,7 @@ router.post('/login', async (req, res) => {
  * POST /api/auth/verificar
  * Verifica si un token JWT es válido. Retorna rol en el usuario.
  */
-router.post('/verificar', verificarToken, async (req, res) => {
+router.post('/verificar', verificarTokenUsuario, async (req, res) => {
   try {
     res.json({
       valido: true,

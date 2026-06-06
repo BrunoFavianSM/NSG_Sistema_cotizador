@@ -124,6 +124,14 @@ const AppProviderInternal = ({ children }) => {
     verificarAutenticacion();
   }, []);
 
+  // SEGURIDAD: ante 401 (token expirado/ inválido) emitido por api.js,
+  // resetear la sesión en memoria para que no "reviva" la cuenta anterior.
+  useEffect(() => {
+    const onExpirada = () => limpiarSesion();
+    window.addEventListener('sesion:expirada', onExpirada);
+    return () => window.removeEventListener('sesion:expirada', onExpirada);
+  }, []);
+
   useEffect(() => {
     cargarConfiguracion();
   }, []);
@@ -140,33 +148,44 @@ const AppProviderInternal = ({ children }) => {
     }
   }, [modoTipoCambio, tipoCambioHook, tipoCambioManualBD]);
 
+  /**
+   * Limpia toda la sesión local (token + usuario) y resetea el estado.
+   * SEGURIDAD: evita que datos de una sesión anterior "reviertan" la cuenta activa.
+   * No redirige; el guard de ruta decide a dónde ir.
+   */
+  const limpiarSesion = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    setUsuario(null);
+    setAutenticado(false);
+  };
+
   const verificarAutenticacion = async () => {
     try {
-      const usuarioGuardado = api.obtenerUsuarioActual();
       const token = localStorage.getItem('token');
 
-      if (usuarioGuardado && token) {
-        // Verificar que el token sea válido
-        const resultado = await api.verificarToken();
-        if (resultado.valido) {
-          // Si el backend retorna rol, actualizar el usuario guardado
-          if (resultado.rol) {
-            usuarioGuardado.rol = resultado.rol;
-          }
-          setUsuario(usuarioGuardado);
-          setAutenticado(true);
-          await cargarConfiguracion();
-        } else {
-          // Token inválido, limpiar
-          api.logout();
-          setUsuario(null);
-          setAutenticado(false);
-        }
+      // Sin token => sesión limpia garantizada (sin restos de cuentas previas).
+      if (!token) {
+        limpiarSesion();
+        return;
+      }
+
+      // El BACKEND es la única fuente de verdad: el usuario se deriva del token
+      // verificado, NO de localStorage (que puede estar desincronizado).
+      const resultado = await api.verificarToken();
+      if (resultado?.valido && resultado.usuario) {
+        const usuarioVerificado = { ...resultado.usuario, rol: resultado.rol };
+        localStorage.setItem('usuario', JSON.stringify(usuarioVerificado));
+        setUsuario(usuarioVerificado);
+        setAutenticado(true);
+        await cargarConfiguracion();
+      } else {
+        // Token inválido/expirado => limpiar todo rastro de sesión.
+        limpiarSesion();
       }
     } catch (error) {
-      console.error('Error al verificar autenticación:', error);
-      setUsuario(null);
-      setAutenticado(false);
+      // 401/403 (expirado/ inválido) u otro error => sesión limpia, sin restos.
+      limpiarSesion();
     } finally {
       setCargandoAuth(false);
     }
