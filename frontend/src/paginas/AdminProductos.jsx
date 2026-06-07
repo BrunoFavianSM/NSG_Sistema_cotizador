@@ -341,6 +341,7 @@ export default function AdminProductos() {
   const [vistaDetallada, setVistaDetallada] = useState(false);
   // Task 10.2 — filtro por estado de enriquecimiento
   const [filtroEstado, setFiltroEstado] = useState('');
+  const [filtroEtiqueta, setFiltroEtiqueta] = useState('');
   // Task 10.2 — tooltip para badge ia_fallido (almacena id del producto o null)
   const [tooltipFallido, setTooltipFallido] = useState(null);
 
@@ -517,8 +518,11 @@ export default function AdminProductos() {
     if (filtroEstado) {
       lista = lista.filter((producto) => (producto.estado_enriquecimiento || 'no_aplica') === filtroEstado);
     }
+    if (filtroEtiqueta) {
+      lista = lista.filter((producto) => String(producto.etiqueta || '') === filtroEtiqueta);
+    }
     return lista;
-  }, [productos, filtroCategoria, filtroEstado]);
+  }, [productos, filtroCategoria, filtroEstado, filtroEtiqueta]);
 
   const columnas = [
     { key: 'id', label: 'ID', sortable: true },
@@ -746,7 +750,7 @@ export default function AdminProductos() {
                     htmlFor="filtro-estado-enriquecimiento"
                     className="text-xs font-medium text-[var(--color-text-muted)]"
                   >
-                    Estado IA
+                    Estado
                   </label>
                   <select
                     id="filtro-estado-enriquecimiento"
@@ -761,6 +765,23 @@ export default function AdminProductos() {
                     <option value="fallido">Falló</option>
                     <option value="pendiente">Pendiente</option>
                     <option value="no_aplica">Sin enriquecimiento</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="filtro-etiqueta-perfil" className="text-xs font-medium text-[var(--color-text-muted)]">
+                    Etiqueta
+                  </label>
+                  <select
+                    id="filtro-etiqueta-perfil"
+                    value={filtroEtiqueta}
+                    onChange={(e) => setFiltroEtiqueta(e.target.value)}
+                    aria-label="Filtrar por etiqueta de perfil"
+                    className="min-h-11 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] sm:max-w-[15rem]"
+                  >
+                    <option value="">Todas las etiquetas</option>
+                    {etiquetas.map((et) => (
+                      <option key={et.id} value={et.nombre}>{et.nombre}</option>
+                    ))}
                   </select>
                 </div>
               </div>

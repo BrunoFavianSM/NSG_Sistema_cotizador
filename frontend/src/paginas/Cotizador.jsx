@@ -693,6 +693,13 @@ export default function Cotizador() {
   );
 
   // Mostrar toast cuando se alcanza el límite del comparador (Req. 6.4)
+  // Cargar etiquetas de perfil para el filtro del cotizador.
+  useEffect(() => {
+    api.obtenerEtiquetas()
+      .then((d) => setEtiquetasDisponibles(d?.etiquetas || []))
+      .catch(() => setEtiquetasDisponibles([]));
+  }, []);
+
   useEffect(() => {
     if (errorComparador) {
       toast.warning('Límite del comparador', errorComparador);
@@ -706,6 +713,9 @@ export default function Cotizador() {
   const [soloCompatibles, setSoloCompatibles] = useState(true);
   // ordenPrecio: 'relevancia' | 'menor' | 'mayor' — persiste entre pasos (Req. 10.9)
   const [ordenPrecio, setOrdenPrecio] = useState('relevancia');
+  // Filtro global por etiqueta de perfil (Básico/Medio/Avanzado/Gamer Full)
+  const [filtroEtiqueta, setFiltroEtiqueta] = useState('all');
+  const [etiquetasDisponibles, setEtiquetasDisponibles] = useState([]);
   const [filtrosPaso, setFiltrosPaso] = useState({
     procesadorMarca: 'all',
     procesadorModelo: 'all',
@@ -1087,6 +1097,11 @@ export default function Cotizador() {
     let lista = [...productosPasoBase];
     const coincide = (valor, filtroActivo) => normalizarTexto(valor) === normalizarTexto(filtroActivo);
 
+    // Filtro global por etiqueta de perfil (Básico/Medio/Avanzado/Gamer Full).
+    if (filtroEtiqueta !== 'all') {
+      lista = lista.filter((p) => String(p.etiqueta || '') === filtroEtiqueta);
+    }
+
     switch (pasoInfo.id) {
       case 'procesador':
         if (filtrosPaso.procesadorMarca !== 'all') {
@@ -1149,7 +1164,7 @@ export default function Cotizador() {
     }
 
     return lista;
-  }, [productosPasoBase, pasoInfo.id, filtrosPaso]);
+  }, [productosPasoBase, pasoInfo.id, filtrosPaso, filtroEtiqueta]);
 
   // Aplicar ordenamiento por precio después de todos los filtros (Req. 10.3–10.6)
   const productosFiltradosYOrdenados = useMemo(
@@ -1900,6 +1915,18 @@ export default function Cotizador() {
             <>
               <section className="surface-card p-3" aria-label="Filtros de productos">
                 {renderFiltrosPaso()}
+                {etiquetasDisponibles.length > 0 ? (
+                  <div className="mt-3 border-t border-[var(--color-border)] pt-3">
+                    {renderCampoFiltro(
+                      'filtro-etiqueta-perfil',
+                      'Etiqueta de perfil',
+                      filtroEtiqueta,
+                      (valor) => setFiltroEtiqueta(valor),
+                      etiquetasDisponibles.map((et) => et.nombre),
+                      'Todas las etiquetas'
+                    )}
+                  </div>
+                ) : null}
               </section>
 
               {cargandoProductos ? (
@@ -1947,16 +1974,23 @@ export default function Cotizador() {
                                   <h3 className="text-base font-semibold text-[var(--color-text)]">
                                     {capitalizarPrimeraLetra(producto.nombre)}
                                   </h3>
-                                  {vistaDetalladaProductos ? (
-                                    <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-muted)]">
-                                      <span className="inline-flex rounded-full bg-[var(--color-surface-soft)] px-2.5 py-1 font-medium">
-                                        {capitalizarPrimeraLetra(extraerMarca(producto))}
+                                  <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-muted)]">
+                                    {producto.etiqueta ? (
+                                      <span className="inline-flex rounded-full bg-[var(--color-accent-soft)] px-2.5 py-1 font-semibold text-[var(--color-accent-text)]">
+                                        {producto.etiqueta}
                                       </span>
-                                      <span className="inline-flex rounded-full bg-[var(--color-surface-soft)] px-2.5 py-1 font-medium">
-                                        {pasoInfo.nombre}
-                                      </span>
-                                    </div>
-                                  ) : null}
+                                    ) : null}
+                                    {vistaDetalladaProductos ? (
+                                      <>
+                                        <span className="inline-flex rounded-full bg-[var(--color-surface-soft)] px-2.5 py-1 font-medium">
+                                          {capitalizarPrimeraLetra(extraerMarca(producto))}
+                                        </span>
+                                        <span className="inline-flex rounded-full bg-[var(--color-surface-soft)] px-2.5 py-1 font-medium">
+                                          {pasoInfo.nombre}
+                                        </span>
+                                      </>
+                                    ) : null}
+                                  </div>
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
                                   <span className={`inline-flex shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${estadoStock.className}`}>
@@ -1995,6 +2029,48 @@ export default function Cotizador() {
                                     </div>
                                   ))}
                                 </dl>
+                              ) : null}
+
+                              {/* Ficha tecnica completa (Icecat/Deltron) — colapsable */}
+                              {vistaDetalladaProductos && Array.isArray(producto.ficha_tecnica?.grupos) && producto.ficha_tecnica.grupos.length > 0 ? (
+                                <details className="mt-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-3 py-2">
+                                  <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
+                                    Ficha técnica completa
+                                  </summary>
+                                  <div className="mt-3 space-y-3">
+                                    {producto.ficha_tecnica.grupos.map((g, gi) => (
+                                      <div key={`${producto.id}-ficha-${gi}`}>
+                                        <h4 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text)]">{g.nombre}</h4>
+                                        <dl className="mt-1 grid gap-1.5 sm:grid-cols-2">
+                                          {(g.items || []).map((it, ii) => (
+                                            <div key={`${producto.id}-ficha-${gi}-${ii}`} className="flex flex-col">
+                                              <dt className="text-[11px] text-[var(--color-text-muted)]">{it.etiqueta}</dt>
+                                              <dd className="text-xs font-medium text-[var(--color-text)]">{it.valor}</dd>
+                                            </div>
+                                          ))}
+                                        </dl>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </details>
+                              ) : null}
+
+                              {/* Enlace a la ficha del producto en Deltron */}
+                              {producto.codigo_proveedor ? (
+                                <a
+                                  href={`https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=${encodeURIComponent(producto.codigo_proveedor)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="mt-3 inline-flex min-h-11 w-fit items-center gap-1.5 text-xs font-medium text-[var(--color-accent)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] rounded-[var(--radius-sm)]"
+                                >
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                    <polyline points="15 3 21 3 21 9" />
+                                    <line x1="10" y1="14" x2="21" y2="3" />
+                                  </svg>
+                                  Ver en Deltron
+                                </a>
                               ) : null}
 
                               <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
