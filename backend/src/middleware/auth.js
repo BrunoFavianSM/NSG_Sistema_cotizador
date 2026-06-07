@@ -79,7 +79,7 @@ async function verificarTokenUsuario(req, res, next) {
   try {
     const decoded = decodificarToken(token);
 
-    if (!['admin', 'usuario'].includes(decoded.rol)) {
+    if (!['admin', 'vendedor', 'usuario'].includes(decoded.rol)) {
       return res.status(403).json({
         error: 'Rol no autorizado',
         mensaje: 'Tu cuenta no tiene permisos para acceder a este recurso'
@@ -168,6 +168,34 @@ function verificarTokenAdmin(req, res, next) {
 }
 
 /**
+ * Middleware que permite admin o vendedor (gestión de cotizaciones/clientes).
+ * Rechaza 401 sin token, 403 si el rol no es admin/vendedor.
+ */
+function verificarTokenAdminOVendedor(req, res, next) {
+  const token = extraerToken(req);
+  if (!token) {
+    return res.status(401).json({ error: 'Acceso denegado', mensaje: 'Token de autenticación no proporcionado' });
+  }
+  try {
+    const decoded = decodificarToken(token);
+    if (decoded.rol !== 'admin' && decoded.rol !== 'vendedor') {
+      return res.status(403).json({ error: 'Acceso restringido', mensaje: 'Se requieren permisos de administrador o vendedor' });
+    }
+    req.usuario = { id: decoded.id, username: decoded.username, nombre: decoded.nombre };
+    req.rol = decoded.rol;
+    next();
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expirado', mensaje: 'El token de autenticación ha expirado' });
+    }
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(403).json({ error: 'Token inválido', mensaje: 'El token de autenticación no es válido' });
+    }
+    return res.status(500).json({ error: 'Error de autenticación', mensaje: 'Error al verificar el token' });
+  }
+}
+
+/**
  * Alias legacy: verificarToken = verificarTokenAdmin.
  * Mantenido para compatibilidad con código existente que hace require('verificarToken').
  */
@@ -175,4 +203,4 @@ function verificarToken(req, res, next) {
   return verificarTokenAdmin(req, res, next);
 }
 
-module.exports = { verificarToken, verificarTokenAdmin, verificarTokenUsuario, detectarUsuario };
+module.exports = { verificarToken, verificarTokenAdmin, verificarTokenAdminOVendedor, verificarTokenUsuario, detectarUsuario };

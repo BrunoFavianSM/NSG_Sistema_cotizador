@@ -179,11 +179,12 @@ async function registrar(datos) {
     // Hashear contraseña
     const passwordHash = await hashPassword(datos.password);
 
+    const dni = String(datos.dni || '').trim() || null;
     const insert = await ejecutarQuery(
-      `INSERT INTO cuentas (username, password_hash, correo_encrypted, correo_hash, nombre_completo, telefono_encrypted, telefono_hash, rol)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'usuario')
+      `INSERT INTO cuentas (username, password_hash, correo_encrypted, correo_hash, nombre_completo, telefono_encrypted, telefono_hash, dni, rol)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'usuario')
        RETURNING id, username, nombre_completo, rol`,
-      [datos.username, passwordHash, correoEncrypted, correoHash, datos.nombre_completo, telefonoEncrypted, telefonoHash]
+      [datos.username, passwordHash, correoEncrypted, correoHash, datos.nombre_completo, telefonoEncrypted, telefonoHash, dni]
     );
 
     const cuenta = insert.rows[0];
