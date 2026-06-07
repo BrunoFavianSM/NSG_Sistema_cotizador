@@ -8,7 +8,7 @@
  * Requisitos: 10.1, 10.2, 10.3, 10.4
  */
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs'); // JS puro: portable, sin binario nativo (compatible con hashes $2a$/$2b$)
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { ejecutarQuery } = require('../configuracion/baseDatos');
