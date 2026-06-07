@@ -30,35 +30,42 @@ const C_MUTED = '#636366';   // valor fijo para SVG (no hereda CSS vars)
 // ─── Layout del viewBox ───────────────────────────────────────────────────────
 // Nodos tipo card: 130×90 px, esquinas 14 px — más espacio para nombre completo
 const VB_W  = 760;
-const VB_H  = 420;
+const VB_H  = 560;
 const NW    = 130;
 const NH    = 90;
 const NR    = 14;
 
+// 7 componentes en 3 filas: CPU/MB/RAM · GPU/Almacenamiento/Fuente · Case
 const POSICIONES = {
-  procesador:  { cx: 105,  cy: 115 },
-  placa_madre: { cx: 380,  cy: 115 },
-  ram:         { cx: 655,  cy: 115 },
-  gpu:         { cx: 225,  cy: 310 },
-  fuente:      { cx: 535,  cy: 310 },
+  procesador:     { cx: 140, cy: 110 },
+  placa_madre:    { cx: 380, cy: 110 },
+  ram:            { cx: 620, cy: 110 },
+  gpu:            { cx: 140, cy: 290 },
+  almacenamiento: { cx: 380, cy: 290 },
+  fuente:         { cx: 620, cy: 290 },
+  case:           { cx: 380, cy: 470 },
 };
 
 const CONEXIONES = [
-  { id: 'cpu-mb',    desde: 'procesador',  hasta: 'placa_madre', kw: ['socket','procesador','placa'] },
-  { id: 'mb-ram',    desde: 'placa_madre', hasta: 'ram',         kw: ['ram','memoria','ddr'] },
-  { id: 'mb-gpu',    desde: 'placa_madre', hasta: 'gpu',         kw: ['gpu','grafica','video','pcie'] },
-  { id: 'fuente-cpu',desde: 'fuente',      hasta: 'procesador',  kw: ['fuente','watt','potencia','energia'] },
-  { id: 'fuente-mb', desde: 'fuente',      hasta: 'placa_madre', kw: ['fuente','watt','potencia','energia'] },
-  { id: 'fuente-ram',desde: 'fuente',      hasta: 'ram',         kw: ['fuente','watt','potencia','energia'] },
-  { id: 'fuente-gpu',desde: 'fuente',      hasta: 'gpu',         kw: ['fuente','watt','potencia','energia','gpu'] },
+  { id: 'cpu-mb',     desde: 'procesador',  hasta: 'placa_madre',    kw: ['socket','procesador','placa'] },
+  { id: 'mb-ram',     desde: 'placa_madre', hasta: 'ram',            kw: ['ram','memoria','ddr'] },
+  { id: 'mb-gpu',     desde: 'placa_madre', hasta: 'gpu',            kw: ['gpu','grafica','video','pcie'] },
+  { id: 'mb-storage', desde: 'placa_madre', hasta: 'almacenamiento', kw: ['m.2','nvme','sata','almacenamiento','disco'] },
+  { id: 'fuente-cpu', desde: 'fuente',      hasta: 'procesador',     kw: ['fuente','watt','potencia','energia'] },
+  { id: 'fuente-mb',  desde: 'fuente',      hasta: 'placa_madre',    kw: ['fuente','watt','potencia','energia'] },
+  { id: 'fuente-gpu', desde: 'fuente',      hasta: 'gpu',            kw: ['fuente','watt','potencia','energia','gpu'] },
+  { id: 'case-mb',    desde: 'case',        hasta: 'placa_madre',    kw: ['case','factor de forma','form factor','gabinete'] },
+  { id: 'case-gpu',   desde: 'case',        hasta: 'gpu',            kw: ['case','espacio','longitud','gpu','mm'] },
 ];
 
 const ETIQUETAS = {
-  procesador:  'CPU',
-  placa_madre: 'Motherboard',
-  ram:         'RAM',
-  gpu:         'GPU',
-  fuente:      'Fuente',
+  procesador:     'CPU',
+  placa_madre:    'Motherboard',
+  ram:            'RAM',
+  gpu:            'GPU',
+  almacenamiento: 'Almacenamiento',
+  fuente:         'Fuente',
+  case:           'Case',
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -187,12 +194,36 @@ function PathFuente() {
   );
 }
 
+function PathStorage() {
+  return (
+    <g fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="-9" y="-7" width="18" height="14" rx="2"/>
+      <circle cx="0" cy="0" r="3.5"/>
+      <circle cx="0" cy="0" r="0.8" fill="currentColor"/>
+      <line x1="6" y1="4" x2="7" y2="4"/>
+    </g>
+  );
+}
+
+function PathCase() {
+  return (
+    <g fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="-7" y="-11" width="14" height="22" rx="2"/>
+      <line x1="-3" y1="-7" x2="3" y2="-7"/>
+      <line x1="-3" y1="-4" x2="3" y2="-4"/>
+      <circle cx="0" cy="5" r="2.5"/>
+    </g>
+  );
+}
+
 const PATHS = {
-  procesador:  PathCPU,
-  placa_madre: PathMotherboard,
-  ram:         PathRAM,
-  gpu:         PathGPU,
-  fuente:      PathFuente,
+  procesador:     PathCPU,
+  placa_madre:    PathMotherboard,
+  ram:            PathRAM,
+  gpu:            PathGPU,
+  almacenamiento: PathStorage,
+  fuente:         PathFuente,
+  case:           PathCase,
 };
 
 // ─── Nodo tipo card (SVG puro, sin foreignObject) ─────────────────────────────
@@ -347,7 +378,11 @@ export function DiagramaSVGPuro({ configuracionSeleccionada, incompatibilidades 
                    ? configuracionSeleccionada.ram[0]
                    : null,
     gpu:         configuracionSeleccionada?.gpu   ?? null,
+    almacenamiento: Array.isArray(configuracionSeleccionada?.almacenamiento) && configuracionSeleccionada.almacenamiento.length > 0
+                   ? configuracionSeleccionada.almacenamiento[0]
+                   : (configuracionSeleccionada?.almacenamiento ?? null),
     fuente:      configuracionSeleccionada?.fuente ?? null,
+    case:        configuracionSeleccionada?.case ?? null,
   };
 
   const estadoConexiones = useMemo(() => CONEXIONES.map(con => {
@@ -507,7 +542,11 @@ export default function DiagramaCompatibilidad({ configuracionSeleccionada, inco
                    ? configuracionSeleccionada.ram[0]
                    : null,
     gpu:         configuracionSeleccionada?.gpu   ?? null,
+    almacenamiento: Array.isArray(configuracionSeleccionada?.almacenamiento) && configuracionSeleccionada.almacenamiento.length > 0
+                   ? configuracionSeleccionada.almacenamiento[0]
+                   : (configuracionSeleccionada?.almacenamiento ?? null),
     fuente:      configuracionSeleccionada?.fuente ?? null,
+    case:        configuracionSeleccionada?.case ?? null,
   };
 
   const hayAlgunComponente = Object.values(config).some(Boolean);
