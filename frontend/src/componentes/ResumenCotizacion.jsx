@@ -299,7 +299,7 @@ const ResumenCotizacion = ({
       >
         <p className="text-xs text-blue-800">
           <span className="font-semibold">Nota:</span> Los precios están sujetos a cambios.
-          La cotización es válida por 3 días desde su emisión.
+          La cotización es válida por 15 días desde su emisión.
         </p>
       </motion.div>
     </motion.div>

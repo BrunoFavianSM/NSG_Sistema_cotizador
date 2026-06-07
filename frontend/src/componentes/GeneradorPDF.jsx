@@ -499,7 +499,7 @@ const GeneradorPDF = ({
                       {/* Nota informativa */}
                       <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                         <p className="text-xs text-yellow-800">
-                          <span className="font-semibold">Importante:</span> Esta cotización es válida por 3 días.
+                          <span className="font-semibold">Importante:</span> Esta cotización es válida por 15 días.
                           Los precios están sujetos a cambios según disponibilidad.
                         </p>
                       </div>

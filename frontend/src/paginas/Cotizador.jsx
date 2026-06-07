@@ -716,6 +716,8 @@ export default function Cotizador() {
   // Filtro global por etiqueta de perfil (Básico/Medio/Avanzado/Gamer Full)
   const [filtroEtiqueta, setFiltroEtiqueta] = useState('all');
   const [etiquetasDisponibles, setEtiquetasDisponibles] = useState([]);
+  // Multi-PC: número de equipos iguales a cotizar (multiplicador)
+  const [cantidadEquipos, setCantidadEquipos] = useState(1);
   const [filtrosPaso, setFiltrosPaso] = useState({
     procesadorMarca: 'all',
     procesadorModelo: 'all',
@@ -1364,6 +1366,7 @@ export default function Cotizador() {
 
     const payload = { componentes };
     payload.margen_personalizado = Number(margenGanancia);
+    payload.cantidad_equipos = Math.max(1, parseInt(cantidadEquipos, 10) || 1);
     if (nombreClienteLimpio) payload.nombre_cliente = nombreClienteLimpio;
     if (emailClienteLimpio) payload.email_cliente = emailClienteLimpio;
     if (telefonoClienteLimpio) payload.telefono_cliente = telefonoClienteLimpio;
@@ -2539,14 +2542,34 @@ export default function Cotizador() {
                 </div>
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={generarCotizacion}
-                disabled={!configuracionCompleta || generando || validacionCompatibilidad.errores.length > 0 || !datosClienteValidos}
-                className="min-h-11 w-full rounded-[var(--radius-md)] bg-[var(--color-success-solid)] px-4 text-sm font-semibold text-[var(--color-on-success)] disabled:opacity-45"
-              >
-                {generando ? 'Generando cotizacion...' : 'Generar cotizacion'}
-              </button>
+              <>
+                <label htmlFor="cantidad-equipos" className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-3 py-2">
+                  <span className="text-sm font-medium text-[var(--color-text)]">Número de equipos</span>
+                  <input
+                    id="cantidad-equipos"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={cantidadEquipos}
+                    onChange={(e) => setCantidadEquipos(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    className="min-h-11 w-24 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+                    aria-label="Número de equipos iguales a cotizar"
+                  />
+                </label>
+                {cantidadEquipos > 1 ? (
+                  <p className="text-xs text-[var(--color-text-muted)]">
+                    Se cotizarán {cantidadEquipos} equipos iguales; los totales y el stock se multiplican por {cantidadEquipos}.
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={generarCotizacion}
+                  disabled={!configuracionCompleta || generando || validacionCompatibilidad.errores.length > 0 || !datosClienteValidos}
+                  className="min-h-11 w-full rounded-[var(--radius-md)] bg-[var(--color-success-solid)] px-4 text-sm font-semibold text-[var(--color-on-success)] disabled:opacity-45"
+                >
+                  {generando ? 'Generando cotizacion...' : 'Generar cotizacion'}
+                </button>
+              </>
             )}
 
             {errorGenerar ? (
