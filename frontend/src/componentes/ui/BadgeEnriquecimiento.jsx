@@ -32,20 +32,20 @@ const CONFIG_BADGE = {
     pulso: false,
     clickeable: false,
   },
-  ia_completado: {
-    texto: 'Completado IA',
+  enriquecido: {
+    texto: 'Enriquecido',
     claseColor: 'bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]',
     pulso: false,
     clickeable: false,
   },
-  ia_fallido: {
-    texto: 'IA Falló',
+  fallido: {
+    texto: 'Falló',
     claseColor: 'bg-[color:rgba(255,69,58,0.16)] text-[var(--color-danger)]',
     pulso: false,
     clickeable: true,
   },
   pendiente: {
-    texto: 'Pendiente IA',
+    texto: 'Pendiente',
     claseColor: 'bg-[color:rgba(255,214,10,0.16)] text-[var(--color-warning)]',
     pulso: true,
     clickeable: false,

@@ -247,7 +247,7 @@ async function enriquecerProducto(item) {
   // 1) Deltron: 1 petición -> MPN + imagen.
   const dl = await deltron.descargarHtmlDeltron(codigo_proveedor);
   if (!dl.html) {
-    await marcarEstado(id_producto, 'ia_fallido');
+    await marcarEstado(id_producto, 'fallido');
     return { id_producto, ok: false, fuente: 'deltron', motivo: dl.error || ('http_' + dl.status) };
   }
   const datosMpn = deltron.extraerMpnDeHtml(dl.html, codigo_proveedor);
@@ -280,7 +280,7 @@ async function enriquecerProducto(item) {
   }
 
   if (!featuresGroups) {
-    await marcarEstado(id_producto, 'ia_fallido');
+    await marcarEstado(id_producto, 'fallido');
     return { id_producto, ok: false, fuente: fuente || 'ninguna', motivo: 'sin_features' };
   }
 
@@ -321,7 +321,7 @@ async function guardarEnriquecimiento({ id_producto, categoria, tabla, tipadas, 
   await ejecutarQuery(
     `UPDATE productos
        SET imagen_url = COALESCE($2, imagen_url),
-           estado_enriquecimiento = 'ia_completado',
+           estado_enriquecimiento = 'enriquecido',
            updated_at = CURRENT_TIMESTAMP
      WHERE id = $1`,
     [id_producto, imagen]

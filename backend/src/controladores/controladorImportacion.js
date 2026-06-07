@@ -82,12 +82,12 @@ async function construirEstadoEnriquecimiento() {
   const sql = `
     SELECT estado_enriquecimiento, COUNT(*) AS total
     FROM productos
-    WHERE estado_enriquecimiento IN ('pendiente', 'ia_completado', 'ia_fallido')
+    WHERE estado_enriquecimiento IN ('pendiente', 'enriquecido', 'fallido')
     GROUP BY estado_enriquecimiento
   `;
   const resultado = await ejecutarQuery(sql);
   const filas = resultado.rows || [];
-  const conteos = { pendiente: 0, ia_completado: 0, ia_fallido: 0 };
+  const conteos = { pendiente: 0, enriquecido: 0, fallido: 0 };
 
   for (const fila of filas) {
     conteos[fila.estado_enriquecimiento] = parseInt(fila.total, 10);
@@ -97,8 +97,8 @@ async function construirEstadoEnriquecimiento() {
     en_proceso: estadoMemoria.procesando,
     pendientes: conteos.pendiente,
     pendientes_en_memoria: estadoMemoria.en_cola || 0,
-    completados: conteos.ia_completado,
-    fallidos: conteos.ia_fallido,
+    completados: conteos.enriquecido,
+    fallidos: conteos.fallido,
     ultima_actualizacion: new Date().toISOString(),
   };
 }
@@ -171,7 +171,7 @@ async function reintentarFallidos(req, res) {
       WITH actualizados AS (
         UPDATE productos
            SET estado_enriquecimiento = 'pendiente', updated_at = NOW()
-         WHERE estado_enriquecimiento = 'ia_fallido'
+         WHERE estado_enriquecimiento = 'fallido'
          RETURNING id, id_categoria, id_marca, codigo_proveedor
       )
       SELECT a.id AS id_producto, a.codigo_proveedor,

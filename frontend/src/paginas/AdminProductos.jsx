@@ -586,12 +586,12 @@ export default function AdminProductos() {
           <div className="relative">
             <BadgeEnriquecimiento
               estado={estado}
-              onClick={estado === 'ia_fallido'
+              onClick={estado === 'fallido'
                 ? () => setTooltipFallido((prev) => (prev === row.id ? null : row.id))
                 : undefined}
             />
-            {/* Task 10.2 — tooltip para ia_fallido */}
-            {estado === 'ia_fallido' && tooltipFallido === row.id && (
+            {/* tooltip para estado 'fallido' */}
+            {estado === 'fallido' && tooltipFallido === row.id && (
               <div
                 role="tooltip"
                 className="absolute z-10 left-0 top-full mt-1 w-64 rounded-lg surface-card border border-[var(--color-border)] p-3 shadow-lg text-xs text-[var(--color-text-muted)] leading-relaxed"
@@ -747,9 +747,9 @@ export default function AdminProductos() {
                   >
                     <option value="">Todos los estados</option>
                     <option value="csv">Datos CSV</option>
-                    <option value="ia_completado">Completado IA</option>
-                    <option value="ia_fallido">IA Falló</option>
-                    <option value="pendiente">Pendiente IA</option>
+                    <option value="enriquecido">Enriquecido</option>
+                    <option value="fallido">Falló</option>
+                    <option value="pendiente">Pendiente</option>
                     <option value="no_aplica">Sin enriquecimiento</option>
                   </select>
                 </div>
@@ -905,9 +905,9 @@ export default function AdminProductos() {
                 >
                   <option value="">Todos los estados</option>
                   <option value="csv">Datos CSV</option>
-                  <option value="ia_completado">Completado IA</option>
-                  <option value="ia_fallido">IA Falló</option>
-                  <option value="pendiente">Pendiente IA</option>
+                  <option value="enriquecido">Enriquecido</option>
+                  <option value="fallido">Falló</option>
+                  <option value="pendiente">Pendiente</option>
                   <option value="no_aplica">Sin enriquecimiento</option>
                 </select>
               </div>
