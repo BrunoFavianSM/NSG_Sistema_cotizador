@@ -13,6 +13,7 @@ import Cotizador from './paginas/Cotizador';
 import ValidadorCotizaciones from './paginas/ValidadorCotizaciones';
 import HistorialCliente from './paginas/HistorialCliente';
 import AdminProductos from './paginas/AdminProductos';
+import AdminUsuarios from './paginas/AdminUsuarios';
 import AdminConfiguracion from './paginas/AdminConfiguracion';
 import ImportarCSV from './paginas/ImportarCSV';
 import Dashboard from './paginas/Dashboard';
@@ -71,6 +72,7 @@ function AppRoutes() {
           <Route path="/admin" element={<Navigate to="/admin/productos" replace />} />
           <Route path="/admin/dashboard" element={<RutaProtegida><Dashboard /></RutaProtegida>} />
           <Route path="/admin/productos" element={<RutaProtegida><AdminProductos /></RutaProtegida>} />
+          <Route path="/admin/usuarios" element={<RutaProtegida><AdminUsuarios /></RutaProtegida>} />
           <Route path="/admin/configuracion" element={<RutaProtegida><AdminConfiguracion /></RutaProtegida>} />
           <Route path="/admin/importar-csv" element={<RutaProtegida><ImportarCSV /></RutaProtegida>} />
           <Route path="/perfil" element={<RutaProtegidaUsuario><Perfil /></RutaProtegidaUsuario>} />

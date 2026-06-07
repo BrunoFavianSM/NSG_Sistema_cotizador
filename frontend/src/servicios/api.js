@@ -98,16 +98,16 @@ api.interceptors.response.use(
  * @param {string} password - Contraseña
  * @returns {Promise<{exito: boolean, token?: string, usuario?: Object, error?: string}>}
  */
-export const login = async (username, password) => {
+export const login = async (username, password, captchaToken = null) => {
   try {
-    const response = await api.post('/auth/login', { username, password });
-    
+    const response = await api.post('/auth/login', { username, password, captcha_token: captchaToken });
+
     // Guardar token y usuario en localStorage
     if (response.data.exito && response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('usuario', JSON.stringify(response.data.usuario));
     }
-    
+
     return response.data;
   } catch (error) {
     throw error;
@@ -736,10 +736,10 @@ export const obtenerEstadisticasIA = async () => {
  * @param {Object} datos - { username, password, confirmarPassword, correo, nombre_completo, telefono? }
  * @returns {Promise<{exito: boolean, token?: string, usuario?: Object, error?: string}>}
  */
-export const registrar = async ({ username, password, confirmarPassword, correo, nombre_completo, telefono }) => {
+export const registrar = async ({ username, password, confirmarPassword, correo, nombre_completo, telefono, dni, captcha_token }) => {
   try {
     const response = await api.post('/auth/registro', {
-      username, password, confirmarPassword, correo, nombre_completo, telefono
+      username, password, confirmarPassword, correo, nombre_completo, telefono, dni, captcha_token
     });
 
     if (response.data.exito && response.data.token) {
@@ -752,6 +752,14 @@ export const registrar = async ({ username, password, confirmarPassword, correo,
     throw error;
   }
 };
+
+// ============================================
+// GESTIÓN DE CUENTAS (admin)
+// ============================================
+export const obtenerCuentas = async () => (await api.get('/cuentas')).data;
+export const crearCuenta = async (datos) => (await api.post('/cuentas', datos)).data;
+export const actualizarCuenta = async (id, datos) => (await api.put(`/cuentas/${id}`, datos)).data;
+export const eliminarCuenta = async (id) => (await api.delete(`/cuentas/${id}`)).data;
 
 /**
  * Solicita recuperacion de contrasena por correo electronico

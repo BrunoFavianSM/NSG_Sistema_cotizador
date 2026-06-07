@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Button from '../componentes/ui/Button';
 import InputField from '../componentes/ui/InputField';
 import ErrorState from '../componentes/feedback/ErrorState';
+import TurnstileWidget from '../componentes/ui/TurnstileWidget';
 import { useAppContext } from '../contexto/AppContext';
 
 function validarCredenciales(username, password) {
@@ -31,6 +32,7 @@ export default function Login() {
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
+  const [captchaToken, setCaptchaToken] = useState(null);
 
   const manejarSubmit = async (event) => {
     event.preventDefault();
@@ -45,10 +47,10 @@ export default function Login() {
     setCargando(true);
 
     try {
-      const resultado = await login(username.trim(), password);
+      const resultado = await login(username.trim(), password, captchaToken);
 
       if (resultado?.exito) {
-        navigate('/admin/productos');
+        navigate(resultado.rol === 'admin' ? '/admin/productos' : '/cotizador');
         return;
       }
 
@@ -145,6 +147,8 @@ export default function Login() {
 
             <p className="text-xs text-[var(--color-text-muted)]">Por seguridad, usa una contraseña de al menos 8 caracteres.</p>
           </div>
+
+          <TurnstileWidget onToken={setCaptchaToken} />
 
           <div className="flex flex-col items-center gap-3 pt-2">
             <Button type="submit" loading={cargando} className="sm:min-w-[12rem]">

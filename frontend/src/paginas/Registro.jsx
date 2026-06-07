@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Button from '../componentes/ui/Button';
 import InputField from '../componentes/ui/InputField';
 import ErrorState from '../componentes/feedback/ErrorState';
+import TurnstileWidget from '../componentes/ui/TurnstileWidget';
 import { useAppContext } from '../contexto/AppContext';
 import { evaluarFortalezaPassword } from '../utilidades/evaluarFortalezaPassword';
 
@@ -15,11 +16,13 @@ export default function Registro() {
   const [nombreCompleto, setNombreCompleto] = useState('');
   const [correo, setCorreo] = useState('');
   const [telefono, setTelefono] = useState('');
+  const [dni, setDni] = useState('');
   const [password, setPassword] = useState('');
   const [confirmarPassword, setConfirmarPassword] = useState('');
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
+  const [captchaToken, setCaptchaToken] = useState(null);
 
   const fortaleza = evaluarFortalezaPassword(password);
   const contrasenasCoinciden = password === confirmarPassword;
@@ -37,6 +40,9 @@ export default function Registro() {
     if (nombreCompleto.trim().length < 2) return setError('El nombre debe tener al menos 2 caracteres.');
     if (!correo.trim()) return setError('El correo electrónico es obligatorio.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.trim())) return setError('El formato del correo no es válido.');
+    if (!telefono.trim()) return setError('El teléfono es obligatorio.');
+    if (!dni.trim()) return setError('El DNI es obligatorio.');
+    if (!/^[0-9]{8,15}$/.test(dni.trim())) return setError('El DNI debe tener entre 8 y 15 dígitos.');
 
     if (!password) return setError('La contraseña es obligatoria.');
     if (password.length < 8) return setError('La contraseña debe tener al menos 8 caracteres.');
@@ -55,7 +61,9 @@ export default function Registro() {
         confirmarPassword,
         correo: correo.trim().toLowerCase(),
         nombre_completo: nombreCompleto.trim(),
-        telefono: telefono.trim() || undefined
+        telefono: telefono.trim(),
+        dni: dni.trim(),
+        captcha_token: captchaToken
       });
 
       if (resultado?.exito) {
@@ -132,12 +140,23 @@ export default function Registro() {
 
           <InputField
             id="registro-telefono"
-            label="Teléfono (opcional)"
+            label="Teléfono"
             type="tel"
+            required
             autoComplete="tel"
             value={telefono}
             onChange={(e) => { setTelefono(e.target.value); setError(''); }}
             placeholder="+51 999 999 999"
+          />
+
+          <InputField
+            id="registro-dni"
+            label="DNI"
+            required
+            inputMode="numeric"
+            value={dni}
+            onChange={(e) => { setDni(e.target.value.replace(/[^0-9]/g, '')); setError(''); }}
+            placeholder="Ej: 01234567 (admite ceros a la izquierda)"
           />
 
           <div className="space-y-1.5">
@@ -242,6 +261,8 @@ export default function Registro() {
               <p className="text-xs text-[var(--color-success)]">Las contraseñas coinciden</p>
             )}
           </div>
+
+          <TurnstileWidget onToken={setCaptchaToken} />
 
           <div className="flex flex-col items-center gap-3 pt-2">
             <Button type="submit" loading={cargando} className="sm:min-w-[12rem]">

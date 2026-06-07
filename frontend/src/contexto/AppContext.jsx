@@ -263,14 +263,14 @@ const AppProviderInternal = ({ children }) => {
   /**
    * Inicia sesiÃ³n de administrador
    */
-  const login = async (username, password) => {
+  const login = async (username, password, captchaToken = null) => {
     try {
-      const resultado = await api.login(username, password);
+      const resultado = await api.login(username, password, captchaToken);
 
       if (resultado.exito) {
         setUsuario(resultado.usuario);
         setAutenticado(true);
-        return { exito: true };
+        return { exito: true, rol: resultado.usuario?.rol };
       } else {
         return { exito: false, error: resultado.error };
       }
