@@ -65,8 +65,10 @@ function parseProducto(producto) {
     stock: producto.stock !== null && producto.stock !== undefined ? String(producto.stock) : '',
     disponible_a_pedido: Boolean(producto.disponible_a_pedido),
     tiempo_entrega_dias: producto.tiempo_entrega_dias ? String(producto.tiempo_entrega_dias) : '',
-    descripcion_tecnica: producto.descripcion_tecnica || '',
+    descripcion_tecnica: producto.descripcion_tecnica || producto.descripcion_general || '',
     imagen_url: producto.imagen_url || '',
+    id_etiqueta: producto.id_etiqueta != null ? String(producto.id_etiqueta) : '',
+    codigo_proveedor: producto.codigo_proveedor || '',
     // Procesador
     socket: producto.socket || '',
     arquitectura: producto.arquitectura || '',
@@ -355,6 +357,7 @@ export default function AdminProductos() {
   const [formulario, setFormulario] = useState(PRODUCTO_INICIAL);
   const [errorFormulario, setErrorFormulario] = useState('');
   const [guardando, setGuardando] = useState(false);
+  const [etiquetas, setEtiquetas] = useState([]);
 
   const [modalEliminar, setModalEliminar] = useState({ open: false, producto: null });
 
@@ -415,6 +418,13 @@ export default function AdminProductos() {
       cargarProductos();
     }
   }, [autenticado, cargarProductos]);
+
+  // Cargar etiquetas de perfil (para el selector del formulario y el filtro).
+  useEffect(() => {
+    api.obtenerEtiquetas()
+      .then((d) => setEtiquetas(d?.etiquetas || []))
+      .catch(() => setEtiquetas([]));
+  }, []);
 
   // Resetear página cuando cambia la categoría
   useEffect(() => {
@@ -953,6 +963,7 @@ export default function AdminProductos() {
           mode={modalFormulario.mode}
           error={errorFormulario}
           categorias={categoriasDisponibles}
+          etiquetas={etiquetas}
         />
       </Modal>
 

@@ -280,6 +280,30 @@ export const subirImagenProducto = async (categoria, id, archivo) => {
 };
 
 /**
+ * Obtiene las etiquetas de perfil (Básico/Medio/Avanzado/Gamer Full).
+ * @returns {Promise<{exito:boolean, etiquetas:Array<{id:number,nombre:string,orden:number}>}>}
+ */
+export const obtenerEtiquetas = async () => {
+  try {
+    const response = await api.get('/etiquetas');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Construye la URL de la ficha del producto en Deltron a partir del código de proveedor.
+ * @param {string} codigoProveedor
+ * @returns {string|null}
+ */
+export const construirUrlDeltron = (codigoProveedor) => {
+  const codigo = String(codigoProveedor || '').trim();
+  if (!codigo) return null;
+  return `https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=${encodeURIComponent(codigo)}`;
+};
+
+/**
  * Limpia todo el catálogo de productos (requiere autenticación)
  * Elimina todos los registros de las 23 tablas de productos.
  * @returns {Promise<Object>}
