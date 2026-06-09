@@ -112,10 +112,14 @@ function validarDatosClienteParaCotizacion({ esAdmin, esUsuarioAutenticado, emai
   const nombreNormalizado = normalizarNombreCliente(nombre);
   const telefonoNormalizado = normalizarTelefonoCliente(telefono);
 
-  // Admin: datos opcionales
-  // Usuario autenticado: no necesita nombre ni correo (usa su id del token)
-  // Invitado: nombre y correo obligatorios
-  if (!esAdmin && !esUsuarioAutenticado) {
+  // Admin: el correo es OBLIGATORIO (identifica la cuenta/cliente asignado).
+  // Usuario autenticado: no necesita nombre ni correo (usa su id del token).
+  // Invitado: nombre y correo obligatorios.
+  if (esAdmin) {
+    if (!emailNormalizado) {
+      errores.push('El correo del cliente es obligatorio');
+    }
+  } else if (!esUsuarioAutenticado) {
     if (!nombreNormalizado) {
       errores.push('El nombre del cliente es obligatorio');
     }

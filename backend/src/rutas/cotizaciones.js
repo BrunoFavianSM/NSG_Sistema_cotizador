@@ -1,6 +1,6 @@
 ﻿const express = require('express');
 const router = express.Router();
-const { verificarToken, verificarTokenAdmin, verificarTokenUsuario } = require('../middleware/auth');
+const { verificarToken, verificarTokenAdmin, verificarTokenAdminOVendedor, verificarTokenUsuario } = require('../middleware/auth');
 const {
   crearCotizacion,
   consultarCotizacion,
@@ -18,8 +18,8 @@ const {
 // Crear nueva cotizacion (requiere login: admin o usuario)
 router.post('/', verificarTokenUsuario, crearCotizacion);
 
-// Listar todos los clientes registrados (solo admin)
-router.get('/clientes', verificarTokenAdmin, listarClientesRegistrados);
+// Listar todos los clientes registrados (admin o vendedor)
+router.get('/clientes', verificarTokenAdminOVendedor, listarClientesRegistrados);
 
 // Cotizaciones propias del usuario autenticado (debe ir ANTES de rutas con parámetros)
 // Requisito: 5.1
@@ -39,9 +39,9 @@ router.get('/:codigoTicket/pdf-tecnico', obtenerPdfTecnico);
 // Exportar a Excel (requiere login: admin o usuario)
 router.get('/:codigoTicket/excel', verificarTokenUsuario, exportarExcel);
 
-// Flujo operativo admin
-router.put('/:codigoTicket/reclamar', verificarTokenAdmin, marcarComoReclamada);
-router.post('/:codigoTicket/notificar-listo', verificarTokenAdmin, notificarCotizacionLista);
+// Flujo operativo (admin o vendedor: el vendedor gestiona/completa ventas)
+router.put('/:codigoTicket/reclamar', verificarTokenAdminOVendedor, marcarComoReclamada);
+router.post('/:codigoTicket/notificar-listo', verificarTokenAdminOVendedor, notificarCotizacionLista);
 
 module.exports = router;
 

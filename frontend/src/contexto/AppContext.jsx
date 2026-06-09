@@ -51,6 +51,7 @@ const AppProviderInternal = ({ children }) => {
   const [cargandoAuth, setCargandoAuth] = useState(true);
   const rol = usuario?.rol || null;
   const esAdmin = rol === 'admin';
+  const esVendedor = rol === 'vendedor';
   const esUsuario = rol === 'usuario';
   const esInvitado = !autenticado;
 
@@ -759,6 +760,7 @@ const AppProviderInternal = ({ children }) => {
     cargandoAuth,
     rol,
     esAdmin,
+    esVendedor,
     esUsuario,
     esInvitado,
     login,

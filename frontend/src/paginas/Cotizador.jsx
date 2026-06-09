@@ -882,7 +882,10 @@ export default function Cotizador() {
   // Validaciones de campos obligatorios (nombre, email, teléfono)
   const faltanDatosClientePublico = !esAdmin && (!nombreClienteLimpio || !emailClienteLimpio || !telefonoClienteLimpio);
   const hayErrorNombreCliente = !esAdmin && intentoGenerar && !nombreClienteLimpio;
-  const hayErrorEmailCliente = (!esAdmin && intentoGenerar && !emailClienteLimpio)
+  // El correo es obligatorio también para admin: identifica la cuenta/cliente
+  // (sea seleccionando una existente o ingresando los datos). Sin correo no se
+  // puede generar una cotización "vacía" sin cliente asignado.
+  const hayErrorEmailCliente = (intentoGenerar && !emailClienteLimpio)
     || (emailClienteLimpio && !emailClienteEsValido);
   const hayErrorTelefonoCliente = (!esAdmin && intentoGenerar && !telefonoClienteLimpio)
     || (telefonoClienteLimpio && !telefonoClienteEsValido);
@@ -891,7 +894,7 @@ export default function Cotizador() {
   const datosClienteValidos = autenticado && !esAdmin
     ? true  // usuario registrado — el backend usa su id del token
     : esAdmin
-      ? (!emailClienteLimpio || emailClienteEsValido) && (!telefonoClienteLimpio || telefonoClienteEsValido)
+      ? emailClienteEsValido && (!telefonoClienteLimpio || telefonoClienteEsValido)
       : Boolean(nombreClienteLimpio && emailClienteEsValido && telefonoClienteEsValido);
   const procesadorTieneGraficosIntegrados = useMemo(() => {
     const procesador = configuracionSeleccionada.procesador;
@@ -2327,15 +2330,13 @@ export default function Cotizador() {
             incompatibilidades={validacionCompatibilidad.errores}
           />
 
-          {/* Datos del cliente — solo para admin (datos opcionales) o invitado (no puede cotizar) */}
+          {/* Datos del cliente — obligatorios: selecciona una cuenta (correo) o ingresa los datos */}
           {(esAdmin) && (
           <section className="surface-elevated space-y-4 p-5" aria-label="Datos del cliente">
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Datos del cliente</h3>
               <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-                {esAdmin
-                  ? 'Modo admin: estos datos son opcionales para generar la cotizacion.'
-                  : 'Completa nombre, correo y teléfono antes de generar la cotización.'}
+                Selecciona una cuenta por correo o ingresa los datos del cliente. El correo es obligatorio para generar la cotización.
               </p>
             </div>
 
