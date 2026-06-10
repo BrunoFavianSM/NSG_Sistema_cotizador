@@ -65,8 +65,10 @@ function parseProducto(producto) {
     stock: producto.stock !== null && producto.stock !== undefined ? String(producto.stock) : '',
     disponible_a_pedido: Boolean(producto.disponible_a_pedido),
     tiempo_entrega_dias: producto.tiempo_entrega_dias ? String(producto.tiempo_entrega_dias) : '',
-    descripcion_tecnica: producto.descripcion_tecnica || '',
+    descripcion_tecnica: producto.descripcion_tecnica || producto.descripcion_general || '',
     imagen_url: producto.imagen_url || '',
+    id_etiqueta: producto.id_etiqueta != null ? String(producto.id_etiqueta) : '',
+    codigo_proveedor: producto.codigo_proveedor || '',
     // Procesador
     socket: producto.socket || '',
     arquitectura: producto.arquitectura || '',
@@ -339,6 +341,7 @@ export default function AdminProductos() {
   const [vistaDetallada, setVistaDetallada] = useState(false);
   // Task 10.2 — filtro por estado de enriquecimiento
   const [filtroEstado, setFiltroEstado] = useState('');
+  const [filtroEtiqueta, setFiltroEtiqueta] = useState('');
   // Task 10.2 — tooltip para badge ia_fallido (almacena id del producto o null)
   const [tooltipFallido, setTooltipFallido] = useState(null);
 
@@ -355,6 +358,7 @@ export default function AdminProductos() {
   const [formulario, setFormulario] = useState(PRODUCTO_INICIAL);
   const [errorFormulario, setErrorFormulario] = useState('');
   const [guardando, setGuardando] = useState(false);
+  const [etiquetas, setEtiquetas] = useState([]);
 
   const [modalEliminar, setModalEliminar] = useState({ open: false, producto: null });
 
@@ -415,6 +419,13 @@ export default function AdminProductos() {
       cargarProductos();
     }
   }, [autenticado, cargarProductos]);
+
+  // Cargar etiquetas de perfil (para el selector del formulario y el filtro).
+  useEffect(() => {
+    api.obtenerEtiquetas()
+      .then((d) => setEtiquetas(d?.etiquetas || []))
+      .catch(() => setEtiquetas([]));
+  }, []);
 
   // Resetear página cuando cambia la categoría
   useEffect(() => {
@@ -507,8 +518,11 @@ export default function AdminProductos() {
     if (filtroEstado) {
       lista = lista.filter((producto) => (producto.estado_enriquecimiento || 'no_aplica') === filtroEstado);
     }
+    if (filtroEtiqueta) {
+      lista = lista.filter((producto) => String(producto.etiqueta || '') === filtroEtiqueta);
+    }
     return lista;
-  }, [productos, filtroCategoria, filtroEstado]);
+  }, [productos, filtroCategoria, filtroEstado, filtroEtiqueta]);
 
   const columnas = [
     { key: 'id', label: 'ID', sortable: true },
@@ -576,22 +590,22 @@ export default function AdminProductos() {
           : <Badge variant="neutral">No</Badge>
       ),
     },
-    // Task 10.1 — columna Estado IA con BadgeEnriquecimiento
+    // columna Carga de datos con BadgeEnriquecimiento
     {
       key: 'estado_enriquecimiento',
-      label: 'Estado IA',
+      label: 'Carga de datos',
       render: (row) => {
         const estado = row.estado_enriquecimiento || 'no_aplica';
         return (
           <div className="relative">
             <BadgeEnriquecimiento
               estado={estado}
-              onClick={estado === 'ia_fallido'
+              onClick={estado === 'fallido'
                 ? () => setTooltipFallido((prev) => (prev === row.id ? null : row.id))
                 : undefined}
             />
-            {/* Task 10.2 — tooltip para ia_fallido */}
-            {estado === 'ia_fallido' && tooltipFallido === row.id && (
+            {/* tooltip para estado 'fallido' */}
+            {estado === 'fallido' && tooltipFallido === row.id && (
               <div
                 role="tooltip"
                 className="absolute z-10 left-0 top-full mt-1 w-64 rounded-lg surface-card border border-[var(--color-border)] p-3 shadow-lg text-xs text-[var(--color-text-muted)] leading-relaxed"
@@ -672,7 +686,7 @@ export default function AdminProductos() {
         />
       ) : null}
 
-      {/* Task 10.3 — banner de productos pendientes de enriquecimiento IA */}
+      {/* banner de productos pendientes de carga de datos */}
       {(pendientesCount > 0 || enProcesoCount > 0) && (
         <div
           role="status"
@@ -687,13 +701,13 @@ export default function AdminProductos() {
               <p className="text-sm text-[var(--color-text)]">
                 {enProcesoCount > 0 ? (
                   <span className="font-semibold text-[var(--color-success)]">
-                    {enProcesoCount} en enriquecimiento
+                    {enProcesoCount} en carga de datos
                   </span>
                 ) : null}
                 {enProcesoCount > 0 && pendientesCount > 0 ? ' • ' : ''}
                 {pendientesCount > 0 ? (
                   <span>
-                    <strong>{pendientesCount}</strong> pendientes de enriquecimiento IA
+                    <strong>{pendientesCount}</strong> pendientes de carga de datos
                   </span>
                 ) : null}
               </p>
@@ -736,7 +750,7 @@ export default function AdminProductos() {
                     htmlFor="filtro-estado-enriquecimiento"
                     className="text-xs font-medium text-[var(--color-text-muted)]"
                   >
-                    Estado IA
+                    Carga de datos
                   </label>
                   <select
                     id="filtro-estado-enriquecimiento"
@@ -747,10 +761,27 @@ export default function AdminProductos() {
                   >
                     <option value="">Todos los estados</option>
                     <option value="csv">Datos CSV</option>
-                    <option value="ia_completado">Completado IA</option>
-                    <option value="ia_fallido">IA Falló</option>
-                    <option value="pendiente">Pendiente IA</option>
-                    <option value="no_aplica">Sin enriquecimiento</option>
+                    <option value="enriquecido">Completo</option>
+                    <option value="fallido">Falló</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="no_aplica">No aplica</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="filtro-etiqueta-perfil" className="text-xs font-medium text-[var(--color-text-muted)]">
+                    Etiqueta
+                  </label>
+                  <select
+                    id="filtro-etiqueta-perfil"
+                    value={filtroEtiqueta}
+                    onChange={(e) => setFiltroEtiqueta(e.target.value)}
+                    aria-label="Filtrar por etiqueta de perfil"
+                    className="min-h-11 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] sm:max-w-[15rem]"
+                  >
+                    <option value="">Todas las etiquetas</option>
+                    {etiquetas.map((et) => (
+                      <option key={et.id} value={et.nombre}>{et.nombre}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -894,7 +925,7 @@ export default function AdminProductos() {
                   htmlFor="filtro-estado-enriquecimiento"
                   className="text-xs font-medium text-[var(--color-text-muted)]"
                 >
-                  Estado IA
+                  Carga de datos
                 </label>
                 <select
                   id="filtro-estado-enriquecimiento"
@@ -905,10 +936,10 @@ export default function AdminProductos() {
                 >
                   <option value="">Todos los estados</option>
                   <option value="csv">Datos CSV</option>
-                  <option value="ia_completado">Completado IA</option>
-                  <option value="ia_fallido">IA Falló</option>
-                  <option value="pendiente">Pendiente IA</option>
-                  <option value="no_aplica">Sin enriquecimiento</option>
+                  <option value="enriquecido">Completo</option>
+                  <option value="fallido">Falló</option>
+                  <option value="pendiente">Pendiente</option>
+                  <option value="no_aplica">No aplica</option>
                 </select>
               </div>
             </div>
@@ -953,6 +984,7 @@ export default function AdminProductos() {
           mode={modalFormulario.mode}
           error={errorFormulario}
           categorias={categoriasDisponibles}
+          etiquetas={etiquetas}
         />
       </Modal>
 

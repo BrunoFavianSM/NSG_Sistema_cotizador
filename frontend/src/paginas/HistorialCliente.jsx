@@ -65,7 +65,9 @@ function StatCard({ label, value, helper }) {
 export default function HistorialCliente() {
   const toast = useToast();
   const navigate = useNavigate();
-  const { monedaVista, formatearMontoSegunMonedaVista, esAdmin, esUsuario } = useAppContext();
+  const { monedaVista, formatearMontoSegunMonedaVista, esAdmin, esVendedor, esUsuario } = useAppContext();
+  // El vendedor ve todas las cotizaciones igual que el admin (gestiona ventas).
+  const puedeVerTodas = esAdmin || esVendedor;
 
   const [email, setEmail] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
@@ -104,9 +106,9 @@ export default function HistorialCliente() {
       .finally(() => setBuscando(false));
   }, [esUsuario]);
 
-  // ─── Carga de clientes registrados (solo admin) ───────────────────────────────
+  // ─── Carga de clientes registrados (admin o vendedor) ─────────────────────────
   useEffect(() => {
-    if (!esAdmin) return;
+    if (!puedeVerTodas) return;
 
     setCargandoClientes(true);
     listarClientesRegistrados()
@@ -117,7 +119,7 @@ export default function HistorialCliente() {
         // Silencioso: la lista es un complemento, no bloquea el flujo
       })
       .finally(() => setCargandoClientes(false));
-  }, [esAdmin]);
+  }, [puedeVerTodas]);
 
   const cotizacionesFiltradas = useMemo(() => {
     if (filtroEstado === 'todos') return cotizaciones;
@@ -450,8 +452,8 @@ export default function HistorialCliente() {
         </p>
       </header>
 
-      {/* ── Sección de búsqueda por email: solo visible para admin (Req. 5.3, 5.4) ── */}
-      {esAdmin ? (
+      {/* ── Sección de búsqueda por email: visible para admin y vendedor ── */}
+      {puedeVerTodas ? (
         <motion.section
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -508,8 +510,8 @@ export default function HistorialCliente() {
         />
       ) : null}
 
-      {/* ── Lista de clientes registrados: solo admin, cuando no hay historial cargado ── */}
-      {esAdmin && !buscando && !historialCargado && !error ? (
+      {/* ── Lista de clientes registrados: admin/vendedor, cuando no hay historial cargado ── */}
+      {puedeVerTodas && !buscando && !historialCargado && !error ? (
         <motion.section
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}

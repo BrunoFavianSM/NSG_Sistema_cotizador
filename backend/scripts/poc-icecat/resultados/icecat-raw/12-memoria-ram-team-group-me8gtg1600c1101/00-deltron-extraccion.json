@@ -1,0 +1,21 @@
+{
+  "producto": {
+    "codigo_deltron": "me8gtg1600c1101",
+    "categoria": "Memoria RAM",
+    "marca_csv": "teamgroup",
+    "marca_normalizada": "Team Group",
+    "nombre_esperado": "memoria teamgroup elite 8gb (1x8gb) ddr3-1600mhz pc3-12800, cl11, 1.35v",
+    "indice": 12,
+    "carpeta": "12-memoria-ram-team-group-me8gtg1600c1101"
+  },
+  "resultado": {
+    "codigo_consultado": "me8gtg1600c1101",
+    "url": "https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=me8gtg1600c1101",
+    "sku_encontrado": "me8gtg1600c1101",
+    "sku_coincide": true,
+    "mpn": "TED3L8G1600C1101",
+    "mpn_metodo": "part-number",
+    "titulo_h1": "Memoria TeamGroup Elite 8GB (1x8GB) DDR3-1600MHz PC3-12800, CL11, 1.35V",
+    "timestamp": "2026-06-05T23:41:02.257Z"
+  }
+}

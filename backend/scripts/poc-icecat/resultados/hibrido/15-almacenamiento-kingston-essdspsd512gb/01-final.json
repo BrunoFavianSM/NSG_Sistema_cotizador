@@ -1,0 +1,1514 @@
+{
+  "ok": true,
+  "status": 200,
+  "consulta": {
+    "mpn": "SPSD/512GB",
+    "marca": "Kingston",
+    "lang": "ES"
+  },
+  "data": {
+    "msg": "OK",
+    "data": {
+      "GeneralInfo": {
+        "IcecatId": 137460941,
+        "ReleaseDate": "10-11-2025",
+        "EndOfLifeDate": "",
+        "Title": "Kingston Technology 512GB Dual USB-A/C Portable SSD, Up to 1050MB/s USB 3.2 Gen 2",
+        "TitleInfo": {
+          "GeneratedIntTitle": "Kingston Technology Dual Portable",
+          "GeneratedLocalTitle": {
+            "Value": "Kingston Technology Dual Portable USB Type-A / USB Type-C 3.2 Gen 2 (3.1 Gen 2) Negro, Rojo",
+            "Language": "ES"
+          },
+          "BrandLocalTitle": {
+            "Value": "Kingston Technology 512GB Dual USB-A/C Portable SSD, Up to 1050MB/s USB 3.2 Gen 2",
+            "Language": "ES"
+          }
+        },
+        "Brand": "Kingston Technology",
+        "BrandID": "18",
+        "BrandLogo": "https://images.icecat.biz/img/brand/thumb/18_8d09cd2af5a44ca9a49b3493e9db517c.jpg",
+        "BrandInfo": {
+          "BrandName": "Kingston Technology",
+          "BrandLocalName": "",
+          "BrandLogo": "https://images.icecat.biz/img/brand/thumb/18_8d09cd2af5a44ca9a49b3493e9db517c.jpg"
+        },
+        "ProductName": "512GB Dual USB-A/C Portable SSD, Up to 1050MB/s USB 3.2 Gen 2",
+        "ProductNameInfo": {
+          "ProductIntName": "Dual Portable",
+          "ProductLocalName": {
+            "Value": "512GB Dual USB-A/C Portable SSD, Up to 1050MB/s USB 3.2 Gen 2",
+            "Language": "ES"
+          }
+        },
+        "BrandPartCode": "SPSD/512GB",
+        "GTIN": [
+          "0740617352207",
+          "740617352207"
+        ],
+        "Category": {
+          "CategoryID": "5509",
+          "Name": {
+            "Value": "Unidades externas de estado sólido",
+            "Language": "ES"
+          }
+        },
+        "ProductFamily": {},
+        "ProductSeries": {
+          "SeriesID": "1"
+        },
+        "Description": {
+          "ID": "105344723",
+          "LongDesc": "<b>Con conectores USB-A/C y velocidades de transferencia de hasta 1050MB/s*</b><br>Aunque tiene el aspecto de una memoria USB, la SSD portátil de doble conector de [Kingston] ofrece un rendimiento sorprendente con USB 3.2 Gen 2* para tus dispositivos tipo A y tipo C®**. Esta SSD portátil de doble conector redefine la comodidad con un diseño metálico compacto y resistente, y conectores tipo A y tipo C que te permiten mover archivos fácilmente entre tu portátil, ordenador, móvil sin complicaciones. Lleva tu productividad al siguiente nivel con velocidades de lectura de hasta 1050MB/s y escritura de 950MB/s.*<br><br>Sin necesidad de cables ni accesorios adicionales, la SSD portátil de doble conector es una solución de almacenamiento todo en uno para archivos grandes, fotos en alta resolución y vídeos en 4K, con capacidades de hasta 2TB***. Disfruta con tranquilidad de una garantía limitada de cinco años****, soporte técnico gratuito y la fiabilidad legendaria de Kingston.<br><br><b>Se adapta a tu ritmo de vida</b><br>Todo en uno, y uno para todos… tus dispositivos, claro. Con conectores USB tipo A y tipo C, la SSD portátil de doble conector transfiere archivos fácilmente entre portátiles, ordenadores de sobremesa, móviles y mucho más.<br><br><b>La velocidad que necesitas</b><br>Impulsa tu productividad creativa con velocidades USB 3.2 Gen 2 de hasta 1050MB/s de lectura y 950MB/s de escritura*.<br><br><b>Olvídate de los cables</b><br>La vida ya es bastante caótica como para lidiar con cables. Simplifica y di adiós a los enredos. Cabe en tu mano, tu bolsillo o tu bolso: esta SSD compacta va contigo a todas partes.<br><br><b>Más capacidad de almacenamiento para crear sin límites</b><br>Obtén almacenamiento fiable para tus archivos pesados, fotos en alta resolución y vídeos 4K de hasta 2TB***.",
+          "LongProductName": "512GB Dual USB-A/C Portable SSD, Up to 1050MB/s USB 3.2 Gen 2",
+          "MiddleDesc": "",
+          "Disclaimer": "* La velocidad puede variar en función del hardware, del software y del uso. Se requiere un dispositivo host USB 3.2 Gen 2 para disfrutar de velocidades óptimas.<br>** USB Type-C® y USB-C® son marcas registradas de USB Implementers Forum.<br>*** Parte del espacio de almacenamiento de los dispositivos Flash se destina a cuestiones relacionadas con el formato y otras funciones, y no puede utilizarse para guardar datos. Por esta razón, la capacidad real de almacenamiento de datos es inferior a la indicada en los productos. Para obtener más información, consulta la Guía de memorias Flash de Kingston.  <br>**** Garantía limitada de 5 años o basada en la “vida útil restante del SSD”, que se podrá encontrar mediante el Kingston SSD Manager. Un producto nuevo y sin uso indicará un valor de desgaste de cien (100), en tanto que un producto que haya alcanzado el límite de ciclos de borrado indicará un valor de desgaste de uno (1). Visita la página de garantía de Kingston para más información.<br>***** La compatibilidad con dispositivos Windows, macOS, Linux, Chrome OS, iOS/iPadOS y Android puede variar y depende, en gran medida, del hardware o software del dispositivo host (consulte las capacidades en la sección de asistencia técnica del fabricante del dispositivo host). Para dispositivos Android/iOS/iPadOS, es posible que se requiera un adaptador OTG adicional (no suministrado por Kingston).",
+          "ManualPDFURL": "",
+          "ManualPDFSize": "0",
+          "LeafletPDFURL": "https://objects.icecat.biz/objects/mmo_137460941_1767709945_5557_1190102.pdf",
+          "PDFSize": "131414",
+          "URL": "https://www.kingston.com/en",
+          "WarrantyInfo": "5 años de garantía limitada con soporte técnico gratuito",
+          "Updated": "2025-10-28 15:21:31",
+          "Language": "ES"
+        },
+        "SEOs": {
+          "Title": "",
+          "Description": "",
+          "Keywords": "2tb externo, unidad usb 1tb, unidad flash 1tb, unidad usb c, ssd portátil, ssd 1tb, pendrive, disco duro externo, disco duro externo ssd, ssd externa, memoria flash, ssd 2tb, almacenamiento externo para iphone, ssd portátil 2tb, unidad externa, ssd"
+        },
+        "SummaryDescription": {
+          "ShortSummaryDescription": "Kingston Technology 512GB Dual USB-A/C Portable SSD, Up to 1050MB/s USB 3.2 Gen 2, 512 GB, USB Type-A / USB Type-C, 3.2 Gen 2 (3.1 Gen 2), 1050 MB/s, Negro, Rojo",
+          "LongSummaryDescription": "Kingston Technology 512GB Dual USB-A/C Portable SSD, Up to 1050MB/s USB 3.2 Gen 2. SDD, capacidad: 512 GB. Conector USB: USB Type-A / USB Type-C, Versión USB: 3.2 Gen 2 (3.1 Gen 2). Velocidad de lectura: 1050 MB/s, Velocidad de escritura: 950 MB/s. Color del producto: Negro, Rojo"
+        },
+        "BulletPoints": {
+          "BulletPointsId": "14459974",
+          "Language": "ES",
+          "Values": [
+            "Velocidades de hasta 1050MB/s con USB 3.2 Gen 2*",
+            "Conectores USB tipo A y tipo C",
+            "Diseño portátil sin necesidad de cables",
+            "Almacenamiento de alta capacidad de hasta 2TB***",
+            "Carcasa duradera de metal"
+          ],
+          "Updated": "2025-10-28 15:21:26"
+        },
+        "GeneratedBulletPoints": {
+          "Language": "ES",
+          "Values": [
+            "512 GB Negro, Rojo",
+            "Velocidad de lectura: 1050 MB/s Velocidad de escritura: 950 MB/s",
+            "USB Type-A / USB Type-C",
+            "Material de la carcasa: Metal, Plástico"
+          ]
+        },
+        "GTINs": [
+          {
+            "GTIN": "0740617352207",
+            "IsApproved": true
+          },
+          {
+            "GTIN": "740617352207",
+            "IsApproved": true
+          }
+        ]
+      },
+      "Image": {
+        "HighPic": "https://images.icecat.biz/img/gallery/61cad63c14e1de9d581381a08b3c7ed6904b9b9e.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "HighPicSize": "1238239",
+        "HighPicHeight": "1500",
+        "HighPicWidth": "2400",
+        "LowPic": "https://images.icecat.biz/img/gallery_lows/40591f0a8d7674c30c763b6ecca73c4ca4e9508f.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "LowPicSize": "9145",
+        "LowPicHeight": "125",
+        "LowPicWidth": "200",
+        "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/ff6791e0dd52d67ebe45415ff3ddf782111a60aa.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "Pic500x500Size": "45282",
+        "Pic500x500Height": "313",
+        "Pic500x500Width": "500",
+        "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/55fe1797855c8b3262bf83c870ec805827243afe.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "ThumbPicSize": "2529"
+      },
+      "Multimedia": [
+        {
+          "ID": "8BA146EF-D20B-48F5-B84E-4ED817940FF8",
+          "URL": "https://objects.icecat.biz/objects/137460941_70705344.mp4?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Type": "video/mp4",
+          "ContentType": "video/mp4",
+          "KeepAsUrl": "0",
+          "Description": "Dual Portable",
+          "Size": "75276896",
+          "IsPrivate": "0",
+          "Updated": "2025-10-28 15:10:03",
+          "Language": "ES",
+          "IsVideo": 1,
+          "ThumbUrl": "https://objects.icecat.biz/objects/thumb/137460941_70705344_thumb.png?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "PreviewUrl": "https://objects.icecat.biz/objects/preview/137460941_70705344_preview.png?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2"
+        },
+        {
+          "ID": "55F68AB9-4911-4BA1-9CBD-3390AC4B6F4C",
+          "URL": "https://objects.icecat.biz/objects/mmo_137460941_1767709945_5557_1190102.pdf?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Type": "leaflet",
+          "ContentType": "application/pdf",
+          "KeepAsUrl": "0",
+          "Description": "Folleto",
+          "Size": "131414",
+          "IsPrivate": "0",
+          "Updated": "2026-01-06 15:32:25",
+          "Language": "ES",
+          "IsVideo": 0
+        }
+      ],
+      "Gallery": [
+        {
+          "ID": "122235067",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/40591f0a8d7674c30c763b6ecca73c4ca4e9508f.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "9145",
+          "LowHeight": "125",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/55fe1797855c8b3262bf83c870ec805827243afe.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "2529",
+          "Pic": "https://images.icecat.biz/img/gallery/61cad63c14e1de9d581381a08b3c7ed6904b9b9e.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "1238239",
+          "PicHeight": "1500",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/ff6791e0dd52d67ebe45415ff3ddf782111a60aa.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "45282",
+          "Pic500x500Height": "313",
+          "Pic500x500Width": "500",
+          "No": "2",
+          "IsMain": "Y",
+          "Updated": "2025-10-28 15:16:38",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "122235069",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/3c3c28d678f9afc77cb49fc8a37a9ad8f77e6ac3.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "8997",
+          "LowHeight": "125",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/3a4eedf08ccd064d166eb495b7f91ecd5837d7dd.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "2445",
+          "Pic": "https://images.icecat.biz/img/gallery/e7b63ee7d8abc5805d462bd336628d5f7984804c.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "1356640",
+          "PicHeight": "1500",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/a398f89ef8bf8e5b4acda1e032f5c4142e23872f.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "45235",
+          "Pic500x500Height": "313",
+          "Pic500x500Width": "500",
+          "No": "3",
+          "IsMain": "N",
+          "Updated": "2025-10-28 15:16:39",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "122235066",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/378acfe405360bae93626c3231208748b2125df0.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "13767",
+          "LowHeight": "125",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/aa2a9f55b6fc81b2cd6c1e4e9e7d0c12c97a21b2.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "3595",
+          "Pic": "https://images.icecat.biz/img/gallery/211534bb37dc04ccabdaa32d14d2fdcf286007db.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "1031518",
+          "PicHeight": "1500",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/2ad549dfe8742441eaceb0009d523927c643b8e5.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "56480",
+          "Pic500x500Height": "313",
+          "Pic500x500Width": "500",
+          "No": "4",
+          "IsMain": "N",
+          "Updated": "2025-10-28 15:16:40",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "122235064",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/e9837a3a6552a6df94930e88b6ddca02a9d70c18.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "13626",
+          "LowHeight": "125",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/cf95c18974d142cb7383411427b4ec8731d232cd.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "3729",
+          "Pic": "https://images.icecat.biz/img/gallery/bd798af3f6a0776f828eed1a5c512de3b118e09a.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "1129127",
+          "PicHeight": "1500",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/e257dc97c49bf33c04a65467cca84771b0736971.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "56273",
+          "Pic500x500Height": "313",
+          "Pic500x500Width": "500",
+          "No": "5",
+          "IsMain": "N",
+          "Updated": "2025-10-28 15:16:40",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "122235063",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/6b365e424446b4757d685a6f639fcbeb8026b93a.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "10506",
+          "LowHeight": "125",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/186464e3bfbbe311ed2ae80a96b949d918e26a21.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "2832",
+          "Pic": "https://images.icecat.biz/img/gallery/73687557ceedf6bf1f38d0c27f8a3a2f250d93c7.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "477850",
+          "PicHeight": "1500",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/2304e4f7468e45eba83d353b664544514260ae5e.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "44691",
+          "Pic500x500Height": "313",
+          "Pic500x500Width": "500",
+          "No": "6",
+          "IsMain": "N",
+          "Updated": "2026-01-06 15:21:26",
+          "IsPrivate": "0",
+          "Type": "ProductPackagingImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "122235070",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/03d8765d3854750ce47ad0bdf485ecdd0bbaf21c.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "7000",
+          "LowHeight": "125",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/233032464cea8f0f1bb61917c0fbc94e2bd8f87b.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "1971",
+          "Pic": "https://images.icecat.biz/img/gallery/ffc4a3da3e46998531f1d6847d1278f6cc2ed4fb.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "425069",
+          "PicHeight": "1500",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/4747a6776cceace2cd9e3cfec69971da191baf86.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "30937",
+          "Pic500x500Height": "313",
+          "Pic500x500Width": "500",
+          "No": "7",
+          "IsMain": "N",
+          "Updated": "2026-01-06 15:21:28",
+          "IsPrivate": "0",
+          "Type": "ProductPackagingImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        }
+      ],
+      "FeaturesGroups": [
+        {
+          "ID": 30742,
+          "SortNo": "50",
+          "FeatureGroup": {
+            "ID": "267",
+            "Name": {
+              "Value": "Unidad de estado sólido",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 868144525,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "3D NAND",
+              "CategoryFeatureId": "187437",
+              "CategoryFeatureGroupID": "30742",
+              "SortNo": "10000489",
+              "PresentationValue": "3D NAND",
+              "RawValue": "3D NAND",
+              "LocalValue": "3D NAND",
+              "Description": "Type of memory in the device e.g. DDR3",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "642",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tipo de memoria",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868145759,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "512",
+              "CategoryFeatureId": "187358",
+              "CategoryFeatureGroupID": "30742",
+              "SortNo": "500",
+              "PresentationValue": "512 GB",
+              "RawValue": "512",
+              "LocalValue": "512",
+              "Description": "The Solid State Drive's data storage capacity.",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "5586",
+                "Sign": "",
+                "Measure": {
+                  "ID": "20",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7432",
+                    "_": "GB",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "SDD, capacidad",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868145543,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "1050",
+              "CategoryFeatureId": "187435",
+              "CategoryFeatureGroupID": "30742",
+              "SortNo": "400",
+              "PresentationValue": "1050 MB/s",
+              "RawValue": "1050",
+              "LocalValue": "1050",
+              "Description": "The speed at which a device can read data.",
+              "Mandatory": "1",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1644",
+                "Sign": "",
+                "Measure": {
+                  "ID": "40",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7449",
+                    "_": "MB/s",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Velocidad de lectura",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868145544,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "950",
+              "CategoryFeatureId": "187436",
+              "CategoryFeatureGroupID": "30742",
+              "SortNo": "399",
+              "PresentationValue": "950 MB/s",
+              "RawValue": "950",
+              "LocalValue": "950",
+              "Description": "Write speed for type of media; expressed in bytes per second",
+              "Mandatory": "1",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1645",
+                "Sign": "",
+                "Measure": {
+                  "ID": "40",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7449",
+                    "_": "MB/s",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Velocidad de escritura",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 20695,
+          "SortNo": "45",
+          "FeatureGroup": {
+            "ID": "12",
+            "Name": {
+              "Value": "Puertos e Interfaces",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 868144421,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "N",
+              "CategoryFeatureId": "187448",
+              "CategoryFeatureGroupID": "20695",
+              "SortNo": "10000435",
+              "PresentationValue": "No",
+              "RawValue": "N",
+              "LocalValue": "No",
+              "Description": "Based on the PCI Express and DisplayPort technologies, Thunderbolt technology supports both data devices and displays.",
+              "Mandatory": "1",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "13551",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tecnología Thunderbolt (Rayo)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868144419,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "USB Type-A / USB Type-C",
+              "CategoryFeatureId": "187446",
+              "CategoryFeatureGroupID": "20695",
+              "SortNo": "440",
+              "PresentationValue": "USB Type-A / USB Type-C",
+              "RawValue": "USB Type-A / USB Type-C",
+              "LocalValue": "USB Type-A / USB Type-C",
+              "Description": "What type of USB connector is built into the device.",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "26352",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Conector USB",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868144420,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "3.2 Gen 2 (3.1 Gen 2)",
+              "CategoryFeatureId": "187447",
+              "CategoryFeatureGroupID": "20695",
+              "SortNo": "439",
+              "PresentationValue": "3.2 Gen 2 (3.1 Gen 2)",
+              "RawValue": "3.2 Gen 2 (3.1 Gen 2)",
+              "LocalValue": "3.2 Gen 2 (3.1 Gen 2)",
+              "Description": "Universal Serial Bus (USB) is an industry standard developed in the mid-1990s that defines the interface used for connection",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8541",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Versión USB",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868144422,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "N",
+              "CategoryFeatureId": "187474",
+              "CategoryFeatureGroupID": "20695",
+              "SortNo": "420",
+              "PresentationValue": "No",
+              "RawValue": "N",
+              "LocalValue": "No",
+              "Description": "Popular technology that allows an electronic device to exchange data or connect to the internet wirelessly using radio waves.",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "3239",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Wifi",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 30743,
+          "SortNo": "38",
+          "FeatureGroup": {
+            "ID": "185",
+            "Name": {
+              "Value": "Características",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 868144595,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "Metal,Plastic",
+              "CategoryFeatureId": "187309",
+              "CategoryFeatureGroupID": "30743",
+              "SortNo": "10000199",
+              "PresentationValue": "Metal, Plástico",
+              "RawValue": "Metal,Plastic",
+              "LocalValue": "Metal, Plástico",
+              "Description": "What the casing of the product is made of.",
+              "Mandatory": "1",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "5214",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Material de la carcasa",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868144424,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "Black,Red",
+              "CategoryFeatureId": "187326",
+              "CategoryFeatureGroupID": "30743",
+              "SortNo": "200",
+              "PresentationValue": "Negro, Rojo",
+              "RawValue": "Black,Red",
+              "LocalValue": "Negro, Rojo",
+              "Description": "The colour e.g. red",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1766",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Color del producto",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868144790,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "Windows 11,Windows 11 Enterprise,Windows 11 Enterprise x64,Windows 11 Home,Windows 11 Pro,Windows 11 x64",
+              "CategoryFeatureId": "187353",
+              "CategoryFeatureGroupID": "30743",
+              "SortNo": "48",
+              "PresentationValue": "Windows 11, Windows 11 Enterprise, Windows 11 Enterprise x64, Windows 11 Home, Windows 11 Pro, Windows 11 x64",
+              "RawValue": "Windows 11,Windows 11 Enterprise,Windows 11 Enterprise x64,Windows 11 Home,Windows 11 Pro,Windows 11 x64",
+              "LocalValue": "Windows 11, Windows 11 Enterprise, Windows 11 Enterprise x64, Windows 11 Home, Windows 11 Pro, Windows 11 x64",
+              "Description": "Windows vesions wich can be used with the device.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7986",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Sistema operativo Windows soportado",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868144913,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "Mac OS X 13.0 Ventura,Mac OS X 14.0 Sonoma,Mac OS X 15.0 Sequoia",
+              "CategoryFeatureId": "187354",
+              "CategoryFeatureGroupID": "30743",
+              "SortNo": "47",
+              "PresentationValue": "Mac OS X 13.0 Ventura, Mac OS X 14.0 Sonoma, Mac OS X 15.0 Sequoia",
+              "RawValue": "Mac OS X 13.0 Ventura,Mac OS X 14.0 Sonoma,Mac OS X 15.0 Sequoia",
+              "LocalValue": "Mac OS X 13.0 Ventura, Mac OS X 14.0 Sonoma, Mac OS X 15.0 Sequoia",
+              "Description": "Mac operating systems e.g. OS X can be used with the device.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7987",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Sistema operativo MAC soportado",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868145023,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "Y",
+              "CategoryFeatureId": "187355",
+              "CategoryFeatureGroupID": "30743",
+              "SortNo": "46",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "8 RT. Linux (9.4, 9.5), Red Hat Enterprise Linux 5.0 (supported with a pre-built package); SUSE Linux (10.3, 11.0, 11, 11.1, 11.2), Fedora (9, 9.0, 10, 10.0, 11.0, 11, 12, 12.0), Ubuntu (8.04, 8.04.1, 8.04.2, 8.10, 9.04, 9.10, 10.04), Debian (5.0, 5.0.1, 5.0.2, 5.0.3)",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7988",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Sistema operativo Linux soportado",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868145077,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "Android,iOS 13,iOS 13.4,iOS 14,iOS 14.3,iOS 14.5,iOS 15,iOS 16,iOS 17,iOS 18,iPadOS 13,iPadOS 14,iPadOS 17.1.1,iPadOS 17.4,iPadOS 17.5,iPadOS 18.3",
+              "CategoryFeatureId": "192634",
+              "CategoryFeatureGroupID": "30743",
+              "SortNo": "44",
+              "PresentationValue": "Android, iOS 13, iOS 13.4, iOS 14, iOS 14.3, iOS 14.5, iOS 15, iOS 16, iOS 17, iOS 18, iPadOS 13, iPadOS 14, iPadOS 17.1.1, iPadOS 17.4, iPadOS 17.5, iPadOS 18.3",
+              "RawValue": "Android,iOS 13,iOS 13.4,iOS 14,iOS 14.3,iOS 14.5,iOS 15,iOS 16,iOS 17,iOS 18,iPadOS 13,iPadOS 14,iPadOS 17.1.1,iPadOS 17.4,iPadOS 17.5,iPadOS 18.3",
+              "LocalValue": "Android, iOS 13, iOS 13.4, iOS 14, iOS 14.3, iOS 14.5, iOS 15, iOS 16, iOS 17, iOS 18, iPadOS 13, iPadOS 14, iPadOS 17.1.1, iPadOS 17.4, iPadOS 17.5, iPadOS 18.3",
+              "Description": "The operating systems e.g. Android",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8956",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Sistemas operativos móviles soportados",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868139319,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "Taiwan",
+              "CategoryFeatureId": "255280",
+              "CategoryFeatureGroupID": "30743",
+              "SortNo": "-3",
+              "PresentationValue": "Taiwán",
+              "RawValue": "Taiwan",
+              "LocalValue": "Taiwán",
+              "Description": "Country where the device is made. Aka Country of manufacture (COM).",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "1",
+              "Feature": {
+                "ID": "3294",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "País de origen",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 20680,
+          "SortNo": "15",
+          "FeatureGroup": {
+            "ID": "28",
+            "Name": {
+              "Value": "Condiciones ambientales",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 868144640,
+              "LocalID": 0,
+              "Type": "range",
+              "Value": "0 - 60",
+              "CategoryFeatureId": "187361",
+              "CategoryFeatureGroupID": "20680",
+              "SortNo": "-21",
+              "PresentationValue": "0 - 60 °C",
+              "RawValue": "0 - 60",
+              "LocalValue": "0 - 60",
+              "Description": "The minimum and maximum temperatures at which the product can be safely operated.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1112",
+                "Sign": "",
+                "Measure": {
+                  "ID": "65",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7473",
+                    "_": "°C",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Intervalo de temperatura operativa",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868144675,
+              "LocalID": 0,
+              "Type": "range",
+              "Value": "-20 - 85",
+              "CategoryFeatureId": "187362",
+              "CategoryFeatureGroupID": "20680",
+              "SortNo": "-22",
+              "PresentationValue": "-20 - 85 °C",
+              "RawValue": "-20 - 85",
+              "LocalValue": "-20 - 85",
+              "Description": "The minimum and maximum temperatures at which the product can be safely stored.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "757",
+                "Sign": "",
+                "Measure": {
+                  "ID": "65",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7473",
+                    "_": "°C",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Intervalo de temperatura de almacenaje",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 20670,
+          "SortNo": "10",
+          "FeatureGroup": {
+            "ID": "14",
+            "Name": {
+              "Value": "Peso y dimensiones",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 868139342,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "21.1",
+              "CategoryFeatureId": "187312",
+              "CategoryFeatureGroupID": "20670",
+              "SortNo": "25",
+              "PresentationValue": "21,1 mm",
+              "RawValue": "21.1",
+              "LocalValue": "21,1",
+              "Description": "The measurement or extent of something from side to side.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1649",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Ancho",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868139325,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "71.85",
+              "CategoryFeatureId": "187315",
+              "CategoryFeatureGroupID": "20670",
+              "SortNo": "24",
+              "PresentationValue": "71,8 mm",
+              "RawValue": "71.85",
+              "LocalValue": "71,8",
+              "Description": "The distance from the front to the back of something.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1650",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Profundidad",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868139344,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "8.6",
+              "CategoryFeatureId": "187316",
+              "CategoryFeatureGroupID": "20670",
+              "SortNo": "23",
+              "PresentationValue": "8,6 mm",
+              "RawValue": "8.6",
+              "LocalValue": "8,6",
+              "Description": "Height of the product",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1464",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Altura",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868139356,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "13",
+              "CategoryFeatureId": "187317",
+              "CategoryFeatureGroupID": "20670",
+              "SortNo": "20",
+              "PresentationValue": "13 g",
+              "RawValue": "13",
+              "LocalValue": "13",
+              "Description": "Peso del producto sin embalaje (peso neto). Si es posible, se da el peso neto incluyendo los accesorios y suministros estándar. Tenga en cuenta que a veces el fabricante deja de lado el peso de los accesorios y / o suministros.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "94",
+                "Sign": "",
+                "Measure": {
+                  "ID": "38",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7447",
+                    "_": "g",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Peso",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 31117,
+          "SortNo": "8",
+          "FeatureGroup": {
+            "ID": "67",
+            "Name": {
+              "Value": "Empaquetado",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 868139348,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "80.01",
+              "CategoryFeatureId": "187318",
+              "CategoryFeatureGroupID": "31117",
+              "SortNo": "-11",
+              "PresentationValue": "80 mm",
+              "RawValue": "80.01",
+              "LocalValue": "80",
+              "Description": "The distance from one side of the packaging to the other.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "3808",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Ancho del paquete",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868139345,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "16.51",
+              "CategoryFeatureId": "187319",
+              "CategoryFeatureGroupID": "31117",
+              "SortNo": "-12",
+              "PresentationValue": "16,5 mm",
+              "RawValue": "16.51",
+              "LocalValue": "16,5",
+              "Description": "The distance from the front to the back of the packaging.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "3806",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Profundidad del paquete",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868139349,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "140.97",
+              "CategoryFeatureId": "187320",
+              "CategoryFeatureGroupID": "31117",
+              "SortNo": "-13",
+              "PresentationValue": "141 mm",
+              "RawValue": "140.97",
+              "LocalValue": "141",
+              "Description": "The distance from the top to the bottom of the packaging.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "3807",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Altura del paquete",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868139354,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "33.95",
+              "CategoryFeatureId": "187321",
+              "CategoryFeatureGroupID": "31117",
+              "SortNo": "-20",
+              "PresentationValue": "33,95 g",
+              "RawValue": "33.95",
+              "LocalValue": "34",
+              "Description": "Weight of the packaged product.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "762",
+                "Sign": "",
+                "Measure": {
+                  "ID": "38",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7447",
+                    "_": "g",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Peso del paquete",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868149411,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "Box",
+              "CategoryFeatureId": "187322",
+              "CategoryFeatureGroupID": "31117",
+              "SortNo": "-50",
+              "PresentationValue": "Caja",
+              "RawValue": "Box",
+              "LocalValue": "Caja",
+              "Description": "The type of product package e.g. box.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "4463",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tipo de embalaje",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 20676,
+          "SortNo": "-30",
+          "FeatureGroup": {
+            "ID": "198",
+            "Name": {
+              "Value": "Datos logísticos",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 868139361,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "173.99",
+              "CategoryFeatureId": "192635",
+              "CategoryFeatureGroupID": "20676",
+              "SortNo": "-40",
+              "PresentationValue": "174 mm",
+              "RawValue": "173.99",
+              "LocalValue": "174",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "1",
+              "Feature": {
+                "ID": "4457",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Ancho de la caja principal",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868139365,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "416.56",
+              "CategoryFeatureId": "192636",
+              "CategoryFeatureGroupID": "20676",
+              "SortNo": "-41",
+              "PresentationValue": "416,6 mm",
+              "RawValue": "416.56",
+              "LocalValue": "416,6",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "1",
+              "Feature": {
+                "ID": "22658",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Longitud de la caja",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868139371,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "119.38",
+              "CategoryFeatureId": "192637",
+              "CategoryFeatureGroupID": "20676",
+              "SortNo": "-42",
+              "PresentationValue": "119,4 mm",
+              "RawValue": "119.38",
+              "LocalValue": "119,4",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "1",
+              "Feature": {
+                "ID": "4456",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Alto de la caja principal",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868139378,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "1184.09",
+              "CategoryFeatureId": "192638",
+              "CategoryFeatureGroupID": "20676",
+              "SortNo": "-43",
+              "PresentationValue": "1,18 kg",
+              "RawValue": "1184.09",
+              "LocalValue": "1,18",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "1",
+              "Feature": {
+                "ID": "19016",
+                "Sign": "",
+                "Measure": {
+                  "ID": "38",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7447",
+                    "_": "g",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Peso del envase completo",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 868139375,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "30",
+              "CategoryFeatureId": "192640",
+              "CategoryFeatureGroupID": "20676",
+              "SortNo": "-45",
+              "PresentationValue": "30 pieza(s)",
+              "RawValue": "30",
+              "LocalValue": "30",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "1",
+              "Feature": {
+                "ID": "22659",
+                "Sign": "",
+                "Measure": {
+                  "ID": "144",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7549",
+                    "_": "pieza(s)",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Cantidad por caja",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "FeatureLogos": [],
+      "ReasonsToBuy": [],
+      "Reviews": [],
+      "ProductRelated": [],
+      "CatalogObjectCloud": {
+        "ProductPage": {
+          "QRCodeURL": "https://qr.icecat.biz/coc/d337b7a4-6776-48aa-a378-4b2e8384ba8e",
+          "URL": "https://coc.icecat.biz/d337b7a4-6776-48aa-a378-4b2e8384ba8e"
+        }
+      },
+      "Variants": [],
+      "ProductStory": [],
+      "Dictionary": {
+        "eu_energy_label": "EU Energy Label",
+        "pdf_url": "User manual",
+        "reviews_head_name": "Reviews",
+        "zoom_panel_dragg": "Mouse dragging",
+        "demo_msg_part2": "Su nombre de usuario de Icecat",
+        "zoom_panel_out": "Zoom out",
+        "zoom_panel_in": "Zoom in",
+        "demo_msg_part1": "Ahora est&aacute; usando una cuenta demo. Por favor, utilice su propia cuenta Icecat",
+        "zoom_panel_init": "Original size",
+        "demo_insert_desc": "Esta es una demo de una inserci&oacute;n de ficha de producto Icecat LIVE en su sitio web. Imagine que esta ficha t&eacute;cnica est&aacute; incluida en la p&aacute;gina del producto de su tienda online.",
+        "options_head_name": "Options",
+        "demo_msg_part3": "Si no tiene una cuenta en Icecat, reg&iacute;strese aqu&iacute; de forma gratuita",
+        "pdf_specs": "Folleto",
+        "product_family": "Familia de productos",
+        "supplier_name": "Marca",
+        "flash360": "3D tour",
+        "product_series": "Series de Productos",
+        "desc": "Descripci&oacute;n",
+        "ean_code": "C&oacute;digo EAN/UPC",
+        "specs": "Especificaciones",
+        "marketing_text": "Descripción",
+        "reasons_to_buy": "Razones para comprar",
+        "release_date": "Release date",
+        "html_content": "",
+        "eu_product_fiche": "EU Product Fiche",
+        "cat_name": "Categor&iacute;a",
+        "prod_code": "C&oacute;digo del producto",
+        "back_to_top": "Volver arriba",
+        "model_name": "Nombre de producto",
+        "repairability_index": "Repairability index",
+        "video": "Video",
+        "link_integrate_desk": "How to integrate Icecat LIVE JavaScript."
+      },
+      "DemoAccount": false
+    }
+  },
+  "mpn_usado": "SPSD/512GB",
+  "mpn_original": "SPSD/512GB",
+  "variante_indice": 0,
+  "fuente": "icecat"
+}

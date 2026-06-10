@@ -30,6 +30,7 @@ export const PRODUCTO_INICIAL = {
   tiempo_entrega_dias: '',
   descripcion_tecnica: '',
   imagen_url: '',
+  id_etiqueta: '',
   // Procesador
   socket: '',
   arquitectura: '',
@@ -98,6 +99,7 @@ export default function ProductForm({
   mode = 'create',
   error = '',
   categorias = CATEGORIAS,
+  etiquetas = [],
 }) {
   const categoriasDisponibles = useMemo(
     () => Array.from(new Set([...(categorias || []), ...(value.categoria ? [value.categoria] : [])])),
@@ -176,6 +178,35 @@ export default function ProductForm({
           onChange={(e) => setCampo('imagen_url', e.target.value)}
           placeholder="https://..."
         />
+
+        <SelectField
+          id="producto-etiqueta"
+          label="Etiqueta de perfil"
+          value={value.id_etiqueta ?? ''}
+          onChange={(e) => setCampo('id_etiqueta', e.target.value)}
+          options={[
+            { value: '', label: 'Sin etiqueta' },
+            ...etiquetas.map((et) => ({ value: String(et.id), label: et.nombre })),
+          ]}
+        />
+
+        {value.codigo_proveedor ? (
+          <div className="sm:col-span-2">
+            <a
+              href={`https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=${encodeURIComponent(value.codigo_proveedor)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-3 py-2 text-sm text-[var(--color-accent)] transition-colors hover:bg-[var(--color-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+              Ver en Deltron ({value.codigo_proveedor})
+            </a>
+          </div>
+        ) : null}
       </FormSection>
 
       <SwitchField

@@ -87,15 +87,17 @@ const ValidadorCompatibilidad = ({
         {errores.length > 0 && (
           <motion.div
             variants={variantesItem}
-            className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg shadow-sm"
+            role="alert"
+            className="mb-4 rounded-[var(--radius-md)] border-l-4 border-[var(--color-danger)] bg-[color:rgba(255,69,58,0.10)] p-4 shadow-[var(--shadow-1)]"
           >
             <div className="flex items-start">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-6 w-6 text-red-500"
+                  className="h-6 w-6 text-[var(--color-danger)]"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -106,23 +108,23 @@ const ValidadorCompatibilidad = ({
                 </svg>
               </div>
               <div className="ml-3 flex-1">
-                <h3 className="text-sm font-semibold text-red-800 mb-2">
+                <h3 className="mb-2 text-sm font-semibold text-[var(--color-text)]">
                   Incompatibilidades Detectadas
-                  <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-red-700">Critico</span>
+                  <span className="ml-2 rounded-full bg-[color:rgba(255,69,58,0.16)] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-danger)]">Crítico</span>
                 </h3>
                 <ul className="space-y-2">
                   {errores.map((error, index) => (
                     <motion.li
                       key={index}
                       variants={variantesItem}
-                      className="text-sm text-red-700 flex items-start"
+                      className="flex items-start text-sm text-[var(--color-text)]"
                     >
-                      <span className="mr-2 flex-shrink-0">•</span>
+                      <span className="mr-2 flex-shrink-0 text-[var(--color-danger)]">•</span>
                       <span className="flex-1">{error}</span>
                     </motion.li>
                   ))}
                 </ul>
-                <p className="mt-3 text-xs text-red-600 font-medium">
+                <p className="mt-3 text-xs font-medium text-[var(--color-danger)]">
                   Por favor, ajusta tu selección para resolver estas incompatibilidades.
                 </p>
               </div>
@@ -134,15 +136,17 @@ const ValidadorCompatibilidad = ({
         {advertencias.length > 0 && (
           <motion.div
             variants={variantesItem}
-            className="p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg shadow-sm"
+            role="status"
+            className="rounded-[var(--radius-md)] border-l-4 border-[var(--color-warning)] bg-[color:rgba(255,159,10,0.10)] p-4 shadow-[var(--shadow-1)]"
           >
             <div className="flex items-start">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-6 w-6 text-yellow-500"
+                  className="h-6 w-6 text-[var(--color-warning)]"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -153,23 +157,23 @@ const ValidadorCompatibilidad = ({
                 </svg>
               </div>
               <div className="ml-3 flex-1">
-                <h3 className="text-sm font-semibold text-yellow-800 mb-2">
+                <h3 className="mb-2 text-sm font-semibold text-[var(--color-text)]">
                   Advertencias
-                  <span className="ml-2 rounded-full bg-yellow-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-yellow-700">Advertencia</span>
+                  <span className="ml-2 rounded-full bg-[color:rgba(255,159,10,0.16)] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-warning)]">Advertencia</span>
                 </h3>
                 <ul className="space-y-2">
                   {advertencias.map((advertencia, index) => (
                     <motion.li
                       key={index}
                       variants={variantesItem}
-                      className="text-sm text-yellow-700 flex items-start"
+                      className="flex items-start text-sm text-[var(--color-text)]"
                     >
-                      <span className="mr-2 flex-shrink-0">•</span>
+                      <span className="mr-2 flex-shrink-0 text-[var(--color-warning)]">•</span>
                       <span className="flex-1">{advertencia}</span>
                     </motion.li>
                   ))}
                 </ul>
-                <p className="mt-3 text-xs text-yellow-600 font-medium">
+                <p className="mt-3 text-xs font-medium text-[var(--color-text-muted)]">
                   Tu configuración es compatible, pero considera estas recomendaciones.
                 </p>
               </div>
@@ -181,15 +185,17 @@ const ValidadorCompatibilidad = ({
         {compatible && errores.length === 0 && advertencias.length === 0 && (
           <motion.div
             variants={variantesItem}
-            className="p-4 bg-green-50 border-l-4 border-green-500 rounded-lg shadow-sm"
+            role="status"
+            className="rounded-[var(--radius-md)] border-l-4 border-[var(--color-success)] bg-[color:rgba(48,209,88,0.10)] p-4 shadow-[var(--shadow-1)]"
           >
             <div className="flex items-start">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-6 w-6 text-green-500"
+                  className="h-6 w-6 text-[var(--color-success)]"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -200,10 +206,10 @@ const ValidadorCompatibilidad = ({
                 </svg>
               </div>
               <div className="ml-3 flex-1">
-                <h3 className="text-sm font-semibold text-green-800">
+                <h3 className="text-sm font-semibold text-[var(--color-text)]">
                   ¡Configuración Compatible!
                 </h3>
-                <p className="mt-1 text-sm text-green-700">
+                <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                   Todos los componentes son compatibles entre sí.
                 </p>
               </div>

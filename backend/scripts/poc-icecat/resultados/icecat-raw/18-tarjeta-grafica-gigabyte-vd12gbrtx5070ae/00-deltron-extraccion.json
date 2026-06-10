@@ -1,0 +1,21 @@
+{
+  "producto": {
+    "codigo_deltron": "vd12gbrtx5070ae",
+    "categoria": "Tarjeta grafica",
+    "marca_csv": "gigabyte",
+    "marca_normalizada": "Gigabyte",
+    "nombre_esperado": "tarjeta de video gigabyte geforce rtx 5070 aero oc 12g, 12 gb gddr7, pcie gen 5.0",
+    "indice": 18,
+    "carpeta": "18-tarjeta-grafica-gigabyte-vd12gbrtx5070ae"
+  },
+  "resultado": {
+    "codigo_consultado": "vd12gbrtx5070ae",
+    "url": "https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=vd12gbrtx5070ae",
+    "sku_encontrado": "vd12gbrtx5070ae",
+    "sku_coincide": true,
+    "mpn": "GV-N5070AERO OC-12GD",
+    "mpn_metodo": "part-number",
+    "titulo_h1": "Tarjeta de video GIGABYTE GeForce RTX 5070 AERO OC 12G, 12 GB GDDR7, PCIe Gen 5.0",
+    "timestamp": "2026-06-05T23:41:29.907Z"
+  }
+}

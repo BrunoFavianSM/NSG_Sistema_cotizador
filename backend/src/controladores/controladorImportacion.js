@@ -10,8 +10,8 @@
  */
 
 const { ejecutarQuery } = require('../configuracion/baseDatos');
-const { parsearCSV, importar, calcularSpecsFaltantes } = require('../servicios/servicioImportacion');
-const servicioEnriquecimientoIA = require('../servicios/servicioEnriquecimientoIA');
+const { parsearCSV, importar } = require('../servicios/servicioImportacion');
+const servicioEnriquecimiento = require('../servicios/servicioEnriquecimiento');
 
 /**
  * POST /api/importacion/csv
@@ -78,28 +78,28 @@ async function importarCSV(req, res) {
  * @param {Object} res
  */
 async function construirEstadoEnriquecimiento() {
-  const estadoMemoria = servicioEnriquecimientoIA.obtenerEstadoMemoria();
+  const estadoMemoria = servicioEnriquecimiento.estado();
   const sql = `
     SELECT estado_enriquecimiento, COUNT(*) AS total
     FROM productos
-    WHERE estado_enriquecimiento IN ('pendiente', 'ia_completado', 'ia_fallido')
+    WHERE estado_enriquecimiento IN ('pendiente', 'enriquecido', 'fallido')
     GROUP BY estado_enriquecimiento
   `;
   const resultado = await ejecutarQuery(sql);
   const filas = resultado.rows || [];
-  const conteos = { pendiente: 0, ia_completado: 0, ia_fallido: 0 };
+  const conteos = { pendiente: 0, enriquecido: 0, fallido: 0 };
 
   for (const fila of filas) {
     conteos[fila.estado_enriquecimiento] = parseInt(fila.total, 10);
   }
 
   return {
-    en_proceso: estadoMemoria.en_proceso,
+    en_proceso: estadoMemoria.procesando,
     pendientes: conteos.pendiente,
-    pendientes_en_memoria: estadoMemoria.pendientes_en_memoria || 0,
-    completados: conteos.ia_completado,
-    fallidos: conteos.ia_fallido,
-    ultima_actualizacion: estadoMemoria.ultima_actualizacion,
+    pendientes_en_memoria: estadoMemoria.en_cola || 0,
+    completados: conteos.enriquecido,
+    fallidos: conteos.fallido,
+    ultima_actualizacion: new Date().toISOString(),
   };
 }
 
@@ -164,19 +164,28 @@ async function transmitirEstadoEnriquecimiento(req, res) {
  */
 async function reintentarFallidos(req, res) {
   try {
-    // Mover ia_fallido → pendiente y recuperar los productos afectados (diseño §6.2)
+    // Mover ia_fallido → pendiente y recuperar los productos afectados con
+    // su categoría (nombre), código de proveedor y marca (los necesita el
+    // enriquecimiento Icecat/Deltron).
     const sql = `
-      UPDATE productos
-      SET estado_enriquecimiento = 'pendiente',
-          updated_at = NOW()
-      WHERE estado_enriquecimiento = 'ia_fallido'
-      RETURNING id, categoria, nombre, descripcion_general
+      WITH actualizados AS (
+        UPDATE productos
+           SET estado_enriquecimiento = 'pendiente', updated_at = NOW()
+         WHERE estado_enriquecimiento = 'fallido'
+         RETURNING id, id_categoria, id_marca, codigo_proveedor
+      )
+      SELECT a.id AS id_producto, a.codigo_proveedor,
+             c.nombre AS categoria, m.nombre AS marca
+        FROM actualizados a
+        JOIN categorias c ON c.id = a.id_categoria
+        LEFT JOIN marcas m ON m.id = a.id_marca
+       WHERE c.es_componente_principal = true
     `;
     const resultado = await ejecutarQuery(sql);
     const filas = resultado.rows || [];
 
     // Sin productos fallidos → respuesta informativa (Req 5.4)
-    if (resultado.rowCount === 0) {
+    if (filas.length === 0) {
       return res.json({
         exito: true,
         mensaje: 'No hay productos fallidos para reintentar',
@@ -184,23 +193,19 @@ async function reintentarFallidos(req, res) {
       });
     }
 
-    // Reconstruir items de cola con specs faltantes (diseño §6.2)
     const items = filas.map((fila) => ({
-      id_producto:        fila.id,
-      categoria:          fila.categoria,
-      nombre:             fila.nombre,
-      descripcion_general: fila.descripcion_general,
-      // Sin registro de specs en memoria → calcularSpecsFaltantes devuelve todos los campos requeridos
-      specs_faltantes:    calcularSpecsFaltantes(fila.categoria, {}),
+      id_producto: fila.id_producto,
+      codigo_proveedor: fila.codigo_proveedor,
+      marca: fila.marca || '',
+      categoria: fila.categoria,
     }));
 
-    // Encolar y reactivar el procesamiento (Req 5.5)
-    servicioEnriquecimientoIA.encolarProductos(items);
-    servicioEnriquecimientoIA.reactivarCola();
+    // Encolar (el servicio inicia el procesamiento automáticamente).
+    servicioEnriquecimiento.encolarProductos(items);
 
     return res.json({
       exito:       true,
-      reintentados: resultado.rowCount,
+      reintentados: items.length,
     });
   } catch (error) {
     console.error('Error al reintentar productos fallidos:', error);

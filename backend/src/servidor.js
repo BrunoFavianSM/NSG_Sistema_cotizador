@@ -118,6 +118,8 @@ app.use('/api/compatibilidad', require('./rutas/compatibilidad'));
 // app.use('/api/ia', require('./rutas/ia'));           // movido a _asistente_legacy/back_3
 app.use('/api/auth', require('./rutas/auth'));
 app.use('/api/clientes', require('./rutas/clientes'));
+app.use('/api/cuentas', require('./rutas/cuentas'));
+app.use('/api/etiquetas', require('./rutas/etiquetas'));
 app.use('/api/configuracion', require('./rutas/configuracion'));
 app.use('/api/tipo-cambio', require('./rutas/tipoCambio'));
 const rutasImportacion = require('./rutas/importacion');
@@ -127,12 +129,12 @@ app.use('/api/notificaciones', require('./rutas/notificaciones'));
 // app.use('/api/asistente', require('./rutas/rutasAsistente')); // movido a _asistente_legacy/back_3
 app.use('/api/asistente', require('./asistente/rutasAsistente'));
 
-// Recuperar productos pendientes de enriquecimiento IA al arrancar (diseño §4.5)
+// Recuperar productos pendientes de enriquecimiento (Icecat/Deltron) al arrancar.
 // No bloquea el inicio del servidor; fallo se registra como advertencia.
-const servicioEnriquecimientoIA = require('./servicios/servicioEnriquecimientoIA');
+const servicioEnriquecimiento = require('./servicios/servicioEnriquecimiento');
 const { ejecutarQuery } = require('./configuracion/baseDatos');
-servicioEnriquecimientoIA.reactivarDesdeDB(ejecutarQuery).catch((err) =>
-  console.warn('[EnriquecimientoIA] Cola pendiente no recuperada:', err.message)
+servicioEnriquecimiento.reactivarDesdeDB(ejecutarQuery).catch((err) =>
+  console.warn('[Enriquecimiento] Cola pendiente no recuperada:', err.message)
 );
 
 // Servir imágenes subidas

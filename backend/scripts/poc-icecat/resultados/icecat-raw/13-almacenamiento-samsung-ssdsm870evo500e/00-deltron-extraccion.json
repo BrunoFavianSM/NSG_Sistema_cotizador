@@ -1,0 +1,21 @@
+{
+  "producto": {
+    "codigo_deltron": "ssdsm870evo500e",
+    "categoria": "Almacenamiento",
+    "marca_csv": "samsung",
+    "marca_normalizada": "Samsung",
+    "nombre_esperado": "unidad en estado solido samsung 870 evo 500gb, 2.5, sata 6gb/s",
+    "indice": 13,
+    "carpeta": "13-almacenamiento-samsung-ssdsm870evo500e"
+  },
+  "resultado": {
+    "codigo_consultado": "ssdsm870evo500e",
+    "url": "https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=ssdsm870evo500e",
+    "sku_encontrado": "ssdsm870evo500e",
+    "sku_coincide": true,
+    "mpn": "MZ-77E500E",
+    "mpn_metodo": "part-number",
+    "titulo_h1": "Unidad en estado solido Samsung 870 EVO 500GB, 2.5\", SATA 6Gb/s",
+    "timestamp": "2026-06-05T23:41:06.832Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "producto": {
+    "codigo_deltron": "vd16asrtx506toe",
+    "categoria": "Tarjeta grafica",
+    "marca_csv": "asus",
+    "marca_normalizada": "ASUS",
+    "nombre_esperado": "tarjeta de video asus dual-rtx5060ti-o16g-evo, 16gb gddr7, pcie gen 5.0",
+    "indice": 17,
+    "carpeta": "17-tarjeta-grafica-asus-vd16asrtx506toe"
+  },
+  "resultado": {
+    "codigo_consultado": "vd16asrtx506toe",
+    "url": "https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=vd16asrtx506toe",
+    "sku_encontrado": "vd16asrtx506toe",
+    "sku_coincide": true,
+    "mpn": "DUAL-RTX5060TI-O16G-EVO",
+    "mpn_metodo": "part-number",
+    "titulo_h1": "Tarjeta de video ASUS DUAL-RTX5060TI-O16G-EVO, 16 GB GDDR7, PCIe Gen 5.0",
+    "timestamp": "2026-06-05T23:41:25.298Z"
+  }
+}

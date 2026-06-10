@@ -1,0 +1,21 @@
+{
+  "producto": {
+    "codigo_deltron": "me8gcox4m1e3200",
+    "categoria": "Memoria RAM",
+    "marca_csv": "corsair",
+    "marca_normalizada": "Corsair",
+    "nombre_esperado": "memoria udimm corsair vengeance lpx 8gb (1x8gb) ddr4-3200 pc4-25600, cl16, 1.35v, bla",
+    "indice": 10,
+    "carpeta": "10-memoria-ram-corsair-me8gcox4m1e3200"
+  },
+  "resultado": {
+    "codigo_consultado": "me8gcox4m1e3200",
+    "url": "https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=me8gcox4m1e3200",
+    "sku_encontrado": "me8gcox4m1e3200",
+    "sku_coincide": true,
+    "mpn": "CMK8GX4M1E3200C16",
+    "mpn_metodo": "part-number",
+    "titulo_h1": "Memoria UDIMM Corsair Vengeance LPX 8GB (1x8GB) DDR4-3200 PC4-25600, CL16, 1.35V, Black",
+    "timestamp": "2026-06-05T23:40:52.990Z"
+  }
+}

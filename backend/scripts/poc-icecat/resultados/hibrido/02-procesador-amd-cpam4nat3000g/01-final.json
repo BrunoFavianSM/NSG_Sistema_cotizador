@@ -1,0 +1,223 @@
+{
+  "ok": true,
+  "fuente": "deltron-scraping",
+  "status": 200,
+  "consulta": {
+    "codigo": "cpam4nat3000g",
+    "marca": "AMD"
+  },
+  "data": {
+    "msg": "OK",
+    "StatusCode": 0,
+    "source": "deltron-scraping",
+    "data": {
+      "GeneralInfo": {
+        "Title": "Procesador AMD Athlon 3000G, 3.50GHz, 4MB L3 Cache, 2-Cores, AM4, 14nm, TDP: 35W.",
+        "Brand": "AMD",
+        "BrandPartCode": "cpam4nat3000g",
+        "SummaryDescription": {
+          "ShortSummaryDescription": "id=\"home\"> PROC AMD ATHLON 3000G 3.50GHZ Integra controladora de video / Incluye cooler de refrigeracion / Procesador en Caja Retail Consideraciones Tipo de Producto : Componente Tipo Operatividad : (NV) Nuevo Foto referencial"
+        }
+      },
+      "FeaturesGroups": [
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "General"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "MARCA"
+                }
+              },
+              "PresentationValue": "AMD"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "FAMILIA"
+                }
+              },
+              "PresentationValue": "Athlon"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "LINEA AMD"
+                }
+              },
+              "PresentationValue": "Procesador AMD Athlon SAM4"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "NOMBRE DEL PROCESADOR"
+                }
+              },
+              "PresentationValue": "Athlon 3000G"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "SOCKET"
+                }
+              },
+              "PresentationValue": "AM4 AMD"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "LITOGRAFIA AMD"
+                }
+              },
+              "PresentationValue": "14nm"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "INCORPORA CONTROLADOR GRAFICO"
+                }
+              },
+              "PresentationValue": "SI"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "PROCESADOR GRAFICO"
+                }
+              },
+              "PresentationValue": "AMD Radeon Vega 3 Graphics"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "INCLUYE FAN COOLER"
+                }
+              },
+              "PresentationValue": "SI"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "PRESENTACION"
+                }
+              },
+              "PresentationValue": "CAJA"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CODIGO DEL FABRICANTE"
+                }
+              },
+              "PresentationValue": "YD3000C6FHSBX"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "NUCLEOS"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CANTIDAD DE NUCLEOS"
+                }
+              },
+              "PresentationValue": "2"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CANTIDAD DE SUBPROCESOS"
+                }
+              },
+              "PresentationValue": "4"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "FRECUENCIAS"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "FRECUENCIA BASE"
+                }
+              },
+              "PresentationValue": "3.5 GHz"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "DESBLOQUEADO"
+                }
+              },
+              "PresentationValue": "SI"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "CACHE"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CACHE L1 TOTAL"
+                }
+              },
+              "PresentationValue": "192 KB"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CACHE L2 TOTAL"
+                }
+              },
+              "PresentationValue": "1 MB"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "CACHE L3 TOTAL"
+                }
+              },
+              "PresentationValue": "4 MB"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "POTENCIA"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "TDP"
+                }
+              },
+              "PresentationValue": "35 Watt"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

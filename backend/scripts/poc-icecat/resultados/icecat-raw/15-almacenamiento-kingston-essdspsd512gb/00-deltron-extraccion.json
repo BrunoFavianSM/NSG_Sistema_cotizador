@@ -1,0 +1,21 @@
+{
+  "producto": {
+    "codigo_deltron": "essdspsd512gb",
+    "categoria": "Almacenamiento",
+    "marca_csv": "kingston",
+    "marca_normalizada": "Kingston",
+    "nombre_esperado": "unidad en estado sï¿½lido dual portatil kingston 512gb, interfaz usb-a, usb-c, usb 3.2",
+    "indice": 15,
+    "carpeta": "15-almacenamiento-kingston-essdspsd512gb"
+  },
+  "resultado": {
+    "codigo_consultado": "essdspsd512gb",
+    "url": "https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=essdspsd512gb",
+    "sku_encontrado": "essdspsd512gb",
+    "sku_coincide": true,
+    "mpn": "SPSD/512GB",
+    "mpn_metodo": "part-number",
+    "titulo_h1": "Unidad en estado sólido Dual Portatil Kingston 512GB, Interfaz USB-A, USB-C, USB 3.2 Gen 2",
+    "timestamp": "2026-06-05T23:41:15.979Z"
+  }
+}

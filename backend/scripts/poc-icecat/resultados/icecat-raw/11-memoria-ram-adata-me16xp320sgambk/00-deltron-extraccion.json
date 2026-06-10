@@ -1,0 +1,21 @@
+{
+  "producto": {
+    "codigo_deltron": "me16xp320sgambk",
+    "categoria": "Memoria RAM",
+    "marca_csv": "a-data",
+    "marca_normalizada": "ADATA",
+    "nombre_esperado": "memoria adata xpg gammix d20 16gb ddr4-3200mhz pc4-25600, cl16, 1.35v, 288-pines",
+    "indice": 11,
+    "carpeta": "11-memoria-ram-adata-me16xp320sgambk"
+  },
+  "resultado": {
+    "codigo_consultado": "me16xp320sgambk",
+    "url": "https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=me16xp320sgambk",
+    "sku_encontrado": "me16xp320sgambk",
+    "sku_coincide": true,
+    "mpn": "AX4U320016G16A-CBK20",
+    "mpn_metodo": "part-number",
+    "titulo_h1": "Memoria ADATA XPG GAMMIX D20 16GB DDR4-3200MHz PC4-25600, CL16, 1.35V, 288-pines",
+    "timestamp": "2026-06-05T23:40:57.568Z"
+  }
+}

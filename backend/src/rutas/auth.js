@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const servicioAuth = require('../servicios/servicioAuth');
-const { verificarToken } = require('../middleware/auth');
+const { verificarToken, verificarTokenUsuario } = require('../middleware/auth');
+const { middlewareTurnstile } = require('../utilidades/turnstile');
 
 // Rate limiter para registro (5 intentos / 15 min)
 const limitadorRegistro = rateLimit({
@@ -28,7 +29,7 @@ const limitadorRecuperacion = rateLimit({
  * POST /api/auth/login
  * Autentica un usuario (admin o usuario registrado) y retorna token JWT
  */
-router.post('/login', async (req, res) => {
+router.post('/login', middlewareTurnstile, async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -60,7 +61,7 @@ router.post('/login', async (req, res) => {
  * POST /api/auth/verificar
  * Verifica si un token JWT es válido. Retorna rol en el usuario.
  */
-router.post('/verificar', verificarToken, async (req, res) => {
+router.post('/verificar', verificarTokenUsuario, async (req, res) => {
   try {
     res.json({
       valido: true,
@@ -80,11 +81,11 @@ router.post('/verificar', verificarToken, async (req, res) => {
  * POST /api/auth/registro
  * Registra un nuevo usuario con rol 'usuario'.
  */
-router.post('/registro', limitadorRegistro, async (req, res) => {
+router.post('/registro', limitadorRegistro, middlewareTurnstile, async (req, res) => {
   try {
-    const { username, password, confirmarPassword, correo, nombre_completo, telefono } = req.body;
+    const { username, password, confirmarPassword, correo, nombre_completo, telefono, dni } = req.body;
 
-    if (!username || !password || !confirmarPassword || !correo || !nombre_completo) {
+    if (!username || !password || !confirmarPassword || !correo || !nombre_completo || !telefono || !dni) {
       return res.status(400).json({
         exito: false,
         error: 'Todos los campos requeridos deben ser proporcionados',
@@ -93,7 +94,9 @@ router.post('/registro', limitadorRegistro, async (req, res) => {
           { campo: 'password', mensaje: !password ? 'Contrasena es requerida' : null },
           { campo: 'confirmarPassword', mensaje: !confirmarPassword ? 'Confirmar contrasena es requerido' : null },
           { campo: 'correo', mensaje: !correo ? 'Correo electronico es requerido' : null },
-          { campo: 'nombre_completo', mensaje: !nombre_completo ? 'Nombre completo es requerido' : null }
+          { campo: 'nombre_completo', mensaje: !nombre_completo ? 'Nombre completo es requerido' : null },
+          { campo: 'telefono', mensaje: !telefono ? 'Telefono es requerido' : null },
+          { campo: 'dni', mensaje: !dni ? 'DNI es requerido' : null }
         ].filter(d => d.mensaje)
       });
     }
@@ -104,7 +107,8 @@ router.post('/registro', limitadorRegistro, async (req, res) => {
       confirmarPassword,
       correo: correo.trim().toLowerCase(),
       nombre_completo: nombre_completo.trim(),
-      telefono: telefono ? telefono.trim() : null
+      telefono: telefono ? String(telefono).trim() : null,
+      dni: dni ? String(dni).trim() : null
     });
 
     if (!resultado.exito) {

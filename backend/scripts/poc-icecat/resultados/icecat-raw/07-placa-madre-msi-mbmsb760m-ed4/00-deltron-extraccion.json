@@ -1,0 +1,21 @@
+{
+  "producto": {
+    "codigo_deltron": "mbmsb760m-ed4",
+    "categoria": "Placa madre",
+    "marca_csv": "msi",
+    "marca_normalizada": "MSI",
+    "nombre_esperado": "motherboard msi pro pro b760m-e ddr4, chipset intel b760, lga1700, hdmi, vga, matx.[@",
+    "indice": 7,
+    "carpeta": "07-placa-madre-msi-mbmsb760m-ed4"
+  },
+  "resultado": {
+    "codigo_consultado": "mbmsb760m-ed4",
+    "url": "https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=mbmsb760m-ed4",
+    "sku_encontrado": "mbmsb760m-ed4",
+    "sku_coincide": true,
+    "mpn": "PRO B760M-E DDR4",
+    "mpn_metodo": "part-number",
+    "titulo_h1": "Motherboard MSI PRO PRO B760M-E DDR4, Chipset Intel B760, LGA1700, HDMI, VGA, mATX.",
+    "timestamp": "2026-06-05T23:40:35.726Z"
+  }
+}

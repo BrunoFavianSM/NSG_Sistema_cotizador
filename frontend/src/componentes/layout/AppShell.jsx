@@ -71,6 +71,17 @@ const NAV_ITEMS = [
     mobileLabel: 'Admin',
   },
   {
+    key: 'admin-usuarios',
+    to: '/admin/usuarios',
+    label: 'Cuentas',
+    description: 'Gestiona cuentas y roles',
+    icon: 'person_add',
+    group: 'admin',
+    requiresAuth: true,
+    requiresAdmin: true,
+    showInMobileTab: false,
+  },
+  {
     key: 'admin-configuracion',
     to: '/admin/configuracion',
     label: 'Configuración',

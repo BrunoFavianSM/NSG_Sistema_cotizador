@@ -56,11 +56,16 @@ api.interceptors.response.use(
 
     switch (status) {
       case 401:
-        // Token inválido o expirado
+        // Token inválido o expirado: limpiar SIEMPRE todo rastro de sesión
+        // y avisar a la app para resetear el estado (evita que la cuenta
+        // anterior "reviva"). El guard de ruta decide la redirección.
         localStorage.removeItem('token');
         localStorage.removeItem('usuario');
-        if (window.location.pathname.startsWith('/admin')) {
-          window.location.href = '/login';
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('sesion:expirada'));
+          if (window.location.pathname.startsWith('/admin')) {
+            window.location.href = '/login';
+          }
         }
         break;
       case 403:
@@ -93,16 +98,16 @@ api.interceptors.response.use(
  * @param {string} password - Contraseña
  * @returns {Promise<{exito: boolean, token?: string, usuario?: Object, error?: string}>}
  */
-export const login = async (username, password) => {
+export const login = async (username, password, captchaToken = null) => {
   try {
-    const response = await api.post('/auth/login', { username, password });
-    
+    const response = await api.post('/auth/login', { username, password, captcha_token: captchaToken });
+
     // Guardar token y usuario en localStorage
     if (response.data.exito && response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('usuario', JSON.stringify(response.data.usuario));
     }
-    
+
     return response.data;
   } catch (error) {
     throw error;
@@ -272,6 +277,30 @@ export const subirImagenProducto = async (categoria, id, archivo) => {
   } catch (error) {
     throw error;
   }
+};
+
+/**
+ * Obtiene las etiquetas de perfil (Básico/Medio/Avanzado/Gamer Full).
+ * @returns {Promise<{exito:boolean, etiquetas:Array<{id:number,nombre:string,orden:number}>}>}
+ */
+export const obtenerEtiquetas = async () => {
+  try {
+    const response = await api.get('/etiquetas');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Construye la URL de la ficha del producto en Deltron a partir del código de proveedor.
+ * @param {string} codigoProveedor
+ * @returns {string|null}
+ */
+export const construirUrlDeltron = (codigoProveedor) => {
+  const codigo = String(codigoProveedor || '').trim();
+  if (!codigo) return null;
+  return `https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=${encodeURIComponent(codigo)}`;
 };
 
 /**
@@ -707,10 +736,10 @@ export const obtenerEstadisticasIA = async () => {
  * @param {Object} datos - { username, password, confirmarPassword, correo, nombre_completo, telefono? }
  * @returns {Promise<{exito: boolean, token?: string, usuario?: Object, error?: string}>}
  */
-export const registrar = async ({ username, password, confirmarPassword, correo, nombre_completo, telefono }) => {
+export const registrar = async ({ username, password, confirmarPassword, correo, nombre_completo, telefono, dni, captcha_token }) => {
   try {
     const response = await api.post('/auth/registro', {
-      username, password, confirmarPassword, correo, nombre_completo, telefono
+      username, password, confirmarPassword, correo, nombre_completo, telefono, dni, captcha_token
     });
 
     if (response.data.exito && response.data.token) {
@@ -723,6 +752,14 @@ export const registrar = async ({ username, password, confirmarPassword, correo,
     throw error;
   }
 };
+
+// ============================================
+// GESTIÓN DE CUENTAS (admin)
+// ============================================
+export const obtenerCuentas = async () => (await api.get('/cuentas')).data;
+export const crearCuenta = async (datos) => (await api.post('/cuentas', datos)).data;
+export const actualizarCuenta = async (id, datos) => (await api.put(`/cuentas/${id}`, datos)).data;
+export const eliminarCuenta = async (id) => (await api.delete(`/cuentas/${id}`)).data;
 
 /**
  * Solicita recuperacion de contrasena por correo electronico

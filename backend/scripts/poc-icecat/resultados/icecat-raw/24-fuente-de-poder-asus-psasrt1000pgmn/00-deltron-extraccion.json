@@ -1,0 +1,21 @@
+{
+  "producto": {
+    "codigo_deltron": "psasrt1000pgmn",
+    "categoria": "Fuente de poder",
+    "marca_csv": "asus",
+    "marca_normalizada": "ASUS",
+    "nombre_esperado": "psu as rog strix 1000p gm 80+p",
+    "indice": 24,
+    "carpeta": "24-fuente-de-poder-asus-psasrt1000pgmn"
+  },
+  "resultado": {
+    "codigo_consultado": "psasrt1000pgmn",
+    "url": "https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=psasrt1000pgmn",
+    "sku_encontrado": "psasrt1000pgmn",
+    "sku_coincide": true,
+    "mpn": "ROG-STRIX-1000P-GAMING",
+    "mpn_metodo": "part-number",
+    "titulo_h1": "PSU AS ROG STRIX 1000P GM 80+P",
+    "timestamp": "2026-06-05T23:41:58.301Z"
+  }
+}

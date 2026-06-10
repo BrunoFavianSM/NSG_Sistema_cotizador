@@ -1,0 +1,21 @@
+{
+  "producto": {
+    "codigo_deltron": "vd16xfrx906xtm3",
+    "categoria": "Tarjeta grafica",
+    "marca_csv": "xfx",
+    "marca_normalizada": "XFX",
+    "nombre_esperado": "tarjeta de video xfx mercury amd radeon rx 9060 xt oc gaming edition, 16gb gddr6, pci",
+    "indice": 20,
+    "carpeta": "20-tarjeta-grafica-xfx-vd16xfrx906xtm3"
+  },
+  "resultado": {
+    "codigo_consultado": "vd16xfrx906xtm3",
+    "url": "https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=vd16xfrx906xtm3",
+    "sku_encontrado": "vd16xfrx906xtm3",
+    "sku_coincide": true,
+    "mpn": "RX-96TMERCB9",
+    "mpn_metodo": "part-number",
+    "titulo_h1": "Tarjeta de video XFX Mercury AMD Radeon RX 9060 XT OC Gaming Edition, 16GB GDDR6, PCIe5",
+    "timestamp": "2026-06-05T23:41:39.615Z"
+  }
+}

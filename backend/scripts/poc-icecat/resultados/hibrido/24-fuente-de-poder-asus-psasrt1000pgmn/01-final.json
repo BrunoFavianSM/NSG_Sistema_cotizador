@@ -1,0 +1,2436 @@
+{
+  "ok": true,
+  "status": 200,
+  "consulta": {
+    "mpn": "ROG-STRIX-1000P-GAMING",
+    "marca": "ASUS",
+    "lang": "ES"
+  },
+  "data": {
+    "msg": "OK",
+    "data": {
+      "GeneralInfo": {
+        "IcecatId": 122666937,
+        "ReleaseDate": "",
+        "EndOfLifeDate": "",
+        "Title": "ASUS ROG STRIX-1000P-GAMING unidad de fuente de alimentación 1000 W 20+4 pin ATX ATX Negro, Plata",
+        "TitleInfo": {
+          "GeneratedIntTitle": "ASUS ROG STRIX-1000P-GAMING power supply unit",
+          "GeneratedLocalTitle": {
+            "Value": "ASUS ROG STRIX-1000P-GAMING unidad de fuente de alimentación 1000 W 20+4 pin ATX ATX Negro, Plata",
+            "Language": "ES"
+          },
+          "BrandLocalTitle": {
+            "Value": "",
+            "Language": "ES"
+          }
+        },
+        "Brand": "ASUS",
+        "BrandID": "161",
+        "BrandLogo": "https://images.icecat.biz/img/brand/thumb/161_0457b539b0334f679d065c1176fa11ab.jpg",
+        "BrandInfo": {
+          "BrandName": "ASUS",
+          "BrandLocalName": "",
+          "BrandLogo": "https://images.icecat.biz/img/brand/thumb/161_0457b539b0334f679d065c1176fa11ab.jpg"
+        },
+        "ProductName": "STRIX-1000P-GAMING",
+        "ProductNameInfo": {
+          "ProductIntName": "STRIX-1000P-GAMING",
+          "ProductLocalName": {
+            "Value": "",
+            "Language": "ES"
+          }
+        },
+        "BrandPartCode": "90YE00W1-B0NA00",
+        "GTIN": [
+          "4711387594384",
+          "0197105594456",
+          "197105594456"
+        ],
+        "Category": {
+          "CategoryID": "963",
+          "Name": {
+            "Value": "Unidades de fuentes de alimentación",
+            "Language": "ES"
+          }
+        },
+        "ProductFamily": {
+          "ProductFamilyID": "75020",
+          "Value": "ROG",
+          "Language": "EN"
+        },
+        "ProductSeries": {
+          "SeriesID": "1"
+        },
+        "Description": {},
+        "SEOs": {},
+        "SummaryDescription": {
+          "ShortSummaryDescription": "ASUS ROG STRIX-1000P-GAMING, 1000 W, 100 - 240 V, Activo, 130 W, 1000 W, 130 W",
+          "LongSummaryDescription": "ASUS ROG STRIX-1000P-GAMING. Potencia total: 1000 W, Voltaje de entrada AC: 100 - 240 V, Corrección del factor de potencia tipo (PFC): Activo. Alimentador de energía para tarjeta madre: 20+4 pin ATX, Longitud del cable de alimentación de la placa base: 61 cm, Longitud del cable de alimentación SATA: 120,400 mm. Utilizar con: PC, Factor de forma de fuente de alimentación (PSU): ATX, Certificación 80 PLUS: 80 PLUS Platinum. Color del producto: Negro, Plata, Tipo de enfriamiento: Semi-passive, Número de ventiladores: 1 Ventilador(es). Cables incluidos: Corriente alterna, CPU, PCIe, Peripheral (Molex), SATA"
+        },
+        "BulletPoints": {},
+        "GeneratedBulletPoints": {
+          "Language": "ES",
+          "Values": [
+            "1000 W 100 - 240 V",
+            "Alimentador de energía para tarjeta madre: 20+4 pin ATX",
+            "PC ATX 80 PLUS Platinum",
+            "Semi-passive",
+            "Negro, Plata"
+          ]
+        },
+        "GTINs": [
+          {
+            "GTIN": "4711387594384",
+            "IsApproved": true
+          },
+          {
+            "GTIN": "0197105594456",
+            "IsApproved": true
+          },
+          {
+            "GTIN": "197105594456",
+            "IsApproved": true
+          }
+        ]
+      },
+      "Image": {
+        "HighPic": "https://images.icecat.biz/img/gallery/75b6c6e87b2e53aaa23edb87c71504c74ea97692.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "HighPicSize": "2401498",
+        "HighPicHeight": "2400",
+        "HighPicWidth": "2400",
+        "LowPic": "https://images.icecat.biz/img/gallery_lows/902ef6d7cca7efe9a0cb921f93f09a75f80dc1ca.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "LowPicSize": "25162",
+        "LowPicHeight": "200",
+        "LowPicWidth": "200",
+        "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/f64c15fc1612b4d38ad3f3dcf5c6956cc09e9b31.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "Pic500x500Size": "120089",
+        "Pic500x500Height": "500",
+        "Pic500x500Width": "500",
+        "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/9735a5bf1e9078f3c9ec036da87685d24ed99ffa.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "ThumbPicSize": "5361"
+      },
+      "Multimedia": [
+        {
+          "ID": "20CF9C21-0A42-435C-8950-04BFD70B2E89",
+          "URL": "https://objects.icecat.biz/objects/mmo_122666937_1727372951_2502_1048162.pdf?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Type": "manual pdf",
+          "ContentType": "application/pdf",
+          "KeepAsUrl": "0",
+          "Description": "User manual",
+          "Size": "8797881",
+          "IsPrivate": "0",
+          "Updated": "2024-09-26 19:49:11",
+          "Language": "",
+          "IsVideo": 0
+        },
+        {
+          "ID": "00000000-0000-0000-0000-000000000000",
+          "URL": "https://icecat.biz/rest/product-pdf?productId=122666937&lang=es",
+          "Type": "leaflet",
+          "ContentType": "application/pdf",
+          "KeepAsUrl": "0",
+          "Description": "Brochure ASUS 90YE00W1-B0NA00",
+          "Size": "0",
+          "IsPrivate": "0",
+          "Updated": "2024-09-26 20:12:47",
+          "Language": "ES",
+          "IsVideo": 0
+        }
+      ],
+      "Gallery": [
+        {
+          "ID": "95915882",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/902ef6d7cca7efe9a0cb921f93f09a75f80dc1ca.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "25162",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/9735a5bf1e9078f3c9ec036da87685d24ed99ffa.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "5361",
+          "Pic": "https://images.icecat.biz/img/gallery/75b6c6e87b2e53aaa23edb87c71504c74ea97692.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "2401498",
+          "PicHeight": "2400",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/f64c15fc1612b4d38ad3f3dcf5c6956cc09e9b31.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "120089",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "1",
+          "IsMain": "Y",
+          "Updated": "2024-09-26 19:47:38",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "95915884",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/1f62bc05eda935038c80bc3cfb812881c64fec60.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "21042",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/f883b9b3b90b8f24b65d5714a56b7819868fe81b.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "4176",
+          "Pic": "https://images.icecat.biz/img/gallery/764830f8bcfe449e90f19b2e7b3eb3e1f4fab93f.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "2220040",
+          "PicHeight": "2400",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/c8b4a8b5d6234fae939d9a804e947badff0701f1.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "105674",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "2",
+          "IsMain": "N",
+          "Updated": "2024-09-26 19:47:38",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "95915886",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/fe519813954622be9c7739f77c230ae745d69e0a.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "20389",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/be20cd646e1c97ebbc116b7c6418d16daf80fc3d.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "4243",
+          "Pic": "https://images.icecat.biz/img/gallery/19245b2623e815cf00302ca3c215b2969d007589.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "2487997",
+          "PicHeight": "2400",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/42b3d0270997b3750274095635d830aaae07d5c2.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "106654",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "3",
+          "IsMain": "N",
+          "Updated": "2024-09-26 19:47:38",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "95915887",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/316aa4648f9af4b8ee06d0f179bdf08dd8d21856.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "15730",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/d1225b04bc7d4e919b9b9002e9a3d2f888a54351.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "3292",
+          "Pic": "https://images.icecat.biz/img/gallery/3a8e61471cdebb1ceda926c981b8f8ffa29a491a.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "1957783",
+          "PicHeight": "2400",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/10f177326da006516de2647b47b9abcc12f6d2b2.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "82639",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "4",
+          "IsMain": "N",
+          "Updated": "2024-09-26 19:47:44",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "95915888",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/f03022ef33cdc87691225a10a7e80557800faf04.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "30793",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/cea4a591df9b44895d7899f06c4eff55cbb82114.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "6653",
+          "Pic": "https://images.icecat.biz/img/gallery/7660b21bbb0f506461ea7035885f7dfaffff9f7a.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "3899909",
+          "PicHeight": "2400",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/b6d8c0540e9ac7ed2b6a0ff702aeb88f5595c7b1.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "157685",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "5",
+          "IsMain": "N",
+          "Updated": "2024-09-26 19:47:43",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "95915889",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/b4afa54607b5dbbbb8582630078a6ff07d0d9f7b.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "23538",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/25eba57152aa479d890901426d94afe1a394f75d.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "4700",
+          "Pic": "https://images.icecat.biz/img/gallery/67a6e40f3408082dfed8364312fdb61fb9cca23c.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "3017854",
+          "PicHeight": "2400",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/df0178fc731765c2121d6e80f0700d6a6e8ce8c4.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "123891",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "6",
+          "IsMain": "N",
+          "Updated": "2024-09-26 19:47:46",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "95915890",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/d00a121a71982d6f55f26a7ee25127b15912a0ef.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "25081",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/bb9504b35f288a27fd60f853b8b7d49220bb77e4.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "5108",
+          "Pic": "https://images.icecat.biz/img/gallery/a6f851125562a5f95e8564586b8cd90b7e95257a.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "2915469",
+          "PicHeight": "2400",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/805c8b3dd1dee092a4f8b2dc08cff9f206f455fc.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "126867",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "7",
+          "IsMain": "N",
+          "Updated": "2024-09-26 19:48:01",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "95915891",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/e5ffee425df192fb9200bc0195cd085421353a9f.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "25783",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/8029a8cbe1af57783bcacce57fa711736f7fd32a.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "5149",
+          "Pic": "https://images.icecat.biz/img/gallery/23f8d6dc74b783189e5d2cb82ab8f0fb15a403a7.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "2952724",
+          "PicHeight": "2400",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/9d34ecd21ba156b4b64b1b75a89a4038bcaef277.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "131621",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "8",
+          "IsMain": "N",
+          "Updated": "2024-09-26 19:48:01",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "95915892",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/0345c97546d4f9d5a8322e13e72599ab110080ca.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "16441",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/8d8fdd0bce8df95532325ce08397e21add9420fb.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "3465",
+          "Pic": "https://images.icecat.biz/img/gallery/e91510c856f080731d1db4e0d4e4e339802af539.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "1827113",
+          "PicHeight": "2400",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/b6d706f4ed3385807cdd65fb18b5d3385ae6f798.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "84393",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "9",
+          "IsMain": "N",
+          "Updated": "2024-09-26 19:48:07",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "95915893",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/23c8690e69ec736be66c5b8d1d91c7969fd16343.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "17375",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/023fad65ff153e819c43fa6f7da0bc0409cc1b39.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "3469",
+          "Pic": "https://images.icecat.biz/img/gallery/1a44314d0503d456192c6361749b13e45d2943d3.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "2155107",
+          "PicHeight": "2400",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/ad49654c1db18f2052e7f90822ed4f003946c6d2.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "97430",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "10",
+          "IsMain": "N",
+          "Updated": "2024-09-26 19:48:14",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "95915894",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/3f438284037de8d250698d16de7a5d11cbddec49.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "21004",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/448799994616663516a5d9b725db552a3b7b1deb.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "4085",
+          "Pic": "https://images.icecat.biz/img/gallery/c13a4ff1453a29f14f0237daff119f67e931e6e1.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "2198915",
+          "PicHeight": "2400",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/044b181848adcfa2eebf662ebba6745f197e9c6d.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "107403",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "11",
+          "IsMain": "N",
+          "Updated": "2024-09-26 19:48:13",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "95915895",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/6933bb7c32603026b8a94eaeb473a13e6f17b246.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "13568",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/669d37b783ada7ed864a9eef8d3d371b084e42af.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "2885",
+          "Pic": "https://images.icecat.biz/img/gallery/7c99e9dc922a521514573ecb14d1787d95c94f7e.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "1992498",
+          "PicHeight": "2400",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/78dbd75b359c99186cee98499820e7b206b8e66f.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "75906",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "12",
+          "IsMain": "N",
+          "Updated": "2024-09-26 19:48:29",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "95915896",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/8b48bd244dccf213fc1be65fd72ef5066ccc1a04.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "16975",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/75ca7fcf446ca0c47a5c3902f94320f87e3b0a8d.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "3114",
+          "Pic": "https://images.icecat.biz/img/gallery/7750879923160afb1ec19b265b8252101128ee1d.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "2618232",
+          "PicHeight": "2400",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/1c451d53a7968fa86cdb62d62026fdbe7df44800.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "101216",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "13",
+          "IsMain": "N",
+          "Updated": "2024-09-26 19:48:30",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "95915897",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/105912ab19cb9fc450b1a41083db447a4fac5bb3.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "19018",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/61ce3eaf02b9d51c959728674de79ca824a26e2d.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "3111",
+          "Pic": "https://images.icecat.biz/img/gallery/dcb73c90bb9dc903350f5ca84f7bb754fa32b142.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "2563886",
+          "PicHeight": "2400",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/b98ed47f5e7f1dee0e80b9d1bf767d2d2af78bd9.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "113362",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "14",
+          "IsMain": "N",
+          "Updated": "2024-09-26 19:48:27",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "95915898",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/5ce273959f86442bdc25e5899ae103831e408e40.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "25108",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/b5e4f5023d1e5bd64e29088c29d704b4dfa4ae3f.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "5786",
+          "Pic": "https://images.icecat.biz/img/gallery/84a3b6fec0ddfac67f3f8f66f1c6123e6611a260.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "1466498",
+          "PicHeight": "2400",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/7a94b3609fb5472e210695d5de23ed40dc614fd8.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "115220",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "15",
+          "IsMain": "N",
+          "Updated": "2024-09-26 19:48:32",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        },
+        {
+          "ID": "95915900",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/cc8a8e1efbd42d696729341ef0de553e93ba68f7.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "28816",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/5a899745f0b044ac8ed85121ffaa036dc26fcbea.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "6479",
+          "Pic": "https://images.icecat.biz/img/gallery/eca084f9626bee7d9bdbba4d70ddcd0fe5e683d7.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "2023179",
+          "PicHeight": "2400",
+          "PicWidth": "2400",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/b7c7ae00dfd7c77bbde8dfff6a7a5f5da761e68f.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "128500",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "16",
+          "IsMain": "N",
+          "Updated": "2024-09-26 19:48:38",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        }
+      ],
+      "FeaturesGroups": [
+        {
+          "ID": 1617,
+          "SortNo": "5",
+          "FeatureGroup": {
+            "ID": "27",
+            "Name": {
+              "Value": "Control de energía",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 687259378,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "1000",
+              "CategoryFeatureId": "207296",
+              "CategoryFeatureGroupID": "1617",
+              "SortNo": "150",
+              "PresentationValue": "1000 W",
+              "RawValue": "1000",
+              "LocalValue": "1000",
+              "Description": "The total power that is needed by the device",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "10713",
+                "Sign": "",
+                "Measure": {
+                  "ID": "44",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7453",
+                    "_": "W",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Potencia total",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259385,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "100 - 240",
+              "CategoryFeatureId": "50400",
+              "CategoryFeatureGroupID": "1617",
+              "SortNo": "100",
+              "PresentationValue": "100 - 240 V",
+              "RawValue": "100 - 240",
+              "LocalValue": "100 - 240",
+              "Description": "The voltage of the AC electricity that is inputted into the product.",
+              "Mandatory": "1",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8491",
+                "Sign": "",
+                "Measure": {
+                  "ID": "42",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7451",
+                    "_": "V",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Voltaje de entrada AC",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259402,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "Active",
+              "CategoryFeatureId": "48491",
+              "CategoryFeatureGroupID": "1617",
+              "SortNo": "74",
+              "PresentationValue": "Activo",
+              "RawValue": "Active",
+              "LocalValue": "Activo",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8111",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Corrección del factor de potencia  tipo (PFC)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259408,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "130",
+              "CategoryFeatureId": "48497",
+              "CategoryFeatureGroupID": "1617",
+              "SortNo": "60",
+              "PresentationValue": "130 W",
+              "RawValue": "130",
+              "LocalValue": "130",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8119",
+                "Sign": "",
+                "Measure": {
+                  "ID": "44",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7453",
+                    "_": "W",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Potencia combinada (3,3 V)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259410,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "1000",
+              "CategoryFeatureId": "48501",
+              "CategoryFeatureGroupID": "1617",
+              "SortNo": "59",
+              "PresentationValue": "1000 W",
+              "RawValue": "1000",
+              "LocalValue": "1000",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8120",
+                "Sign": "",
+                "Measure": {
+                  "ID": "44",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7453",
+                    "_": "W",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Potencia combinada (+12 V)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259413,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "130",
+              "CategoryFeatureId": "48503",
+              "CategoryFeatureGroupID": "1617",
+              "SortNo": "58",
+              "PresentationValue": "130 W",
+              "RawValue": "130",
+              "LocalValue": "130",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8121",
+                "Sign": "",
+                "Measure": {
+                  "ID": "44",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7453",
+                    "_": "W",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Potencia combinada (+5 V)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259415,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "3.6",
+              "CategoryFeatureId": "48504",
+              "CategoryFeatureGroupID": "1617",
+              "SortNo": "57",
+              "PresentationValue": "3,6 W",
+              "RawValue": "3.6",
+              "LocalValue": "3,6",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8122",
+                "Sign": "",
+                "Measure": {
+                  "ID": "44",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7453",
+                    "_": "W",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Potencia combinada (-12V)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259417,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "15",
+              "CategoryFeatureId": "48505",
+              "CategoryFeatureGroupID": "1617",
+              "SortNo": "56",
+              "PresentationValue": "15 W",
+              "RawValue": "15",
+              "LocalValue": "15",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8123",
+                "Sign": "",
+                "Measure": {
+                  "ID": "44",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7453",
+                    "_": "W",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Potencia combinada (+5 VSB)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259418,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "25",
+              "CategoryFeatureId": "48513",
+              "CategoryFeatureGroupID": "1617",
+              "SortNo": "55",
+              "PresentationValue": "25 A",
+              "RawValue": "25",
+              "LocalValue": "25",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8124",
+                "Sign": "",
+                "Measure": {
+                  "ID": "41",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7450",
+                    "_": "A",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Corriente máxima de salida (+3.3V)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259420,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "83.3",
+              "CategoryFeatureId": "48515",
+              "CategoryFeatureGroupID": "1617",
+              "SortNo": "54",
+              "PresentationValue": "83,3 A",
+              "RawValue": "83.3",
+              "LocalValue": "83,3",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8125",
+                "Sign": "",
+                "Measure": {
+                  "ID": "41",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7450",
+                    "_": "A",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Corriente máxima de salida (+12V)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259422,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "25",
+              "CategoryFeatureId": "48516",
+              "CategoryFeatureGroupID": "1617",
+              "SortNo": "50",
+              "PresentationValue": "25 A",
+              "RawValue": "25",
+              "LocalValue": "25",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8126",
+                "Sign": "",
+                "Measure": {
+                  "ID": "41",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7450",
+                    "_": "A",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Corriente máxima de salida (+5V)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259423,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "0.3",
+              "CategoryFeatureId": "48521",
+              "CategoryFeatureGroupID": "1617",
+              "SortNo": "49",
+              "PresentationValue": "0,3 A",
+              "RawValue": "0.3",
+              "LocalValue": "0,3",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8127",
+                "Sign": "",
+                "Measure": {
+                  "ID": "41",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7450",
+                    "_": "A",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Corriente máxima de salida (-12V)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259427,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "3",
+              "CategoryFeatureId": "48517",
+              "CategoryFeatureGroupID": "1617",
+              "SortNo": "48",
+              "PresentationValue": "3 A",
+              "RawValue": "3",
+              "LocalValue": "3",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8128",
+                "Sign": "",
+                "Measure": {
+                  "ID": "41",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7450",
+                    "_": "A",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Corriente máxima de salida (+5Vsb)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259784,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "Over current,Over power,Over voltage,Overheating,Short circuit,Under voltage",
+              "CategoryFeatureId": "42701",
+              "CategoryFeatureGroupID": "1617",
+              "SortNo": "-20",
+              "PresentationValue": "Sobreintensidad, Sobretensión, Sobrevoltaje, Sobrecalentamiento, Cortocircuito, Bajo voltaje",
+              "RawValue": "Over current,Over power,Over voltage,Overheating,Short circuit,Under voltage",
+              "LocalValue": "Sobreintensidad, Sobretensión, Sobrevoltaje, Sobrecalentamiento, Cortocircuito, Bajo voltaje",
+              "Description": "Features that protect the device against power problems e.g. overload.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7370",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Funciones de protección de poder",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 2162,
+          "SortNo": "4",
+          "FeatureGroup": {
+            "ID": "12",
+            "Name": {
+              "Value": "Puertos e Interfaces",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 687259443,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "20+4 pin ATX",
+              "CategoryFeatureId": "48533",
+              "CategoryFeatureGroupID": "2162",
+              "SortNo": "100",
+              "PresentationValue": "20+4 pin ATX",
+              "RawValue": "20+4 pin ATX",
+              "LocalValue": "20+4 pin ATX",
+              "Description": "The way in which the motherboard is connected to the power supply.",
+              "Mandatory": "1",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "6945",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Alimentador de energía para tarjeta madre",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259445,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "610",
+              "CategoryFeatureId": "153738",
+              "CategoryFeatureGroupID": "2162",
+              "SortNo": "97",
+              "PresentationValue": "61 cm",
+              "RawValue": "610",
+              "LocalValue": "61",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "24870",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Longitud del cable de alimentación de la placa base",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259471,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "6",
+              "CategoryFeatureId": "16623",
+              "CategoryFeatureGroupID": "2162",
+              "SortNo": "95",
+              "PresentationValue": "6",
+              "RawValue": "6",
+              "LocalValue": "6",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7178",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Número de conectores de energía SATA",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259478,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "120,400",
+              "CategoryFeatureId": "163329",
+              "CategoryFeatureGroupID": "2162",
+              "SortNo": "94",
+              "PresentationValue": "120,400 mm",
+              "RawValue": "120,400",
+              "LocalValue": "120,400",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "26029",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Longitud del cable de alimentación SATA",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259480,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "3",
+              "CategoryFeatureId": "40390",
+              "CategoryFeatureGroupID": "2162",
+              "SortNo": "90",
+              "PresentationValue": "3",
+              "RawValue": "3",
+              "LocalValue": "3",
+              "Description": "White 4-pinned connector used to connect a peripheral to the power supply.",
+              "Mandatory": "1",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7180",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Conectores de poder (4 pin) periferales (Molex)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259488,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "150,400",
+              "CategoryFeatureId": "163330",
+              "CategoryFeatureGroupID": "2162",
+              "SortNo": "89",
+              "PresentationValue": "150,400 mm",
+              "RawValue": "150,400",
+              "LocalValue": "150,400",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "26031",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Longitud del cable de alimentación periférico (Molex)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259576,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "4",
+              "CategoryFeatureId": "45864",
+              "CategoryFeatureGroupID": "2162",
+              "SortNo": "74",
+              "PresentationValue": "4",
+              "RawValue": "4",
+              "LocalValue": "4",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7695",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Conectores de poder PCI Express (6 + 2 pin)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259581,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "1",
+              "CategoryFeatureId": "903780",
+              "CategoryFeatureGroupID": "2162",
+              "SortNo": "73",
+              "PresentationValue": "1",
+              "RawValue": "1",
+              "LocalValue": "1",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "45531",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Conectores de alimentación PCI Express (16 pines)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259588,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "750",
+              "CategoryFeatureId": "163331",
+              "CategoryFeatureGroupID": "2162",
+              "SortNo": "72",
+              "PresentationValue": "75 cm",
+              "RawValue": "750",
+              "LocalValue": "75",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "26032",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Longitud del cable de alimentación PCI Express",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259594,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "Y",
+              "CategoryFeatureId": "40393",
+              "CategoryFeatureGroupID": "2162",
+              "SortNo": "64",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7184",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "CPU conector de alimentación (4 +4 pines)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259603,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "1000",
+              "CategoryFeatureId": "163332",
+              "CategoryFeatureGroupID": "2162",
+              "SortNo": "63",
+              "PresentationValue": "100 cm",
+              "RawValue": "1000",
+              "LocalValue": "100",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "26030",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Longitud del cable de alimentación CPU",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259609,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "Y",
+              "CategoryFeatureId": "40391",
+              "CategoryFeatureGroupID": "2162",
+              "SortNo": "43",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7182",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Conector de poder ATX (20 + 4 pin)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 961891113,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "Y",
+              "CategoryFeatureId": "58997",
+              "CategoryFeatureGroupID": "2162",
+              "SortNo": "0",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "2846",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Conector Express PCI",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259620,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "Fully-Modular",
+              "CategoryFeatureId": "50582",
+              "CategoryFeatureGroupID": "2162",
+              "SortNo": "-1",
+              "PresentationValue": "Totalmente modular",
+              "RawValue": "Fully-Modular",
+              "LocalValue": "Totalmente modular",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8529",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tipo de cableado",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 11103,
+          "SortNo": "3",
+          "FeatureGroup": {
+            "ID": "184",
+            "Name": {
+              "Value": "Desempeño",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 687259727,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "80 PLUS Platinum",
+              "CategoryFeatureId": "48469",
+              "CategoryFeatureGroupID": "11103",
+              "SortNo": "100",
+              "PresentationValue": "80 PLUS Platinum",
+              "RawValue": "80 PLUS Platinum",
+              "LocalValue": "80 PLUS Platinum",
+              "Description": "",
+              "Mandatory": "1",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8110",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Certificación 80 PLUS",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259625,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "PC",
+              "CategoryFeatureId": "48468",
+              "CategoryFeatureGroupID": "11103",
+              "SortNo": "51",
+              "PresentationValue": "PC",
+              "RawValue": "PC",
+              "LocalValue": "PC",
+              "Description": "What the product is used for.",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "2585",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Utilizar con",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259629,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "ATX",
+              "CategoryFeatureId": "234525",
+              "CategoryFeatureGroupID": "11103",
+              "SortNo": "50",
+              "PresentationValue": "ATX",
+              "RawValue": "ATX",
+              "LocalValue": "ATX",
+              "Description": "",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "34322",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Factor de forma de fuente de alimentación (PSU)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 961890879,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "3.1",
+              "CategoryFeatureId": "48464",
+              "CategoryFeatureGroupID": "11103",
+              "SortNo": "46",
+              "PresentationValue": "3.1",
+              "RawValue": "3.1",
+              "LocalValue": "3.1",
+              "Description": "ATX (Advanced Technology eXtended) is a motherboard form factor specification developed by Intel in 1995. The specification defines the key mechanical dimensions",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "8107",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Versión ATX",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259842,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "20",
+              "CategoryFeatureId": "16192",
+              "CategoryFeatureGroupID": "11103",
+              "SortNo": "10",
+              "PresentationValue": "20 dB",
+              "RawValue": "20",
+              "LocalValue": "20",
+              "Description": "The amplitude level of the undesired background noise",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1793",
+                "Sign": "",
+                "Measure": {
+                  "ID": "76",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "18893",
+                    "_": "dB",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Nivel de ruido",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259870,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "Ball bearing",
+              "CategoryFeatureId": "48483",
+              "CategoryFeatureGroupID": "11103",
+              "SortNo": "0",
+              "PresentationValue": "Rodamiento de bolas",
+              "RawValue": "Ball bearing",
+              "LocalValue": "Rodamiento de bolas",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "2984",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tecnología de rodamientos",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259950,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "120000",
+              "CategoryFeatureId": "16629",
+              "CategoryFeatureGroupID": "11103",
+              "SortNo": "-70",
+              "PresentationValue": "120000 h",
+              "RawValue": "120000",
+              "LocalValue": "120000",
+              "Description": "Statistical model used to indicate product/mechanism reliability; expressed in hours and percentage of duty cycle. This number (in hours) does not indicate the mean time before failure for a single unit/mechanism",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "533",
+                "Sign": "",
+                "Measure": {
+                  "ID": "46",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7455",
+                    "_": "h",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tiempo medio entre fallos",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 11104,
+          "SortNo": "2",
+          "FeatureGroup": {
+            "ID": "148",
+            "Name": {
+              "Value": "Diseño",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 687259964,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "Black,Silver",
+              "CategoryFeatureId": "17626",
+              "CategoryFeatureGroupID": "11104",
+              "SortNo": "48",
+              "PresentationValue": "Negro, Plata",
+              "RawValue": "Black,Silver",
+              "LocalValue": "Negro, Plata",
+              "Description": "The colour e.g. red",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1766",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Color del producto",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687259997,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "Semi-passive",
+              "CategoryFeatureId": "50671",
+              "CategoryFeatureGroupID": "11104",
+              "SortNo": "41",
+              "PresentationValue": "Semi-passive",
+              "RawValue": "Semi-passive",
+              "LocalValue": "Semi-passive",
+              "Description": "The method used to cool the device or to cool the air around the device.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "6392",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tipo de enfriamiento",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687260000,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "1",
+              "CategoryFeatureId": "47385",
+              "CategoryFeatureGroupID": "11104",
+              "SortNo": "39",
+              "PresentationValue": "1 Ventilador(es)",
+              "RawValue": "1",
+              "LocalValue": "1",
+              "Description": "The quantity of fans (apparatus with rotating blades that creates a current of air for cooling or ventilation).",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "4539",
+                "Sign": "",
+                "Measure": {
+                  "ID": "378",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "35238",
+                    "_": "Ventilador(es)",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Número de ventiladores",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687260001,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "Y",
+              "CategoryFeatureId": "50668",
+              "CategoryFeatureGroupID": "11104",
+              "SortNo": "5",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "The device has illumination.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1861",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Iluminación",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687260027,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "Y",
+              "CategoryFeatureId": "59209",
+              "CategoryFeatureGroupID": "11104",
+              "SortNo": "0",
+              "PresentationValue": "Si",
+              "RawValue": "Y",
+              "LocalValue": "Si",
+              "Description": "The button which is pressed to switch the device on or off.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "6306",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Interruptor de encendido/apagado integrado",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 34050,
+          "SortNo": "0",
+          "FeatureGroup": {
+            "ID": "116",
+            "Name": {
+              "Value": "Contenido del embalaje",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 687260093,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "AC,CPU,PCIe,Peripheral (Molex),SATA",
+              "CategoryFeatureId": "117037",
+              "CategoryFeatureGroupID": "34050",
+              "SortNo": "50",
+              "PresentationValue": "Corriente alterna, CPU, PCIe, Peripheral (Molex), SATA",
+              "RawValue": "AC,CPU,PCIe,Peripheral (Molex),SATA",
+              "LocalValue": "Corriente alterna, CPU, PCIe, Peripheral (Molex), SATA",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1830",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Cables incluidos",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 41208,
+          "SortNo": "0",
+          "FeatureGroup": {
+            "ID": "76",
+            "Name": {
+              "Value": "Aprobaciones reguladoras",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 687259957,
+              "LocalID": 0,
+              "Type": "textarea",
+              "Value": "Cybenetics Noise Level Certification A+",
+              "CategoryFeatureId": "18192",
+              "CategoryFeatureGroupID": "41208",
+              "SortNo": "-85",
+              "PresentationValue": "Cybenetics Noise Level Certification A+",
+              "RawValue": "Cybenetics Noise Level Certification A+",
+              "LocalValue": "Cybenetics Noise Level Certification A+",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "249",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Certificación",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 1619,
+          "SortNo": "-1",
+          "FeatureGroup": {
+            "ID": "14",
+            "Name": {
+              "Value": "Peso y dimensiones",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 687260038,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "160",
+              "CategoryFeatureId": "16626",
+              "CategoryFeatureGroupID": "1619",
+              "SortNo": "5",
+              "PresentationValue": "160 mm",
+              "RawValue": "160",
+              "LocalValue": "160",
+              "Description": "The measurement or extent of something from side to side.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1649",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Ancho",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687260039,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "150",
+              "CategoryFeatureId": "16627",
+              "CategoryFeatureGroupID": "1619",
+              "SortNo": "4",
+              "PresentationValue": "150 mm",
+              "RawValue": "150",
+              "LocalValue": "150",
+              "Description": "The distance from the front to the back of something.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1650",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Profundidad",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687260041,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "86",
+              "CategoryFeatureId": "16628",
+              "CategoryFeatureGroupID": "1619",
+              "SortNo": "3",
+              "PresentationValue": "86 mm",
+              "RawValue": "86",
+              "LocalValue": "86",
+              "Description": "Height of the product",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1464",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Altura",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687260066,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "2910",
+              "CategoryFeatureId": "12025",
+              "CategoryFeatureGroupID": "1619",
+              "SortNo": "0",
+              "PresentationValue": "2,91 kg",
+              "RawValue": "2910",
+              "LocalValue": "2,91",
+              "Description": "Peso del producto sin embalaje (peso neto). Si es posible, se da el peso neto incluyendo los accesorios y suministros estándar. Tenga en cuenta que a veces el fabricante deja de lado el peso de los accesorios y / o suministros.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "94",
+                "Sign": "",
+                "Measure": {
+                  "ID": "38",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7447",
+                    "_": "g",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Peso",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 6239,
+          "SortNo": "-2",
+          "FeatureGroup": {
+            "ID": "67",
+            "Name": {
+              "Value": "Empaquetado",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 687260067,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "320",
+              "CategoryFeatureId": "74401",
+              "CategoryFeatureGroupID": "6239",
+              "SortNo": "-10",
+              "PresentationValue": "320 mm",
+              "RawValue": "320",
+              "LocalValue": "320",
+              "Description": "The distance from one side of the packaging to the other.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "3808",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Ancho del paquete",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687260068,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "200",
+              "CategoryFeatureId": "79989",
+              "CategoryFeatureGroupID": "6239",
+              "SortNo": "-11",
+              "PresentationValue": "200 mm",
+              "RawValue": "200",
+              "LocalValue": "200",
+              "Description": "The distance from the front to the back of the packaging.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "3806",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Profundidad del paquete",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687260069,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "108",
+              "CategoryFeatureId": "74399",
+              "CategoryFeatureGroupID": "6239",
+              "SortNo": "-12",
+              "PresentationValue": "108 mm",
+              "RawValue": "108",
+              "LocalValue": "108",
+              "Description": "The distance from the top to the bottom of the packaging.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "3807",
+                "Sign": "",
+                "Measure": {
+                  "ID": "24",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7436",
+                    "_": "mm",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Altura del paquete",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687260071,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "3620",
+              "CategoryFeatureId": "13779",
+              "CategoryFeatureGroupID": "6239",
+              "SortNo": "-13",
+              "PresentationValue": "3,62 kg",
+              "RawValue": "3620",
+              "LocalValue": "3,62",
+              "Description": "Weight of the packaged product.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "762",
+                "Sign": "",
+                "Measure": {
+                  "ID": "38",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7447",
+                    "_": "g",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Peso del paquete",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 687260073,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "Box",
+              "CategoryFeatureId": "59216",
+              "CategoryFeatureGroupID": "6239",
+              "SortNo": "-20",
+              "PresentationValue": "Caja",
+              "RawValue": "Box",
+              "LocalValue": "Caja",
+              "Description": "The type of product package e.g. box.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "4463",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tipo de embalaje",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "FeatureLogos": [],
+      "ReasonsToBuy": [],
+      "Reviews": [],
+      "ProductRelated": [],
+      "CatalogObjectCloud": {
+        "ProductPage": {
+          "QRCodeURL": "https://qr.icecat.biz/coc/7ca19dd6-6426-43b1-b539-9875bab8f47f",
+          "URL": "https://coc.icecat.biz/7ca19dd6-6426-43b1-b539-9875bab8f47f"
+        }
+      },
+      "Variants": [],
+      "ProductStory": [],
+      "Dictionary": {
+        "eu_energy_label": "EU Energy Label",
+        "pdf_url": "User manual",
+        "reviews_head_name": "Reviews",
+        "zoom_panel_dragg": "Mouse dragging",
+        "demo_msg_part2": "Su nombre de usuario de Icecat",
+        "zoom_panel_out": "Zoom out",
+        "zoom_panel_in": "Zoom in",
+        "demo_msg_part1": "Ahora est&aacute; usando una cuenta demo. Por favor, utilice su propia cuenta Icecat",
+        "zoom_panel_init": "Original size",
+        "demo_insert_desc": "Esta es una demo de una inserci&oacute;n de ficha de producto Icecat LIVE en su sitio web. Imagine que esta ficha t&eacute;cnica est&aacute; incluida en la p&aacute;gina del producto de su tienda online.",
+        "options_head_name": "Options",
+        "demo_msg_part3": "Si no tiene una cuenta en Icecat, reg&iacute;strese aqu&iacute; de forma gratuita",
+        "pdf_specs": "Folleto",
+        "product_family": "Familia de productos",
+        "supplier_name": "Marca",
+        "flash360": "3D tour",
+        "product_series": "Series de Productos",
+        "desc": "Descripci&oacute;n",
+        "ean_code": "C&oacute;digo EAN/UPC",
+        "specs": "Especificaciones",
+        "marketing_text": "Descripción",
+        "reasons_to_buy": "Razones para comprar",
+        "release_date": "Release date",
+        "html_content": "",
+        "eu_product_fiche": "EU Product Fiche",
+        "cat_name": "Categor&iacute;a",
+        "prod_code": "C&oacute;digo del producto",
+        "back_to_top": "Volver arriba",
+        "model_name": "Nombre de producto",
+        "repairability_index": "Repairability index",
+        "video": "Video",
+        "link_integrate_desk": "How to integrate Icecat LIVE JavaScript."
+      },
+      "DemoAccount": false
+    }
+  },
+  "mpn_usado": "ROG-STRIX-1000P-GAMING",
+  "mpn_original": "ROG-STRIX-1000P-GAMING",
+  "variante_indice": 0,
+  "fuente": "icecat"
+}

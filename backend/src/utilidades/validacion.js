@@ -409,12 +409,22 @@ function validarRegistro(datos) {
     }
   }
 
-  // Telefono: opcional, validar si se proporciona
-  if (datos.telefono !== undefined && datos.telefono !== null && datos.telefono !== '') {
+  // Telefono: OBLIGATORIO
+  if (datos.telefono === undefined || datos.telefono === null || String(datos.telefono).trim() === '') {
+    errores.push({ campo: 'telefono', mensaje: 'El teléfono es obligatorio' });
+  } else {
     const validacionTelefono = validarTelefono(datos.telefono);
     if (!validacionTelefono.valido) {
       errores.push({ campo: 'telefono', mensaje: validacionTelefono.error });
     }
+  }
+
+  // DNI: OBLIGATORIO. Texto de solo dígitos (admite ceros a la izquierda), 8 a 15.
+  const dni = String(datos.dni ?? '').trim();
+  if (!dni) {
+    errores.push({ campo: 'dni', mensaje: 'El DNI es obligatorio' });
+  } else if (!/^[0-9]{8,15}$/.test(dni)) {
+    errores.push({ campo: 'dni', mensaje: 'El DNI debe tener entre 8 y 15 dígitos' });
   }
 
   return { valido: errores.length === 0, errores };

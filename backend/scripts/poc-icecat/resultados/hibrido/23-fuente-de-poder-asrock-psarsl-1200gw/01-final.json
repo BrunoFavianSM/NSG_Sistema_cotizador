@@ -1,0 +1,224 @@
+{
+  "ok": true,
+  "fuente": "deltron-scraping",
+  "status": 200,
+  "consulta": {
+    "codigo": "psarsl-1200gw",
+    "marca": "ASRock"
+  },
+  "data": {
+    "msg": "OK",
+    "StatusCode": 0,
+    "source": "deltron-scraping",
+    "data": {
+      "GeneralInfo": {
+        "Title": "Fuente de alimentación Asrock, SL-1200GW, 1200W, ATX, 80 Plus Gold.",
+        "Brand": "ASRock",
+        "BrandPartCode": "psarsl-1200gw",
+        "SummaryDescription": {
+          "ShortSummaryDescription": "id=\"home\"> PSU AR SL-1200GW 80+G FM WHITE 1 conector ATX 24/20 pines, 2 conector EPS 2x4, 3 conectores PCI-e 8 pines, 9 conectores SATA, 3 conectores Periféricos, 2 x 16-pin PCIe Power, ventilador interno de 13.50 cm. Consideraciones Tipo de Producto : Componente Tipo Operatividad : (NV) Nuevo Foto referencial"
+        }
+      },
+      "FeaturesGroups": [
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "General"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "MARCA"
+                }
+              },
+              "PresentationValue": "ASROCK"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "MODELO"
+                }
+              },
+              "PresentationValue": "SL-1200GW"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "LARGO FUENTE POWER"
+                }
+              },
+              "PresentationValue": "150 mm"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "FACTOR DE FORMA"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "FORMATO"
+                }
+              },
+              "PresentationValue": "ATX"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "MODULAR"
+                }
+              },
+              "PresentationValue": "MODULAR FULL"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "DIMENSIONES"
+                }
+              },
+              "PresentationValue": "15.00 x 15.00 x 8.60 cm"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "POTENCIA (WATTS)"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "POTENCIA"
+                }
+              },
+              "PresentationValue": "1200"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "EFICIENCIA"
+                }
+              },
+              "PresentationValue": "80 PLUS GOLD"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "CONECTORES DE FUENTE"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "1 x 24-pin ATX Main Power"
+                }
+              },
+              "PresentationValue": "1"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "1 x 8-pin ATX 12V power"
+                }
+              },
+              "PresentationValue": "2"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "1 x 8-pin PCIe Power"
+                }
+              },
+              "PresentationValue": "3"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "Conectores SATA"
+                }
+              },
+              "PresentationValue": "9"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "Perifericos 4 Pines"
+                }
+              },
+              "PresentationValue": "3"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "1 x 16-pin PCIe Power"
+                }
+              },
+              "PresentationValue": "2"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "VENTILADOR INTERNO"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "FAN INTERNO"
+                }
+              },
+              "PresentationValue": "SI"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "TAMAÑO DEL FAN"
+                }
+              },
+              "PresentationValue": "13.50 cm"
+            },
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "TIPO DE FAN"
+                }
+              },
+              "PresentationValue": "Striped Axial FDB Fan"
+            }
+          ]
+        },
+        {
+          "FeatureGroup": {
+            "Name": {
+              "Value": "CERTIFICACIONES"
+            }
+          },
+          "Features": [
+            {
+              "Feature": {
+                "Name": {
+                  "Value": "SEGURIDAD"
+                }
+              },
+              "PresentationValue": "OTP SCP OPP OCP UVP OVP"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

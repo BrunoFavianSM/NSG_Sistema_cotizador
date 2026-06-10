@@ -8,7 +8,7 @@
  * Requisitos: 10.1, 10.2, 10.3, 10.4
  */
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs'); // JS puro: portable, sin binario nativo (compatible con hashes $2a$/$2b$)
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { ejecutarQuery } = require('../configuracion/baseDatos');
@@ -179,11 +179,12 @@ async function registrar(datos) {
     // Hashear contraseña
     const passwordHash = await hashPassword(datos.password);
 
+    const dni = String(datos.dni || '').trim() || null;
     const insert = await ejecutarQuery(
-      `INSERT INTO cuentas (username, password_hash, correo_encrypted, correo_hash, nombre_completo, telefono_encrypted, telefono_hash, rol)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'usuario')
+      `INSERT INTO cuentas (username, password_hash, correo_encrypted, correo_hash, nombre_completo, telefono_encrypted, telefono_hash, dni, rol)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'usuario')
        RETURNING id, username, nombre_completo, rol`,
-      [datos.username, passwordHash, correoEncrypted, correoHash, datos.nombre_completo, telefonoEncrypted, telefonoHash]
+      [datos.username, passwordHash, correoEncrypted, correoHash, datos.nombre_completo, telefonoEncrypted, telefonoHash, dni]
     );
 
     const cuenta = insert.rows[0];
@@ -356,7 +357,7 @@ function verificarToken(token) {
         id: payload.id,
         username: payload.username,
         nombre: payload.nombre,
-        rol: payload.rol || 'admin'
+        rol: payload.rol || 'usuario' // SEGURIDAD: sin rol => minimo privilegio
       }
     };
   } catch (error) {

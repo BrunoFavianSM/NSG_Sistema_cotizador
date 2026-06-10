@@ -112,10 +112,14 @@ function validarDatosClienteParaCotizacion({ esAdmin, esUsuarioAutenticado, emai
   const nombreNormalizado = normalizarNombreCliente(nombre);
   const telefonoNormalizado = normalizarTelefonoCliente(telefono);
 
-  // Admin: datos opcionales
-  // Usuario autenticado: no necesita nombre ni correo (usa su id del token)
-  // Invitado: nombre y correo obligatorios
-  if (!esAdmin && !esUsuarioAutenticado) {
+  // Admin: el correo es OBLIGATORIO (identifica la cuenta/cliente asignado).
+  // Usuario autenticado: no necesita nombre ni correo (usa su id del token).
+  // Invitado: nombre y correo obligatorios.
+  if (esAdmin) {
+    if (!emailNormalizado) {
+      errores.push('El correo del cliente es obligatorio');
+    }
+  } else if (!esUsuarioAutenticado) {
     if (!nombreNormalizado) {
       errores.push('El nombre del cliente es obligatorio');
     }
@@ -473,6 +477,9 @@ async function crearCotizacion(req, res) {
     }
     const margen = margenPersonalizado ?? configuracionFinanciera.margenDefault;
 
+    // Multi-PC: número de equipos iguales a cotizar (multiplicador). Mínimo 1.
+    const cantidadEquipos = Math.max(1, parseInt(datosSanitizados.cantidad_equipos, 10) || 1);
+
     const tieneEsquemaFinancieroV2 = await usaEsquemaFinancieroV2();
 
     // Usar transacciÃ³n para garantizar consistencia
@@ -547,7 +554,8 @@ async function crearCotizacion(req, res) {
           ...producto,
           tabla_producto: tablaProducto,
           categoria: categoriaEntrada,
-          cantidad: comp.cantidad || 1
+          // Cantidad total = cantidad por equipo x numero de equipos (multi-PC)
+          cantidad: (comp.cantidad || 1) * cantidadEquipos
         };
       });
 
@@ -582,9 +590,9 @@ async function crearCotizacion(req, res) {
         );
       }
 
-      // 6. Calcular fecha de validez (3 dÃ­as desde emisiÃ³n)
+      // 6. Calcular fecha de validez (15 dias desde emision)
       const fechaValidez = new Date();
-      fechaValidez.setDate(fechaValidez.getDate() + 3);
+      fechaValidez.setDate(fechaValidez.getDate() + 15);
 
       // 7. Insertar cotizaciÃ³n
       const cotizacion = tieneEsquemaFinancieroV2
@@ -593,12 +601,12 @@ async function crearCotizacion(req, res) {
               codigo_ticket, id_cliente, fecha_validez, moneda_base,
               subtotal_neto, igv_porcentaje, igv_monto, total_con_igv,
               tipo_cambio_referencia, subtotal_neto_pen, igv_monto_pen, total_con_igv_pen,
-              precio_total, margen_aplicado, estado
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+              precio_total, margen_aplicado, estado, cantidad_equipos
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
             RETURNING id, codigo_unico, codigo_ticket, fecha_emision,
                       fecha_validez, moneda_base, subtotal_neto, igv_porcentaje, igv_monto,
                       total_con_igv, tipo_cambio_referencia, subtotal_neto_pen, igv_monto_pen,
-                      total_con_igv_pen, precio_total, margen_aplicado, estado`,
+                      total_con_igv_pen, precio_total, margen_aplicado, estado, cantidad_equipos`,
             [
               codigoTicket,
               idCliente,
@@ -614,22 +622,24 @@ async function crearCotizacion(req, res) {
               resumenFinanciero.total_con_igv_pen,
               resumenFinanciero.total_con_igv,
               margen,
-              'Pendiente'
+              'Pendiente',
+              cantidadEquipos
             ]
           )
         : await cliente.query(
             `INSERT INTO cotizaciones (
-              codigo_ticket, id_cliente, fecha_validez, precio_total, margen_aplicado, estado
-            ) VALUES ($1, $2, $3, $4, $5, $6)
+              codigo_ticket, id_cliente, fecha_validez, precio_total, margen_aplicado, estado, cantidad_equipos
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING id, codigo_unico, codigo_ticket, fecha_emision,
-                      fecha_validez, precio_total, margen_aplicado, estado`,
+                      fecha_validez, precio_total, margen_aplicado, estado, cantidad_equipos`,
             [
               codigoTicket,
               idCliente,
               fechaValidez,
               resumenFinanciero.subtotal_neto,
               margen,
-              'Pendiente'
+              'Pendiente',
+              cantidadEquipos
             ]
           );
 
@@ -707,7 +717,7 @@ async function crearCotizacion(req, res) {
               req.usuario.id,
               'cotizacion_creada',
               'Cotización creada',
-              `Tu cotización ${codigoTicket} fue generada exitosamente y es válida por 3 días.`,
+              `Tu cotización ${codigoTicket} fue generada exitosamente y es válida por 15 días.`,
               JSON.stringify({ codigoTicket })
             ]
           );
@@ -1333,10 +1343,30 @@ async function marcarComoReclamada(req, res) {
       });
     }
 
-    const resultado = await ejecutarQuery(
-      'UPDATE cotizaciones SET estado = $1, fecha_reclamacion = CURRENT_TIMESTAMP, id_vendedor = $2, notas_vendedor = $3 WHERE id = $4 RETURNING id, codigo_ticket, estado, fecha_reclamacion',
-      [ESTADO_COMPLETADA, datosSanitizados.id_vendedor || null, datosSanitizados.notas_vendedor || null, cotizacionData.id]
-    );
+    // Al completar la venta: marcar Completada y DESCONTAR stock de cada producto
+    // (cantidad del detalle ya incluye el multiplicador de equipos). Atomico.
+    const resultado = await ejecutarTransaccion(async (clienteTx) => {
+      const upd = await clienteTx.query(
+        'UPDATE cotizaciones SET estado = $1, fecha_reclamacion = CURRENT_TIMESTAMP, id_vendedor = $2, notas_vendedor = $3 WHERE id = $4 RETURNING id, codigo_ticket, estado, fecha_reclamacion',
+        [ESTADO_COMPLETADA, datosSanitizados.id_vendedor || null, datosSanitizados.notas_vendedor || null, cotizacionData.id]
+      );
+
+      // Descontar stock por producto (solo los que aún existen). No baja de 0.
+      await clienteTx.query(
+        `UPDATE productos p
+            SET stock = GREATEST(p.stock - d.total, 0), updated_at = CURRENT_TIMESTAMP
+           FROM (
+             SELECT id_producto, SUM(cantidad)::int AS total
+               FROM detalle_cotizacion
+              WHERE id_cotizacion = $1 AND id_producto IS NOT NULL
+              GROUP BY id_producto
+           ) d
+          WHERE p.id = d.id_producto`,
+        [cotizacionData.id]
+      );
+
+      return upd;
+    });
 
     return res.json({
       exito: true,

@@ -1,0 +1,621 @@
+{
+  "ok": true,
+  "status": 200,
+  "consulta": {
+    "mpn": "KCP432NS8/16",
+    "marca": "Kingston",
+    "lang": "ES"
+  },
+  "data": {
+    "msg": "OK",
+    "data": {
+      "GeneralInfo": {
+        "IcecatId": 80420872,
+        "ReleaseDate": "",
+        "EndOfLifeDate": "",
+        "Title": "Kingston Technology KCP432NS8/16 módulo de memoria 16 GB 1 x 16 GB DDR4 3200 MT/s 288-pin DIMM",
+        "TitleInfo": {
+          "GeneratedIntTitle": "Kingston Technology KCP432NS8/16 memory module",
+          "GeneratedLocalTitle": {
+            "Value": "Kingston Technology KCP432NS8/16 módulo de memoria 16 GB 1 x 16 GB DDR4 3200 MT/s 288-pin DIMM",
+            "Language": "ES"
+          },
+          "BrandLocalTitle": {
+            "Value": "",
+            "Language": "ES"
+          }
+        },
+        "Brand": "Kingston Technology",
+        "BrandID": "18",
+        "BrandLogo": "https://images.icecat.biz/img/brand/thumb/18_8d09cd2af5a44ca9a49b3493e9db517c.jpg",
+        "BrandInfo": {
+          "BrandName": "Kingston Technology",
+          "BrandLocalName": "",
+          "BrandLogo": "https://images.icecat.biz/img/brand/thumb/18_8d09cd2af5a44ca9a49b3493e9db517c.jpg"
+        },
+        "ProductName": "KCP432NS8/16",
+        "ProductNameInfo": {
+          "ProductIntName": "KCP432NS8/16",
+          "ProductLocalName": {
+            "Value": "",
+            "Language": "ES"
+          }
+        },
+        "BrandPartCode": "KCP432NS8/16",
+        "GTIN": [
+          "0740617311488",
+          "740617311488"
+        ],
+        "Category": {
+          "CategoryID": "911",
+          "Name": {
+            "Value": "Módulos de memoria",
+            "Language": "ES"
+          }
+        },
+        "ProductFamily": {},
+        "ProductSeries": {
+          "SeriesID": "1"
+        },
+        "Description": {},
+        "SEOs": {},
+        "SummaryDescription": {
+          "ShortSummaryDescription": "Kingston Technology KCP432NS8/16, 16 GB, 1 x 16 GB, DDR4, 288-pin DIMM",
+          "LongSummaryDescription": "Kingston Technology KCP432NS8/16. Componente para: PC/servidor, Memoria interna: 16 GB, Diseño de memoria (módulos x tamaño): 1 x 16 GB, Tipo de memoria interna: DDR4, Forma de factor de memoria: 288-pin DIMM, Latencia CAS: 22"
+        },
+        "BulletPoints": {},
+        "GeneratedBulletPoints": {
+          "Language": "ES",
+          "Values": [
+            "PC/servidor 16 GB DDR4 3200 MT/s",
+            "288-pin DIMM 1 x 16 GB",
+            "Latencia CAS: 22",
+            "1.2 V"
+          ]
+        },
+        "GTINs": [
+          {
+            "GTIN": "0740617311488",
+            "IsApproved": true
+          },
+          {
+            "GTIN": "740617311488",
+            "IsApproved": true
+          }
+        ]
+      },
+      "Image": {
+        "HighPic": "https://images.icecat.biz/img/gallery/04badb5a06aa6a98f81758df6800e262.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "HighPicSize": "408060",
+        "HighPicHeight": "2048",
+        "HighPicWidth": "2048",
+        "LowPic": "https://images.icecat.biz/img/gallery_lows/04badb5a06aa6a98f81758df6800e262.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "LowPicSize": "12288",
+        "LowPicHeight": "200",
+        "LowPicWidth": "200",
+        "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/04badb5a06aa6a98f81758df6800e262.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "Pic500x500Size": "59903",
+        "Pic500x500Height": "500",
+        "Pic500x500Width": "500",
+        "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/04badb5a06aa6a98f81758df6800e262.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+        "ThumbPicSize": "2871"
+      },
+      "Multimedia": [
+        {
+          "ID": "00000000-0000-0000-0000-000000000000",
+          "URL": "https://icecat.biz/rest/product-pdf?productId=80420872&lang=es",
+          "Type": "leaflet",
+          "ContentType": "application/pdf",
+          "KeepAsUrl": "0",
+          "Description": "Brochure Kingston Technology KCP432NS8/16",
+          "Size": "0",
+          "IsPrivate": "0",
+          "Updated": "2025-10-24 10:09:30",
+          "Language": "ES",
+          "IsVideo": 0
+        }
+      ],
+      "Gallery": [
+        {
+          "ID": "82044614",
+          "LowPic": "https://images.icecat.biz/img/gallery_lows/04badb5a06aa6a98f81758df6800e262.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "LowSize": "12288",
+          "LowHeight": "200",
+          "LowWidth": "200",
+          "ThumbPic": "https://images.icecat.biz/img/gallery_thumbs/04badb5a06aa6a98f81758df6800e262.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "ThumbPicSize": "2871",
+          "Pic": "https://images.icecat.biz/img/gallery/04badb5a06aa6a98f81758df6800e262.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Size": "408060",
+          "PicHeight": "2048",
+          "PicWidth": "2048",
+          "Pic500x500": "https://images.icecat.biz/img/gallery_mediums/04badb5a06aa6a98f81758df6800e262.jpg?content_token=3eccd304-5877-45f3-925f-2de2b98aaaa2",
+          "Pic500x500Size": "59903",
+          "Pic500x500Height": "500",
+          "Pic500x500Width": "500",
+          "No": "2",
+          "IsMain": "Y",
+          "Updated": "2023-10-18 14:25:07",
+          "IsPrivate": "0",
+          "Type": "ProductImage",
+          "Attributes": {
+            "OriginalFileName": ""
+          }
+        }
+      ],
+      "FeaturesGroups": [
+        {
+          "ID": 27909,
+          "SortNo": "5",
+          "FeatureGroup": {
+            "ID": "185",
+            "Name": {
+              "Value": "Características",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 365894651,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "22",
+              "CategoryFeatureId": "6141",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "10009035",
+              "PresentationValue": "22",
+              "RawValue": "22",
+              "LocalValue": "22",
+              "Description": "Column Address Strobe (CAS) latency",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1635",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Latencia CAS",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 365894568,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "16",
+              "CategoryFeatureId": "73748",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "9999",
+              "PresentationValue": "16 GB",
+              "RawValue": "16",
+              "LocalValue": "16",
+              "Description": "A computer's memory which is directly accessible to the CPU.",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "11381",
+                "Sign": "",
+                "Measure": {
+                  "ID": "20",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7432",
+                    "_": "GB",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Memoria interna",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 365894574,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "1 x 16",
+              "CategoryFeatureId": "93088",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "9998",
+              "PresentationValue": "1 x 16 GB",
+              "RawValue": "1 x 16",
+              "LocalValue": "1 x 16",
+              "Description": "How the overall memory of the product is put together, defined by the number of modules and the size.",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "16023",
+                "Sign": "",
+                "Measure": {
+                  "ID": "20",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7432",
+                    "_": "GB",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Diseño de memoria (módulos x tamaño)",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 365894594,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "DDR4",
+              "CategoryFeatureId": "6137",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "9980",
+              "PresentationValue": "DDR4",
+              "RawValue": "DDR4",
+              "LocalValue": "DDR4",
+              "Description": "The type of internal memory such as RAM",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "427",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tipo de memoria interna",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 865856410,
+              "LocalID": 0,
+              "Type": "numerical",
+              "Value": "3200",
+              "CategoryFeatureId": "948627",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "9069",
+              "PresentationValue": "3200 MT/s",
+              "RawValue": "3200",
+              "LocalValue": "3200",
+              "Description": "",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "37536",
+                "Sign": "",
+                "Measure": {
+                  "ID": "340",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "30170",
+                    "_": "MT/s",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Rango de memoria de transferencia de datos",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 365894612,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "PC/Server",
+              "CategoryFeatureId": "73714",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "9060",
+              "PresentationValue": "PC/servidor",
+              "RawValue": "PC/Server",
+              "LocalValue": "PC/servidor",
+              "Description": "What this product is used as a part of (component for).",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "9163",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Componente para",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 365894620,
+              "LocalID": 0,
+              "Type": "dropdown",
+              "Value": "288-pin DIMM",
+              "CategoryFeatureId": "45866",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "9050",
+              "PresentationValue": "288-pin DIMM",
+              "RawValue": "288-pin DIMM",
+              "LocalValue": "288-pin DIMM",
+              "Description": "Design of the memory e.g. 240-pin DIMM",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "7696",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Forma de factor de memoria",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 365894642,
+              "LocalID": 0,
+              "Type": "y_n",
+              "Value": "N",
+              "CategoryFeatureId": "6130",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "9039",
+              "PresentationValue": "No",
+              "RawValue": "N",
+              "LocalValue": "No",
+              "Description": "ECC means Error Correction Code",
+              "Mandatory": "1",
+              "Searchable": "1",
+              "Optional": "0",
+              "Feature": {
+                "ID": "1628",
+                "Sign": "",
+                "Measure": {
+                  "ID": "26",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "ECC",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 365894631,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "Unregistered (unbuffered)",
+              "CategoryFeatureId": "301234",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "994",
+              "PresentationValue": "Unregistered (unbuffered)",
+              "RawValue": "Unregistered (unbuffered)",
+              "LocalValue": "Unregistered (unbuffered)",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "38209",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Tipo de memoria con búfer",
+                  "Language": "ES"
+                }
+              }
+            },
+            {
+              "Localized": 0,
+              "ID": 365894662,
+              "LocalID": 0,
+              "Type": "multi_dropdown",
+              "Value": "1.2",
+              "CategoryFeatureId": "36754",
+              "CategoryFeatureGroupID": "27909",
+              "SortNo": "992",
+              "PresentationValue": "1.2 V",
+              "RawValue": "1.2",
+              "LocalValue": "1.2",
+              "Description": "The voltage (V) of the memory in the device.",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "0",
+              "Feature": {
+                "ID": "6266",
+                "Sign": "",
+                "Measure": {
+                  "ID": "42",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "7451",
+                    "_": "V",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Voltaje de memoria",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ID": 24500,
+          "SortNo": "-4",
+          "FeatureGroup": {
+            "ID": "198",
+            "Name": {
+              "Value": "Datos logísticos",
+              "Language": "ES"
+            }
+          },
+          "Features": [
+            {
+              "Localized": 0,
+              "ID": 494545990,
+              "LocalID": 0,
+              "Type": "text",
+              "Value": "84733020",
+              "CategoryFeatureId": "309147",
+              "CategoryFeatureGroupID": "24500",
+              "SortNo": "-53",
+              "PresentationValue": "84733020",
+              "RawValue": "84733020",
+              "LocalValue": "84733020",
+              "Description": "",
+              "Mandatory": "0",
+              "Searchable": "0",
+              "Optional": "1",
+              "Feature": {
+                "ID": "23731",
+                "Sign": "",
+                "Measure": {
+                  "ID": "29",
+                  "Sign": "",
+                  "Signs": {
+                    "ID": "",
+                    "_": "",
+                    "Language": "ES"
+                  }
+                },
+                "Name": {
+                  "Value": "Código de Sistema de Armomización (SA)",
+                  "Language": "ES"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "FeatureLogos": [],
+      "ReasonsToBuy": [],
+      "Reviews": [],
+      "ProductRelated": [
+        {
+          "ID": 184362884,
+          "CategoryID": 911,
+          "Preferred": 0,
+          "IcecatID": 80976170,
+          "ProductCode": "KCP432NS6/8",
+          "ThumbPic": "",
+          "ProductName": "KCP432NS6/8",
+          "Brand": "Kingston Technology",
+          "BrandID": 18,
+          "ProductRelatedLocales": [
+            {
+              "ID": 0,
+              "Language": "ES",
+              "Preferred": 0,
+              "StartDate": "",
+              "EndDate": ""
+            }
+          ],
+          "RelationTypeCode": "alternative"
+        }
+      ],
+      "CatalogObjectCloud": {
+        "ProductPage": {
+          "QRCodeURL": "https://qr.icecat.biz/coc/3e2bd485-b8c8-40d3-a7c1-05c666b9db17",
+          "URL": "https://coc.icecat.biz/3e2bd485-b8c8-40d3-a7c1-05c666b9db17"
+        }
+      },
+      "Variants": [],
+      "ProductStory": [],
+      "Dictionary": {
+        "eu_energy_label": "EU Energy Label",
+        "pdf_url": "User manual",
+        "reviews_head_name": "Reviews",
+        "zoom_panel_dragg": "Mouse dragging",
+        "demo_msg_part2": "Su nombre de usuario de Icecat",
+        "zoom_panel_out": "Zoom out",
+        "zoom_panel_in": "Zoom in",
+        "demo_msg_part1": "Ahora est&aacute; usando una cuenta demo. Por favor, utilice su propia cuenta Icecat",
+        "zoom_panel_init": "Original size",
+        "demo_insert_desc": "Esta es una demo de una inserci&oacute;n de ficha de producto Icecat LIVE en su sitio web. Imagine que esta ficha t&eacute;cnica est&aacute; incluida en la p&aacute;gina del producto de su tienda online.",
+        "options_head_name": "Options",
+        "demo_msg_part3": "Si no tiene una cuenta en Icecat, reg&iacute;strese aqu&iacute; de forma gratuita",
+        "pdf_specs": "Folleto",
+        "product_family": "Familia de productos",
+        "supplier_name": "Marca",
+        "flash360": "3D tour",
+        "product_series": "Series de Productos",
+        "desc": "Descripci&oacute;n",
+        "ean_code": "C&oacute;digo EAN/UPC",
+        "specs": "Especificaciones",
+        "marketing_text": "Descripción",
+        "reasons_to_buy": "Razones para comprar",
+        "release_date": "Release date",
+        "html_content": "",
+        "eu_product_fiche": "EU Product Fiche",
+        "cat_name": "Categor&iacute;a",
+        "prod_code": "C&oacute;digo del producto",
+        "back_to_top": "Volver arriba",
+        "model_name": "Nombre de producto",
+        "repairability_index": "Repairability index",
+        "video": "Video",
+        "link_integrate_desk": "How to integrate Icecat LIVE JavaScript."
+      },
+      "DemoAccount": false
+    }
+  },
+  "mpn_usado": "KCP432NS8/16",
+  "mpn_original": "KCP432NS8/16",
+  "variante_indice": 0
+}

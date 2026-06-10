@@ -1,0 +1,21 @@
+{
+  "producto": {
+    "codigo_deltron": "cpiti312100t",
+    "categoria": "Procesador",
+    "marca_csv": "intel oem",
+    "marca_normalizada": "Intel",
+    "nombre_esperado": "procesador intel core i3-12100 3.30 / 4.30ghz, 12mb intel smart cachï¿½, lga 1700",
+    "indice": 3,
+    "carpeta": "03-procesador-intel-cpiti312100t"
+  },
+  "resultado": {
+    "codigo_consultado": "cpiti312100t",
+    "url": "https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=cpiti312100t",
+    "sku_encontrado": "cpiti312100t",
+    "sku_coincide": true,
+    "mpn": "IN-CM8071504651012",
+    "mpn_metodo": "part-number",
+    "titulo_h1": "Procesador Intel Core i3-12100 3.30 / 4.30GHz, 12 MB Intel Smart Caché, LGA 1700",
+    "timestamp": "2026-06-05T23:40:14.178Z"
+  }
+}

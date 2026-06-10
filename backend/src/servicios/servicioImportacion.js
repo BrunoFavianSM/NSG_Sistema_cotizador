@@ -1335,6 +1335,8 @@ async function importar(filas, db) {
         itemsParaIA.push({
           id_producto: idProducto,
           categoria: registro.categoria,
+          codigo_proveedor: registro.codigo_proveedor,
+          marca: registro.marca,
           nombre: registro.nombre,
           descripcion_general: registro.descripcion_general,
           specs_faltantes: calcularSpecsFaltantes(registro.categoria, registro),
@@ -1349,15 +1351,14 @@ async function importar(filas, db) {
     }
   }
 
-  // §5.3 — Encolar productos para enriquecimiento IA al finalizar el loop (sin bloquear la respuesta HTTP).
-  // Se usa require dinámico con try/catch para no crashear si el módulo aún no existe (Req 4.1, 4.2).
+  // Encolar productos para enriquecimiento Icecat/Deltron al finalizar el loop
+  // (sin bloquear la respuesta HTTP). Reemplaza el enriquecimiento por IA.
   if (itemsParaIA.length > 0) {
     try {
-      const servicioEnriquecimientoIA = require('./servicioEnriquecimientoIA');
-      servicioEnriquecimientoIA.encolarProductos(itemsParaIA);
+      const servicioEnriquecimiento = require('./servicioEnriquecimiento');
+      servicioEnriquecimiento.encolarProductos(itemsParaIA);
     } catch (err) {
-      // El módulo aún no existe (se crea en tarea 6.1). Advertir sin bloquear.
-      console.warn('[ImportacionCSV] servicioEnriquecimientoIA no disponible:', err.message);
+      console.warn('[ImportacionCSV] servicioEnriquecimiento no disponible:', err.message);
     }
   }
 

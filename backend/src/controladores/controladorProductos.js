@@ -95,13 +95,20 @@ const SELECT_PRODUCTO_NORMALIZADO = `
     sc.ventiladores_incluidos,
     sc.color,
     sc.panel_lateral,
-    -- estado de enriquecimiento IA (Req. 3.8)
+    -- estado de enriquecimiento (Icecat/Deltron)
     p.estado_enriquecimiento,
+    -- etiqueta de perfil gestionada por admin (Basico/Medio/Avanzado/Gamer Full)
+    p.id_etiqueta,
+    e.nombre AS etiqueta,
+    -- ficha tecnica curada (Icecat/Deltron) de la categoria del producto
+    COALESCE(sp.ficha_tecnica, sm.ficha_tecnica, sr.ficha_tecnica, sa.ficha_tecnica,
+             sg.ficha_tecnica, sf.ficha_tecnica, sc.ficha_tecnica) AS ficha_tecnica,
     -- indicador de historial de precios (Req. 3.9)
     COALESCE(hp.cnt, 0)::INTEGER > 0 AS tiene_historial
   FROM productos p
   INNER JOIN categorias c ON c.id = p.id_categoria
   LEFT JOIN marcas m ON m.id = p.id_marca
+  LEFT JOIN etiquetas e ON e.id = p.id_etiqueta
   LEFT JOIN specs_procesador sp ON sp.id_producto = p.id
   LEFT JOIN specs_placa_madre sm ON sm.id_producto = p.id
   LEFT JOIN specs_ram sr ON sr.id_producto = p.id
@@ -320,7 +327,7 @@ function construirWhereDestino(destino, params, indiceInicial = 1) {
 
 async function obtenerProductos(req, res) {
   try {
-    const { categoria, socket, marca, busqueda, subcategoria, page, limit } = req.query;
+    const { categoria, socket, marca, busqueda, subcategoria, etiqueta, page, limit } = req.query;
     const params = [];
     let i = 1;
     let where = ' WHERE (p.stock > 0 OR p.disponible_a_pedido = true)';
@@ -345,6 +352,16 @@ async function obtenerProductos(req, res) {
       params.push(`%${busqueda}%`);
       i++;
     }
+    if (etiqueta) {
+      // Filtro por etiqueta de perfil: acepta id numerico o nombre.
+      if (/^\d+$/.test(String(etiqueta))) {
+        where += ` AND p.id_etiqueta = $${i++}`;
+        params.push(Number(etiqueta));
+      } else {
+        where += ` AND e.nombre = $${i++}`;
+        params.push(etiqueta);
+      }
+    }
 
     // Paginación
     const paginaActual = parseInt(page) || 1;
@@ -357,6 +374,7 @@ async function obtenerProductos(req, res) {
       FROM productos p
       LEFT JOIN categorias c ON p.id_categoria = c.id
       LEFT JOIN marcas m ON p.id_marca = m.id
+      LEFT JOIN etiquetas e ON e.id = p.id_etiqueta
       LEFT JOIN specs_procesador sp ON p.id = sp.id_producto
       LEFT JOIN specs_placa_madre sm ON p.id = sm.id_producto
       ${where}
@@ -456,11 +474,16 @@ async function crearProducto(req, res) {
     const idCategoria = await obtenerIdCategoriaPorNombre(destino.categoriaCanonica);
     const idMarca = await obtenerIdMarcaSiExiste(datosSanitizados.marca);
 
+    const idEtiqueta = Number.isInteger(Number(datosSanitizados.id_etiqueta))
+      ? Number(datosSanitizados.id_etiqueta)
+      : null;
+
     const insert = await ejecutarQuery(
       `INSERT INTO productos (
          id_categoria, id_marca, subcategoria, categoria_proveedor, codigo_proveedor,
-         nombre, descripcion_general, precio_base, stock, disponible_a_pedido, garantia, flete, imagen_url
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+         nombre, descripcion_general, precio_base, stock, disponible_a_pedido, garantia, flete, imagen_url,
+         id_etiqueta
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
        RETURNING id`,
       [
         idCategoria,
@@ -476,6 +499,7 @@ async function crearProducto(req, res) {
         datosSanitizados.garantia || null,
         null,
         datosSanitizados.imagen_url || null,
+        idEtiqueta,
       ]
     );
 
@@ -572,6 +596,14 @@ async function actualizarProducto(req, res) {
       const idMarca = await obtenerIdMarcaSiExiste(datosSanitizados.marca);
       actualizaciones.push(`id_marca = $${i++}`);
       valores.push(idMarca);
+    }
+    if (Object.prototype.hasOwnProperty.call(datosSanitizados, 'id_etiqueta')) {
+      // Etiqueta de perfil (gestion manual del admin); null la quita.
+      const idEtiqueta = Number.isInteger(Number(datosSanitizados.id_etiqueta))
+        ? Number(datosSanitizados.id_etiqueta)
+        : null;
+      actualizaciones.push(`id_etiqueta = $${i++}`);
+      valores.push(idEtiqueta);
     }
 
     if (cambiaPrecio) {
