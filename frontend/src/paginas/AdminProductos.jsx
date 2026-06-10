@@ -590,10 +590,10 @@ export default function AdminProductos() {
           : <Badge variant="neutral">No</Badge>
       ),
     },
-    // Task 10.1 — columna Estado IA con BadgeEnriquecimiento
+    // columna Carga de datos con BadgeEnriquecimiento
     {
       key: 'estado_enriquecimiento',
-      label: 'Estado IA',
+      label: 'Carga de datos',
       render: (row) => {
         const estado = row.estado_enriquecimiento || 'no_aplica';
         return (
@@ -686,7 +686,7 @@ export default function AdminProductos() {
         />
       ) : null}
 
-      {/* Task 10.3 — banner de productos pendientes de enriquecimiento IA */}
+      {/* banner de productos pendientes de carga de datos */}
       {(pendientesCount > 0 || enProcesoCount > 0) && (
         <div
           role="status"
@@ -701,13 +701,13 @@ export default function AdminProductos() {
               <p className="text-sm text-[var(--color-text)]">
                 {enProcesoCount > 0 ? (
                   <span className="font-semibold text-[var(--color-success)]">
-                    {enProcesoCount} en enriquecimiento
+                    {enProcesoCount} en carga de datos
                   </span>
                 ) : null}
                 {enProcesoCount > 0 && pendientesCount > 0 ? ' • ' : ''}
                 {pendientesCount > 0 ? (
                   <span>
-                    <strong>{pendientesCount}</strong> pendientes de enriquecimiento IA
+                    <strong>{pendientesCount}</strong> pendientes de carga de datos
                   </span>
                 ) : null}
               </p>
@@ -750,7 +750,7 @@ export default function AdminProductos() {
                     htmlFor="filtro-estado-enriquecimiento"
                     className="text-xs font-medium text-[var(--color-text-muted)]"
                   >
-                    Estado
+                    Carga de datos
                   </label>
                   <select
                     id="filtro-estado-enriquecimiento"
@@ -761,10 +761,10 @@ export default function AdminProductos() {
                   >
                     <option value="">Todos los estados</option>
                     <option value="csv">Datos CSV</option>
-                    <option value="enriquecido">Enriquecido</option>
+                    <option value="enriquecido">Completo</option>
                     <option value="fallido">Falló</option>
                     <option value="pendiente">Pendiente</option>
-                    <option value="no_aplica">Sin enriquecimiento</option>
+                    <option value="no_aplica">No aplica</option>
                   </select>
                 </div>
                 <div className="flex flex-col gap-1">
@@ -925,7 +925,7 @@ export default function AdminProductos() {
                   htmlFor="filtro-estado-enriquecimiento"
                   className="text-xs font-medium text-[var(--color-text-muted)]"
                 >
-                  Estado IA
+                  Carga de datos
                 </label>
                 <select
                   id="filtro-estado-enriquecimiento"
@@ -936,10 +936,10 @@ export default function AdminProductos() {
                 >
                   <option value="">Todos los estados</option>
                   <option value="csv">Datos CSV</option>
-                  <option value="enriquecido">Enriquecido</option>
+                  <option value="enriquecido">Completo</option>
                   <option value="fallido">Falló</option>
                   <option value="pendiente">Pendiente</option>
-                  <option value="no_aplica">Sin enriquecimiento</option>
+                  <option value="no_aplica">No aplica</option>
                 </select>
               </div>
             </div>

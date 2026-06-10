@@ -17,6 +17,7 @@ import { useAppContext } from '../contexto/AppContext';
 import * as api from '../servicios/api';
 
 const LIMITE_FILAS_PREVIEW = 10;
+const CLAVE_ULTIMA_IMPORTACION = 'nsg_ultima_importacion';
 
 function parsearLineaCSV(linea) {
   const campos = [];
@@ -67,32 +68,35 @@ export default function ImportarCSV() {
   const [archivo, setArchivo] = useState(null);
   const [preview, setPreview] = useState({ columnas: [], filas: [] });
   const [importando, setImportando] = useState(false);
-  const [resultado, setResultado] = useState(null);
+  // Resultado de la última importación — persiste entre cambios de vista (localStorage)
+  const [resultado, setResultado] = useState(() => {
+    try { const s = localStorage.getItem(CLAVE_ULTIMA_IMPORTACION); return s ? JSON.parse(s) : null; }
+    catch { return null; }
+  });
   const [error, setError] = useState('');
   const [arrastrando, setArrastrando] = useState(false);
 
-  // ── Estado de enriquecimiento IA (Req 7.2) ───────────────────────────────
+  // ── Estado de la carga de datos del catálogo ─────────────────────────────
   const [estadoIA, setEstadoIA] = useState(null);
   const [reintentando, setReintentando] = useState(false);
 
-  // ── Auto-refresh del estado de enriquecimiento IA (Req 7.2, 7.3, 7.8) ────
+  // ── Estado de la carga de datos: consulta al montar (para que persista al
+  //    volver a esta vista) + polling mientras haya carga en proceso. ────────
   useEffect(() => {
-    if (!resultado) return;
-
+    let activo = true;
+    let intervalo = null;
     const consultar = async () => {
       try {
         const data = await api.obtenerEstadoEnriquecimiento();
+        if (!activo) return;
         setEstadoIA(data);
+        if (intervalo && !data?.en_proceso) { clearInterval(intervalo); intervalo = null; }
       } catch { /* silencioso — no interrumpir la UI por un fallo de polling */ }
     };
-
-    consultar(); // consulta inmediata al mostrar resultado
-
-    if (!estadoIA?.en_proceso) return; // no iniciar intervalo si ya terminó
-
-    const intervalo = setInterval(consultar, 10_000);
-    return () => clearInterval(intervalo);
-  }, [resultado, estadoIA?.en_proceso]);
+    consultar(); // siempre al montar (restaura el panel aunque no haya import fresco)
+    intervalo = setInterval(consultar, 10_000);
+    return () => { activo = false; if (intervalo) clearInterval(intervalo); };
+  }, []);
 
   // Protección de autenticación
   if (!cargandoAuth && !autenticado) {
@@ -160,6 +164,7 @@ export default function ImportarCSV() {
     try {
       const respuesta = await api.importarCSV(archivo);
       setResultado(respuesta);
+      try { localStorage.setItem(CLAVE_ULTIMA_IMPORTACION, JSON.stringify(respuesta)); } catch { /* no-op */ }
     } catch (err) {
       const mensajeError = err?.mensaje || err?.error || 'Error de red al importar. Intenta nuevamente.';
       setError(mensajeError);
@@ -174,6 +179,7 @@ export default function ImportarCSV() {
     setResultado(null);
     setEstadoIA(null);
     setError('');
+    try { localStorage.removeItem(CLAVE_ULTIMA_IMPORTACION); } catch { /* no-op */ }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -377,7 +383,7 @@ export default function ImportarCSV() {
               <p className="text-2xl font-bold" style={{ color: 'var(--color-warning, #af52de)' }}>
                 {resultado.pendientes_enriquecimiento ?? 0}
               </p>
-              <p className="text-xs font-medium text-[var(--color-text-muted)]">Pendientes IA</p>
+              <p className="text-xs font-medium text-[var(--color-text-muted)]">Pendientes</p>
             </div>
           </div>
 
@@ -398,7 +404,7 @@ export default function ImportarCSV() {
 
           {/* ── Sección Estado del enriquecimiento IA (Req 7.2–7.9) ─────────── */}
           <div className="surface-card rounded-[var(--radius-md)] border border-[var(--color-border)] p-4 space-y-4">
-            <h3 className="text-sm font-semibold text-[var(--color-text)]">Estado del enriquecimiento IA</h3>
+            <h3 className="text-sm font-semibold text-[var(--color-text)]">Estado de la carga de datos</h3>
 
             {/* Skeleton en primera carga */}
             {estadoIA === null ? (
@@ -419,7 +425,7 @@ export default function ImportarCSV() {
                       className={`inline-block h-2 w-2 rounded-full bg-[var(--color-warning)]${!prefersReducedMotion ? ' animate-pulse' : ''}`}
                       aria-hidden="true"
                     />
-                    <span className="text-sm text-[var(--color-text-muted)]">Enriqueciendo datos con IA...</span>
+                    <span className="text-sm text-[var(--color-text-muted)]">Cargando datos del catálogo...</span>
                   </div>
                 )}
 

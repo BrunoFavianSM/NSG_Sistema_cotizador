@@ -33,7 +33,7 @@ const CONFIG_BADGE = {
     clickeable: false,
   },
   enriquecido: {
-    texto: 'Enriquecido',
+    texto: 'Completo',
     claseColor: 'bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]',
     pulso: false,
     clickeable: false,
