@@ -32,6 +32,11 @@ Para cualquier tarea de frontend/UI/UX, trabajar siempre con estándar Apple HIG
 - Animaciones sutiles y respetar `prefers-reduced-motion`.
 - No romper flujos existentes ni contratos con backend/API.
 
+## 4.1) Commits y atribución (obligatorio)
+- NUNCA agregar trailers `Co-Authored-By` ni ninguna atribución a la IA (Claude, Codex, etc.) en los mensajes de commit.
+- NUNCA configurarse a sí mismo como autor o co-autor en git. El autor de todo commit debe ser una persona del equipo.
+- Usar Conventional Commits. El agente ejecuta; el crédito del commit es siempre humano.
+
 ## 5) Estándar de idioma y nomenclatura
 - Todo el proyecto debe mantenerse en español para facilitar entendimiento del equipo.
 - Documentación, comentarios, mensajes de error, nombres de variables de negocio, páginas, tablas y campos nuevos: en español.
