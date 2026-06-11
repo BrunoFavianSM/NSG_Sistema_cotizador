@@ -56,6 +56,14 @@ Thumbs.db
 .kiro/skills/
 .claude/
 
+# Herramientas de otros agentes de IA - no versionar (no se usan, solo Claude Code)
+.codex/
+.config/
+.gemini/
+.cursor/
+.kimi/
+.codeium/
+
 # Carpetas internas de trabajo - no versionar
 _basura/
 _para_revision/
