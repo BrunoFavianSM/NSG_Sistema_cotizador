@@ -36,6 +36,7 @@ Para cualquier tarea de frontend/UI/UX, trabajar siempre con estándar Apple HIG
 - NUNCA agregar trailers `Co-Authored-By` ni ninguna atribución a la IA (Claude, Codex, etc.) en los mensajes de commit.
 - NUNCA configurarse a sí mismo como autor o co-autor en git. El autor de todo commit debe ser una persona del equipo.
 - NUNCA hacer que la IA aparezca como contribuidor (Contributor) del repositorio en GitHub. Los trailers de co-autoría son la causa de eso: están prohibidos.
+- Toda subida al repositorio (commit y push) se realiza bajo la cuenta configurada en git del equipo (`user.name`/`user.email` locales). NUNCA bajo Claude ni ninguna identidad de IA, y sin agregar a la IA como contribuidor.
 - Usar Conventional Commits. El agente ejecuta; el crédito del commit es siempre humano.
 
 ## 5) Estándar de idioma y nomenclatura
