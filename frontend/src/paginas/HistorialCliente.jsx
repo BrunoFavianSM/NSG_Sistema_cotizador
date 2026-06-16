@@ -15,7 +15,9 @@ import {
   consultarHistorialCliente,
   listarClientesRegistrados,
   obtenerCotizacionesPropias,
-  exportarExcelCotizacion
+  exportarExcelCotizacion,
+  descargarPdfCotizacion,
+  descargarPdfTecnico
 } from '../servicios/api';
 import { formatearMoneda as formatoMoneda } from '../utilidades/moneda';
 
@@ -127,38 +129,12 @@ export default function HistorialCliente() {
   }, [cotizaciones, filtroEstado]);
 
   const descargarPDF = async (codigoTicket, tipo = 'comercial') => {
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-    const monedaParam = new URLSearchParams({ moneda: String(monedaVista || 'USD').toUpperCase() });
-    const endpoint = tipo === 'tecnico'
-      ? `${API_BASE_URL}/cotizaciones/${codigoTicket}/pdf-tecnico?${monedaParam}`
-      : `${API_BASE_URL}/cotizaciones/${codigoTicket}/pdf?${monedaParam}`;
-
-    const token = localStorage.getItem('token');
-
     try {
-      const respuesta = await fetch(endpoint, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // Servicio central de API: token, manejo de 401 y URL base unificados
+      const blob = tipo === 'tecnico'
+        ? await descargarPdfTecnico(codigoTicket, monedaVista)
+        : await descargarPdfCotizacion(codigoTicket, monedaVista);
 
-      if (!respuesta.ok) {
-        if (respuesta.status === 410) {
-          toast.error(
-            'Cotización vencida',
-            'Esta cotización superó su fecha de validez y no puede generarse en PDF.'
-          );
-          return;
-        }
-        // Otros errores HTTP
-        const data = await respuesta.json().catch(() => ({}));
-        toast.error(
-          'Error al generar PDF',
-          data.mensaje || 'Ocurrió un error al generar el PDF.'
-        );
-        return;
-      }
-
-      // Descarga exitosa: crear blob y disparar descarga
-      const blob = await respuesta.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -167,8 +143,18 @@ export default function HistorialCliente() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-    } catch {
-      toast.error('Error de red', 'No se pudo conectar al servidor.');
+    } catch (error) {
+      if (error?.codigo === 'COTIZACION_CADUCADA') {
+        toast.error(
+          'Cotización vencida',
+          'Esta cotización superó su fecha de validez y no puede generarse en PDF.'
+        );
+        return;
+      }
+      toast.error(
+        'Error al generar PDF',
+        error?.mensaje || 'Ocurrió un error al generar el PDF.'
+      );
     }
   };
 

@@ -657,6 +657,7 @@ export default function Cotizador() {
     limpiarConfiguracion,
     autenticado,
     esAdmin,
+    esVendedor,
     esInvitado,
     margenGanancia,
     tasaIgv,
@@ -748,7 +749,8 @@ export default function Cotizador() {
   const dropdownEmailsRef = useRef(null);
 
   // ── Lista de emails registrados para combobox ─────────────────────────────
-  const { emails: emailsRegistrados } = useEmailsRegistrados();
+  // Solo admin/vendedor: el endpoint expone PII y requiere ese rol en backend
+  const { emails: emailsRegistrados } = useEmailsRegistrados(esAdmin || esVendedor);
 
   // Filtrar emails según lo que el usuario escribe
   const emailsFiltrados = useMemo(() => {
@@ -1418,15 +1420,23 @@ export default function Cotizador() {
     }
   };
 
-  const descargarPdf = () => {
+  const descargarPdf = async () => {
     if (!cotizacionGenerada?.codigo_ticket) return;
-    const urlPdf = api.obtenerUrlPdfCotizacion(cotizacionGenerada.codigo_ticket, monedaVista);
-    const ventana = window.open(urlPdf, '_blank', 'noopener,noreferrer');
-    if (!ventana) {
-      toast.warning('Bloqueo de ventana', 'Permite pop-ups para abrir el PDF.');
-      return;
+    try {
+      // Descarga autenticada (el endpoint de PDF requiere sesión)
+      const blob = await api.descargarPdfCotizacion(cotizacionGenerada.codigo_ticket, monedaVista);
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement('a');
+      enlace.href = url;
+      enlace.download = `cotizacion-${cotizacionGenerada.codigo_ticket}.pdf`;
+      document.body.appendChild(enlace);
+      enlace.click();
+      enlace.remove();
+      URL.revokeObjectURL(url);
+      toast.info('PDF descargado', 'Se descargo el archivo de la cotizacion.');
+    } catch (error) {
+      toast.error('No se pudo descargar', error?.mensaje || 'Intenta nuevamente.');
     }
-    toast.info('PDF abierto', 'Se abrio el archivo en una nueva pestana.');
   };
 
   const copiarTicket = async () => {

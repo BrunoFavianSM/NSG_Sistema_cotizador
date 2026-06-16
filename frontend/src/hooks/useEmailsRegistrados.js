@@ -1,19 +1,29 @@
 import { useState, useEffect } from 'react';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import { obtenerEmailsRegistrados } from '../servicios/api';
 
 /**
  * Hook para obtener lista de emails registrados en el sistema.
  * Usado para datalist de autocompletado en campo de email.
  *
+ * El endpoint expone datos personales descifrados, por lo que requiere
+ * rol admin o vendedor; pasar `habilitado=false` para usuarios sin permiso
+ * y así evitar peticiones que serían rechazadas con 401/403.
+ *
+ * @param {boolean} habilitado - Solo carga la lista si es true
  * @returns {object} { emails: string[], cargando: boolean, error: string|null }
  */
-export function useEmailsRegistrados() {
+export function useEmailsRegistrados(habilitado = false) {
   const [emails, setEmails] = useState([]);
-  const [cargando, setCargando] = useState(true);
+  const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!habilitado) {
+      setEmails([]);
+      setCargando(false);
+      return;
+    }
+
     let cancelado = false;
 
     async function cargarEmails() {
@@ -21,26 +31,14 @@ export function useEmailsRegistrados() {
         setCargando(true);
         setError(null);
 
-        const respuesta = await fetch(`${API_URL}/clientes/emails`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!respuesta.ok) {
-          throw new Error(`Error ${respuesta.status}: ${respuesta.statusText}`);
-        }
-
-        const datos = await respuesta.json();
+        const datos = await obtenerEmailsRegistrados();
 
         if (!cancelado) {
           setEmails(datos.emails || []);
         }
       } catch (err) {
         if (!cancelado) {
-          console.error('Error al cargar emails:', err);
-          setError(err.message);
+          setError(err?.mensaje || err?.message || 'Error al cargar emails');
           setEmails([]);
         }
       } finally {
@@ -55,7 +53,7 @@ export function useEmailsRegistrados() {
     return () => {
       cancelado = true;
     };
-  }, []);
+  }, [habilitado]);
 
   return { emails, cargando, error };
 }

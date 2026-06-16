@@ -60,7 +60,7 @@ const prefersReducedMotion =
 const fmt = new Intl.DateTimeFormat('es-PE', { dateStyle: 'medium', timeStyle: 'short' });
 
 export default function ImportarCSV() {
-  const { autenticado, cargandoAuth } = useAppContext();
+  const { autenticado, cargandoAuth, esAdmin } = useAppContext();
   const toast = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -98,8 +98,9 @@ export default function ImportarCSV() {
     return () => { activo = false; if (intervalo) clearInterval(intervalo); };
   }, []);
 
-  // Protección de autenticación
-  if (!cargandoAuth && !autenticado) {
+  // Protección de autenticación y rol (defensa en profundidad:
+  // la ruta ya exige admin, pero el componente lo vuelve a verificar)
+  if (!cargandoAuth && (!autenticado || !esAdmin)) {
     return <Navigate to="/login" replace />;
   }
 

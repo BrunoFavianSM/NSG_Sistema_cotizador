@@ -355,6 +355,20 @@ export const obtenerEstadoEnriquecimiento = async () => {
 };
 
 /**
+ * Obtiene un token efímero (60s) para abrir el stream SSE de enriquecimiento
+ * sin exponer el JWT de sesión en la URL.
+ * @returns {Promise<string|null>} Token efímero o null si falla
+ */
+export const obtenerTokenStream = async () => {
+  try {
+    const response = await api.post('/importacion/estado/stream-token');
+    return response.data?.token || null;
+  } catch {
+    return null;
+  }
+};
+
+/**
  * Mueve todos los productos con estado ia_fallido a pendiente y reactiva la cola IA.
  * Requiere token JWT de administrador.
  * Valida Requisitos: 5.3, 5.4, 5.5
@@ -475,6 +489,25 @@ export const consultarHistorialCliente = async (email) => {
 };
 
 /**
+ * Busca un cliente por email o teléfono para autocompletado (requiere rol admin/vendedor)
+ * @param {string} valor - Texto de búsqueda (email o teléfono, mínimo 3 caracteres)
+ * @returns {Promise<{encontrado: boolean, cliente?: Object}>}
+ */
+export const buscarClienteAutocompletado = async (valor) => {
+  const response = await api.get('/clientes/buscar', { params: { q: valor } });
+  return response.data;
+};
+
+/**
+ * Obtiene la lista de emails registrados para autocompletado (requiere rol admin/vendedor)
+ * @returns {Promise<{emails: string[]}>}
+ */
+export const obtenerEmailsRegistrados = async () => {
+  const response = await api.get('/clientes/emails');
+  return response.data;
+};
+
+/**
  * Lista todos los clientes registrados con cotizaciones (requiere auth)
  * @returns {Promise<{exito: boolean, clientes: Array}>}
  */
@@ -485,26 +518,6 @@ export const listarClientesRegistrados = async () => {
   } catch (error) {
     throw error;
   }
-};
-
-/**
- * Obtiene URL de descarga del PDF comercial
- * @param {string} codigoTicket
- * @returns {string}
- */
-export const obtenerUrlPdfCotizacion = (codigoTicket, moneda = 'USD') => {
-  const params = new URLSearchParams({ moneda: String(moneda || 'USD').toUpperCase() });
-  return `${API_BASE_URL}/cotizaciones/${codigoTicket}/pdf?${params.toString()}`;
-};
-
-/**
- * Obtiene URL de descarga del PDF tecnico
- * @param {string} codigoTicket
- * @returns {string}
- */
-export const obtenerUrlPdfTecnico = (codigoTicket, moneda = 'USD') => {
-  const params = new URLSearchParams({ moneda: String(moneda || 'USD').toUpperCase() });
-  return `${API_BASE_URL}/cotizaciones/${codigoTicket}/pdf-tecnico?${params.toString()}`;
 };
 
 /**
@@ -522,15 +535,34 @@ export const notificarCotizacionLista = async (codigoTicket) => {
 };
 
 /**
+ * Convierte un error de respuesta blob (JSON serializado) en objeto legible.
+ * Con responseType 'blob', los errores del backend llegan como Blob.
+ */
+const normalizarErrorBlob = async (error) => {
+  if (error instanceof Blob) {
+    try {
+      return JSON.parse(await error.text());
+    } catch {
+      return { mensaje: 'Error al descargar el archivo' };
+    }
+  }
+  return error;
+};
+
+/**
  * Descarga PDF comercial de cotizacion
  * @param {string} codigoTicket
  */
 export const descargarPdfCotizacion = async (codigoTicket, moneda = 'USD') => {
-  const response = await api.get(`/cotizaciones/${codigoTicket}/pdf`, {
-    params: { moneda: String(moneda || 'USD').toUpperCase() },
-    responseType: 'blob'
-  });
-  return response.data;
+  try {
+    const response = await api.get(`/cotizaciones/${codigoTicket}/pdf`, {
+      params: { moneda: String(moneda || 'USD').toUpperCase() },
+      responseType: 'blob'
+    });
+    return response.data;
+  } catch (error) {
+    throw await normalizarErrorBlob(error);
+  }
 };
 
 /**
@@ -538,11 +570,15 @@ export const descargarPdfCotizacion = async (codigoTicket, moneda = 'USD') => {
  * @param {string} codigoTicket
  */
 export const descargarPdfTecnico = async (codigoTicket, moneda = 'USD') => {
-  const response = await api.get(`/cotizaciones/${codigoTicket}/pdf-tecnico`, {
-    params: { moneda: String(moneda || 'USD').toUpperCase() },
-    responseType: 'blob'
-  });
-  return response.data;
+  try {
+    const response = await api.get(`/cotizaciones/${codigoTicket}/pdf-tecnico`, {
+      params: { moneda: String(moneda || 'USD').toUpperCase() },
+      responseType: 'blob'
+    });
+    return response.data;
+  } catch (error) {
+    throw await normalizarErrorBlob(error);
+  }
 };
 
 /**

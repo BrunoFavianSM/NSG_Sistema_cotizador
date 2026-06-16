@@ -120,6 +120,7 @@ function StatCard({ title, value, helper, tone = 'neutral' }) {
 export default function AdminConfiguracion() {
   const {
     autenticado,
+    esAdmin,
     margenGanancia,
     tasaIgv,
     tipoCambioUsdPen,
@@ -388,11 +389,13 @@ export default function AdminConfiguracion() {
   };
 
 
-  if (!autenticado) {
+  // Defensa en profundidad: la ruta ya exige admin, pero el componente
+  // vuelve a verificar el rol antes de renderizar contenido administrativo.
+  if (!autenticado || !esAdmin) {
     return (
       <div className="surface-card p-6 text-center">
         <h2 className="text-xl font-semibold text-[var(--color-text)]">Acceso restringido</h2>
-        <p className="mt-1 text-sm text-[var(--color-text-muted)]">Debes iniciar sesión para administrar configuración.</p>
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">Debes iniciar sesión como administrador para gestionar la configuración.</p>
       </div>
     );
   }

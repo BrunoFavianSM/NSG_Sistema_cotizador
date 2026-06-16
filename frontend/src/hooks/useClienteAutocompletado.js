@@ -3,11 +3,13 @@
  *
  * Hook para autocompletar datos del cliente desde la base de datos.
  * Busca por email o teléfono con debounce de 300ms.
+ *
+ * Usa el servicio central de API (axios) para que la petición viaje
+ * autenticada; el endpoint requiere rol admin o vendedor.
  */
 
 import { useState, useEffect, useCallback } from 'react';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import { buscarClienteAutocompletado } from '../servicios/api';
 
 /**
  * Hook para autocompletar datos del cliente
@@ -30,18 +32,7 @@ export function useClienteAutocompletado(valorBusqueda, habilitado = true) {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/clientes/buscar?q=${encodeURIComponent(valor.trim())}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al buscar cliente');
-      }
-
-      const data = await response.json();
+      const data = await buscarClienteAutocompletado(valor.trim());
 
       if (data.encontrado) {
         setCliente(data.cliente);
@@ -49,8 +40,7 @@ export function useClienteAutocompletado(valorBusqueda, habilitado = true) {
         setCliente(null);
       }
     } catch (err) {
-      console.error('Error al buscar cliente:', err);
-      setError(err.message);
+      setError(err?.mensaje || err?.message || 'Error al buscar cliente');
       setCliente(null);
     } finally {
       setBuscando(false);
