@@ -13,6 +13,20 @@
 const path = require('path');
 const envPath = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
 require('dotenv').config({ path: path.resolve(__dirname, '..', envPath) });
+
+// SEGURIDAD: este seed TRUNCA tablas con datos reales; jamás debe correr en producción.
+if (process.env.NODE_ENV === 'production') {
+  console.error('❌ Este script de seed destruye datos y está bloqueado en producción.');
+  process.exit(1);
+}
+
+// SEGURIDAD: la contraseña del admin de prueba debe venir por variable de entorno;
+// nunca hardcodeada en el repositorio.
+if (!process.env.SEED_ADMIN_PASSWORD) {
+  console.error('❌ Define SEED_ADMIN_PASSWORD en el entorno para crear el admin de prueba.');
+  process.exit(1);
+}
+
 const { pool } = require('../src/configuracion/baseDatos');
 const { hashPassword } = require('../src/servicios/servicioAuth');
 
@@ -58,17 +72,17 @@ async function limpiarDatos(cliente) {
 async function crearAdministrador(cliente) {
   log('\n👤 Creando usuario administrador...', 'blue');
   
-  const passwordHash = await hashPassword('admin123');
-  
+  const passwordHash = await hashPassword(process.env.SEED_ADMIN_PASSWORD);
+
   await cliente.query(
     `INSERT INTO administradores (username, password_hash, nombre_completo)
      VALUES ($1, $2, $3)`,
     ['admin@nsg.com', passwordHash, 'Administrador NSG']
   );
-  
+
   log('✓ Usuario administrador creado', 'green');
   log('  Email: admin@nsg.com', 'reset');
-  log('  Contraseña: admin123', 'reset');
+  log('  Contraseña: la definida en SEED_ADMIN_PASSWORD', 'reset');
 }
 
 /**
@@ -600,7 +614,7 @@ async function main(opciones = {}) {
     log('\n✅ Seed completado exitosamente!', 'green');
     log('\n📝 Credenciales de acceso:', 'yellow');
     log('  Email: admin@nsg.com', 'reset');
-    log('  Contraseña: admin123', 'reset');
+    log('  Contraseña: la definida en SEED_ADMIN_PASSWORD', 'reset');
     log('\n💡 Usa estas credenciales para iniciar sesión en el sistema', 'blue');
     
   } catch (error) {

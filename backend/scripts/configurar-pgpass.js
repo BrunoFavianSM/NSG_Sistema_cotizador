@@ -14,7 +14,13 @@ const DB_HOST = process.env.DB_HOST || 'localhost';
 const DB_PORT = process.env.DB_PORT || '5432';
 const DB_NAME = process.env.DB_NAME || 'nsg_cotizaciones';
 const DB_USER = process.env.DB_USER || 'postgres';
-const DB_PASSWORD = process.env.DB_PASSWORD || '123';
+const DB_PASSWORD = process.env.DB_PASSWORD;
+
+// SEGURIDAD: sin fallback de contraseña; debe venir del .env
+if (!DB_PASSWORD) {
+  console.error('❌ DB_PASSWORD no está definida en .env; no se generará pgpass.conf');
+  process.exit(1);
+}
 
 // Ruta del archivo pgpass en Windows
 const pgpassPath = path.join(os.homedir(), 'AppData', 'Roaming', 'postgresql', 'pgpass.conf');

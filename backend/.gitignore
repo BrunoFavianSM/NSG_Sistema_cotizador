@@ -17,6 +17,9 @@ logs/
 tmp/
 temp/
 
+# Archivos subidos por usuarios (imágenes de productos)
+uploads/
+
 # Cobertura de tests
 coverage/
 .nyc_output/

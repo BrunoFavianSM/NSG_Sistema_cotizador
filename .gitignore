@@ -74,3 +74,5 @@ diagrama.md
 Porpmt_asistente_AI.md
 
 server.log
+# Cache de herramientas internas (no versionar)
+.atl/

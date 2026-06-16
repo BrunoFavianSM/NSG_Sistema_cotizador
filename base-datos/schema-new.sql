@@ -2,7 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict zA1notVThjxZgZZ03bBfKLfnGNEUBsFbYIszl1kcowl6waYbEltNGiF4Ile9qO7
 
 -- Dumped from database version 18.3
 -- Dumped by pg_dump version 18.3
@@ -1845,5 +1844,4 @@ ALTER TABLE ONLY public.specs_ram
 -- PostgreSQL database dump complete
 --
 
-\unrestrict zA1notVThjxZgZZ03bBfKLfnGNEUBsFbYIszl1kcowl6waYbEltNGiF4Ile9qO7
 
