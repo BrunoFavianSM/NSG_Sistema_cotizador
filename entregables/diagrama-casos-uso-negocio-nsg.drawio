@@ -1,0 +1,123 @@
+<mxfile host="app.diagrams.net" modified="2026-06-07T00:00:00.000Z" agent="Claude" version="24.7.17" type="device">
+  <diagram id="casos-uso-negocio-nsg" name="Casos de Uso - Negocio">
+    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="titulo" value="Diagrama de Casos de Uso de Negocio - NSG Cotizador" style="text;html=1;strokeColor=none;fillColor=none;fontSize=22;fontStyle=1;fontColor=#111827;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="24" width="900" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitulo" value="Proceso de negocio de cotizacion y catalogacion de componentes - NSG LATINOAMERICA E.I.R.L." style="text;html=1;strokeColor=none;fillColor=none;fontSize=13;fontColor=#4B5563;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="56" width="900" height="22" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ FRONTERA DEL PROCESO ============ -->
+        <mxCell id="boundary" value="Proceso de Negocio: Cotizacion y Catalogacion" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=center;fontSize=16;fontStyle=1;fontColor=#374151;fillColor=#F9FAFB;strokeColor=#9CA3AF;dashed=1;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="380" y="140" width="880" height="820" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ ACTOR ADMINISTRADOR (IZQUIERDA) ============ -->
+        <mxCell id="a_admin" value="Administrador&#10;(Trabajador de negocio)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;fontStyle=1;fillColor=#EEF2FF;strokeColor=#6366F1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="240" width="60" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ ACTORES DERECHA ============ -->
+        <mxCell id="a_cliente" value="Cliente&#10;(Actor de negocio)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;fontStyle=1;fillColor=#FFF7ED;strokeColor=#F59E0B;" vertex="1" parent="1">
+          <mxGeometry x="1470" y="210" width="60" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_vendedor" value="Vendedor&#10;(Trabajador de negocio)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;fontStyle=1;fillColor=#ECFDF5;strokeColor=#10B981;" vertex="1" parent="1">
+          <mxGeometry x="1470" y="470" width="60" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_ia" value="Servicio de IA&#10;(Gemini / NVIDIA)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;fontStyle=1;fillColor=#F5F3FF;strokeColor=#8B5CF6;" vertex="1" parent="1">
+          <mxGeometry x="1470" y="650" width="60" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ ZONA ADMIN (IZQUIERDA): GOBIERNO DEL CATALOGO ============ -->
+        <mxCell id="cun10" value="CUN-10&#10;Gestionar Catalogo Tecnico" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EEF2FF;strokeColor=#6366F1;fontSize=13;fontColor=#3730A3;" vertex="1" parent="1">
+          <mxGeometry x="400" y="230" width="190" height="74" as="geometry"/>
+        </mxCell>
+        <mxCell id="cun11" value="CUN-11&#10;Actualizar Precios y Margenes" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EEF2FF;strokeColor=#6366F1;fontSize=13;fontColor=#3730A3;" vertex="1" parent="1">
+          <mxGeometry x="400" y="370" width="190" height="74" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ ZONA CENTRAL: SUBPROCESOS INTERNOS ============ -->
+        <mxCell id="cun04" value="CUN-04&#10;Validar Compatibilidad Tecnica" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#34D399;fontSize=13;fontColor=#065F46;" vertex="1" parent="1">
+          <mxGeometry x="620" y="360" width="210" height="72" as="geometry"/>
+        </mxCell>
+        <mxCell id="cun05" value="CUN-05&#10;Calcular Presupuesto" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#34D399;fontSize=13;fontColor=#065F46;" vertex="1" parent="1">
+          <mxGeometry x="620" y="500" width="210" height="72" as="geometry"/>
+        </mxCell>
+        <mxCell id="cun06" value="CUN-06&#10;Emitir Proforma PDF" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#34D399;fontSize=13;fontColor=#065F46;" vertex="1" parent="1">
+          <mxGeometry x="620" y="640" width="210" height="72" as="geometry"/>
+        </mxCell>
+        <mxCell id="cun09" value="CUN-09&#10;Realizar Seguimiento Comercial" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#FBBF24;fontSize=13;fontColor=#92400E;" vertex="1" parent="1">
+          <mxGeometry x="620" y="790" width="210" height="66" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ COLUMNA DERECHA: CASOS CON ACTOR ============ -->
+        <mxCell id="cun01" value="CUN-01&#10;Solicitar Cotizacion" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#FBBF24;fontSize=13;fontColor=#92400E;" vertex="1" parent="1">
+          <mxGeometry x="905" y="200" width="210" height="74" as="geometry"/>
+        </mxCell>
+        <mxCell id="cun02" value="CUN-02&#10;Consultar Catalogo de Componentes" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#FBBF24;fontSize=13;fontColor=#92400E;" vertex="1" parent="1">
+          <mxGeometry x="905" y="335" width="210" height="74" as="geometry"/>
+        </mxCell>
+        <mxCell id="cun03" value="CUN-03&#10;Atender y Elaborar Cotizacion" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#10B981;fontSize=14;fontStyle=1;fontColor=#065F46;" vertex="1" parent="1">
+          <mxGeometry x="890" y="470" width="240" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="cun07" value="CUN-07&#10;Asistir Seleccion con IA" style="ellipse;whiteSpace=wrap;html=1;fillColor=#F5F3FF;strokeColor=#A78BFA;fontSize=13;fontColor=#5B21B6;" vertex="1" parent="1">
+          <mxGeometry x="905" y="625" width="210" height="74" as="geometry"/>
+        </mxCell>
+        <mxCell id="cun08" value="CUN-08&#10;Entregar Proforma al Cliente" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#FBBF24;fontSize=13;fontColor=#92400E;" vertex="1" parent="1">
+          <mxGeometry x="890" y="775" width="240" height="74" as="geometry"/>
+        </mxCell>
+
+        <!-- ============ ASOCIACIONES ADMINISTRADOR ============ -->
+        <mxCell id="e_admin_cun10" style="endArrow=none;html=1;strokeColor=#6366F1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a_admin" target="cun10"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ============ ASOCIACIONES CLIENTE ============ -->
+        <mxCell id="e_cli_cun01" style="endArrow=none;html=1;strokeColor=#F59E0B;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a_cliente" target="cun01"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_cli_cun02" style="endArrow=none;html=1;strokeColor=#F59E0B;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a_cliente" target="cun02"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_cli_cun08" style="endArrow=none;html=1;strokeColor=#F59E0B;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a_cliente" target="cun08"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ============ ASOCIACIONES VENDEDOR ============ -->
+        <mxCell id="e_vend_cun02" style="endArrow=none;html=1;strokeColor=#10B981;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a_vendedor" target="cun02"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_vend_cun03" style="endArrow=none;html=1;strokeColor=#10B981;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a_vendedor" target="cun03"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_vend_cun08" style="endArrow=none;html=1;strokeColor=#10B981;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a_vendedor" target="cun08"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ============ ASOCIACION SERVICIO DE IA ============ -->
+        <mxCell id="e_ia_cun07" style="endArrow=none;html=1;strokeColor=#8B5CF6;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a_ia" target="cun07"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ============ INCLUDE / EXTEND ============ -->
+        <mxCell id="e_inc_10_11" value="&#171;include&#187;" style="endArrow=open;endFill=0;dashed=1;html=1;strokeColor=#6B7280;fontSize=11;fontColor=#374151;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="cun10" target="cun11"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_inc_03_02" value="&#171;include&#187;" style="endArrow=open;endFill=0;dashed=1;html=1;strokeColor=#6B7280;fontSize=11;fontColor=#374151;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="cun03" target="cun02"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_inc_03_04" value="&#171;include&#187;" style="endArrow=open;endFill=0;dashed=1;html=1;strokeColor=#6B7280;fontSize=11;fontColor=#374151;exitX=0;exitY=0.3;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="cun03" target="cun04"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_inc_03_05" value="&#171;include&#187;" style="endArrow=open;endFill=0;dashed=1;html=1;strokeColor=#6B7280;fontSize=11;fontColor=#374151;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="cun03" target="cun05"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_inc_03_06" value="&#171;include&#187;" style="endArrow=open;endFill=0;dashed=1;html=1;strokeColor=#6B7280;fontSize=11;fontColor=#374151;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="cun03" target="cun06"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_ext_07_03" value="&#171;extend&#187;" style="endArrow=open;endFill=0;dashed=1;html=1;strokeColor=#6B7280;fontSize=11;fontColor=#374151;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="cun07" target="cun03"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_ext_09_08" value="&#171;extend&#187;" style="endArrow=open;endFill=0;dashed=1;html=1;strokeColor=#6B7280;fontSize=11;fontColor=#374151;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="cun09" target="cun08"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ============ LEYENDA ============ -->
+        <mxCell id="leyenda" value="Leyenda" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;align=left;fontSize=12;fontStyle=1;fillColor=#FFFFFF;strokeColor=#D1D5DB;spacingLeft=10;spacingTop=8;fontColor=#374151;" vertex="1" parent="1">
+          <mxGeometry x="150" y="600" width="250" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="ley1" value="Linea solida: asociacion actor - caso" style="text;html=1;align=left;fontSize=11;fontColor=#4B5563;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="162" y="632" width="232" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="ley2" value="&#171;include&#187;: subproceso siempre ejecutado" style="text;html=1;align=left;fontSize=11;fontColor=#4B5563;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="162" y="662" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="ley3" value="&#171;extend&#187;: subproceso opcional / condicional" style="text;html=1;align=left;fontSize=11;fontColor=#4B5563;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="162" y="692" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="ley4" value="Centro: subprocesos internos (sin actor)." style="text;html=1;align=left;fontSize=11;fontColor=#4B5563;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="162" y="722" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="ley5" value="Admin (izq) gobierna el catalogo; Cliente,&#10;Vendedor y Servicio de IA (der) operan la venta." style="text;html=1;align=left;fontSize=11;fontColor=#4B5563;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="162" y="752" width="240" height="34" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

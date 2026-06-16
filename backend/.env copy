@@ -1,0 +1,92 @@
+﻿# ─────────────────────────────────────────────────────────────
+# NSG Cotizador — Variables de Entorno
+# ─────────────────────────────────────────────────────────────
+
+# ── Base de Datos PostgreSQL ─────────────────────────────────
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=nsg_cotizaciones
+DB_USER=postgres
+DB_PASSWORD=123
+
+# ── Seguridad ────────────────────────────────────────────────
+JWT_SECRET=min_32_caracteres_aleatorios_cambiar_en_produccion_2024
+ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+
+# ── Servidor ─────────────────────────────────────────────────
+PORT=3000
+NODE_ENV=development
+FRONTEND_URL=http://localhost:5173
+
+# ── API Tipo de Cambio USD/PEN ──────────────────────────────
+APIS_NET_TOKEN=sk_14771.XnMlqtZRq7eqvTFIzefvj4GO5BIpXv5x
+
+# ── Asistente IA — Google Gemini (fallback legacy) ────────────
+GEMINI_API_KEY=AIzaSyDyEvylEqfmdnZNxQnmkNbKdyadYmN-J7I
+GEMINI_MODEL=gemini-2.5-flash
+
+# ── Asistente IA — Pipeline Multi-Agente NVIDIA ─────────────
+NVIDIA_API_KEY=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
+NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
+
+# Modelos del pipeline
+#CLASSIFIER_MODEL
+#EMBEDDING_MODEL
+#RERANKER_MODEL
+NVIDIA_CLASSIFIER_MODEL=meta/llama-3.2-3b-instruct
+NVIDIA_EMBEDDING_MODEL=nvidia/nv-embed-v1
+NVIDIA_RERANKER_MODEL=nvidia/rerank-qa-mistral-4b
+
+# Modelo fallback genérico (chat completions)
+NVIDIA_MODEL=mistralai/mistral-small-4-119b-2603
+
+# Cache de embeddings
+EMBEDDING_CACHE_TTL=300
+EMBEDDING_CACHE_MAX_ITEMS=500
+
+# Timeout y feature flag del pipeline
+AGENT_PIPELINE_TIMEOUT_MS=15000
+AGENT_PIPELINE_ENABLED=false
+
+# ── Asistente IA — Configuración general ────────────────────
+ASISTENTE_MAX_INTENTOS_VALIDACION=3
+ASISTENTE_RATE_LIMIT_POR_IP=20
+ASISTENTE_HISTORIAL_DIAS=90
+ASISTENTE_MAX_HISTORIAL_MENSAJES=8
+WHATSAPP_NUMERO_ASESOR=51993230740
+
+# ── Enriquecimiento IA — Configuración separada ──────────────
+ENRICHMENT_PROVIDER_PRIORITY=nvidia,gemini
+ENRICHMENT_ENABLE_NVIDIA=true
+ENRICHMENT_ENABLE_GEMINI=false
+ENRICHMENT_NVIDIA_MODEL=nvidia/nemotron-3-super-120b-a12b
+#ENRICHMENT_NVIDIA_MODEL=nvidia/llama-3.3-nemotron-super-49b-v1.5
+ENRICHMENT_GEMINI_MODEL=gemini-2.5-flash
+
+# ── Timeouts y reintentos de enriquecimiento ─────────────────
+AI_TIMEOUT_MS=35000
+AI_MAX_RETRIES=2
+AI_INTERVAL_MS=800
+NVIDIA_FETCH_TIMEOUT_MS=32000
+GEMINI_TIMEOUT_MS=25000
+
+# ── Correo SMTP (recuperación de contraseña) ────────────────
+SMTP_HOST=smtp.gmail.com
+# Opcional: usar IP directa para evitar fallos DNS locales
+SMTP_HOST_IP=142.250.0.109
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=bruno.saldarriaga20@gmail.com
+SMTP_PASS=lcfu bsph njbn eymd
+EMAIL_FROM=bruno.saldarriaga20@gmail.com
+
+# == Icecat API (POC enriquecimiento - scripts/poc-icecat) ==
+# Credenciales de TU cuenta Icecat. NO usar el demo openIcecat-live (catalogo recortado).
+ICECAT_API_TOKEN=5ef9f164-ee64-470a-b06c-7ea8abcb13bd
+ICECAT_CONTENT_TOKEN=3eccd304-5877-45f3-925f-2de2b98aaaa2
+ICECAT_SHOPNAME=Bruno-SM
+ICECAT_LANG=ES
+
+# == Cloudflare Turnstile (captcha login/registro) ==
+# Si TURNSTILE_SECRET_KEY esta vacio, la verificacion se omite (modo dev).
+TURNSTILE_SECRET_KEY=0x4AAAAAADgA-k4pJg2KLNnlpYkv160n7NA

@@ -3,7 +3,8 @@
     "allow": [
       "Bash(node -e \"require\\('./src/asistente/servicioSesion'\\); require\\('./src/asistente/sistemaPrompt'\\); require\\('./src/asistente/controladorAsistente'\\); console.log\\('Todos los modulos cargan correctamente'\\);\")",
       "Bash(node -e ' *)",
-      "mcp__exa__web_search_exa"
+      "mcp__exa__web_search_exa",
+      "mcp__plugin_engram_engram__mem_context"
     ]
   },
   "enabledMcpjsonServers": [
