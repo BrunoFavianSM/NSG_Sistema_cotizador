@@ -14,7 +14,7 @@ jest.mock('../../src/configuracion/baseDatos', () => ({
   pool: { query: jest.fn().mockResolvedValue({ rows: [] }) },
 }));
 
-jest.mock('bcrypt', () => ({
+jest.mock('bcryptjs', () => ({
   compare: jest.fn(),
   hash: jest.fn(),
 }));
@@ -24,7 +24,7 @@ jest.mock('bcrypt', () => ({
 const request = require('supertest');
 const app = require('../../src/servidor');
 const { ejecutarQuery } = require('../../src/configuracion/baseDatos');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

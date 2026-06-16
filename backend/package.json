@@ -9,7 +9,6 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "seed": "node scripts/seed-datos-prueba.js",
     "migrar:finanzas:fase1": "node scripts/migrar-finanzas-fase1.js",
     "test:compatibilidad-imposible": "node scripts/test-compatibilidad-imposible.js"
   },
@@ -23,7 +22,6 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@react-pdf/renderer": "^4.4.0",
-    "bcrypt": "^5.1.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

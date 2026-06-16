@@ -345,11 +345,13 @@ describe('Cotizaciones — Unificación de usuarios en tabla cuentas', () => {
     it('retorna las cotizaciones del usuario identificado por email (Requisito 10.3)', async () => {
       const emailCliente = 'historial@ejemplo.com';
 
-      // consultarHistorialCliente:
-      // 1. SELECT id, nombre_completo FROM cuentas WHERE correo_hash = $1
-      // 2. SELECT cotizaciones (esquema v1 — NODE_ENV=test → usaEsquemaFinancieroV2 = false)
+      // consultarHistorialCliente (la ruta ahora exige autenticación):
+      // 1. SELECT estado FROM cuentas (middleware verificarTokenUsuario)
+      // 2. SELECT id, nombre_completo FROM cuentas WHERE correo_hash = $1
+      // 3. SELECT cotizaciones (esquema v1 — NODE_ENV=test → usaEsquemaFinancieroV2 = false)
 
       ejecutarQuery
+        .mockResolvedValueOnce({ rows: [{ estado: 'activa' }] })
         .mockResolvedValueOnce({
           rows: [{ id: 42, nombre: 'Cliente Historial' }],
         })
@@ -386,9 +388,9 @@ describe('Cotizaciones — Unificación de usuarios en tabla cuentas', () => {
           ],
         });
 
-      const res = await request(app).get(
-        `/api/cotizaciones/cliente/${encodeURIComponent(emailCliente)}`
-      );
+      const res = await request(app)
+        .get(`/api/cotizaciones/cliente/${encodeURIComponent(emailCliente)}`)
+        .set('Authorization', `Bearer ${generarTokenAdmin()}`);
 
       expect(res.status).toBe(200);
       expect(res.body.exito).toBe(true);
@@ -404,12 +406,13 @@ describe('Cotizaciones — Unificación de usuarios en tabla cuentas', () => {
     });
 
     it('retorna lista vacía cuando el email no tiene cuenta asociada (Requisito 6.3)', async () => {
-      // SELECT cuentas → no encontrado
-      ejecutarQuery.mockResolvedValueOnce({ rows: [] });
+      ejecutarQuery
+        .mockResolvedValueOnce({ rows: [{ estado: 'activa' }] }) // middleware auth
+        .mockResolvedValueOnce({ rows: [] }); // SELECT cuentas → no encontrado
 
-      const res = await request(app).get(
-        '/api/cotizaciones/cliente/sinhistorial@ejemplo.com'
-      );
+      const res = await request(app)
+        .get('/api/cotizaciones/cliente/sinhistorial@ejemplo.com')
+        .set('Authorization', `Bearer ${generarTokenAdmin()}`);
 
       expect(res.status).toBe(200);
       expect(res.body.exito).toBe(true);
@@ -418,10 +421,20 @@ describe('Cotizaciones — Unificación de usuarios en tabla cuentas', () => {
     });
 
     it('retorna 400 cuando el email tiene formato inválido', async () => {
-      const res = await request(app).get('/api/cotizaciones/cliente/no-es-un-email');
+      ejecutarQuery.mockResolvedValueOnce({ rows: [{ estado: 'activa' }] }); // middleware auth
+
+      const res = await request(app)
+        .get('/api/cotizaciones/cliente/no-es-un-email')
+        .set('Authorization', `Bearer ${generarTokenAdmin()}`);
 
       expect(res.status).toBe(400);
       expect(res.body.error).toBeDefined();
+    });
+
+    it('retorna 401 cuando no hay token de autenticación (endpoint protegido)', async () => {
+      const res = await request(app).get('/api/cotizaciones/cliente/cualquiera@ejemplo.com');
+
+      expect(res.status).toBe(401);
     });
   });
 });
