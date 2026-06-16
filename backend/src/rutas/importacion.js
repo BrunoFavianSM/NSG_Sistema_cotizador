@@ -13,7 +13,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { verificarToken, verificarTokenAdmin } = require('../middleware/auth');
+const { verificarToken, verificarTokenAdmin, verificarTokenStream, emitirTokenStream } = require('../middleware/auth');
 const uploadCSV = require('../middleware/multerCSV');
 const ctrl = require('../controladores/controladorImportacion');
 
@@ -61,13 +61,27 @@ router.get(
 );
 
 /**
+ * POST /api/importacion/estado/stream-token
+ * Auth: verificarTokenAdmin (por header)
+ * Emite un token efímero (60s, scope sse-stream) para abrir el stream SSE
+ * sin exponer el JWT de sesión en la URL.
+ */
+router.post(
+  '/estado/stream-token',
+  verificarTokenAdmin,
+  (req, res) => {
+    res.json({ exito: true, token: emitirTokenStream(req.usuario) });
+  }
+);
+
+/**
  * GET /api/importacion/estado/stream
- * Auth: verificarTokenAdmin
+ * Auth: verificarTokenStream (token efímero por query, scope sse-stream)
  * Requisitos: monitoreo tiempo real de enriquecimiento IA
  */
 router.get(
   '/estado/stream',
-  verificarTokenAdmin,
+  verificarTokenStream,
   ctrl.transmitirEstadoEnriquecimiento
 );
 

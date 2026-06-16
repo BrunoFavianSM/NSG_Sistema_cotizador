@@ -1,5 +1,30 @@
 require('dotenv').config();
 
+// ─────────────────────────────────────────────────────────────
+// Validación de entorno al arrancar
+// En producción, las variables críticas de seguridad son obligatorias:
+// el servidor se niega a arrancar sin ellas para evitar despliegues
+// con credenciales por defecto o protecciones desactivadas en silencio.
+// ─────────────────────────────────────────────────────────────
+const esProduccion = process.env.NODE_ENV === 'production';
+
+if (esProduccion) {
+  const variablesCriticas = ['JWT_SECRET', 'DB_PASSWORD', 'ENCRYPTION_KEY', 'TURNSTILE_SECRET_KEY', 'FRONTEND_URL'];
+  const faltantes = variablesCriticas.filter((variable) => !process.env[variable]);
+  if (faltantes.length > 0) {
+    console.error(`[FATAL] Faltan variables de entorno obligatorias en producción: ${faltantes.join(', ')}`);
+    process.exit(1);
+  }
+  if (process.env.ENCRYPTION_KEY && !/^[0-9a-fA-F]{64}$/.test(process.env.ENCRYPTION_KEY)) {
+    console.error('[FATAL] ENCRYPTION_KEY debe ser de 64 caracteres hexadecimales (32 bytes)');
+    process.exit(1);
+  }
+  if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32) {
+    console.error('[FATAL] JWT_SECRET debe tener al menos 32 caracteres');
+    process.exit(1);
+  }
+}
+
 // Advertencia de inicio: modo automático de tipo de cambio
 if (!process.env.APIS_NET_TOKEN) {
   console.warn('[ADVERTENCIA] APIS_NET_TOKEN no está definido. El modo automático de tipo de cambio no estará disponible.');
@@ -138,7 +163,15 @@ servicioEnriquecimiento.reactivarDesdeDB(ejecutarQuery).catch((err) =>
 );
 
 // Servir imágenes subidas
-app.use('/uploads', express.static('uploads'));
+// Ruta absoluta (independiente del cwd) + cabeceras que evitan que el
+// navegador interprete un archivo subido como contenido ejecutable.
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), {
+  setHeaders: (res) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Disposition', 'inline');
+  }
+}));
 
 // Health check
 app.get('/health', async (req, res) => {
@@ -151,25 +184,29 @@ app.get('/health', async (req, res) => {
 });
 
 // Manejo de errores centralizado
+// SEGURIDAD: en producción nunca se devuelve err.message crudo al cliente
+// (puede contener rutas internas, SQL o detalles de librerías). El detalle
+// completo se registra solo en el log del servidor.
 app.use((err, req, res, next) => {
   console.error('Error:', err);
-  
+
+  const detalleSeguro = esProduccion ? undefined : err.message;
+
   // Errores de validación
   if (err.name === 'ValidationError') {
     return res.status(400).json({
       error: 'Error de validación',
-      detalles: err.message
+      ...(detalleSeguro ? { detalles: detalleSeguro } : {})
     });
   }
-  
+
   // Errores de autenticación
   if (err.name === 'UnauthorizedError' || err.name === 'JsonWebTokenError') {
     return res.status(401).json({
-      error: 'No autorizado',
-      detalles: err.message
+      error: 'No autorizado'
     });
   }
-  
+
   // Errores de base de datos
   if (err.code && err.code.startsWith('23')) { // PostgreSQL constraint errors
     return res.status(409).json({
@@ -177,10 +214,11 @@ app.use((err, req, res, next) => {
       detalles: 'La operación viola restricciones de la base de datos'
     });
   }
-  
+
   // Error genérico
   res.status(err.status || 500).json({
-    error: err.message || 'Error interno del servidor'
+    error: 'Error interno del servidor',
+    ...(detalleSeguro ? { detalles: detalleSeguro } : {})
   });
 });
 

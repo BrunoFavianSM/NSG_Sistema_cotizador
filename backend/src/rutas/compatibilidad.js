@@ -36,7 +36,7 @@ router.post('/validar', verificarTokenUsuario, async (req, res) => {
     console.error('Error en /validar:', error);
     res.status(500).json({
       error: 'Error interno del servidor',
-      mensaje: error.message
+      mensaje: 'No se pudo validar la compatibilidad'
     });
   }
 });

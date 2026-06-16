@@ -1,5 +1,10 @@
 const { Pool } = require('pg');
 
+// SEGURIDAD: en producción no se permiten credenciales por defecto.
+if (process.env.NODE_ENV === 'production' && !process.env.DB_PASSWORD) {
+  throw new Error('DB_PASSWORD es obligatoria en producción (no se permiten credenciales por defecto)');
+}
+
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 5432,
@@ -9,6 +14,8 @@ const pool = new Pool({
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
+  // TLS hacia PostgreSQL para despliegues no locales (DB_SSL=true)
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : false,
 });
 
 pool.on('connect', () => console.log('✓ Conectado a PostgreSQL'));

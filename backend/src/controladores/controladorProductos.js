@@ -733,7 +733,7 @@ async function limpiarCatalogo(req, res) {
     return res.json({ exito: true, mensaje: 'Catalogo limpiado (productos + specs)' });
   } catch (error) {
     console.error('Error al limpiar catalogo:', error);
-    return res.status(500).json({ error: 'Error al limpiar catalogo', mensaje: error.message });
+    return res.status(500).json({ error: 'Error al limpiar catalogo', mensaje: 'No se pudo limpiar el catalogo' });
   }
 }
 

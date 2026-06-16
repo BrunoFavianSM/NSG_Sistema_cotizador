@@ -17,12 +17,9 @@ function extraerToken(req) {
   const authHeader = req.headers['authorization'];
   if (authHeader) return authHeader.split(' ')[1];
 
-  // EventSource nativo no permite headers Authorization.
-  // Se acepta token por query solo para streams protegidos; mantener rutas normales con header.
-  if ((req.originalUrl || req.path || '').includes('/estado/stream') && typeof req.query?.token === 'string') {
-    return req.query.token;
-  }
-
+  // SEGURIDAD: el JWT de sesión NUNCA se acepta por query string
+  // (quedaría en logs de servidor/proxy e historial del navegador).
+  // Los streams SSE usan un token efímero dedicado (verificarTokenStream).
   return null;
 }
 
@@ -122,9 +119,21 @@ async function verificarTokenUsuario(req, res, next) {
 }
 
 /**
+ * Verifica en BD que la cuenta siga activa.
+ * Evita que un token vigente de una cuenta desactivada conserve acceso.
+ */
+async function cuentaSigueActiva(idCuenta) {
+  const { rows } = await ejecutarQuery(
+    'SELECT estado FROM cuentas WHERE id = $1',
+    [idCuenta]
+  );
+  return rows.length > 0 && rows[0].estado === 'activa';
+}
+
+/**
  * Middleware que requiere rol admin (incluye tokens legacy sin campo rol).
  */
-function verificarTokenAdmin(req, res, next) {
+async function verificarTokenAdmin(req, res, next) {
   const token = extraerToken(req);
 
   if (!token) {
@@ -141,6 +150,14 @@ function verificarTokenAdmin(req, res, next) {
       return res.status(403).json({
         error: 'Acceso restringido',
         mensaje: 'Se requieren permisos de administrador'
+      });
+    }
+
+    // SEGURIDAD: el rol del token no basta; la cuenta debe seguir activa en BD
+    if (!(await cuentaSigueActiva(decoded.id))) {
+      return res.status(403).json({
+        error: 'Cuenta no activa',
+        mensaje: 'La cuenta asociada al token no está activa'
       });
     }
 
@@ -171,7 +188,7 @@ function verificarTokenAdmin(req, res, next) {
  * Middleware que permite admin o vendedor (gestión de cotizaciones/clientes).
  * Rechaza 401 sin token, 403 si el rol no es admin/vendedor.
  */
-function verificarTokenAdminOVendedor(req, res, next) {
+async function verificarTokenAdminOVendedor(req, res, next) {
   const token = extraerToken(req);
   if (!token) {
     return res.status(401).json({ error: 'Acceso denegado', mensaje: 'Token de autenticación no proporcionado' });
@@ -180,6 +197,10 @@ function verificarTokenAdminOVendedor(req, res, next) {
     const decoded = decodificarToken(token);
     if (decoded.rol !== 'admin' && decoded.rol !== 'vendedor') {
       return res.status(403).json({ error: 'Acceso restringido', mensaje: 'Se requieren permisos de administrador o vendedor' });
+    }
+    // SEGURIDAD: el rol del token no basta; la cuenta debe seguir activa en BD
+    if (!(await cuentaSigueActiva(decoded.id))) {
+      return res.status(403).json({ error: 'Cuenta no activa', mensaje: 'La cuenta asociada al token no está activa' });
     }
     req.usuario = { id: decoded.id, username: decoded.username, nombre: decoded.nombre };
     req.rol = decoded.rol;
@@ -203,4 +224,61 @@ function verificarToken(req, res, next) {
   return verificarTokenAdmin(req, res, next);
 }
 
-module.exports = { verificarToken, verificarTokenAdmin, verificarTokenAdminOVendedor, verificarTokenUsuario, detectarUsuario };
+const SCOPE_STREAM = 'sse-stream';
+const STREAM_TOKEN_EXPIRA = '60s';
+
+/**
+ * Emite un token efímero exclusivo para streams SSE.
+ * EventSource no soporta headers Authorization, así que el cliente primero
+ * pide este token (autenticado por header) y lo pasa por query string;
+ * al expirar en segundos y tener scope limitado, su exposición en logs es inocua.
+ */
+function emitirTokenStream(usuario) {
+  return jwt.sign(
+    { id: usuario.id, scope: SCOPE_STREAM },
+    process.env.JWT_SECRET,
+    { expiresIn: STREAM_TOKEN_EXPIRA }
+  );
+}
+
+/**
+ * Middleware para streams SSE: acepta SOLO el token efímero por query string.
+ * Rechaza JWTs de sesión (sin scope) para que nunca viajen en URLs.
+ */
+function verificarTokenStream(req, res, next) {
+  const token = typeof req.query?.token === 'string' ? req.query.token : null;
+
+  if (!token) {
+    return res.status(401).json({
+      error: 'Acceso denegado',
+      mensaje: 'Token de stream no proporcionado'
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.scope !== SCOPE_STREAM) {
+      return res.status(403).json({
+        error: 'Token inválido',
+        mensaje: 'El token no es válido para streams'
+      });
+    }
+    req.usuario = { id: decoded.id };
+    next();
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expirado', mensaje: 'El token de stream ha expirado' });
+    }
+    return res.status(403).json({ error: 'Token inválido', mensaje: 'El token de stream no es válido' });
+  }
+}
+
+module.exports = {
+  verificarToken,
+  verificarTokenAdmin,
+  verificarTokenAdminOVendedor,
+  verificarTokenUsuario,
+  detectarUsuario,
+  emitirTokenStream,
+  verificarTokenStream
+};

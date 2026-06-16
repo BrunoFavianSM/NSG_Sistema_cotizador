@@ -1,6 +1,6 @@
 ﻿const express = require('express');
 const router = express.Router();
-const { verificarToken, verificarTokenAdmin, verificarTokenAdminOVendedor, verificarTokenUsuario } = require('../middleware/auth');
+const { verificarToken, verificarTokenAdmin, verificarTokenAdminOVendedor, verificarTokenUsuario, detectarUsuario } = require('../middleware/auth');
 const {
   crearCotizacion,
   consultarCotizacion,
@@ -26,15 +26,17 @@ router.get('/clientes', verificarTokenAdminOVendedor, listarClientesRegistrados)
 router.get('/propias', verificarTokenUsuario, obtenerPropias);
 
 // Historial por cliente (debe ir antes de /:codigoTicket)
-router.get('/cliente/:email', consultarHistorialCliente);
+// SEGURIDAD: requiere login; el controlador valida que un usuario solo vea su propio historial
+router.get('/cliente/:email', verificarTokenUsuario, consultarHistorialCliente);
 
 // Consultar y validar cotizacion por codigo ticket
-router.get('/:codigoTicket', consultarCotizacion);
-router.get('/:codigoTicket/validar', validarCotizacion);
+// SEGURIDAD: detectarUsuario identifica el rol; el controlador omite margen/costos para no privilegiados
+router.get('/:codigoTicket', detectarUsuario, consultarCotizacion);
+router.get('/:codigoTicket/validar', detectarUsuario, validarCotizacion);
 
-// Descargas PDF
-router.get('/:codigoTicket/pdf', obtenerPdfCotizacion);
-router.get('/:codigoTicket/pdf-tecnico', obtenerPdfTecnico);
+// Descargas PDF (requiere login; el controlador valida propiedad para rol usuario)
+router.get('/:codigoTicket/pdf', verificarTokenUsuario, obtenerPdfCotizacion);
+router.get('/:codigoTicket/pdf-tecnico', verificarTokenUsuario, obtenerPdfTecnico);
 
 // Exportar a Excel (requiere login: admin o usuario)
 router.get('/:codigoTicket/excel', verificarTokenUsuario, exportarExcel);

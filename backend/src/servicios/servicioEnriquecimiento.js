@@ -305,6 +305,12 @@ async function enriquecerProducto(item) {
 
 /** Escribe specs tipadas (COALESCE), ficha_tecnica JSONB, imagen y estado. */
 async function guardarEnriquecimiento({ id_producto, categoria, tabla, tipadas, ficha, imagen, fuente }) {
+  // SEGURIDAD: el nombre de tabla solo puede provenir de la allowlist;
+  // nunca interpolar un valor que no esté en TABLA_SPECS.
+  if (!Object.values(TABLA_SPECS).includes(tabla)) {
+    throw new Error(`Tabla de specs no permitida: ${tabla}`);
+  }
+
   // require diferido para evitar ciclo de carga con servicioImportacion.
   const { upsertSpecs } = require('./servicioImportacion');
 

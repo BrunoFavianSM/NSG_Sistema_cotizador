@@ -77,8 +77,8 @@ async function login(username, password) {
       const nuevosIntentos = cuenta.intentos_fallidos + 1;
       if (nuevosIntentos >= MAX_INTENTOS) {
         await ejecutarQuery(
-          `UPDATE cuentas SET intentos_fallidos = 0, bloqueado_hasta = CURRENT_TIMESTAMP + interval '${BLOQUEO_MINUTOS} minutes' WHERE id = $1`,
-          [cuenta.id]
+          `UPDATE cuentas SET intentos_fallidos = 0, bloqueado_hasta = CURRENT_TIMESTAMP + ($2 * interval '1 minute') WHERE id = $1`,
+          [cuenta.id, BLOQUEO_MINUTOS]
         );
         return {
           exito: false,
@@ -317,11 +317,14 @@ async function restablecerContrasena(token, nuevaPassword, confirmarPassword) {
 /**
  * Genera un token JWT con rol incluido.
  *
+ * Expiración de 8 horas: limita la ventana de uso de un token robado
+ * (antes 24h). Configurable vía JWT_EXPIRACION si se necesita ajustar.
+ *
  * @param {Object} payload - { id, username, nombre, rol }
- * @param {string} [expiracion='24h']
+ * @param {string} [expiracion]
  * @returns {string}
  */
-function generarToken(payload, expiracion = '24h') {
+function generarToken(payload, expiracion = process.env.JWT_EXPIRACION || '8h') {
   if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET no está configurado en las variables de entorno');
   }

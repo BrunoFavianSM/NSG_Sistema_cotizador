@@ -219,6 +219,38 @@ function calcularResumenFinanciero(costoNetoUsd, margenAplicado, tasaIgv, tipoCa
   };
 }
 
+/**
+ * Determina si el rol puede ver datos comerciales internos (margen, costos).
+ */
+function esRolPrivilegiado(rol) {
+  return rol === 'admin' || rol === 'vendedor';
+}
+
+/**
+ * Proyecta un componente de cotizacion para respuesta segun rol.
+ * Para roles no privilegiados omite costo y margen (datos internos del negocio).
+ */
+function proyectarComponente(comp, privilegiado) {
+  const base = {
+    id: comp.id,
+    id_producto: comp.id_producto,
+    nombre: comp.nombre,
+    categoria: comp.categoria,
+    descripcion_tecnica: comp.descripcion_tecnica,
+    precio_unitario: comp.precio_unitario,
+    igv_unitario_usd: comp.igv_unitario_usd,
+    precio_unitario_total_usd: comp.precio_unitario_total_usd,
+    cantidad: comp.cantidad,
+    disponible_stock: comp.disponible_stock
+  };
+  if (privilegiado) {
+    base.costo_unitario_neto_usd = comp.costo_unitario_neto_usd;
+    base.margen_aplicado = comp.margen_aplicado;
+    base.precio_unitario_neto_usd = comp.precio_unitario_neto_usd;
+  }
+  return base;
+}
+
 function construirBloqueFinanzas(base) {
   const subtotalNeto = parseNumeroSeguro(base.subtotal_neto, 0);
   const igvMonto = parseNumeroSeguro(base.igv_monto, 0);
@@ -749,7 +781,7 @@ async function crearCotizacion(req, res) {
         fecha_emision: resultado.cotizacion.fecha_emision,
         fecha_validez: resultado.cotizacion.fecha_validez,
         precio_total: parseFloat(resultado.cotizacion.total_con_igv ?? resultado.cotizacion.precio_total),
-        margen_aplicado: parseFloat(resultado.cotizacion.margen_aplicado),
+        ...(esRolPrivilegiado(req.rol) ? { margen_aplicado: parseFloat(resultado.cotizacion.margen_aplicado) } : {}),
         finanzas,
         estado: resultado.cotizacion.estado,
         componentes: resultado.detalles
@@ -759,8 +791,11 @@ async function crearCotizacion(req, res) {
     console.error('Error al crear cotizaciÃ³n:', error);
 
     res.status(500).json({
-      error: 'Error al crear cotizaciÃ³n',
-      mensaje: error.message || 'No se pudo crear la cotizaciÃ³n'
+      error: 'Error al crear cotizacion',
+      // SEGURIDAD: sin detalles internos en producción
+      mensaje: process.env.NODE_ENV === 'production'
+        ? 'No se pudo crear la cotizacion'
+        : (error.message || 'No se pudo crear la cotizacion')
     });
   }
 }
@@ -883,23 +918,26 @@ async function consultarCotizacion(req, res) {
       });
     }
 
-    return res.json({
-      exito: true,
-      cotizacion: {
-        id: cotizacionData.id,
-        codigo_unico: cotizacionData.codigo_unico,
-        codigo_ticket: cotizacionData.codigo_ticket,
-        fecha_emision: cotizacionData.fecha_emision,
-        fecha_validez: cotizacionData.fecha_validez,
-        precio_total: parseFloat(cotizacionData.total_con_igv ?? cotizacionData.precio_total),
-        margen_aplicado: parseFloat(cotizacionData.margen_aplicado),
-        finanzas: cotizacionData.finanzas,
-        estado: cotizacionData.estado,
-        fecha_reclamacion: cotizacionData.fecha_reclamacion,
-        caducada: false,
-        componentes: cotizacionData.componentes
-      }
-    });
+    const privilegiado = esRolPrivilegiado(req.rol);
+
+    const respuesta = {
+      id: cotizacionData.id,
+      codigo_unico: cotizacionData.codigo_unico,
+      codigo_ticket: cotizacionData.codigo_ticket,
+      fecha_emision: cotizacionData.fecha_emision,
+      fecha_validez: cotizacionData.fecha_validez,
+      precio_total: parseFloat(cotizacionData.total_con_igv ?? cotizacionData.precio_total),
+      finanzas: cotizacionData.finanzas,
+      estado: cotizacionData.estado,
+      fecha_reclamacion: cotizacionData.fecha_reclamacion,
+      caducada: false,
+      componentes: cotizacionData.componentes.map((c) => proyectarComponente(c, privilegiado))
+    };
+    if (privilegiado) {
+      respuesta.margen_aplicado = parseFloat(cotizacionData.margen_aplicado);
+    }
+
+    return res.json({ exito: true, cotizacion: respuesta });
   } catch (error) {
     console.error('Error al consultar cotizacion:', error);
     return res.status(500).json({
@@ -1051,7 +1089,7 @@ async function validarCotizacion(req, res) {
         fecha_emision: cotizacionData.fecha_emision,
         fecha_validez: cotizacionData.fecha_validez,
         estado: estadoNormalizado,
-        margen_aplicado: margen,
+        ...(esRolPrivilegiado(req.rol) ? { margen_aplicado: margen } : {}),
         precio_total_historico: precioTotalHistorico,
         precio_total_actual: precioTotalActual,
         diferencia_total: diferenciaTotalPrecio,
@@ -1119,6 +1157,15 @@ function resolverMonedaPdf(valor) {
   return moneda === 'PEN' ? 'PEN' : 'USD';
 }
 
+/**
+ * Verifica que el solicitante pueda acceder a la cotizacion:
+ * admin/vendedor siempre; rol usuario solo si es el dueno.
+ */
+function puedeAccederCotizacion(req, cotizacionData) {
+  if (esRolPrivilegiado(req.rol)) return true;
+  return cotizacionData.id_cliente != null && cotizacionData.id_cliente === req.usuario?.id;
+}
+
 async function obtenerPdfCotizacion(req, res) {
   try {
     const { codigoTicket } = req.params;
@@ -1135,6 +1182,14 @@ async function obtenerPdfCotizacion(req, res) {
         error: 'Cotizacion no encontrada',
         mensaje: 'No existe una cotizacion con ese codigo',
         codigo: 'COTIZACION_NO_ENCONTRADA'
+      });
+    }
+
+    if (!puedeAccederCotizacion(req, cotizacionData)) {
+      return res.status(403).json({
+        error: 'Acceso restringido',
+        mensaje: 'Solo puedes descargar tus propias cotizaciones',
+        codigo: 'COTIZACION_NO_PROPIA'
       });
     }
 
@@ -1177,6 +1232,14 @@ async function obtenerPdfTecnico(req, res) {
         error: 'Cotizacion no encontrada',
         mensaje: 'No existe una cotizacion con ese codigo',
         codigo: 'COTIZACION_NO_ENCONTRADA'
+      });
+    }
+
+    if (!puedeAccederCotizacion(req, cotizacionData)) {
+      return res.status(403).json({
+        error: 'Acceso restringido',
+        mensaje: 'Solo puedes descargar tus propias cotizaciones',
+        codigo: 'COTIZACION_NO_PROPIA'
       });
     }
 
@@ -1413,6 +1476,18 @@ async function consultarHistorialCliente(req, res) {
 
     const cliente = await ejecutarQuery('SELECT id, nombre_completo AS nombre FROM cuentas WHERE correo_hash = $1', [emailHash]);
 
+    // SEGURIDAD: un usuario regular solo puede consultar su propio historial;
+    // admin y vendedor pueden consultar cualquier cliente.
+    if (!esRolPrivilegiado(req.rol)) {
+      const esPropio = cliente.rows.length > 0 && cliente.rows[0].id === req.usuario?.id;
+      if (!esPropio) {
+        return res.status(403).json({
+          error: 'Acceso restringido',
+          mensaje: 'Solo puedes consultar tu propio historial de cotizaciones'
+        });
+      }
+    }
+
     if (cliente.rows.length === 0) {
       return res.json({
         exito: true,
@@ -1456,7 +1531,7 @@ async function consultarHistorialCliente(req, res) {
         fecha_emision: c.fecha_emision,
         fecha_validez: c.fecha_validez,
         precio_total: parseFloat(c.total_con_igv ?? c.precio_total),
-        margen_aplicado: parseFloat(c.margen_aplicado),
+        ...(esRolPrivilegiado(req.rol) ? { margen_aplicado: parseFloat(c.margen_aplicado) } : {}),
         finanzas: construirBloqueFinanzas(c),
         estado: normalizarEstadoCotizacion(c.estado),
         fecha_reclamacion: c.fecha_reclamacion,
@@ -1604,7 +1679,7 @@ async function obtenerPropias(req, res) {
         fecha_emision: c.fecha_emision,
         fecha_validez: c.fecha_validez,
         precio_total: parseFloat(c.total_con_igv ?? c.precio_total),
-        margen_aplicado: parseFloat(c.margen_aplicado),
+        ...(esRolPrivilegiado(req.rol) ? { margen_aplicado: parseFloat(c.margen_aplicado) } : {}),
         finanzas: construirBloqueFinanzas(c),
         estado: normalizarEstadoCotizacion(c.estado),
         fecha_reclamacion: c.fecha_reclamacion,

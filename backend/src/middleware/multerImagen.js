@@ -11,10 +11,17 @@
 
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const crypto = require('crypto');
 
+// Ruta absoluta (independiente del cwd), igual que el static de servidor.js
+const DIRECTORIO_UPLOADS = path.join(__dirname, '..', '..', 'uploads');
+if (!fs.existsSync(DIRECTORIO_UPLOADS)) {
+  fs.mkdirSync(DIRECTORIO_UPLOADS, { recursive: true });
+}
+
 const almacenamientoImagen = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, 'uploads/'),
+  destination: (_req, _file, cb) => cb(null, DIRECTORIO_UPLOADS),
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
     const nombre = crypto.randomBytes(16).toString('hex') + ext;

@@ -140,13 +140,14 @@ router.post('/recuperar', limitadorRecuperacion, async (req, res) => {
       });
     }
 
-    const resultado = await servicioAuth.solicitarRecuperacion(correo);
+    await servicioAuth.solicitarRecuperacion(correo);
 
-    if (!resultado.exito) {
-      return res.status(404).json(resultado);
-    }
-
-    res.json(resultado);
+    // SEGURIDAD (anti-enumeración): siempre 200 con el mismo cuerpo,
+    // sin revelar si el correo existe o no.
+    res.json({
+      exito: true,
+      mensaje: 'Si el correo está registrado, recibirás un enlace de recuperación.'
+    });
   } catch (error) {
     console.error('Error en /recuperar:', error);
     res.status(500).json({
@@ -171,11 +172,12 @@ router.post('/recuperar-por-telefono', limitadorRecuperacion, async (req, res) =
       return res.status(400).json(resultado);
     }
 
-    if (!resultado.exito) {
-      return res.status(404).json(resultado);
-    }
-
-    res.json(resultado);
+    // SEGURIDAD (anti-enumeración): siempre 200 con el mismo cuerpo,
+    // sin revelar si el teléfono existe o no.
+    res.json({
+      exito: true,
+      mensaje: 'Si el teléfono está registrado, recibirás un correo de recuperación.'
+    });
   } catch (error) {
     console.error('Error en /recuperar-por-telefono:', error);
     res.status(500).json({

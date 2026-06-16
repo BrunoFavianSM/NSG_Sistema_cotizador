@@ -81,7 +81,6 @@ async function buscarCliente(req, res) {
     console.error('Error al buscar cliente:', error);
     return res.status(500).json({
       error: 'Error al buscar cliente',
-      detalle: error.message,
     });
   }
 }
@@ -129,7 +128,6 @@ async function obtenerEmails(req, res) {
     console.error('Error al obtener emails:', error);
     return res.status(500).json({
       error: 'Error al obtener emails',
-      detalle: error.message,
     });
   }
 }
