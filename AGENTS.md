@@ -83,6 +83,14 @@ Un cambio se considera terminado solo si:
 - Indicar archivos modificados y validación ejecutada (build/tests si aplica).
 - Reportar riesgos pendientes y próximos pasos si corresponde.
 
+## 11.1) Worktrees — confinamiento obligatorio (CRÍTICO)
+- Si la sesión trabaja dentro de un **git worktree**, TODA lectura y escritura de código debe ocurrir DENTRO de la ruta de ese worktree. NUNCA salir del worktree para editar el repo principal ni otro worktree.
+- Antes de cada edición, verificar que la ruta absoluta del archivo empieza por la ruta del worktree activo. Si no, NO escribir.
+- Antes de dar por válida cualquier prueba: confirmar el toplevel con `git rev-parse --show-toplevel` y/o `require.resolve`, y asegurarse de que el código que se ejecuta es el del worktree (no el del repo principal).
+- Usar rutas relativas al worktree o el cwd de la sesión; no asumir rutas absolutas del repo principal por costumbre.
+- Tras editar backend, reiniciar el server (no recarga solo) y confirmar que arranca desde el worktree antes de validar.
+- Motivo: editar fuera del worktree hace que los servidores ejecuten código viejo, las validaciones no prueban nada y se ensucia el repo principal.
+
 ## 12) Approach
 - Think before acting. Read existing files before writing code.
 - Be concise in output but thorough in reasoning.

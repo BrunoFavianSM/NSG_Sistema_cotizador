@@ -219,14 +219,18 @@ function curarFicha(featuresGroups) {
   return { grupos };
 }
 
-/** Imagen desde el response de Icecat (Gallery / Image). */
+/**
+ * Imagen desde el response de Icecat (Gallery / Image).
+ * Se prefiere la versión más liviana (LowPic) porque la imagen se muestra en
+ * tarjetas del cotizador; se cae a tamaños mayores solo si no existe la liviana.
+ */
 function extraerImagenIcecat(data) {
   try {
     const d = data?.data;
     if (Array.isArray(d?.Gallery) && d.Gallery.length) {
-      return d.Gallery[0].Pic || d.Gallery[0].LowPic || d.Gallery[0].ThumbPic || null;
+      return d.Gallery[0].LowPic || d.Gallery[0].Pic || d.Gallery[0].ThumbPic || null;
     }
-    return d?.Image?.HighPic || d?.Image?.Pic || d?.Image?.LowPic || null;
+    return d?.Image?.LowPic || d?.Image?.Pic || d?.Image?.HighPic || null;
   } catch (_) {
     return null;
   }
@@ -343,6 +347,58 @@ async function marcarEstado(id_producto, estado) {
   } catch (_) { /* no-op */ }
 }
 
+/**
+ * Captura SOLO la imagen de un producto (Icecat/Deltron) sin tocar specs,
+ * ficha_tecnica ni estado_enriquecimiento. Pensado para componentes que llegaron
+ * completos del CSV (estado 'csv'): no necesitan enriquecimiento de specs, pero sí
+ * una imagen para mostrar en el cotizador.
+ *
+ * No pisa una imagen_url existente (COALESCE(imagen_url, $imagen)): respeta la URL
+ * cargada manualmente por el admin.
+ *
+ * @param {Object} item { id_producto, codigo_proveedor, marca, categoria }
+ */
+async function capturarSoloImagen(item) {
+  const { id_producto, codigo_proveedor, marca } = item;
+
+  // 1) Deltron: 1 petición -> MPN + imagen.
+  const dl = await deltron.descargarHtmlDeltron(codigo_proveedor);
+  if (!dl.html) {
+    return { id_producto, ok: false, soloImagen: true, fuente: 'deltron', motivo: dl.error || ('http_' + dl.status) };
+  }
+  const datosMpn = deltron.extraerMpnDeHtml(dl.html, codigo_proveedor);
+  const imagenDeltron = deltron.extraerImagenDeHtml(dl.html);
+
+  // 2) Icecat: solo para obtener la imagen (no se piden features aquí).
+  let imagenIcecat = null;
+  if (datosMpn.mpn && icecat.credencialesPresentes()) {
+    const r = await icecat.consultarIcecatConVariantes({ mpn: datosMpn.mpn, marca, sleep: () => sleep(DELAY_ICECAT_MS) });
+    if (r.status === 200) imagenIcecat = extraerImagenIcecat(r.data);
+  }
+
+  const imagenFinal = imagenIcecat || imagenDeltron || null;
+  if (!imagenFinal) {
+    return { id_producto, ok: false, soloImagen: true, fuente: 'ninguna', motivo: 'sin_imagen' };
+  }
+
+  // 3) Rellenar imagen_url solo si está vacía; no tocar specs/ficha/estado.
+  await ejecutarQuery(
+    `UPDATE productos
+        SET imagen_url = COALESCE(imagen_url, $2),
+            updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1`,
+    [id_producto, imagenFinal]
+  );
+
+  return {
+    id_producto,
+    ok: true,
+    soloImagen: true,
+    fuente: imagenIcecat ? 'icecat' : 'deltron',
+    imagen: true,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Cola en segundo plano (secuencial, gentil con Deltron)
 // ---------------------------------------------------------------------------
@@ -363,12 +419,13 @@ async function _procesarCola() {
     const item = _estado.cola.shift();
     _estado.actual = item.codigo_proveedor;
     try {
-      const r = await enriquecerProducto(item);
+      const r = item.soloImagen ? await capturarSoloImagen(item) : await enriquecerProducto(item);
       if (r.ok) _estado.ok++; else _estado.fallidos++;
     } catch (err) {
       _estado.fallidos++;
       console.warn('[Enriquecimiento] error', item.codigo_proveedor, err.message);
-      await marcarEstado(item.id_producto, 'ia_fallido');
+      // El modo solo-imagen no debe degradar el estado de un producto 'csv' válido.
+      if (!item.soloImagen) await marcarEstado(item.id_producto, 'fallido');
     }
     await sleep(DELAY_DELTRON_MS); // ritmo entre productos
   }
@@ -376,10 +433,14 @@ async function _procesarCola() {
   _estado.procesando = false;
 }
 
-/** Re-encola los productos que quedaron 'pendiente' en BD (al arrancar el server). */
+/**
+ * Re-encola al arrancar el server:
+ *  - Productos 'pendiente' -> enriquecimiento completo (specs + ficha + imagen).
+ *  - Componentes principales 'csv' sin imagen -> captura solo-imagen.
+ */
 async function reactivarDesdeDB(db = ejecutarQuery) {
   try {
-    const { rows } = await db(
+    const { rows: pendientes } = await db(
       `SELECT p.id AS id_producto, p.codigo_proveedor, c.nombre AS categoria, m.nombre AS marca
          FROM productos p
          JOIN categorias c ON c.id = p.id_categoria
@@ -387,15 +448,35 @@ async function reactivarDesdeDB(db = ejecutarQuery) {
         WHERE p.estado_enriquecimiento = 'pendiente'
           AND c.es_componente_principal = true`
     );
-    if (rows.length) {
-      encolarProductos(rows.map((r) => ({
+    if (pendientes.length) {
+      encolarProductos(pendientes.map((r) => ({
         id_producto: r.id_producto,
         codigo_proveedor: r.codigo_proveedor,
         marca: r.marca || '',
         categoria: r.categoria,
       })));
     }
-    return rows.length;
+
+    const { rows: sinImagen } = await db(
+      `SELECT p.id AS id_producto, p.codigo_proveedor, c.nombre AS categoria, m.nombre AS marca
+         FROM productos p
+         JOIN categorias c ON c.id = p.id_categoria
+         LEFT JOIN marcas m ON m.id = p.id_marca
+        WHERE p.estado_enriquecimiento = 'csv'
+          AND c.es_componente_principal = true
+          AND p.imagen_url IS NULL`
+    );
+    if (sinImagen.length) {
+      encolarProductos(sinImagen.map((r) => ({
+        id_producto: r.id_producto,
+        codigo_proveedor: r.codigo_proveedor,
+        marca: r.marca || '',
+        categoria: r.categoria,
+        soloImagen: true,
+      })));
+    }
+
+    return pendientes.length + sinImagen.length;
   } catch (err) {
     console.warn('[Enriquecimiento] reactivarDesdeDB falló:', err.message);
     return 0;

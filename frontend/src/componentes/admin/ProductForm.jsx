@@ -4,6 +4,7 @@ import InputField from '../ui/InputField';
 import SelectField from '../ui/SelectField';
 import SwitchField from '../ui/SwitchField';
 import TextAreaField from '../ui/TextAreaField';
+import ImagenProducto from '../ui/ImagenProducto';
 import { CATEGORIAS_PRODUCTO, formatearCategoria } from '../../dominio/categorias';
 import FormSection from './FormSection';
 
@@ -178,6 +179,16 @@ export default function ProductForm({
           onChange={(e) => setCampo('imagen_url', e.target.value)}
           placeholder="https://..."
         />
+
+        {value.imagen_url ? (
+          <div className="sm:col-span-2">
+            <ImagenProducto
+              src={value.imagen_url}
+              alt="Vista previa de la imagen del producto"
+              imgClassName="max-h-32"
+            />
+          </div>
+        ) : null}
 
         <SelectField
           id="producto-etiqueta"

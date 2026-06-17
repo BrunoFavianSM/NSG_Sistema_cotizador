@@ -1250,6 +1250,9 @@ async function importar(filas, db) {
   const detalle_errores = [];
   // §5.3 — Acumular productos que necesitan enriquecimiento IA (Req 3.3, 4.1, 4.2)
   const itemsParaIA = [];
+  // Componentes principales que llegaron completos del CSV ('csv'): no necesitan
+  // enriquecer specs, pero sí capturar la imagen para mostrar en el cotizador.
+  const itemsSoloImagen = [];
 
   const cacheCategorias = new Map();
   const cacheMarcas = new Map();
@@ -1341,6 +1344,15 @@ async function importar(filas, db) {
           descripcion_general: registro.descripcion_general,
           specs_faltantes: calcularSpecsFaltantes(registro.categoria, registro),
         });
+      } else if (registro.estado_enriquecimiento === 'csv' && registro.es_componente_principal) {
+        // Componente principal completo: capturar solo la imagen (Icecat/Deltron).
+        itemsSoloImagen.push({
+          id_producto: idProducto,
+          categoria: registro.categoria,
+          codigo_proveedor: registro.codigo_proveedor,
+          marca: registro.marca,
+          soloImagen: true,
+        });
       }
 
       if (upsertProducto.rows[0].es_insercion) insertados++;
@@ -1353,16 +1365,26 @@ async function importar(filas, db) {
 
   // Encolar productos para enriquecimiento Icecat/Deltron al finalizar el loop
   // (sin bloquear la respuesta HTTP). Reemplaza el enriquecimiento por IA.
-  if (itemsParaIA.length > 0) {
+  // Los 'csv' principales se encolan en modo solo-imagen (no tocan specs).
+  if (itemsParaIA.length > 0 || itemsSoloImagen.length > 0) {
     try {
       const servicioEnriquecimiento = require('./servicioEnriquecimiento');
-      servicioEnriquecimiento.encolarProductos(itemsParaIA);
+      if (itemsParaIA.length > 0) servicioEnriquecimiento.encolarProductos(itemsParaIA);
+      if (itemsSoloImagen.length > 0) servicioEnriquecimiento.encolarProductos(itemsSoloImagen);
     } catch (err) {
       console.warn('[ImportacionCSV] servicioEnriquecimiento no disponible:', err.message);
     }
   }
 
-  return { insertados, actualizados, omitidos, errores, detalle_errores, pendientes_enriquecimiento: itemsParaIA.length };
+  return {
+    insertados,
+    actualizados,
+    omitidos,
+    errores,
+    detalle_errores,
+    pendientes_enriquecimiento: itemsParaIA.length,
+    pendientes_imagen: itemsSoloImagen.length,
+  };
 }
 
 function normalizarFilasParaCSV(filas) {

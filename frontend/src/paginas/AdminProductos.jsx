@@ -11,6 +11,7 @@ import Badge from '../componentes/ui/Badge';
 import BadgeEnriquecimiento from '../componentes/ui/BadgeEnriquecimiento';
 import Button from '../componentes/ui/Button';
 import DataTable from '../componentes/ui/DataTable';
+import ImagenProducto from '../componentes/ui/ImagenProducto';
 import Modal from '../componentes/ui/Modal';
 import SelectField from '../componentes/ui/SelectField';
 import Paginacion from '../componentes/ui/Paginacion';
@@ -867,6 +868,11 @@ export default function AdminProductos() {
                           {producto.descripcion_tecnica}
                         </p>
                       ) : null}
+
+                      <ImagenProducto
+                        src={producto.imagen_url}
+                        alt={`Imagen de ${producto.nombre}`}
+                      />
 
                       <div>
                         <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">

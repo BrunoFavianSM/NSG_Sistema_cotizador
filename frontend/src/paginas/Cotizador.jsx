@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import AsistenteIA from '../componentes/AsistenteIA';
 import Button from '../componentes/ui/Button';
+import ImagenProducto from '../componentes/ui/ImagenProducto';
 import EmptyState from '../componentes/feedback/EmptyState';
 import ErrorState from '../componentes/feedback/ErrorState';
 import LoadingSpinner from '../componentes/feedback/LoadingSpinner';
@@ -2022,6 +2023,12 @@ export default function Cotizador() {
                                   )}
                                 </div>
                               </div>
+
+                              <ImagenProducto
+                                src={producto.imagen_url}
+                                alt={`Imagen de ${capitalizarPrimeraLetra(producto.nombre)}`}
+                                className="mt-3"
+                              />
 
                               <p className="mt-2 text-sm text-[var(--color-text-muted)]">
                                 {producto.descripcion_tecnica
