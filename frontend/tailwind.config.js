@@ -46,9 +46,14 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(-6px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
       },
       animation: {
         fadeInDown: 'fadeInDown 150ms cubic-bezier(0.22, 1, 0.36, 1) both',
+        fadeIn: 'fadeIn 120ms ease-out both',
       },
     },
   },

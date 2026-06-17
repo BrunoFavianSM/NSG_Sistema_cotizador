@@ -221,16 +221,17 @@ function curarFicha(featuresGroups) {
 
 /**
  * Imagen desde el response de Icecat (Gallery / Image).
- * Se prefiere la versión más liviana (LowPic) porque la imagen se muestra en
- * tarjetas del cotizador; se cae a tamaños mayores solo si no existe la liviana.
+ * Se prefiere la versión de mayor resolución (Pic/HighPic) para que la imagen se
+ * vea bien al ampliarla a pantalla completa; las tarjetas la reescalan con
+ * object-contain. Solo se cae a tamaños menores si la grande no existe.
  */
 function extraerImagenIcecat(data) {
   try {
     const d = data?.data;
     if (Array.isArray(d?.Gallery) && d.Gallery.length) {
-      return d.Gallery[0].LowPic || d.Gallery[0].Pic || d.Gallery[0].ThumbPic || null;
+      return d.Gallery[0].Pic || d.Gallery[0].LowPic || d.Gallery[0].ThumbPic || null;
     }
-    return d?.Image?.LowPic || d?.Image?.Pic || d?.Image?.HighPic || null;
+    return d?.Image?.HighPic || d?.Image?.Pic || d?.Image?.LowPic || null;
   } catch (_) {
     return null;
   }
