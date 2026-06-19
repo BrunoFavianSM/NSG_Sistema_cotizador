@@ -46,6 +46,16 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const COND_FICHA_VACIA = (expr) =>
   `(${expr} IS NULL OR ${expr} = '{}'::jsonb OR COALESCE(jsonb_array_length(${expr}->'grupos'), 0) = 0)`;
 
+/**
+ * Condición SQL para detectar una imagen de IceCat que NO está en el tamaño
+ * objetivo (gallery_mediums = 500x500). Cubre tanto las chicas (gallery_lows /
+ * gallery_thumbs) como las muy grandes (gallery = 2000x2000), para reemplazarlas
+ * por la media. No toca imágenes de Deltron ni URLs manuales.
+ * @param {string} expr columna o expresión de texto con la URL
+ */
+const COND_IMAGEN_ICECAT_REDIMENSIONAR = (expr) =>
+  `(${expr} LIKE '%images.icecat.biz%' AND ${expr} NOT LIKE '%gallery_mediums%')`;
+
 // ---------------------------------------------------------------------------
 // Utilidades de parseo / normalización
 // ---------------------------------------------------------------------------
@@ -229,17 +239,19 @@ function curarFicha(featuresGroups) {
 
 /**
  * Imagen desde el response de Icecat (Gallery / Image).
- * Se prefiere la versión de mayor resolución (Pic/HighPic) para que la imagen se
- * vea bien al ampliarla a pantalla completa; las tarjetas la reescalan con
- * object-contain. Solo se cae a tamaños menores si la grande no existe.
+ * Se prefiere el tamaño MEDIO (Pic500x500 = 500x500, gallery_mediums): se ve bien
+ * al ampliarla a pantalla completa sin sobrecargar el navegador al renderizar
+ * muchas tarjetas (la versión grande pesa ~1.5MB c/u). Solo se cae a otros tamaños
+ * si el medio no existe.
  */
 function extraerImagenIcecat(data) {
   try {
     const d = data?.data;
     if (Array.isArray(d?.Gallery) && d.Gallery.length) {
-      return d.Gallery[0].Pic || d.Gallery[0].LowPic || d.Gallery[0].ThumbPic || null;
+      const g = d.Gallery[0];
+      return g.Pic500x500 || g.Pic || g.LowPic || g.ThumbPic || null;
     }
-    return d?.Image?.HighPic || d?.Image?.Pic || d?.Image?.LowPic || null;
+    return d?.Image?.Pic500x500 || d?.Image?.Pic || d?.Image?.HighPic || d?.Image?.LowPic || null;
   } catch (_) {
     return null;
   }
@@ -429,11 +441,17 @@ async function complementarFichaEImagen(item) {
     );
   }
 
-  // 5) Imagen: rellenar solo si está vacía. No tocar specs tipadas ni estado.
+  // 5) Imagen: rellenar si está vacía y REDIMENSIONAR si la guardada es de IceCat
+  //    en un tamaño distinto al medio (chica o muy grande). No pisar una URL manual
+  //    ni una de Deltron. No toca specs tipadas ni estado.
   if (imagenFinal) {
     await ejecutarQuery(
       `UPDATE productos
-          SET imagen_url = COALESCE(imagen_url, $2),
+          SET imagen_url = CASE
+                WHEN imagen_url IS NULL THEN $2
+                WHEN ${COND_IMAGEN_ICECAT_REDIMENSIONAR('imagen_url')} THEN $2
+                ELSE imagen_url
+              END,
               updated_at = CURRENT_TIMESTAMP
         WHERE id = $1`,
       [id_producto, imagenFinal]
@@ -487,8 +505,9 @@ async function _procesarCola() {
 /**
  * Re-encola al arrancar el server:
  *  - Productos 'pendiente' -> enriquecimiento completo (specs + ficha + imagen).
- *  - Componentes principales 'csv' a los que les falta ficha_tecnica o imagen ->
- *    complemento (ficha + imagen, sin tocar las columnas tipadas del CSV).
+ *  - Componentes principales (no 'pendiente') a los que les falta ficha_tecnica,
+ *    les falta imagen, o tienen una imagen de IceCat en tamaño no-medio ->
+ *    complemento (ficha + imagen 500x500, sin tocar las columnas tipadas).
  */
 async function reactivarDesdeDB(db = ejecutarQuery) {
   try {
@@ -521,10 +540,11 @@ async function reactivarDesdeDB(db = ejecutarQuery) {
          LEFT JOIN specs_gpu sg ON sg.id_producto = p.id
          LEFT JOIN specs_fuente sf ON sf.id_producto = p.id
          LEFT JOIN specs_case sc ON sc.id_producto = p.id
-        WHERE p.estado_enriquecimiento = 'csv'
+        WHERE p.estado_enriquecimiento <> 'pendiente'
           AND c.es_componente_principal = true
           AND (
                 p.imagen_url IS NULL
+                OR ${COND_IMAGEN_ICECAT_REDIMENSIONAR('p.imagen_url')}
                 OR ${COND_FICHA_VACIA(`COALESCE(sp.ficha_tecnica, sm.ficha_tecnica, sr.ficha_tecnica, sa.ficha_tecnica,
                             sg.ficha_tecnica, sf.ficha_tecnica, sc.ficha_tecnica)`)}
           )`
