@@ -1251,8 +1251,9 @@ async function importar(filas, db) {
   // §5.3 — Acumular productos que necesitan enriquecimiento IA (Req 3.3, 4.1, 4.2)
   const itemsParaIA = [];
   // Componentes principales que llegaron completos del CSV ('csv'): no necesitan
-  // enriquecer specs, pero sí capturar la imagen para mostrar en el cotizador.
-  const itemsSoloImagen = [];
+  // enriquecer specs (el CSV es autoritativo), pero sí complementar con ficha
+  // técnica + imagen (Icecat/Deltron) para mostrar en el cotizador.
+  const itemsComplemento = [];
 
   const cacheCategorias = new Map();
   const cacheMarcas = new Map();
@@ -1345,13 +1346,14 @@ async function importar(filas, db) {
           specs_faltantes: calcularSpecsFaltantes(registro.categoria, registro),
         });
       } else if (registro.estado_enriquecimiento === 'csv' && registro.es_componente_principal) {
-        // Componente principal completo: capturar solo la imagen (Icecat/Deltron).
-        itemsSoloImagen.push({
+        // Componente principal completo: complementar con ficha técnica + imagen
+        // (Icecat/Deltron) sin tocar las columnas tipadas del CSV.
+        itemsComplemento.push({
           id_producto: idProducto,
           categoria: registro.categoria,
           codigo_proveedor: registro.codigo_proveedor,
           marca: registro.marca,
-          soloImagen: true,
+          complemento: true,
         });
       }
 
@@ -1365,12 +1367,13 @@ async function importar(filas, db) {
 
   // Encolar productos para enriquecimiento Icecat/Deltron al finalizar el loop
   // (sin bloquear la respuesta HTTP). Reemplaza el enriquecimiento por IA.
-  // Los 'csv' principales se encolan en modo solo-imagen (no tocan specs).
-  if (itemsParaIA.length > 0 || itemsSoloImagen.length > 0) {
+  // Los 'csv' principales se encolan en modo complemento (ficha + imagen, sin
+  // tocar las columnas tipadas).
+  if (itemsParaIA.length > 0 || itemsComplemento.length > 0) {
     try {
       const servicioEnriquecimiento = require('./servicioEnriquecimiento');
       if (itemsParaIA.length > 0) servicioEnriquecimiento.encolarProductos(itemsParaIA);
-      if (itemsSoloImagen.length > 0) servicioEnriquecimiento.encolarProductos(itemsSoloImagen);
+      if (itemsComplemento.length > 0) servicioEnriquecimiento.encolarProductos(itemsComplemento);
     } catch (err) {
       console.warn('[ImportacionCSV] servicioEnriquecimiento no disponible:', err.message);
     }
@@ -1383,7 +1386,7 @@ async function importar(filas, db) {
     errores,
     detalle_errores,
     pendientes_enriquecimiento: itemsParaIA.length,
-    pendientes_imagen: itemsSoloImagen.length,
+    pendientes_complemento: itemsComplemento.length,
   };
 }
 

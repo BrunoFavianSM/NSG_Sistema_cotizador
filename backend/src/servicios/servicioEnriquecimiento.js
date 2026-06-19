@@ -38,6 +38,14 @@ const TABLA_SPECS = {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * Condición SQL para detectar una ficha_tecnica "vacía": NULL, '{}' o sin grupos.
+ * La importación deja '{}' por defecto, así que NULL no alcanza para detectarla.
+ * @param {string} expr columna o expresión JSONB (p. ej. 'ficha_tecnica' o un COALESCE)
+ */
+const COND_FICHA_VACIA = (expr) =>
+  `(${expr} IS NULL OR ${expr} = '{}'::jsonb OR COALESCE(jsonb_array_length(${expr}->'grupos'), 0) = 0)`;
+
 // ---------------------------------------------------------------------------
 // Utilidades de parseo / normalización
 // ---------------------------------------------------------------------------
@@ -349,54 +357,96 @@ async function marcarEstado(id_producto, estado) {
 }
 
 /**
- * Captura SOLO la imagen de un producto (Icecat/Deltron) sin tocar specs,
- * ficha_tecnica ni estado_enriquecimiento. Pensado para componentes que llegaron
- * completos del CSV (estado 'csv'): no necesitan enriquecimiento de specs, pero sí
- * una imagen para mostrar en el cotizador.
+ * Complementa un componente que llegó COMPLETO del CSV (estado 'csv'):
+ * obtiene la ficha técnica (Icecat con fallback a scraping Deltron) + la imagen,
+ * y escribe ÚNICAMENTE ficha_tecnica + imagen_url.
+ *
+ * NO toca las columnas tipadas (socket, nucleos, chipset, etc.): el CSV es la
+ * fuente autoritativa de esas y alimentan la compatibilidad. Tampoco cambia
+ * estado_enriquecimiento (sigue 'csv').
  *
  * No pisa una imagen_url existente (COALESCE(imagen_url, $imagen)): respeta la URL
  * cargada manualmente por el admin.
  *
  * @param {Object} item { id_producto, codigo_proveedor, marca, categoria }
  */
-async function capturarSoloImagen(item) {
-  const { id_producto, codigo_proveedor, marca } = item;
+async function complementarFichaEImagen(item) {
+  const { id_producto, codigo_proveedor, marca, categoria } = item;
+  const tabla = TABLA_SPECS[categoria];
+  if (!tabla) return { id_producto, ok: false, complemento: true, motivo: 'categoria_no_principal' };
 
-  // 1) Deltron: 1 petición -> MPN + imagen.
+  // 1) Deltron: 1 petición -> MPN + imagen + (posible) ficha de fallback.
   const dl = await deltron.descargarHtmlDeltron(codigo_proveedor);
   if (!dl.html) {
-    return { id_producto, ok: false, soloImagen: true, fuente: 'deltron', motivo: dl.error || ('http_' + dl.status) };
+    return { id_producto, ok: false, complemento: true, fuente: 'deltron', motivo: dl.error || ('http_' + dl.status) };
   }
   const datosMpn = deltron.extraerMpnDeHtml(dl.html, codigo_proveedor);
   const imagenDeltron = deltron.extraerImagenDeHtml(dl.html);
 
-  // 2) Icecat: solo para obtener la imagen (no se piden features aquí).
-  let imagenIcecat = null;
+  // 2) Icecat (si hay MPN y credenciales): ficha oficial + imagen.
+  let featuresGroups = null;
+  let fuente = null;
+  let imagen = null;
   if (datosMpn.mpn && icecat.credencialesPresentes()) {
     const r = await icecat.consultarIcecatConVariantes({ mpn: datosMpn.mpn, marca, sleep: () => sleep(DELAY_ICECAT_MS) });
-    if (r.status === 200) imagenIcecat = extraerImagenIcecat(r.data);
+    const fg = r?.data?.data?.FeaturesGroups;
+    if (r.status === 200 && Array.isArray(fg) && fg.length) {
+      featuresGroups = fg;
+      fuente = 'icecat';
+      imagen = extraerImagenIcecat(r.data);
+    }
   }
 
-  const imagenFinal = imagenIcecat || imagenDeltron || null;
-  if (!imagenFinal) {
-    return { id_producto, ok: false, soloImagen: true, fuente: 'ninguna', motivo: 'sin_imagen' };
+  // 3) Fallback: especificaciones scrapeadas de Deltron (mismo HTML).
+  if (!featuresGroups) {
+    const fichaDeltron = deltron.construirFichaDeHtml(dl.html, codigo_proveedor, marca);
+    const fg = fichaDeltron?.data?.data?.FeaturesGroups;
+    if (Array.isArray(fg) && fg.length) {
+      featuresGroups = fg;
+      fuente = 'deltron-scraping';
+      imagen = fichaDeltron.imagen;
+    }
   }
 
-  // 3) Rellenar imagen_url solo si está vacía; no tocar specs/ficha/estado.
-  await ejecutarQuery(
-    `UPDATE productos
-        SET imagen_url = COALESCE(imagen_url, $2),
-            updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1`,
-    [id_producto, imagenFinal]
-  );
+  const imagenFinal = imagen || imagenDeltron || null;
+
+  // Si no se obtuvo ficha NI imagen, no hay nada que complementar.
+  if (!featuresGroups && !imagenFinal) {
+    return { id_producto, ok: false, complemento: true, fuente: 'ninguna', motivo: 'sin_datos' };
+  }
+
+  // 4) Escribir ficha_tecnica solo si la actual está vacía (NULL, '{}' o sin
+  //    grupos). No pisa una ficha real ya existente.
+  if (featuresGroups) {
+    const ficha = curarFicha(featuresGroups);
+    await ejecutarQuery(
+      `UPDATE ${tabla}
+          SET ficha_tecnica = $2::jsonb,
+              updated_at = CURRENT_TIMESTAMP
+        WHERE id_producto = $1
+          AND ${COND_FICHA_VACIA('ficha_tecnica')}`,
+      [id_producto, JSON.stringify({ fuente, ...ficha })]
+    );
+  }
+
+  // 5) Imagen: rellenar solo si está vacía. No tocar specs tipadas ni estado.
+  if (imagenFinal) {
+    await ejecutarQuery(
+      `UPDATE productos
+          SET imagen_url = COALESCE(imagen_url, $2),
+              updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1`,
+      [id_producto, imagenFinal]
+    );
+  }
 
   return {
     id_producto,
     ok: true,
-    soloImagen: true,
-    fuente: imagenIcecat ? 'icecat' : 'deltron',
-    imagen: true,
+    complemento: true,
+    fuente: fuente || 'ninguna',
+    ficha: Boolean(featuresGroups),
+    imagen: Boolean(imagenFinal),
   };
 }
 
@@ -420,13 +470,13 @@ async function _procesarCola() {
     const item = _estado.cola.shift();
     _estado.actual = item.codigo_proveedor;
     try {
-      const r = item.soloImagen ? await capturarSoloImagen(item) : await enriquecerProducto(item);
+      const r = item.complemento ? await complementarFichaEImagen(item) : await enriquecerProducto(item);
       if (r.ok) _estado.ok++; else _estado.fallidos++;
     } catch (err) {
       _estado.fallidos++;
       console.warn('[Enriquecimiento] error', item.codigo_proveedor, err.message);
-      // El modo solo-imagen no debe degradar el estado de un producto 'csv' válido.
-      if (!item.soloImagen) await marcarEstado(item.id_producto, 'fallido');
+      // El modo complemento no debe degradar el estado de un producto 'csv' válido.
+      if (!item.complemento) await marcarEstado(item.id_producto, 'fallido');
     }
     await sleep(DELAY_DELTRON_MS); // ritmo entre productos
   }
@@ -437,7 +487,8 @@ async function _procesarCola() {
 /**
  * Re-encola al arrancar el server:
  *  - Productos 'pendiente' -> enriquecimiento completo (specs + ficha + imagen).
- *  - Componentes principales 'csv' sin imagen -> captura solo-imagen.
+ *  - Componentes principales 'csv' a los que les falta ficha_tecnica o imagen ->
+ *    complemento (ficha + imagen, sin tocar las columnas tipadas del CSV).
  */
 async function reactivarDesdeDB(db = ejecutarQuery) {
   try {
@@ -458,26 +509,37 @@ async function reactivarDesdeDB(db = ejecutarQuery) {
       })));
     }
 
-    const { rows: sinImagen } = await db(
+    const { rows: porComplementar } = await db(
       `SELECT p.id AS id_producto, p.codigo_proveedor, c.nombre AS categoria, m.nombre AS marca
          FROM productos p
          JOIN categorias c ON c.id = p.id_categoria
          LEFT JOIN marcas m ON m.id = p.id_marca
+         LEFT JOIN specs_procesador sp ON sp.id_producto = p.id
+         LEFT JOIN specs_placa_madre sm ON sm.id_producto = p.id
+         LEFT JOIN specs_ram sr ON sr.id_producto = p.id
+         LEFT JOIN specs_almacenamiento sa ON sa.id_producto = p.id
+         LEFT JOIN specs_gpu sg ON sg.id_producto = p.id
+         LEFT JOIN specs_fuente sf ON sf.id_producto = p.id
+         LEFT JOIN specs_case sc ON sc.id_producto = p.id
         WHERE p.estado_enriquecimiento = 'csv'
           AND c.es_componente_principal = true
-          AND p.imagen_url IS NULL`
+          AND (
+                p.imagen_url IS NULL
+                OR ${COND_FICHA_VACIA(`COALESCE(sp.ficha_tecnica, sm.ficha_tecnica, sr.ficha_tecnica, sa.ficha_tecnica,
+                            sg.ficha_tecnica, sf.ficha_tecnica, sc.ficha_tecnica)`)}
+          )`
     );
-    if (sinImagen.length) {
-      encolarProductos(sinImagen.map((r) => ({
+    if (porComplementar.length) {
+      encolarProductos(porComplementar.map((r) => ({
         id_producto: r.id_producto,
         codigo_proveedor: r.codigo_proveedor,
         marca: r.marca || '',
         categoria: r.categoria,
-        soloImagen: true,
+        complemento: true,
       })));
     }
 
-    return pendientes.length + sinImagen.length;
+    return pendientes.length + porComplementar.length;
   } catch (err) {
     console.warn('[Enriquecimiento] reactivarDesdeDB falló:', err.message);
     return 0;
