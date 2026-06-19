@@ -32,7 +32,12 @@ Para cualquier tarea de frontend/UI/UX, trabajar siempre con estándar Apple HIG
 - Animaciones sutiles y respetar `prefers-reduced-motion`.
 - No romper flujos existentes ni contratos con backend/API.
 
-## 4.1) Commits y atribución (obligatorio)
+## 4.1) Subida al repositorio y PRs (obligatorio)
+- **NUNCA crear un Pull Request ni hacer push al repositorio remoto a menos que el usuario lo mencione explícitamente.**
+- Esto aplica sin excepción: ni al finalizar una tarea, ni como parte de un flujo automatizado, ni por iniciativa propia.
+- Si el trabajo está listo pero el usuario no mencionó PR ni push, reportar el estado y esperar instrucción.
+
+## 4.2) Commits y atribución (obligatorio)
 - NUNCA agregar trailers `Co-Authored-By` ni ninguna atribución a la IA (Claude, Codex, etc.) en los mensajes de commit.
 - NUNCA configurarse a sí mismo como autor o co-autor en git. El autor de todo commit debe ser una persona del equipo.
 - NUNCA hacer que la IA aparezca como contribuidor (Contributor) del repositorio en GitHub. Los trailers de co-autoría son la causa de eso: están prohibidos.
