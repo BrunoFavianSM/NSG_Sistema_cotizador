@@ -2078,8 +2078,8 @@ export default function Cotizador() {
                                 </details>
                               ) : null}
 
-                              {/* Enlace a la ficha del producto en Deltron */}
-                              {producto.codigo_proveedor ? (
+                              {/* Enlace a la ficha del producto en Deltron — solo admin */}
+                              {esAdmin && producto.codigo_proveedor ? (
                                 <a
                                   href={`https://www.deltron.com.pe/modulos/productos/items/producto.php?item_number=${encodeURIComponent(producto.codigo_proveedor)}`}
                                   target="_blank"

@@ -71,36 +71,34 @@ function extraerMpnDeHtml(html, codigo) {
 }
 
 /**
- * Extrae la URL de la imagen principal del producto.
+ * Extrae la URL de la imagen REAL del producto.
  *
- * Importante: el meta `og:image` de Deltron suele apuntar a una ruta equivocada
- * (categoría incorrecta), por eso se prioriza la imagen real del carrusel del
- * producto (lightSlider), que vive en data-src/data-thumb/<img src> sobre el host
- * imagenes.deltron.com.pe. og:image queda como último recurso.
+ * Solo acepta imágenes bajo la ruta `/productos/` del host de imágenes de Deltron.
+ * Esto evita capturar el logo/encabezado del sitio (`/temp_imgs/deltron_logo...`),
+ * que es lo único que tiene la página "PRODUCTO NO ENCONTRADO" cuando el item ya
+ * no existe en Deltron. Si no hay imagen de producto, devuelve null (no se pone nada).
+ *
+ * Se prioriza el carrusel (lightSlider) porque el `og:image` de Deltron suele
+ * apuntar a una ruta equivocada; og:image queda como último recurso.
  */
 function extraerImagenDeHtml(html) {
-  const HOST_IMG = '(?:https?:)?\\/\\/imagenes\\.deltron\\.com\\.pe\\/[^"\']+';
+  const IMG_PRODUCTO = '(?:https?:)?\\/\\/imagenes\\.deltron\\.com\\.pe\\/[^"\']*\\/productos\\/[^"\']+';
 
   // 1) Carrusel: <li data-thumb="URL" data-src="URL" class="lslide ..."><img src="URL"></li>
-  //    data-src es la imagen grande del slide; data-thumb, su miniatura (misma img en la práctica).
-  const dataSrc = html.match(new RegExp(`data-src=["'](${HOST_IMG})["']`, 'i'));
+  const dataSrc = html.match(new RegExp(`data-src=["'](${IMG_PRODUCTO})["']`, 'i'));
   if (dataSrc && dataSrc[1]) return normalizarUrl(dataSrc[1]);
-  const dataThumb = html.match(new RegExp(`data-thumb=["'](${HOST_IMG})["']`, 'i'));
+  const dataThumb = html.match(new RegExp(`data-thumb=["'](${IMG_PRODUCTO})["']`, 'i'));
   if (dataThumb && dataThumb[1]) return normalizarUrl(dataThumb[1]);
 
-  // 2) Cualquier <img> apuntando al host de imágenes de Deltron.
-  const imgHost = html.match(new RegExp(`<img[^>]+src=["'](${HOST_IMG})["']`, 'i'));
+  // 2) <img> de producto (bajo /productos/), nunca logos del sitio.
+  const imgHost = html.match(new RegExp(`<img[^>]+src=["'](${IMG_PRODUCTO})["']`, 'i'));
   if (imgHost && imgHost[1]) return normalizarUrl(imgHost[1]);
 
-  // 3) Fallbacks antiguos por atributo semántico.
-  const img = html.match(/itemprop=["']image["'][^>]*\ssrc=["']([^"']+)["']/i) ||
-              html.match(/id=["']imagen[^"']*["'][^>]*\ssrc=["']([^"']+)["']/i);
-  if (img && img[1]) return normalizarUrl(img[1]);
-
-  // 4) Último recurso: og:image (puede estar equivocado en Deltron).
+  // 3) Último recurso: og:image, solo si es una imagen de producto.
   const og = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i);
-  if (og && og[1]) return normalizarUrl(og[1]);
+  if (og && og[1] && /\/productos\//.test(og[1])) return normalizarUrl(og[1]);
 
+  // Producto inexistente / sin imagen de producto -> no devolver nada.
   return null;
 }
 
