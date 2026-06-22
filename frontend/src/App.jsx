@@ -9,6 +9,7 @@ import Login from './paginas/Login';
 import Registro from './paginas/Registro';
 import RecuperarContrasena from './paginas/RecuperarContrasena';
 import RestablecerContrasena from './paginas/RestablecerContrasena';
+import ActivarCuenta from './paginas/ActivarCuenta';
 import Cotizador from './paginas/Cotizador';
 import ValidadorCotizaciones from './paginas/ValidadorCotizaciones';
 import HistorialCliente from './paginas/HistorialCliente';
@@ -66,6 +67,7 @@ function AppRoutes() {
           <Route path="/registro" element={<Registro />} />
           <Route path="/recuperar" element={<RecuperarContrasena />} />
           <Route path="/restablecer" element={<RestablecerContrasena />} />
+          <Route path="/activar" element={<ActivarCuenta />} />
           <Route path="/cotizador" element={<Cotizador />} />
           <Route path="/historial" element={<RutaProtegidaUsuario><HistorialCliente /></RutaProtegidaUsuario>} />
           <Route path="/validar" element={<RutaProtegidaUsuario><ValidadorCotizaciones /></RutaProtegidaUsuario>} />

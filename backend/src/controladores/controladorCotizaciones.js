@@ -106,16 +106,18 @@ function resolverContextoAdmin(req) {
   }
 }
 
-function validarDatosClienteParaCotizacion({ esAdmin, esUsuarioAutenticado, email, nombre, telefono }) {
+function validarDatosClienteParaCotizacion({ esPrivilegiado, esUsuarioAutenticado, email, nombre, apellidos, telefono }) {
   const errores = [];
   const emailNormalizado = typeof email === 'string' ? email.trim().toLowerCase() : '';
   const nombreNormalizado = normalizarNombreCliente(nombre);
+  const apellidosNormalizado = apellidos ? String(apellidos).trim() : null;
   const telefonoNormalizado = normalizarTelefonoCliente(telefono);
 
-  // Admin: el correo es OBLIGATORIO (identifica la cuenta/cliente asignado).
-  // Usuario autenticado: no necesita nombre ni correo (usa su id del token).
+  // Privilegiado (admin/vendedor): cotiza PARA un cliente; el correo es
+  // OBLIGATORIO (identifica/crea la cuenta del cliente asignado).
+  // Usuario autenticado (cliente): no necesita nombre ni correo (usa su id del token).
   // Invitado: nombre y correo obligatorios.
-  if (esAdmin) {
+  if (esPrivilegiado) {
     if (!emailNormalizado) {
       errores.push('El correo del cliente es obligatorio');
     }
@@ -148,6 +150,7 @@ function validarDatosClienteParaCotizacion({ esAdmin, esUsuarioAutenticado, emai
     datos: {
       email: emailNormalizado || null,
       nombre: nombreNormalizado,
+      apellidos: apellidosNormalizado,
       telefono: telefonoNormalizado
     }
   };
@@ -332,71 +335,75 @@ async function generarCodigoTicket() {
  * @param {string} telefono - TelÃ©fono del cliente (opcional)
  * @returns {Promise<number|null>} ID del cliente o null si no hay email
  */
-async function buscarOCrearCliente(email, nombre = null, telefono = null) {
+async function buscarOCrearCliente(email, nombre = null, apellidos = null, telefono = null) {
   if (!email) {
     return null;
   }
-  
+
   // Validar email
   const validacionEmail = validarEmail(email);
   if (!validacionEmail.valido) {
-    throw new Error(`Email invÃ¡lido: ${validacionEmail.error}`);
+    throw new Error(`Email invalido: ${validacionEmail.error}`);
   }
-  
+
   try {
-    // Usar hash determinÃ­stico para bÃºsqueda (AES-CBC no es determinÃ­stico)
+    // Usar hash deterministico para busqueda (AES-CBC no es deterministico)
     const emailHash = hashBusqueda(validacionEmail.email);
-    
+    const nombreLimpio = nombre ? String(nombre).trim() : null;
+    const apellidosLimpio = apellidos ? String(apellidos).trim() : null;
+    const nombreCompleto = [nombreLimpio, apellidosLimpio].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+
     // Buscar cliente existente por hash
     const clienteExistente = await ejecutarQuery(
-      'SELECT id, nombre_completo AS nombre, telefono_encrypted AS telefono FROM cuentas WHERE correo_hash = $1',
+      'SELECT id, nombre_completo, telefono_encrypted FROM cuentas WHERE correo_hash = $1',
       [emailHash]
     );
-    
+
     if (clienteExistente.rows.length > 0) {
       const cliente = clienteExistente.rows[0];
       const camposActualizar = [];
       const valores = [];
       let indice = 1;
 
-      if (!cliente.nombre && nombre) {
-        camposActualizar.push(`nombre = $${indice++}`);
-        valores.push(nombre);
+      // Completar nombre/apellidos/nombre_completo solo si faltan y tenemos datos.
+      if ((!cliente.nombre_completo || cliente.nombre_completo.trim() === '') && nombreCompleto) {
+        camposActualizar.push(`nombre = $${indice++}`); valores.push(nombreLimpio);
+        camposActualizar.push(`apellidos = $${indice++}`); valores.push(apellidosLimpio);
+        camposActualizar.push(`nombre_completo = $${indice++}`); valores.push(nombreCompleto);
       }
 
-      if (!cliente.telefono && telefono) {
-        camposActualizar.push(`telefono = $${indice++}`);
-        valores.push(encriptar(telefono));
+      if (!cliente.telefono_encrypted && telefono) {
+        camposActualizar.push(`telefono_encrypted = $${indice++}`); valores.push(encriptar(telefono));
+        camposActualizar.push(`telefono_hash = $${indice++}`); valores.push(hashBusqueda(telefono));
       }
 
       if (camposActualizar.length > 0) {
         valores.push(cliente.id);
         await ejecutarQuery(
-          `UPDATE cuentas
-           SET ${camposActualizar.join(', ')}
-           WHERE id = $${indice}`,
+          `UPDATE cuentas SET ${camposActualizar.join(', ')} WHERE id = $${indice}`,
           valores
         );
       }
 
       return cliente.id;
     }
-    
-    // Crear nuevo cliente
+
+    // Crear nuevo cliente (pendiente de activacion, sin username ni password)
     const emailEncriptado = encriptar(validacionEmail.email);
     const telefonoEncriptado = telefono ? encriptar(telefono) : null;
-    
+    const telefonoHash = telefono ? hashBusqueda(telefono) : null;
+
     const nuevoCliente = await ejecutarQuery(
-      `INSERT INTO cuentas (nombre_completo, correo_encrypted, correo_hash, telefono_encrypted, rol, estado, password_hash)
-       VALUES ($1, $2, $3, $4, 'usuario', 'pendiente_activacion', NULL)
+      `INSERT INTO cuentas (nombre, apellidos, nombre_completo, correo_encrypted, correo_hash, telefono_encrypted, telefono_hash, rol, estado, password_hash)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'usuario', 'pendiente_activacion', NULL)
        RETURNING id`,
-      [nombre, emailEncriptado, emailHash, telefonoEncriptado]
+      [nombreLimpio, apellidosLimpio, nombreCompleto, emailEncriptado, emailHash, telefonoEncriptado, telefonoHash]
     );
-    
+
     return nuevoCliente.rows[0].id;
   } catch (error) {
     console.error('Error al buscar/crear cliente:', error);
-    throw new Error('Error al procesar informaciÃ³n del cliente');
+    throw new Error('Error al procesar informacion del cliente');
   }
 }
 
@@ -442,15 +449,17 @@ async function crearCotizacion(req, res) {
       datosSanitizados.email_cliente = emailOriginal.trim().toLowerCase();
     }
 
-    const esAdmin = resolverContextoAdmin(req);
+    // Privilegiado = admin o vendedor: cotizan PARA un cliente (deben indicar el correo).
+    const esPrivilegiado = esRolPrivilegiado(req.rol);
     // Usuario autenticado con rol 'usuario': no necesita datos de cliente en el body
-    const esUsuarioAutenticado = !esAdmin && req.usuario?.id && req.rol === 'usuario';
+    const esUsuarioAutenticado = !esPrivilegiado && req.usuario?.id && req.rol === 'usuario';
 
     const validacionDatosCliente = validarDatosClienteParaCotizacion({
-      esAdmin,
+      esPrivilegiado,
       esUsuarioAutenticado,
       email: datosSanitizados.email_cliente,
       nombre: datosSanitizados.nombre_cliente,
+      apellidos: datosSanitizados.apellidos_cliente,
       telefono: datosSanitizados.telefono_cliente
     });
 
@@ -618,6 +627,7 @@ async function crearCotizacion(req, res) {
         idCliente = await buscarOCrearCliente(
           validacionDatosCliente.datos.email,
           validacionDatosCliente.datos.nombre,
+          validacionDatosCliente.datos.apellidos,
           validacionDatosCliente.datos.telefono
         );
       }
@@ -818,7 +828,7 @@ async function obtenerCotizacionConDetallesPorTicket(codigoTicket) {
           c.fecha_emision, c.fecha_validez, c.moneda_base,
           c.subtotal_neto, c.igv_porcentaje, c.igv_monto, c.total_con_igv,
           c.tipo_cambio_referencia, c.subtotal_neto_pen, c.igv_monto_pen, c.total_con_igv_pen,
-          c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion,
+          c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion, c.fecha_solicitud_confirmacion, c.fecha_confirmacion,
           uc.nombre_completo AS cliente_nombre, uc.correo_encrypted AS cliente_correo
         FROM cotizaciones c
         LEFT JOIN cuentas uc ON uc.id = c.id_cliente
@@ -826,7 +836,7 @@ async function obtenerCotizacionConDetallesPorTicket(codigoTicket) {
       : `SELECT 
           c.id, c.codigo_unico, c.codigo_ticket, c.id_cliente,
           c.fecha_emision, c.fecha_validez,
-          c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion,
+          c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion, c.fecha_solicitud_confirmacion, c.fecha_confirmacion,
           uc.nombre_completo AS cliente_nombre, uc.correo_encrypted AS cliente_correo
         FROM cotizaciones c
         LEFT JOIN cuentas uc ON uc.id = c.id_cliente
@@ -930,6 +940,8 @@ async function consultarCotizacion(req, res) {
       finanzas: cotizacionData.finanzas,
       estado: cotizacionData.estado,
       fecha_reclamacion: cotizacionData.fecha_reclamacion,
+      fecha_solicitud_confirmacion: cotizacionData.fecha_solicitud_confirmacion || null,
+      fecha_confirmacion: cotizacionData.fecha_confirmacion || null,
       caducada: false,
       componentes: cotizacionData.componentes.map((c) => proyectarComponente(c, privilegiado))
     };
@@ -1398,7 +1410,8 @@ async function marcarComoReclamada(req, res) {
     const cotizacionData = cotizacion.rows[0];
     const estadoActual = normalizarEstadoCotizacion(cotizacionData.estado);
 
-    if (estadoActual !== 'Pendiente') {
+    // Se puede completar la venta desde 'Pendiente' (sin confirmar) o 'Confirmada'.
+    if (estadoActual !== 'Pendiente' && estadoActual !== 'Confirmada') {
       return res.status(400).json({
         error: 'Estado invalido',
         mensaje: `La cotizacion ya esta en estado: ${estadoActual}`,
@@ -1504,15 +1517,15 @@ async function consultarHistorialCliente(req, res) {
     try {
       cotizaciones = await ejecutarQuery(
         tieneEsquemaFinancieroV2
-          ? 'SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez, c.precio_total, c.total_con_igv, c.subtotal_neto, c.igv_porcentaje, c.igv_monto, c.tipo_cambio_referencia, c.subtotal_neto_pen, c.igv_monto_pen, c.total_con_igv_pen, c.moneda_base, c.margen_aplicado, c.estado, c.fecha_reclamacion, COUNT(dc.id) as cantidad_componentes, n.estado as estado_notificacion, n.fecha_envio as fecha_notificacion FROM cotizaciones c LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion LEFT JOIN LATERAL (SELECT nc.estado, nc.fecha_envio FROM notificaciones_cotizacion nc WHERE nc.id_cotizacion = c.id ORDER BY nc.fecha_intento DESC LIMIT 1) n ON TRUE WHERE c.id_cliente = $1 GROUP BY c.id, n.estado, n.fecha_envio ORDER BY c.fecha_emision DESC'
-          : 'SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez, c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion, COUNT(dc.id) as cantidad_componentes, n.estado as estado_notificacion, n.fecha_envio as fecha_notificacion FROM cotizaciones c LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion LEFT JOIN LATERAL (SELECT nc.estado, nc.fecha_envio FROM notificaciones_cotizacion nc WHERE nc.id_cotizacion = c.id ORDER BY nc.fecha_intento DESC LIMIT 1) n ON TRUE WHERE c.id_cliente = $1 GROUP BY c.id, n.estado, n.fecha_envio ORDER BY c.fecha_emision DESC',
+          ? 'SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez, c.precio_total, c.total_con_igv, c.subtotal_neto, c.igv_porcentaje, c.igv_monto, c.tipo_cambio_referencia, c.subtotal_neto_pen, c.igv_monto_pen, c.total_con_igv_pen, c.moneda_base, c.margen_aplicado, c.estado, c.fecha_reclamacion, c.fecha_solicitud_confirmacion, c.fecha_confirmacion, COUNT(dc.id) as cantidad_componentes, n.estado as estado_notificacion, n.fecha_envio as fecha_notificacion FROM cotizaciones c LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion LEFT JOIN LATERAL (SELECT nc.estado, nc.fecha_envio FROM notificaciones_cotizacion nc WHERE nc.id_cotizacion = c.id ORDER BY nc.fecha_intento DESC LIMIT 1) n ON TRUE WHERE c.id_cliente = $1 GROUP BY c.id, n.estado, n.fecha_envio ORDER BY c.fecha_emision DESC'
+          : 'SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez, c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion, c.fecha_solicitud_confirmacion, c.fecha_confirmacion, COUNT(dc.id) as cantidad_componentes, n.estado as estado_notificacion, n.fecha_envio as fecha_notificacion FROM cotizaciones c LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion LEFT JOIN LATERAL (SELECT nc.estado, nc.fecha_envio FROM notificaciones_cotizacion nc WHERE nc.id_cotizacion = c.id ORDER BY nc.fecha_intento DESC LIMIT 1) n ON TRUE WHERE c.id_cliente = $1 GROUP BY c.id, n.estado, n.fecha_envio ORDER BY c.fecha_emision DESC',
         [clienteData.id]
       );
     } catch (errorNotificaciones) {
       cotizaciones = await ejecutarQuery(
         tieneEsquemaFinancieroV2
-          ? 'SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez, c.precio_total, c.total_con_igv, c.subtotal_neto, c.igv_porcentaje, c.igv_monto, c.tipo_cambio_referencia, c.subtotal_neto_pen, c.igv_monto_pen, c.total_con_igv_pen, c.moneda_base, c.margen_aplicado, c.estado, c.fecha_reclamacion, COUNT(dc.id) as cantidad_componentes FROM cotizaciones c LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion WHERE c.id_cliente = $1 GROUP BY c.id ORDER BY c.fecha_emision DESC'
-          : 'SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez, c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion, COUNT(dc.id) as cantidad_componentes FROM cotizaciones c LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion WHERE c.id_cliente = $1 GROUP BY c.id ORDER BY c.fecha_emision DESC',
+          ? 'SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez, c.precio_total, c.total_con_igv, c.subtotal_neto, c.igv_porcentaje, c.igv_monto, c.tipo_cambio_referencia, c.subtotal_neto_pen, c.igv_monto_pen, c.total_con_igv_pen, c.moneda_base, c.margen_aplicado, c.estado, c.fecha_reclamacion, c.fecha_solicitud_confirmacion, c.fecha_confirmacion, COUNT(dc.id) as cantidad_componentes FROM cotizaciones c LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion WHERE c.id_cliente = $1 GROUP BY c.id ORDER BY c.fecha_emision DESC'
+          : 'SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez, c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion, c.fecha_solicitud_confirmacion, c.fecha_confirmacion, COUNT(dc.id) as cantidad_componentes FROM cotizaciones c LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion WHERE c.id_cliente = $1 GROUP BY c.id ORDER BY c.fecha_emision DESC',
         [clienteData.id]
       );
     }
@@ -1535,6 +1548,8 @@ async function consultarHistorialCliente(req, res) {
         finanzas: construirBloqueFinanzas(c),
         estado: normalizarEstadoCotizacion(c.estado),
         fecha_reclamacion: c.fecha_reclamacion,
+        fecha_solicitud_confirmacion: c.fecha_solicitud_confirmacion || null,
+        fecha_confirmacion: c.fecha_confirmacion || null,
         cantidad_componentes: parseInt(c.cantidad_componentes, 10),
         notificacion: c.estado_notificacion
           ? { estado: c.estado_notificacion, fecha_envio: c.fecha_notificacion || null }
@@ -1604,7 +1619,7 @@ async function obtenerPropias(req, res) {
           ? `SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez,
                     c.precio_total, c.total_con_igv, c.subtotal_neto, c.igv_porcentaje, c.igv_monto,
                     c.tipo_cambio_referencia, c.subtotal_neto_pen, c.igv_monto_pen, c.total_con_igv_pen,
-                    c.moneda_base, c.margen_aplicado, c.estado, c.fecha_reclamacion,
+                    c.moneda_base, c.margen_aplicado, c.estado, c.fecha_reclamacion, c.fecha_solicitud_confirmacion, c.fecha_confirmacion,
                     COUNT(dc.id) AS cantidad_componentes,
                     n.estado AS estado_notificacion,
                     n.fecha_envio AS fecha_notificacion
@@ -1621,7 +1636,7 @@ async function obtenerPropias(req, res) {
              GROUP BY c.id, n.estado, n.fecha_envio
              ORDER BY c.fecha_emision DESC`
           : `SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez,
-                    c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion,
+                    c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion, c.fecha_solicitud_confirmacion, c.fecha_confirmacion,
                     COUNT(dc.id) AS cantidad_componentes,
                     n.estado AS estado_notificacion,
                     n.fecha_envio AS fecha_notificacion
@@ -1646,7 +1661,7 @@ async function obtenerPropias(req, res) {
           ? `SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez,
                     c.precio_total, c.total_con_igv, c.subtotal_neto, c.igv_porcentaje, c.igv_monto,
                     c.tipo_cambio_referencia, c.subtotal_neto_pen, c.igv_monto_pen, c.total_con_igv_pen,
-                    c.moneda_base, c.margen_aplicado, c.estado, c.fecha_reclamacion,
+                    c.moneda_base, c.margen_aplicado, c.estado, c.fecha_reclamacion, c.fecha_solicitud_confirmacion, c.fecha_confirmacion,
                     COUNT(dc.id) AS cantidad_componentes
              FROM cotizaciones c
              LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion
@@ -1654,7 +1669,7 @@ async function obtenerPropias(req, res) {
              GROUP BY c.id
              ORDER BY c.fecha_emision DESC`
           : `SELECT c.id, c.codigo_unico, c.codigo_ticket, c.fecha_emision, c.fecha_validez,
-                    c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion,
+                    c.precio_total, c.margen_aplicado, c.estado, c.fecha_reclamacion, c.fecha_solicitud_confirmacion, c.fecha_confirmacion,
                     COUNT(dc.id) AS cantidad_componentes
              FROM cotizaciones c
              LEFT JOIN detalle_cotizacion dc ON c.id = dc.id_cotizacion
@@ -1683,6 +1698,8 @@ async function obtenerPropias(req, res) {
         finanzas: construirBloqueFinanzas(c),
         estado: normalizarEstadoCotizacion(c.estado),
         fecha_reclamacion: c.fecha_reclamacion,
+        fecha_solicitud_confirmacion: c.fecha_solicitud_confirmacion || null,
+        fecha_confirmacion: c.fecha_confirmacion || null,
         cantidad_componentes: parseInt(c.cantidad_componentes, 10),
         notificacion: c.estado_notificacion
           ? { estado: c.estado_notificacion, fecha_envio: c.fecha_notificacion || null }
@@ -1801,6 +1818,124 @@ async function exportarExcel(req, res) {
   }
 }
 
+/**
+ * Confirmar (verificar) una cotización — solo admin/vendedor.
+ *
+ * PUT /api/cotizaciones/:codigoTicket/confirmar
+ *
+ * Transición 'Pendiente' (sin confirmar) → 'Confirmada'. Una vez confirmada,
+ * la cotización ya no caduca y queda fijada. NO mueve stock (negocio a pedido).
+ */
+async function confirmarCotizacion(req, res) {
+  try {
+    const { codigoTicket } = req.params;
+
+    const validacion = validarCodigoTicket(codigoTicket);
+    if (!validacion.valido) {
+      return res.status(400).json({
+        error: 'Codigo invalido',
+        mensaje: validacion.error,
+        codigo: 'CODIGO_INVALIDO'
+      });
+    }
+
+    const cotizacion = await ejecutarQuery(
+      'SELECT id, estado FROM cotizaciones WHERE codigo_ticket = $1',
+      [codigoTicket]
+    );
+
+    if (cotizacion.rows.length === 0) {
+      return res.status(404).json({
+        error: 'Cotizacion no encontrada',
+        mensaje: 'No existe una cotizacion con ese codigo',
+        codigo: 'COTIZACION_NO_ENCONTRADA'
+      });
+    }
+
+    const estadoActual = normalizarEstadoCotizacion(cotizacion.rows[0].estado);
+    if (estadoActual !== 'Pendiente') {
+      return res.status(400).json({
+        error: 'Estado invalido',
+        mensaje: `Solo se puede confirmar una cotizacion sin confirmar. Estado actual: ${estadoActual}`,
+        codigo: 'ESTADO_NO_PERMITE_CONFIRMAR'
+      });
+    }
+
+    const resultado = await ejecutarQuery(
+      `UPDATE cotizaciones
+          SET estado = 'Confirmada', fecha_confirmacion = CURRENT_TIMESTAMP, id_confirmador = $2
+        WHERE id = $1
+        RETURNING id, codigo_ticket, estado, fecha_confirmacion`,
+      [cotizacion.rows[0].id, req.usuario?.id || null]
+    );
+
+    return res.json({
+      exito: true,
+      mensaje: 'Cotizacion confirmada',
+      cotizacion: {
+        id: resultado.rows[0].id,
+        codigo_ticket: resultado.rows[0].codigo_ticket,
+        estado: resultado.rows[0].estado,
+        fecha_confirmacion: resultado.rows[0].fecha_confirmacion
+      }
+    });
+  } catch (error) {
+    console.error('Error al confirmar cotizacion:', error);
+    return res.status(500).json({
+      error: 'Error al confirmar cotizacion',
+      mensaje: 'No se pudo confirmar la cotizacion',
+      codigo: 'ERROR_CONFIRMAR_COTIZACION'
+    });
+  }
+}
+
+/**
+ * Registrar que el cliente solicitó confirmar su cotización (contacto a
+ * ventas por WhatsApp).
+ *
+ * POST /api/cotizaciones/:codigoTicket/solicitar-confirmacion
+ *
+ * Idempotente: solo marca la primera vez y solo sobre cotizaciones 'Pendiente'.
+ * No requiere rol privilegiado: identifica por código de ticket.
+ */
+async function solicitarConfirmacion(req, res) {
+  try {
+    const { codigoTicket } = req.params;
+
+    const validacion = validarCodigoTicket(codigoTicket);
+    if (!validacion.valido) {
+      return res.status(400).json({
+        error: 'Codigo invalido',
+        mensaje: validacion.error,
+        codigo: 'CODIGO_INVALIDO'
+      });
+    }
+
+    const resultado = await ejecutarQuery(
+      `UPDATE cotizaciones
+          SET fecha_solicitud_confirmacion = COALESCE(fecha_solicitud_confirmacion, CURRENT_TIMESTAMP)
+        WHERE codigo_ticket = $1 AND estado = 'Pendiente'
+        RETURNING codigo_ticket, fecha_solicitud_confirmacion`,
+      [codigoTicket]
+    );
+
+    // Respuesta uniforme aunque ya estuviera marcada o no aplique (no filtra estado).
+    return res.json({
+      exito: true,
+      mensaje: 'Solicitud de confirmacion registrada',
+      registrada: resultado.rows.length > 0,
+      fecha_solicitud_confirmacion: resultado.rows[0]?.fecha_solicitud_confirmacion || null
+    });
+  } catch (error) {
+    console.error('Error al registrar solicitud de confirmacion:', error);
+    return res.status(500).json({
+      error: 'Error al registrar solicitud',
+      mensaje: 'No se pudo registrar la solicitud de confirmacion',
+      codigo: 'ERROR_SOLICITAR_CONFIRMACION'
+    });
+  }
+}
+
 module.exports = {
   crearCotizacion,
   consultarCotizacion,
@@ -1809,6 +1944,8 @@ module.exports = {
   obtenerPdfTecnico,
   notificarCotizacionLista,
   marcarComoReclamada,
+  confirmarCotizacion,
+  solicitarConfirmacion,
   consultarHistorialCliente,
   obtenerPropias,
   listarClientesRegistrados,

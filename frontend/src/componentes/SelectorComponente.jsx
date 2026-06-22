@@ -7,7 +7,7 @@
  * - Indica disponibilidad (En Stock / A Pedido con días)
  * - Filtra por compatibilidad (socket, RAM type)
  * - Reutilizable para todas las categorías
- * - Botón de favorito (❤️) para usuarios autenticados con optimistic update
+ * - Botón de favorito (corazón) para usuarios autenticados con optimistic update
  * 
  * Valida Requisitos: 2.1, 2.2, 2.3, 3.2, 4.8, 4.9, 4.10
  */

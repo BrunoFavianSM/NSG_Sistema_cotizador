@@ -30,7 +30,7 @@ async function buscarCliente(req, res) {
 
     // Buscar por email o teléfono en tabla cuentas (solo usuarios)
     const query = `
-      SELECT nombre_completo, correo_encrypted, telefono_encrypted
+      SELECT nombre, apellidos, nombre_completo, correo_encrypted, telefono_encrypted
       FROM cuentas
       WHERE rol = 'usuario'
         AND estado = 'activa'
@@ -72,7 +72,9 @@ async function buscarCliente(req, res) {
     return res.json({
       encontrado: true,
       cliente: {
-        nombre: cuenta.nombre_completo,
+        nombre: cuenta.nombre || null,
+        apellidos: cuenta.apellidos || null,
+        nombre_completo: cuenta.nombre_completo,
         email: email,
         telefono: telefono,
       },

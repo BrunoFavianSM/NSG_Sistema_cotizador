@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const servicioAuth = require('../servicios/servicioAuth');
+const servicioDni = require('../servicios/servicioDni');
 const { verificarToken, verificarTokenUsuario } = require('../middleware/auth');
 const { middlewareTurnstile } = require('../utilidades/turnstile');
 
@@ -25,25 +26,36 @@ const limitadorRecuperacion = rateLimit({
   }
 });
 
+// Rate limiter estricto para consulta de DNI (PRE-auth, expone PII de RENIEC).
+// No usa Turnstile: sus tokens son de un solo uso y quemarían el del registro.
+const limitadorConsultaDni = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  message: {
+    exito: false,
+    error: 'Demasiadas consultas de DNI. Intenta mas tarde.'
+  }
+});
+
 /**
  * POST /api/auth/login
  * Autentica un usuario (admin o usuario registrado) y retorna token JWT
  */
 router.post('/login', middlewareTurnstile, async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { correo, password } = req.body;
 
-    if (!username || !password) {
+    if (!correo || !password) {
       return res.status(400).json({
         exito: false,
-        error: 'Username y password son requeridos'
+        error: 'Correo y password son requeridos'
       });
     }
 
-    const resultado = await servicioAuth.login(username, password);
+    const resultado = await servicioAuth.login(correo, password);
 
     if (!resultado.exito) {
-      console.warn(`[LOGIN_FALLIDO] username=${username} ip=${req.ip}`);
+      console.warn(`[LOGIN_FALLIDO] ip=${req.ip}`);
       return res.status(resultado.status || 401).json(resultado);
     }
 
@@ -83,18 +95,18 @@ router.post('/verificar', verificarTokenUsuario, async (req, res) => {
  */
 router.post('/registro', limitadorRegistro, middlewareTurnstile, async (req, res) => {
   try {
-    const { username, password, confirmarPassword, correo, nombre_completo, telefono, dni } = req.body;
+    const { password, confirmarPassword, correo, nombre, apellidos, telefono, dni } = req.body;
 
-    if (!username || !password || !confirmarPassword || !correo || !nombre_completo || !telefono || !dni) {
+    if (!password || !confirmarPassword || !correo || !nombre || !apellidos || !telefono || !dni) {
       return res.status(400).json({
         exito: false,
         error: 'Todos los campos requeridos deben ser proporcionados',
         detalles: [
-          { campo: 'username', mensaje: !username ? 'Username es requerido' : null },
           { campo: 'password', mensaje: !password ? 'Contrasena es requerida' : null },
           { campo: 'confirmarPassword', mensaje: !confirmarPassword ? 'Confirmar contrasena es requerido' : null },
           { campo: 'correo', mensaje: !correo ? 'Correo electronico es requerido' : null },
-          { campo: 'nombre_completo', mensaje: !nombre_completo ? 'Nombre completo es requerido' : null },
+          { campo: 'nombre', mensaje: !nombre ? 'Nombre es requerido' : null },
+          { campo: 'apellidos', mensaje: !apellidos ? 'Apellidos son requeridos' : null },
           { campo: 'telefono', mensaje: !telefono ? 'Telefono es requerido' : null },
           { campo: 'dni', mensaje: !dni ? 'DNI es requerido' : null }
         ].filter(d => d.mensaje)
@@ -102,11 +114,11 @@ router.post('/registro', limitadorRegistro, middlewareTurnstile, async (req, res
     }
 
     const resultado = await servicioAuth.registrar({
-      username: username.trim(),
       password,
       confirmarPassword,
       correo: correo.trim().toLowerCase(),
-      nombre_completo: nombre_completo.trim(),
+      nombre: nombre.trim(),
+      apellidos: apellidos.trim(),
       telefono: telefono ? String(telefono).trim() : null,
       dni: dni ? String(dni).trim() : null
     });
@@ -225,12 +237,12 @@ router.post('/restablecer', async (req, res) => {
  */
 router.post('/activar', async (req, res) => {
   try {
-    const { correo, username, password, confirmarPassword } = req.body;
+    const { correo, password, confirmarPassword } = req.body;
 
-    if (!correo || !username || !password) {
+    if (!correo || !password) {
       return res.status(400).json({
         exito: false,
-        error: 'Correo, username y password son requeridos'
+        error: 'Correo y password son requeridos'
       });
     }
 
@@ -243,7 +255,6 @@ router.post('/activar', async (req, res) => {
 
     const resultado = await servicioAuth.activarCuenta({
       correo: correo.trim().toLowerCase(),
-      username: username.trim(),
       password,
       confirmarPassword
     });
@@ -259,6 +270,115 @@ router.post('/activar', async (req, res) => {
       exito: false,
       error: 'Error interno del servidor'
     });
+  }
+});
+
+/**
+ * GET /api/auth/consultar-dni/:dni
+ * Autocompleta nombre/apellidos desde RENIEC (decolecta) para el registro.
+ * PRE-auth: protegido con rate-limit estricto. La UI hace fallback manual si falla.
+ */
+router.get('/consultar-dni/:dni', limitadorConsultaDni, async (req, res) => {
+  try {
+    const dni = String(req.params.dni || '').trim();
+    if (!/^[0-9]{8}$/.test(dni)) {
+      return res.status(400).json({ exito: false, error: 'El DNI debe tener 8 dígitos' });
+    }
+    const resultado = await servicioDni.consultarDni(dni);
+    if (!resultado.exito) {
+      return res.status(resultado.status || 502).json(resultado);
+    }
+    res.json(resultado);
+  } catch (error) {
+    console.error('Error en /consultar-dni:', error);
+    res.status(500).json({ exito: false, error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * GET /api/auth/perfil
+ * Devuelve el perfil propio (correo/teléfono desencriptados) del usuario autenticado.
+ */
+router.get('/perfil', verificarTokenUsuario, async (req, res) => {
+  try {
+    const perfil = await servicioAuth.obtenerPerfilPropio(req.usuario.id);
+    if (!perfil) {
+      return res.status(404).json({ exito: false, error: 'Cuenta no encontrada' });
+    }
+    res.json({ exito: true, perfil });
+  } catch (error) {
+    console.error('Error en GET /perfil:', error);
+    res.status(500).json({ exito: false, error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * PUT /api/auth/perfil
+ * Actualiza los datos editables de la propia cuenta (teléfono y correo).
+ */
+router.put('/perfil', verificarTokenUsuario, async (req, res) => {
+  try {
+    const { telefono, correo } = req.body || {};
+    if (!telefono || !correo) {
+      return res.status(400).json({ exito: false, error: 'Teléfono y correo son requeridos' });
+    }
+    const resultado = await servicioAuth.actualizarPerfilPropio(req.usuario.id, {
+      telefono: String(telefono).trim(),
+      correo: String(correo).trim().toLowerCase()
+    });
+    if (!resultado.exito) {
+      return res.status(resultado.status || 400).json(resultado);
+    }
+    res.json(resultado);
+  } catch (error) {
+    console.error('Error en PUT /perfil:', error);
+    res.status(500).json({ exito: false, error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * POST /api/auth/cambiar-contrasena
+ * Cambia la contraseña de la propia cuenta (exige la contraseña actual).
+ */
+router.post('/cambiar-contrasena', verificarTokenUsuario, async (req, res) => {
+  try {
+    const { contrasena_actual, nueva_password, confirmar_password } = req.body || {};
+    if (!contrasena_actual || !nueva_password || !confirmar_password) {
+      return res.status(400).json({ exito: false, error: 'Contraseña actual, nueva y confirmación son requeridas' });
+    }
+    const resultado = await servicioAuth.cambiarContrasenaPropia(req.usuario.id, {
+      contrasena_actual,
+      nueva_password,
+      confirmar_password
+    });
+    if (!resultado.exito) {
+      return res.status(resultado.status || 400).json(resultado);
+    }
+    res.json(resultado);
+  } catch (error) {
+    console.error('Error en /cambiar-contrasena:', error);
+    res.status(500).json({ exito: false, error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * POST /api/auth/desactivar-cuenta
+ * Baja lógica de la propia cuenta (exige la contraseña).
+ */
+router.post('/desactivar-cuenta', verificarTokenUsuario, async (req, res) => {
+  try {
+    const { password } = req.body || {};
+    if (!password) {
+      return res.status(400).json({ exito: false, error: 'La contraseña es requerida' });
+    }
+    const resultado = await servicioAuth.desactivarCuentaPropia(req.usuario.id, { password });
+    if (!resultado.exito) {
+      return res.status(resultado.status || 400).json(resultado);
+    }
+    res.json(resultado);
+  } catch (error) {
+    console.error('Error en /desactivar-cuenta:', error);
+    res.status(500).json({ exito: false, error: 'Error interno del servidor' });
   }
 });
 

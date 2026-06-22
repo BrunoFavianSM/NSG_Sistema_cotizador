@@ -14,6 +14,7 @@ const crypto = require('crypto');
 const { ejecutarQuery } = require('../configuracion/baseDatos');
 const { validarCredenciales, validarRegistro, validarRestablecimiento } = require('../utilidades/validacion');
 const { encriptar, hashBusqueda, desencriptar } = require('../utilidades/encriptacion');
+const { validarEmail, validarTelefono } = require('../utilidades/sanitizacion');
 const { enviarCorreoRecuperacion } = require('./servicioCorreo');
 
 const SALT_ROUNDS = 12;
@@ -29,22 +30,24 @@ const TOKEN_EXPIRA_MINUTOS = 5;
  * @param {string} password
  * @returns {Promise<Object>}
  */
-async function login(username, password) {
+async function login(correo, password) {
   try {
-    const validacion = validarCredenciales({ username, password });
+    const validacion = validarCredenciales({ correo, password });
     if (!validacion.valido) {
       return { exito: false, error: 'Credenciales inválidas', detalles: validacion.errores };
     }
 
+    // Login por correo: se busca por el hash determinístico (correo_hash es único).
+    const correoHash = hashBusqueda(String(correo).trim().toLowerCase());
     const resultado = await ejecutarQuery(
       `SELECT id, username, password_hash, nombre_completo, rol,
               estado, intentos_fallidos, bloqueado_hasta
-       FROM cuentas WHERE username = $1`,
-      [username]
+       FROM cuentas WHERE correo_hash = $1`,
+      [correoHash]
     );
 
     if (resultado.rows.length === 0) {
-      return { exito: false, error: 'Usuario o contraseña incorrectos' };
+      return { exito: false, error: 'Correo o contraseña incorrectos' };
     }
 
     const cuenta = resultado.rows[0];
@@ -89,7 +92,7 @@ async function login(username, password) {
         'UPDATE cuentas SET intentos_fallidos = $1 WHERE id = $2',
         [nuevosIntentos, cuenta.id]
       );
-      return { exito: false, error: 'Usuario o contraseña incorrectos' };
+      return { exito: false, error: 'Correo o contraseña incorrectos' };
     }
 
     // Login exitoso: resetear intentos y bloqueo
@@ -135,18 +138,14 @@ async function registrar(datos) {
       return { exito: false, status: 400, error: 'Datos inválidos', detalles: validacion.errores };
     }
 
-    // Verificar unicidad de username
-    const usernameExiste = await ejecutarQuery(
-      'SELECT id FROM cuentas WHERE username = $1',
-      [datos.username]
-    );
-    if (usernameExiste.rows.length > 0) {
-      return { exito: false, status: 409, error: 'El nombre de usuario ya está en uso' };
-    }
-
-    // Verificar unicidad de correo (vía hash)
     const correoNormalizado = datos.correo.trim().toLowerCase();
     const correoHash = hashBusqueda(correoNormalizado);
+    const dni = String(datos.dni || '').trim() || null;
+    const nombre = datos.nombre.trim();
+    const apellidos = datos.apellidos.trim();
+    const nombreCompleto = `${nombre} ${apellidos}`.replace(/\s+/g, ' ').trim();
+
+    // Dedup por correo (vía hash). Si la cuenta existe y está pendiente, se enruta a activar.
     const correoExiste = await ejecutarQuery(
       'SELECT id, estado FROM cuentas WHERE correo_hash = $1',
       [correoHash]
@@ -162,36 +161,54 @@ async function registrar(datos) {
           mensaje: 'Este correo ya tiene cotizaciones asociadas. Activa tu cuenta para acceder a ellas.'
         };
       }
-      return { exito: false, status: 409, error: 'El correo electrónico ya está registrado' };
+      return {
+        exito: false,
+        status: 409,
+        error: 'El correo electrónico ya está registrado',
+        codigo: 'CORREO_DUPLICADO',
+        mensaje: 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu contraseña.'
+      };
     }
 
-    // Cifrar correo
+    // Dedup por DNI (índice único parcial uq_cuentas_dni).
+    if (dni) {
+      const dniExiste = await ejecutarQuery('SELECT id FROM cuentas WHERE dni = $1', [dni]);
+      if (dniExiste.rows.length > 0) {
+        return {
+          exito: false,
+          status: 409,
+          error: 'Ya existe una cuenta con ese DNI',
+          codigo: 'DNI_DUPLICADO',
+          mensaje: 'Ya hay una cuenta registrada con ese DNI.'
+        };
+      }
+    }
+
     const correoEncrypted = encriptar(correoNormalizado);
 
-    // Cifrar teléfono si se proporciona
     let telefonoEncrypted = null;
     let telefonoHash = null;
     if (datos.telefono) {
-      telefonoEncrypted = encriptar(datos.telefono);
-      telefonoHash = hashBusqueda(datos.telefono);
+      const telefonoLimpio = String(datos.telefono).trim();
+      telefonoEncrypted = encriptar(telefonoLimpio);
+      telefonoHash = hashBusqueda(telefonoLimpio);
     }
 
-    // Hashear contraseña
     const passwordHash = await hashPassword(datos.password);
 
-    const dni = String(datos.dni || '').trim() || null;
+    // username queda NULL (login por correo). nombre_completo se mantiene derivado.
     const insert = await ejecutarQuery(
-      `INSERT INTO cuentas (username, password_hash, correo_encrypted, correo_hash, nombre_completo, telefono_encrypted, telefono_hash, dni, rol)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'usuario')
-       RETURNING id, username, nombre_completo, rol`,
-      [datos.username, passwordHash, correoEncrypted, correoHash, datos.nombre_completo, telefonoEncrypted, telefonoHash, dni]
+      `INSERT INTO cuentas (password_hash, correo_encrypted, correo_hash, nombre, apellidos, nombre_completo, telefono_encrypted, telefono_hash, dni, rol)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'usuario')
+       RETURNING id, nombre_completo, rol`,
+      [passwordHash, correoEncrypted, correoHash, nombre, apellidos, nombreCompleto, telefonoEncrypted, telefonoHash, dni]
     );
 
     const cuenta = insert.rows[0];
 
     const token = generarToken({
       id: cuenta.id,
-      username: cuenta.username,
+      username: null,
       nombre: cuenta.nombre_completo,
       rol: cuenta.rol
     });
@@ -201,12 +218,16 @@ async function registrar(datos) {
       token,
       usuario: {
         id: cuenta.id,
-        username: cuenta.username,
+        username: null,
         nombre: cuenta.nombre_completo,
         rol: cuenta.rol
       }
     };
   } catch (error) {
+    // Carrera en la unicidad de correo_hash / dni → respuesta amigable.
+    if (error && error.code === '23505') {
+      return { exito: false, status: 409, error: 'Ya existe una cuenta con ese correo o DNI', codigo: 'DUPLICADO' };
+    }
     console.error('Error en registrar:', error);
     return { exito: false, status: 500, error: 'Error al procesar el registro' };
   }
@@ -428,25 +449,25 @@ async function obtenerCuentaPorId(id) {
 }
 
 /**
- * Activa una Cuenta_Pendiente estableciendo username y contraseña.
- * Cambia estado de 'pendiente_activacion' a 'activa'.
+ * Activa una Cuenta_Pendiente estableciendo la contraseña (login por correo:
+ * ya no se pide username). Cambia estado de 'pendiente_activacion' a 'activa'.
  *
- * @param {Object} datos - { correo, username, password, confirmarPassword }
+ * @param {Object} datos - { correo, password, confirmarPassword }
  * @returns {Promise<Object>}
  */
 async function activarCuenta(datos) {
   try {
-    const { correo, username, password } = datos;
+    const { correo, password, confirmarPassword } = datos;
 
-    // 1. Validar inputs
-    if (!username || username.trim().length === 0) {
-      return { exito: false, status: 400, error: 'El nombre de usuario es requerido', codigo: 'USERNAME_REQUERIDO' };
+    // 1. Validar inputs (login por correo: sin username)
+    if (!correo) {
+      return { exito: false, status: 400, error: 'El correo es requerido', codigo: 'CORREO_REQUERIDO' };
     }
     if (!password || password.length < 8) {
       return { exito: false, status: 400, error: 'La contraseña debe tener al menos 8 caracteres', codigo: 'PASSWORD_INVALIDO' };
     }
-    if (!correo) {
-      return { exito: false, status: 400, error: 'El correo es requerido', codigo: 'CORREO_REQUERIDO' };
+    if (confirmarPassword !== undefined && password !== confirmarPassword) {
+      return { exito: false, status: 400, error: 'Las contraseñas no coinciden', codigo: 'PASSWORD_NO_COINCIDE' };
     }
 
     // 2. Buscar cuenta por correo_hash con estado='pendiente_activacion'
@@ -464,31 +485,22 @@ async function activarCuenta(datos) {
 
     const cuenta = resultadoCuenta.rows[0];
 
-    // 3. Verificar unicidad de username
-    const usernameExiste = await ejecutarQuery(
-      'SELECT id FROM cuentas WHERE username = $1 AND id != $2',
-      [username.trim(), cuenta.id]
-    );
-    if (usernameExiste.rows.length > 0) {
-      return { exito: false, status: 409, error: 'El nombre de usuario ya está en uso', codigo: 'USERNAME_EN_USO' };
-    }
-
-    // 4. Hashear contraseña
+    // 3. Hashear contraseña
     const passwordHash = await hashPassword(password);
 
-    // 5. Activar cuenta
+    // 4. Activar cuenta (sin tocar username)
     await ejecutarQuery(
       `UPDATE cuentas
-       SET password_hash = $1, username = $2, estado = 'activa',
+       SET password_hash = $1, estado = 'activa',
            intentos_fallidos = 0, bloqueado_hasta = NULL, updated_at = NOW()
-       WHERE correo_hash = $3 AND estado = 'pendiente_activacion'`,
-      [passwordHash, username.trim(), correoHash]
+       WHERE correo_hash = $2 AND estado = 'pendiente_activacion'`,
+      [passwordHash, correoHash]
     );
 
-    // 6. Generar JWT y retornar
+    // 5. Generar JWT y retornar
     const token = generarToken({
       id: cuenta.id,
-      username: username.trim(),
+      username: null,
       nombre: cuenta.nombre_completo,
       rol: cuenta.rol
     });
@@ -498,7 +510,7 @@ async function activarCuenta(datos) {
       token,
       usuario: {
         id: cuenta.id,
-        username: username.trim(),
+        username: null,
         nombre: cuenta.nombre_completo,
         rol: cuenta.rol
       }
@@ -569,6 +581,144 @@ async function recuperarPorTelefono(telefono) {
   }
 }
 
+/**
+ * Obtiene el perfil propio (cuenta del usuario autenticado) con correo y
+ * teléfono desencriptados. El JWT no incluye estos datos, así que este es el
+ * origen para poblar el formulario de cuenta.
+ *
+ * @param {number} id
+ * @returns {Promise<Object|null>}
+ */
+async function obtenerPerfilPropio(id) {
+  const resultado = await ejecutarQuery(
+    'SELECT id, username, nombre, apellidos, nombre_completo, rol, estado, dni, correo_encrypted, telefono_encrypted FROM cuentas WHERE id = $1',
+    [id]
+  );
+  if (resultado.rows.length === 0) return null;
+  const c = resultado.rows[0];
+  const desc = (valor) => {
+    if (!valor) return null;
+    try { return desencriptar(valor); } catch { return null; }
+  };
+  return {
+    id: c.id,
+    username: c.username,
+    nombre: c.nombre || null,
+    apellidos: c.apellidos || null,
+    nombre_completo: c.nombre_completo,
+    rol: c.rol,
+    estado: c.estado,
+    dni: c.dni || null,
+    correo: desc(c.correo_encrypted),
+    telefono: desc(c.telefono_encrypted)
+  };
+}
+
+/**
+ * Actualiza los datos editables de la propia cuenta: teléfono y correo.
+ * Reescribe SIEMPRE las columnas _encrypted y _hash. Valida unicidad del
+ * correo excluyendo la cuenta propia. (Nombre/DNI/rol/estado no se tocan.)
+ *
+ * @param {number} id
+ * @param {{ telefono: string, correo: string }} datos
+ */
+async function actualizarPerfilPropio(id, { telefono, correo }) {
+  const vCorreo = validarEmail(correo);
+  if (!vCorreo.valido) {
+    return { exito: false, status: 400, error: vCorreo.error || 'Correo inválido' };
+  }
+  const vTelefono = validarTelefono(telefono);
+  if (!vTelefono.valido) {
+    return { exito: false, status: 400, error: vTelefono.error || 'Teléfono inválido' };
+  }
+
+  const correoNormalizado = vCorreo.email;
+  const telefonoNormalizado = vTelefono.telefono;
+  const correoHash = hashBusqueda(correoNormalizado);
+
+  // Unicidad de correo (excluyendo la propia cuenta).
+  const duplicado = await ejecutarQuery(
+    'SELECT id FROM cuentas WHERE correo_hash = $1 AND id <> $2',
+    [correoHash, id]
+  );
+  if (duplicado.rows.length > 0) {
+    return { exito: false, status: 409, error: 'El correo ya está en uso por otra cuenta' };
+  }
+
+  await ejecutarQuery(
+    `UPDATE cuentas
+        SET correo_encrypted = $1, correo_hash = $2,
+            telefono_encrypted = $3, telefono_hash = $4,
+            updated_at = NOW()
+      WHERE id = $5`,
+    [encriptar(correoNormalizado), correoHash, encriptar(telefonoNormalizado), hashBusqueda(telefonoNormalizado), id]
+  );
+
+  return { exito: true, mensaje: 'Datos actualizados', perfil: await obtenerPerfilPropio(id) };
+}
+
+/**
+ * Cambia la contraseña de la propia cuenta exigiendo la contraseña actual.
+ *
+ * @param {number} id
+ * @param {{ contrasena_actual: string, nueva_password: string, confirmar_password: string }} datos
+ */
+async function cambiarContrasenaPropia(id, { contrasena_actual, nueva_password, confirmar_password }) {
+  const errores = [];
+  if (!nueva_password || nueva_password.length < 8) {
+    errores.push('La contraseña debe tener al menos 8 caracteres');
+  } else {
+    if (!/[A-Z]/.test(nueva_password)) errores.push('Debe contener al menos una mayúscula');
+    if (!/[a-z]/.test(nueva_password)) errores.push('Debe contener al menos una minúscula');
+    if (!/[0-9]/.test(nueva_password)) errores.push('Debe contener al menos un número');
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(nueva_password)) errores.push('Debe contener al menos un carácter especial');
+  }
+  if (nueva_password !== confirmar_password) errores.push('Las contraseñas no coinciden');
+  if (errores.length > 0) {
+    return { exito: false, status: 400, error: 'Datos inválidos', detalles: errores };
+  }
+
+  const resultado = await ejecutarQuery('SELECT password_hash FROM cuentas WHERE id = $1', [id]);
+  if (resultado.rows.length === 0) {
+    return { exito: false, status: 404, error: 'Cuenta no encontrada' };
+  }
+
+  const actualOk = await verificarPassword(contrasena_actual || '', resultado.rows[0].password_hash);
+  if (!actualOk) {
+    // 400 (no 401): la sesión es válida, solo el campo "contraseña actual" es
+    // incorrecto. Un 401 dispararía el logout global del interceptor de axios.
+    return { exito: false, status: 400, error: 'La contraseña actual es incorrecta' };
+  }
+
+  const passwordHash = await hashPassword(nueva_password);
+  await ejecutarQuery('UPDATE cuentas SET password_hash = $1, updated_at = NOW() WHERE id = $2', [passwordHash, id]);
+  return { exito: true, mensaje: 'Contraseña actualizada correctamente' };
+}
+
+/**
+ * Baja lógica de la propia cuenta. Exige la contraseña. No borra datos:
+ * cambia estado a 'desactivada' (el middleware corta el acceso en el
+ * siguiente request). Reversible por un admin.
+ *
+ * @param {number} id
+ * @param {{ password: string }} datos
+ */
+async function desactivarCuentaPropia(id, { password }) {
+  const resultado = await ejecutarQuery('SELECT password_hash FROM cuentas WHERE id = $1', [id]);
+  if (resultado.rows.length === 0) {
+    return { exito: false, status: 404, error: 'Cuenta no encontrada' };
+  }
+
+  const passwordOk = await verificarPassword(password || '', resultado.rows[0].password_hash);
+  if (!passwordOk) {
+    // 400 (no 401): evita el logout global del interceptor; la sesión sigue siendo válida.
+    return { exito: false, status: 400, error: 'La contraseña es incorrecta' };
+  }
+
+  await ejecutarQuery("UPDATE cuentas SET estado = 'desactivada', updated_at = NOW() WHERE id = $1", [id]);
+  return { exito: true, mensaje: 'Tu cuenta fue dada de baja' };
+}
+
 // Retrocompatibilidad
 const obtenerAdministradorPorId = obtenerCuentaPorId;
 
@@ -584,5 +734,9 @@ module.exports = {
   hashPassword,
   verificarPassword,
   obtenerCuentaPorId,
-  obtenerAdministradorPorId
+  obtenerAdministradorPorId,
+  obtenerPerfilPropio,
+  actualizarPerfilPropio,
+  cambiarContrasenaPropia,
+  desactivarCuentaPropia
 };

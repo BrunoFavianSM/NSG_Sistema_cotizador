@@ -98,9 +98,9 @@ api.interceptors.response.use(
  * @param {string} password - Contraseña
  * @returns {Promise<{exito: boolean, token?: string, usuario?: Object, error?: string}>}
  */
-export const login = async (username, password, captchaToken = null) => {
+export const login = async (correo, password, captchaToken = null) => {
   try {
-    const response = await api.post('/auth/login', { username, password, captcha_token: captchaToken });
+    const response = await api.post('/auth/login', { correo, password, captcha_token: captchaToken });
 
     // Guardar token y usuario en localStorage
     if (response.data.exito && response.data.token) {
@@ -475,6 +475,36 @@ export const marcarComoReclamada = async (codigoTicket) => {
 };
 
 /**
+ * Confirma (verifica) una cotización — solo admin/vendedor.
+ * Transición 'Pendiente' (sin confirmar) → 'Confirmada'.
+ * @param {string} codigoTicket - Código del ticket
+ * @returns {Promise<Object>}
+ */
+export const confirmarCotizacion = async (codigoTicket) => {
+  try {
+    const response = await api.put(`/cotizaciones/${codigoTicket}/confirmar`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Registra que el cliente solicitó confirmar su cotización (contacto a
+ * ventas por WhatsApp). Idempotente; solo aplica a cotizaciones sin confirmar.
+ * @param {string} codigoTicket - Código del ticket
+ * @returns {Promise<Object>}
+ */
+export const solicitarConfirmacionCotizacion = async (codigoTicket) => {
+  try {
+    const response = await api.post(`/cotizaciones/${codigoTicket}/solicitar-confirmacion`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
  * Consulta el historial de cotizaciones de un cliente
  * @param {string} email - Email del cliente
  * @returns {Promise<Array>}
@@ -618,11 +648,12 @@ export const obtenerMargenGanancia = async () => {
  * @param {number} tipo_cambio_usd_pen
  * @returns {Promise<Object>}
  */
-export const actualizarMargenGanancia = async (margen_ganancia, tasa_igv, tipo_cambio_usd_pen) => {
+export const actualizarMargenGanancia = async (margen_ganancia, tasa_igv, tipo_cambio_usd_pen, whatsapp_numero_ventas) => {
   try {
     const payload = { margen_ganancia_default: margen_ganancia };
     if (typeof tasa_igv === 'number') payload.tasa_igv = tasa_igv;
     if (typeof tipo_cambio_usd_pen === 'number') payload.tipo_cambio_usd_pen = tipo_cambio_usd_pen;
+    if (typeof whatsapp_numero_ventas === 'string') payload.whatsapp_numero_ventas = whatsapp_numero_ventas;
     const response = await api.put('/configuracion/margen', payload);
     return response.data;
   } catch (error) {
@@ -772,10 +803,10 @@ export const obtenerEstadisticasIA = async () => {
  * @param {Object} datos - { username, password, confirmarPassword, correo, nombre_completo, telefono? }
  * @returns {Promise<{exito: boolean, token?: string, usuario?: Object, error?: string}>}
  */
-export const registrar = async ({ username, password, confirmarPassword, correo, nombre_completo, telefono, dni, captcha_token }) => {
+export const registrar = async ({ password, confirmarPassword, correo, nombre, apellidos, telefono, dni, captcha_token }) => {
   try {
     const response = await api.post('/auth/registro', {
-      username, password, confirmarPassword, correo, nombre_completo, telefono, dni, captcha_token
+      password, confirmarPassword, correo, nombre, apellidos, telefono, dni, captcha_token
     });
 
     if (response.data.exito && response.data.token) {
@@ -787,6 +818,29 @@ export const registrar = async ({ username, password, confirmarPassword, correo,
   } catch (error) {
     throw error;
   }
+};
+
+/**
+ * Consulta nombre/apellidos por DNI (decolecta) para autocompletar el registro.
+ * @param {string} dni - 8 dígitos
+ * @returns {Promise<{exito:boolean, datos?:{nombre,apellidos,nombre_completo}, error?:string}>}
+ */
+export const consultarDni = async (dni) => {
+  const response = await api.get(`/auth/consultar-dni/${encodeURIComponent(dni)}`);
+  return response.data;
+};
+
+/**
+ * Activa una cuenta pendiente definiendo su contraseña (login por correo).
+ * @param {Object} datos - { correo, password, confirmarPassword }
+ */
+export const activarCuenta = async ({ correo, password, confirmarPassword }) => {
+  const response = await api.post('/auth/activar', { correo, password, confirmarPassword });
+  if (response.data?.exito && response.data?.token) {
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('usuario', JSON.stringify(response.data.usuario));
+  }
+  return response.data;
 };
 
 // ============================================
@@ -844,6 +898,51 @@ export const restablecerContrasena = async ({ token, nuevaPassword, confirmarPas
   } catch (error) {
     throw error;
   }
+};
+
+// ============================================
+// GESTIÓN DE CUENTA PROPIA (self-service)
+// ============================================
+
+/**
+ * Obtiene el perfil propio (correo/teléfono desencriptados) del usuario autenticado.
+ * @returns {Promise<{exito: boolean, perfil: Object}>}
+ */
+export const obtenerPerfilPropio = async () => {
+  const response = await api.get('/auth/perfil');
+  return response.data;
+};
+
+/**
+ * Actualiza los datos editables de la propia cuenta (teléfono y correo).
+ * @param {Object} datos - { telefono, correo }
+ * @returns {Promise<{exito: boolean, mensaje: string, perfil?: Object}>}
+ */
+export const actualizarPerfilPropio = async ({ telefono, correo }) => {
+  const response = await api.put('/auth/perfil', { telefono, correo });
+  return response.data;
+};
+
+/**
+ * Cambia la contraseña de la propia cuenta (exige la actual).
+ * @param {Object} datos - { contrasena_actual, nueva_password, confirmar_password }
+ * @returns {Promise<{exito: boolean, mensaje: string}>}
+ */
+export const cambiarContrasenaPropia = async ({ contrasena_actual, nueva_password, confirmar_password }) => {
+  const response = await api.post('/auth/cambiar-contrasena', {
+    contrasena_actual, nueva_password, confirmar_password
+  });
+  return response.data;
+};
+
+/**
+ * Da de baja (baja lógica) la propia cuenta. Exige la contraseña.
+ * @param {Object} datos - { password }
+ * @returns {Promise<{exito: boolean, mensaje: string}>}
+ */
+export const desactivarCuentaPropia = async ({ password }) => {
+  const response = await api.post('/auth/desactivar-cuenta', { password });
+  return response.data;
 };
 
 // ============================================
@@ -1265,6 +1364,24 @@ export const actualizarApiKeysIA = async (claves) => {
       'No se pudieron guardar las claves API de IA.';
     throw { mensaje, codigo: error?.codigo || error?.response?.data?.codigo };
   }
+};
+
+/**
+ * Estado del token de consulta de DNI (decolecta). No expone el valor.
+ * @returns {Promise<{exito:boolean, configurado:boolean}>}
+ */
+export const obtenerEstadoTokenDni = async () => {
+  const response = await api.get('/configuracion/token-dni');
+  return response.data;
+};
+
+/**
+ * Guarda (encriptado) el token de decolecta. Solo admin.
+ * @param {string} token
+ */
+export const actualizarTokenDni = async (token) => {
+  const response = await api.put('/configuracion/token-dni', { token });
+  return response.data;
 };
 
 // ============================================

@@ -28,6 +28,16 @@ const NAV_ITEMS = [
     showInMobileTab: true,
   },
   {
+    key: 'perfil',
+    to: '/perfil',
+    label: 'Mi cuenta',
+    description: 'Gestiona tus datos y contraseña',
+    icon: 'user',
+    group: 'primary',
+    requiresAuth: true,
+    showInMobileTab: false,
+  },
+  {
     key: 'login',
     to: '/login',
     label: 'Iniciar sesión',
@@ -141,6 +151,11 @@ const ROUTE_METADATA = [
     title: 'Acceso Administrativo',
     subtitle: 'Inicia sesión para gestionar validaciones y catálogo.',
   },
+  {
+    match: (pathname) => pathname === '/perfil',
+    title: 'Mi cuenta',
+    subtitle: 'Gestiona tus datos, contraseña y el estado de tu cuenta.',
+  },
 ];
 
 function resolveRouteMetadata(pathname) {
@@ -253,6 +268,13 @@ function NavIcon({ name, className }) {
           <path strokeLinecap="round" strokeWidth={1.8} d="M20 8v6M23 11h-6" />
         </svg>
       );
+    case 'user':
+      return (
+        <svg className={iconClass(className)} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="8" r="4" strokeWidth={1.8} />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6" />
+        </svg>
+      );
     case 'bell':
       return (
         <svg className={iconClass(className)} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -343,7 +365,7 @@ function MobileDrawer({ open, onClose, navItems, usuario, autenticado, onLogout 
         </div>
 
         <div className="surface-card mb-4 rounded-[var(--radius-lg)] p-4">
-          <p className="text-sm font-semibold text-[var(--color-text)]">{autenticado ? (usuario?.username || 'Administrador') : 'Modo visitante'}</p>
+          <p className="text-sm font-semibold text-[var(--color-text)]">{autenticado ? (usuario?.nombre || usuario?.username || 'Administrador') : 'Modo visitante'}</p>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             {subtituloUsuario(autenticado, usuario?.rol)}
           </p>
@@ -397,7 +419,7 @@ function DesktopSidebar({ navItems, usuario, autenticado, onLogout }) {
       </div>
 
       <div className="surface-card mb-6 rounded-[var(--radius-lg)] p-4">
-        <p className="text-sm font-semibold text-[var(--color-text)]">{autenticado ? (usuario?.username || 'Administrador') : 'Modo visitante'}</p>
+        <p className="text-sm font-semibold text-[var(--color-text)]">{autenticado ? (usuario?.nombre || usuario?.username || 'Administrador') : 'Modo visitante'}</p>
         <p className="mt-1 text-xs text-[var(--color-text-muted)]">
           {subtituloUsuario(autenticado, usuario?.rol)}
         </p>
@@ -565,7 +587,14 @@ export default function AppShell() {
 
               {autenticado ? (
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <span className="hidden text-sm text-[var(--color-text-muted)] md:inline">{usuario?.username || 'Administrador'}</span>
+                  <NavLink
+                    to="/perfil"
+                    aria-label="Ir a mi cuenta"
+                    className="hidden items-center gap-1.5 rounded-[var(--radius-sm)] px-2 py-1 text-sm text-[var(--color-text-muted)] transition-colors duration-higNormal ease-hig hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-text)] md:inline-flex"
+                  >
+                    <NavIcon name="user" className="h-4 w-4" />
+                    {usuario?.nombre || 'Mi cuenta'}
+                  </NavLink>
 
                   {/* Req. 6.2, 6.3, 6.7: ícono de notificaciones con badge — solo para usuarios autenticados (!esInvitado) */}
                   {!esInvitado && (

@@ -9,6 +9,8 @@ const {
   obtenerPdfTecnico,
   notificarCotizacionLista,
   marcarComoReclamada,
+  confirmarCotizacion,
+  solicitarConfirmacion,
   consultarHistorialCliente,
   obtenerPropias,
   listarClientesRegistrados,
@@ -41,7 +43,12 @@ router.get('/:codigoTicket/pdf-tecnico', verificarTokenUsuario, obtenerPdfTecnic
 // Exportar a Excel (requiere login: admin o usuario)
 router.get('/:codigoTicket/excel', verificarTokenUsuario, exportarExcel);
 
+// El cliente solicita confirmar su cotizacion (contacto a ventas por WhatsApp).
+// No requiere rol privilegiado: identifica por codigo de ticket.
+router.post('/:codigoTicket/solicitar-confirmacion', detectarUsuario, solicitarConfirmacion);
+
 // Flujo operativo (admin o vendedor: el vendedor gestiona/completa ventas)
+router.put('/:codigoTicket/confirmar', verificarTokenAdminOVendedor, confirmarCotizacion);
 router.put('/:codigoTicket/reclamar', verificarTokenAdminOVendedor, marcarComoReclamada);
 router.post('/:codigoTicket/notificar-listo', verificarTokenAdminOVendedor, notificarCotizacionLista);
 

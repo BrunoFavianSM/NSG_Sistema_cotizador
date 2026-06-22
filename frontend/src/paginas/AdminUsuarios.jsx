@@ -15,7 +15,7 @@ const ROLES = [
 ];
 
 const FORM_INICIAL = {
-  username: '', nombre_completo: '', correo: '', telefono: '', dni: '',
+  nombre: '', apellidos: '', correo: '', telefono: '', dni: '',
   rol: 'usuario', estado: 'activa', password: '',
 };
 
@@ -47,7 +47,7 @@ export default function AdminUsuarios() {
   const abrirCrear = () => { setForm(FORM_INICIAL); setErrorForm(''); setModal({ open: true, mode: 'create' }); };
   const abrirEditar = (c) => {
     setForm({
-      id: c.id, username: c.username || '', nombre_completo: c.nombre_completo || '',
+      id: c.id, nombre: c.nombre || '', apellidos: c.apellidos || '',
       correo: c.correo || '', telefono: c.telefono || '', dni: c.dni || '',
       rol: c.rol, estado: c.estado, password: '',
     });
@@ -64,12 +64,13 @@ export default function AdminUsuarios() {
     try {
       if (modal.mode === 'create') {
         await api.crearCuenta({
-          username: form.username.trim(), password: form.password,
-          correo: form.correo.trim().toLowerCase(), nombre_completo: form.nombre_completo.trim(),
+          password: form.password,
+          correo: form.correo.trim().toLowerCase(),
+          nombre: form.nombre.trim(), apellidos: form.apellidos.trim(),
           telefono: form.telefono.trim() || undefined, dni: form.dni.trim() || undefined, rol: form.rol,
         });
       } else {
-        const datos = { nombre_completo: form.nombre_completo.trim(), rol: form.rol, estado: form.estado, dni: form.dni.trim() || null };
+        const datos = { nombre: form.nombre.trim(), apellidos: form.apellidos.trim(), rol: form.rol, estado: form.estado, dni: form.dni.trim() || null };
         if (form.password) datos.password = form.password;
         await api.actualizarCuenta(form.id, datos);
       }
@@ -83,7 +84,7 @@ export default function AdminUsuarios() {
   };
 
   const eliminar = async (c) => {
-    if (!window.confirm(`¿Eliminar la cuenta "${c.username || c.correo}"? Esta acción no se puede deshacer.`)) return;
+    if (!window.confirm(`¿Eliminar la cuenta "${c.nombre_completo || c.correo}"? Esta acción no se puede deshacer.`)) return;
     try {
       await api.eliminarCuenta(c.id);
       await cargar();
@@ -113,7 +114,6 @@ export default function AdminUsuarios() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-[11px] uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
-                  <th className="px-3 py-2">Usuario</th>
                   <th className="px-3 py-2">Nombre</th>
                   <th className="px-3 py-2">Correo</th>
                   <th className="px-3 py-2">DNI</th>
@@ -125,16 +125,21 @@ export default function AdminUsuarios() {
               <tbody>
                 {cuentas.map((c) => (
                   <tr key={c.id} className="border-t border-[var(--color-border)]">
-                    <td className="px-3 py-2 font-medium text-[var(--color-text)]">{c.username || '—'}</td>
-                    <td className="px-3 py-2">{c.nombre_completo}</td>
+                    <td className="px-3 py-2 font-medium text-[var(--color-text)]">{c.nombre_completo}</td>
                     <td className="px-3 py-2 text-[var(--color-text-muted)]">{c.correo || '—'}</td>
                     <td className="px-3 py-2">{c.dni || '—'}</td>
                     <td className="px-3 py-2">
                       <span className="inline-flex rounded-full bg-[var(--color-surface-soft)] px-2.5 py-1 text-xs font-medium capitalize">{c.rol}</span>
                     </td>
                     <td className="px-3 py-2">
-                      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${c.estado === 'activa' ? 'bg-[color:rgba(48,209,88,0.15)] text-[var(--color-success)]' : 'bg-[color:rgba(255,159,10,0.15)] text-[var(--color-warning)]'}`}>
-                        {c.estado === 'activa' ? 'Activa' : 'Pendiente'}
+                      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                        c.estado === 'activa'
+                          ? 'bg-[color:rgba(48,209,88,0.15)] text-[var(--color-success)]'
+                          : c.estado === 'desactivada'
+                            ? 'bg-[color:rgba(255,69,58,0.15)] text-[var(--color-danger)]'
+                            : 'bg-[color:rgba(255,159,10,0.15)] text-[var(--color-warning)]'
+                      }`}>
+                        {c.estado === 'activa' ? 'Activa' : c.estado === 'desactivada' ? 'Desactivada' : 'Pendiente'}
                       </span>
                     </td>
                     <td className="px-3 py-2">
@@ -146,7 +151,7 @@ export default function AdminUsuarios() {
                   </tr>
                 ))}
                 {cuentas.length === 0 ? (
-                  <tr><td colSpan={7} className="px-3 py-6 text-center text-[var(--color-text-muted)]">No hay cuentas.</td></tr>
+                  <tr><td colSpan={6} className="px-3 py-6 text-center text-[var(--color-text-muted)]">No hay cuentas.</td></tr>
                 ) : null}
               </tbody>
             </table>
@@ -160,10 +165,8 @@ export default function AdminUsuarios() {
             <p className="rounded-[var(--radius-sm)] border border-[color:rgba(255,69,58,0.4)] bg-[color:rgba(255,69,58,0.10)] px-3 py-2 text-sm text-[var(--color-danger)]">{errorForm}</p>
           ) : null}
 
-          {modal.mode === 'create' ? (
-            <InputField id="cu-username" label="Usuario" required value={form.username} onChange={(e) => setCampo('username', e.target.value)} />
-          ) : null}
-          <InputField id="cu-nombre" label="Nombre completo" required value={form.nombre_completo} onChange={(e) => setCampo('nombre_completo', e.target.value)} />
+          <InputField id="cu-nombre" label="Nombre" required value={form.nombre} onChange={(e) => setCampo('nombre', e.target.value)} />
+          <InputField id="cu-apellidos" label="Apellidos" required value={form.apellidos} onChange={(e) => setCampo('apellidos', e.target.value)} />
           {modal.mode === 'create' ? (
             <InputField id="cu-correo" label="Correo" type="email" required value={form.correo} onChange={(e) => setCampo('correo', e.target.value)} />
           ) : null}
@@ -172,7 +175,7 @@ export default function AdminUsuarios() {
           <SelectField id="cu-rol" label="Rol" value={form.rol} onChange={(e) => setCampo('rol', e.target.value)} options={ROLES} />
           {modal.mode === 'edit' ? (
             <SelectField id="cu-estado" label="Estado" value={form.estado} onChange={(e) => setCampo('estado', e.target.value)}
-              options={[{ value: 'activa', label: 'Activa' }, { value: 'pendiente_activacion', label: 'Pendiente' }]} />
+              options={[{ value: 'activa', label: 'Activa' }, { value: 'pendiente_activacion', label: 'Pendiente' }, { value: 'desactivada', label: 'Desactivada' }]} />
           ) : null}
           <InputField id="cu-password" label={modal.mode === 'create' ? 'Contraseña' : 'Nueva contraseña (opcional)'} type="password"
             required={modal.mode === 'create'} value={form.password} onChange={(e) => setCampo('password', e.target.value)} placeholder="Mínimo 8 caracteres" />

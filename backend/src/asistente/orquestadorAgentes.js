@@ -118,9 +118,9 @@ function generarRespuestaConversacional(clasificacion, configPropuesta, tipoCamb
     partes.push(`\n\n**Total estimado: S/${configPropuesta.precio_total_pen.toLocaleString('es-PE')}**`);
     const pct = presupuesto ? Math.round((configPropuesta.precio_total_pen / presupuesto) * 100) : null;
     if (pct && pct >= 85 && pct <= 115) {
-      partes.push(' ✅ dentro del presupuesto');
+      partes.push(' (dentro del presupuesto)');
     } else if (pct && pct > 115) {
-      partes.push(' ⚠️ excede ligeramente el presupuesto');
+      partes.push(' (excede ligeramente el presupuesto)');
     }
   }
 

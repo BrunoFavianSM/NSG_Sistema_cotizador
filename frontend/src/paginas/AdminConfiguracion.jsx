@@ -124,6 +124,7 @@ export default function AdminConfiguracion() {
     margenGanancia,
     tasaIgv,
     tipoCambioUsdPen,
+    numeroWhatsAppVentas,
     actualizarConfiguracionFinanciera,
     // Tipo de cambio — modo y estados del hook (Requisitos 1.2–1.6, 11.1–11.4)
     modoTipoCambio: modoTipoCambioContexto,
@@ -137,6 +138,7 @@ export default function AdminConfiguracion() {
   const [nuevoMargen, setNuevoMargen] = useState(String(margenGanancia));
   const [nuevaTasaIgv, setNuevaTasaIgv] = useState(String(tasaIgv));
   const [nuevoTipoCambio, setNuevoTipoCambio] = useState(String(tipoCambioUsdPen));
+  const [numeroWhatsApp, setNumeroWhatsApp] = useState(String(numeroWhatsAppVentas || ''));
   const [guardando, setGuardando] = useState(false);
 
   // Estado local del modo sincronizado con el contexto (Requisito 1.2)
@@ -167,19 +169,53 @@ export default function AdminConfiguracion() {
   const [estadoApiKeys, setEstadoApiKeys] = useState({ gemini_configurada: false, nvidia_configurada: false });
   const [guardandoApiKeys, setGuardandoApiKeys] = useState(false);
 
+  // ── Estado token de consulta de DNI (decolecta) ───────────────────────────
+  const [tokenDni, setTokenDni] = useState('');
+  const [tokenDniConfigurado, setTokenDniConfigurado] = useState(false);
+  const [guardandoTokenDni, setGuardandoTokenDni] = useState(false);
+
   useEffect(() => {
     if (autenticado) {
       cargarEstadisticasIA();
       cargarModelosIA();
       cargarEstadoApiKeys();
+      cargarEstadoTokenDni();
     }
   }, [autenticado]);
+
+  const cargarEstadoTokenDni = async () => {
+    try {
+      const res = await api.obtenerEstadoTokenDni();
+      setTokenDniConfigurado(!!res?.configurado);
+    } catch {
+      // Silencioso: el estado del token es complementario.
+    }
+  };
+
+  const guardarTokenDni = async () => {
+    if (!tokenDni.trim()) {
+      toast.warning('Token vacío', 'Ingresa el token de decolecta para guardarlo.');
+      return;
+    }
+    setGuardandoTokenDni(true);
+    try {
+      await api.actualizarTokenDni(tokenDni.trim());
+      setTokenDni('');
+      setTokenDniConfigurado(true);
+      toast.success('Token guardado', 'El token de consulta de DNI se actualizó correctamente.');
+    } catch (error) {
+      toast.error('No se pudo guardar', error?.mensaje || error?.error || 'Intenta nuevamente.');
+    } finally {
+      setGuardandoTokenDni(false);
+    }
+  };
 
   useEffect(() => {
     setNuevoMargen(String(margenGanancia));
     setNuevaTasaIgv(String(tasaIgv));
     setNuevoTipoCambio(String(tipoCambioUsdPen));
-  }, [margenGanancia, tasaIgv, tipoCambioUsdPen]);
+    setNumeroWhatsApp(String(numeroWhatsAppVentas || ''));
+  }, [margenGanancia, tasaIgv, tipoCambioUsdPen, numeroWhatsAppVentas]);
 
   // Sincronizar estado local de modo cuando cambia el contexto (Requisito 1.2)
   useEffect(() => {
@@ -329,8 +365,16 @@ export default function AdminConfiguracion() {
     const tipoCambioAGuardar = modoTipoCambio === 'manual' ? nuevoTipoCambio : String(tipoCambioUsdPen);
     const tipoCambioValidoParaGuardar = modoTipoCambio === 'automatico' || tipoCambioValido;
 
+    const numeroWhatsAppLimpio = String(numeroWhatsApp || '').replace(/[^\d]/g, '');
+    const numeroWhatsAppValido = numeroWhatsAppLimpio === '' || /^\d{8,15}$/.test(numeroWhatsAppLimpio);
+
     if (!margenValido || !tasaIgvValida || !tipoCambioValidoParaGuardar) {
       toast.warning('Configuracion invalida', 'Revisa margen, IGV y tipo de cambio antes de guardar.');
+      return;
+    }
+
+    if (!numeroWhatsAppValido) {
+      toast.warning('WhatsApp inválido', 'El número debe tener entre 8 y 15 dígitos (incluye código de país).');
       return;
     }
 
@@ -339,7 +383,8 @@ export default function AdminConfiguracion() {
       const respuesta = await actualizarConfiguracionFinanciera({
         margen_ganancia_default: Number(nuevoMargen),
         tasa_igv: Number(nuevaTasaIgv),
-        tipo_cambio_usd_pen: Number(tipoCambioAGuardar)
+        tipo_cambio_usd_pen: Number(tipoCambioAGuardar),
+        ...(numeroWhatsAppLimpio ? { whatsapp_numero_ventas: numeroWhatsAppLimpio } : {})
       });
       const margen = Number(respuesta?.margen_ganancia ?? nuevoMargen);
       toast.success('Configuracion guardada', `Margen ${margen.toFixed(1)}%, IGV ${Number(respuesta?.tasa_igv ?? nuevaTasaIgv).toFixed(2)}%.`);
@@ -491,7 +536,7 @@ export default function AdminConfiguracion() {
                     role="alert"
                     className="flex items-start gap-2 rounded-[var(--radius-sm)] border border-[color:rgba(255,214,10,0.45)] bg-[color:rgba(255,214,10,0.10)] px-3 py-2"
                   >
-                    <span aria-hidden="true" className="mt-0.5 text-yellow-500">⚠</span>
+                    <svg aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 9v4m0 4h.01M10.29 3.86 2.11 18a1.5 1.5 0 0 0 1.3 2.25h17.18a1.5 1.5 0 0 0 1.3-2.25L13.71 3.86a1.5 1.5 0 0 0-2.42 0z" /></svg>
                     <p className="text-sm text-[var(--color-text)]">{advertenciaTipoCambio}</p>
                   </div>
                 )}
@@ -546,6 +591,19 @@ export default function AdminConfiguracion() {
             </div>
           </div>
 
+          <div className="grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
+            <InputField
+              id="whatsapp-numero-ventas"
+              label="WhatsApp de ventas"
+              type="tel"
+              inputMode="numeric"
+              placeholder="51993230740"
+              value={numeroWhatsApp}
+              onChange={(event) => setNumeroWhatsApp(event.target.value)}
+              hint="Código de país + número (solo dígitos). Lo usa el botón 'Confirmar por WhatsApp'."
+            />
+          </div>
+
           <div className="grid gap-3 sm:grid-cols-3">
             <StatCard title="Base USD 1000" value={formatearMoneda(precioEjemploUsd(1000), 'USD')} helper={`Ref ${formatearMoneda(precioEjemploPen(1000), 'PEN')}`} />
             <StatCard title="Base USD 2500" value={formatearMoneda(precioEjemploUsd(2500), 'USD')} helper={`Ref ${formatearMoneda(precioEjemploPen(2500), 'PEN')}`} />
@@ -564,6 +622,7 @@ export default function AdminConfiguracion() {
                   Number(nuevoMargen) === Number(margenGanancia)
                   && Number(nuevaTasaIgv) === Number(tasaIgv)
                   && (modoTipoCambio === 'automatico' || Number(nuevoTipoCambio) === Number(tipoCambioUsdPen))
+                  && String(numeroWhatsApp || '').replace(/[^\d]/g, '') === String(numeroWhatsAppVentas || '')
                 )
               }
             >
@@ -571,6 +630,49 @@ export default function AdminConfiguracion() {
             </Button>
           </div>
         </form>
+      </section>
+
+      <section className="surface-elevated p-6">
+        <header className="mb-4">
+          <h2 className="text-lg font-semibold text-[var(--color-text)]">Consulta de DNI (RENIEC)</h2>
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+            Token de decolecta para autocompletar nombre y apellidos por DNI en el registro. Se guarda
+            cifrado; no se muestra una vez guardado.
+          </p>
+        </header>
+
+        <div className="flex items-center gap-2">
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+              tokenDniConfigurado
+                ? 'bg-[color:rgba(48,209,88,0.15)] text-[var(--color-success)]'
+                : 'bg-[color:rgba(255,159,10,0.15)] text-[var(--color-warning)]'
+            }`}
+          >
+            {tokenDniConfigurado ? (
+              <>
+                <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                Configurado
+              </>
+            ) : 'No configurado'}
+          </span>
+        </div>
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <InputField
+            id="token-dni"
+            label={tokenDniConfigurado ? 'Reemplazar token de decolecta' : 'Token de decolecta'}
+            type="password"
+            value={tokenDni}
+            onChange={(e) => setTokenDni(e.target.value)}
+            placeholder="Pega aquí el token (Bearer)"
+            hint="Se obtiene en el panel de decolecta. Solo se envía para guardarlo cifrado."
+            autoComplete="off"
+          />
+          <Button onClick={guardarTokenDni} loading={guardandoTokenDni} disabled={!tokenDni.trim()}>
+            Guardar token
+          </Button>
+        </div>
       </section>
 
       <section className="surface-elevated p-6">
@@ -897,7 +999,7 @@ export default function AdminConfiguracion() {
               </label>
               {estadoApiKeys.gemini_configurada ? (
                 <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400">
-                  <span aria-hidden="true">✓</span> Configurada
+                  <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Configurada
                 </span>
               ) : (
                 <span className="text-xs text-[var(--color-text-muted)]">No configurada</span>
@@ -964,7 +1066,7 @@ export default function AdminConfiguracion() {
               </label>
               {estadoApiKeys.nvidia_configurada ? (
                 <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400">
-                  <span aria-hidden="true">✓</span> Configurada
+                  <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Configurada
                 </span>
               ) : (
                 <span className="text-xs text-[var(--color-text-muted)]">No configurada</span>

@@ -31,6 +31,7 @@ Para cualquier tarea de frontend/UI/UX, trabajar siempre con estándar Apple HIG
 - Touch targets mínimos de 44px.
 - Animaciones sutiles y respetar `prefers-reduced-motion`.
 - No romper flujos existentes ni contratos con backend/API.
+- **PROHIBIDO usar emojis en cualquier parte del proyecto**: UI/texto visible, código, comentarios, logs de consola, mensajes de error, toasts y respuestas del asistente IA. En su lugar, usar **íconos SVG** (aplicando las skills de diseño Apple HIG), con `stroke="currentColor"`, tamaño acorde y `aria-hidden="true"` cuando son decorativos. Esto aplica sin excepción.
 
 ## 4.1) Subida al repositorio y PRs (obligatorio)
 - **NUNCA crear un Pull Request ni hacer push al repositorio remoto a menos que el usuario lo mencione explícitamente.**

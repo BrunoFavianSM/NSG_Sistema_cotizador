@@ -24,6 +24,7 @@ import usePersistenciaSeleccion from '../hooks/usePersistenciaSeleccion';
 import * as api from '../servicios/api';
 import { etiquetaMonedaBase, formatearMoneda } from '../utilidades/moneda';
 import { calcularResumenFinancieroAdmin } from '../utilidades/calcularResumenFinancieroAdmin';
+import { construirEnlaceWhatsApp, construirMensajeConfirmacion } from '../utilidades/whatsapp';
 
 const PASOS = [
   { id: 'procesador', nombre: 'Procesador', categoria: 'procesador' },
@@ -667,6 +668,7 @@ export default function Cotizador() {
     calcularResumenFinanciero,
     monedaVista,
     formatearMontoSegunMonedaVista,
+    numeroWhatsAppVentas,
     extras,
     cargandoExtras,
     agregarExtra,
@@ -677,6 +679,10 @@ export default function Cotizador() {
 
   const navigate = useNavigate();
   const toast = useToast();
+  // Privilegiado = admin o vendedor: cotizan PARA un cliente, así que ingresan/
+  // seleccionan los datos del cliente (el correo es obligatorio). El rol 'usuario'
+  // (cliente) NO usa el formulario: su identidad sale del token.
+  const esPrivilegiado = esAdmin || esVendedor;
 
   // ── Comparador de productos (Requisitos 6.3, 6.4) ────────────────────────
   const {
@@ -740,6 +746,7 @@ export default function Cotizador() {
   const [cotizacionGenerada, setCotizacionGenerada] = useState(null);
   const [errorGenerar, setErrorGenerar] = useState('');
   const [nombreCliente, setNombreCliente] = useState('');
+  const [apellidosCliente, setApellidosCliente] = useState('');
   const [emailCliente, setEmailCliente] = useState('');
   const [telefonoCliente, setTelefonoCliente] = useState('');
   const [intentoGenerar, setIntentoGenerar] = useState(false);
@@ -778,7 +785,7 @@ export default function Cotizador() {
   const valorBusquedaTelefono = telefonoCliente.trim();
 
   // Activar búsqueda si hay al menos 3 caracteres en email O en teléfono
-  const debeActivarBusqueda = esAdmin && (
+  const debeActivarBusqueda = esPrivilegiado && (
     (valorBusquedaEmail.length >= 3) || (valorBusquedaTelefono.length >= 3)
   );
 
@@ -800,11 +807,14 @@ export default function Cotizador() {
       if (!nombreCliente && clienteEncontrado.nombre) {
         setNombreCliente(clienteEncontrado.nombre);
       }
+      if (!apellidosCliente && clienteEncontrado.apellidos) {
+        setApellidosCliente(clienteEncontrado.apellidos);
+      }
       if (!telefonoCliente && clienteEncontrado.telefono) {
         setTelefonoCliente(clienteEncontrado.telefono);
       }
     }
-  }, [clienteEncontrado, nombreCliente, telefonoCliente]);
+  }, [clienteEncontrado, nombreCliente, apellidosCliente, telefonoCliente]);
 
   // Limpiar campos cuando el usuario cambia el email manualmente
   const emailAnteriorRef = useRef(emailCliente);
@@ -813,6 +823,7 @@ export default function Cotizador() {
     if (emailAnteriorRef.current !== emailCliente && emailCliente !== '') {
       // Limpiar nombre y teléfono para que se autocompleten con el nuevo cliente
       setNombreCliente('');
+      setApellidosCliente('');
       setTelefonoCliente('');
     }
     emailAnteriorRef.current = emailCliente;
@@ -877,27 +888,30 @@ export default function Cotizador() {
   const handleFleteToggle = (activo) => setFlete((prev) => ({ ...prev, activo }));
   const handleFleteCambiarPrecio = (valor) => setFlete((prev) => ({ ...prev, precio: valor }));
   const nombreClienteLimpio = nombreCliente.trim();
+  const apellidosClienteLimpio = apellidosCliente.trim();
   const emailClienteLimpio = emailCliente.trim().toLowerCase();
   const telefonoClienteLimpio = telefonoCliente.trim();
   const emailClienteEsValido = emailClienteLimpio ? esEmailValido(emailClienteLimpio) : false;
   const telefonoClienteEsValido = telefonoClienteLimpio ? normalizarTelefono(telefonoClienteLimpio).length >= 7 : false;
 
   // Validaciones de campos obligatorios (nombre, email, teléfono)
-  const faltanDatosClientePublico = !esAdmin && (!nombreClienteLimpio || !emailClienteLimpio || !telefonoClienteLimpio);
-  const hayErrorNombreCliente = !esAdmin && intentoGenerar && !nombreClienteLimpio;
+  const faltanDatosClientePublico = !esPrivilegiado && (!nombreClienteLimpio || !emailClienteLimpio || !telefonoClienteLimpio);
+  const hayErrorNombreCliente = !esPrivilegiado && intentoGenerar && !nombreClienteLimpio;
   // El correo es obligatorio también para admin: identifica la cuenta/cliente
   // (sea seleccionando una existente o ingresando los datos). Sin correo no se
   // puede generar una cotización "vacía" sin cliente asignado.
   const hayErrorEmailCliente = (intentoGenerar && !emailClienteLimpio)
     || (emailClienteLimpio && !emailClienteEsValido);
-  const hayErrorTelefonoCliente = (!esAdmin && intentoGenerar && !telefonoClienteLimpio)
+  const hayErrorTelefonoCliente = (!esPrivilegiado && intentoGenerar && !telefonoClienteLimpio)
     || (telefonoClienteLimpio && !telefonoClienteEsValido);
 
-  // Para usuario autenticado (no admin): sus datos ya están en el token, no necesita formulario
-  const datosClienteValidos = autenticado && !esAdmin
-    ? true  // usuario registrado — el backend usa su id del token
-    : esAdmin
-      ? emailClienteEsValido && (!telefonoClienteLimpio || telefonoClienteEsValido)
+  // Privilegiado (admin/vendedor): correo obligatorio (identifica al cliente).
+  // Usuario autenticado (cliente): sus datos salen del token, no usa formulario.
+  // Invitado: nombre, correo y teléfono.
+  const datosClienteValidos = esPrivilegiado
+    ? emailClienteEsValido && (!telefonoClienteLimpio || telefonoClienteEsValido)
+    : autenticado
+      ? true  // usuario registrado — el backend usa su id del token
       : Boolean(nombreClienteLimpio && emailClienteEsValido && telefonoClienteEsValido);
   const procesadorTieneGraficosIntegrados = useMemo(() => {
     const procesador = configuracionSeleccionada.procesador;
@@ -1374,6 +1388,7 @@ export default function Cotizador() {
     payload.margen_personalizado = Number(margenGanancia);
     payload.cantidad_equipos = Math.max(1, parseInt(cantidadEquipos, 10) || 1);
     if (nombreClienteLimpio) payload.nombre_cliente = nombreClienteLimpio;
+    if (apellidosClienteLimpio) payload.apellidos_cliente = apellidosClienteLimpio;
     if (emailClienteLimpio) payload.email_cliente = emailClienteLimpio;
     if (telefonoClienteLimpio) payload.telefono_cliente = telefonoClienteLimpio;
     return payload;
@@ -1394,7 +1409,7 @@ export default function Cotizador() {
     }
 
     if (!datosClienteValidos) {
-      if (!esAdmin && faltanDatosClientePublico) {
+      if (!esPrivilegiado && faltanDatosClientePublico) {
         toast.warning('Datos incompletos', 'Ingresa nombre y correo para generar la cotizacion.');
       } else if (hayErrorEmailCliente) {
         toast.warning('Correo invalido', 'Corrige el correo del cliente para continuar.');
@@ -1454,6 +1469,38 @@ export default function Cotizador() {
     }
   };
 
+  // ── Confirmar cotización por WhatsApp ───────────────────────────────────────
+  // Registra la solicitud en el sistema y abre WhatsApp con un mensaje
+  // prearmado (ticket + total). La verificación final la hace ventas.
+  const confirmarPorWhatsApp = async () => {
+    if (!cotizacionGenerada?.codigo_ticket) return;
+
+    const enlace = construirEnlaceWhatsApp({
+      numero: numeroWhatsAppVentas,
+      mensaje: construirMensajeConfirmacion({
+        codigoTicket: cotizacionGenerada.codigo_ticket,
+        montoFormateado: formatearMontoSegunMonedaVista({
+          montoUsd: cotizacionGenerada?.finanzas?.total?.usd ?? cotizacionGenerada.precio_total,
+          montoPen: cotizacionGenerada?.finanzas?.total?.pen,
+        }),
+      }),
+    });
+
+    if (!enlace) {
+      toast.error('WhatsApp no disponible', 'No hay un número de ventas configurado. Avisa al administrador.');
+      return;
+    }
+
+    // Registrar la solicitud (no bloquea la apertura de WhatsApp si falla).
+    try {
+      await api.solicitarConfirmacionCotizacion(cotizacionGenerada.codigo_ticket);
+    } catch {
+      // Silencioso: la marca es un complemento; el cliente igual contacta a ventas.
+    }
+
+    window.open(enlace, '_blank', 'noopener,noreferrer');
+  };
+
   // ── Compartir configuración (Req. 10.1, 10.2, 10.3, 10.9) ───────────────────
   const compartirConfiguracion = async () => {
     const haySeleccion = Object.values(configuracionSeleccionada).some((valor) => {
@@ -1487,6 +1534,7 @@ export default function Cotizador() {
     setErrorGenerar('');
     setIntentoGenerar(false);
     setNombreCliente('');
+    setApellidosCliente('');
     setEmailCliente('');
     setTelefonoCliente('');
     setEmbalaje({ activo: false, opcion: 'basico', precioBasico: 20, precioAvanzado: 30 });
@@ -2348,7 +2396,7 @@ export default function Cotizador() {
           />
 
           {/* Datos del cliente — obligatorios: selecciona una cuenta (correo) o ingresa los datos */}
-          {(esAdmin) && (
+          {(esPrivilegiado) && (
           <section className="surface-elevated space-y-4 p-5" aria-label="Datos del cliente">
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Datos del cliente</h3>
@@ -2360,15 +2408,15 @@ export default function Cotizador() {
             <div className="space-y-3">
               <label htmlFor="nombre-cliente" className="flex min-w-0 flex-col gap-1.5">
                 <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
-                  Nombre completo
+                  Nombre
                 </span>
                 <input
                   id="nombre-cliente"
                   type="text"
                   value={nombreCliente}
                   onChange={(event) => setNombreCliente(event.target.value)}
-                  placeholder="Ingrese su nombre"
-                  autoComplete="name"
+                  placeholder="Ingrese el nombre"
+                  autoComplete="given-name"
                   aria-invalid={hayErrorNombreCliente ? 'true' : 'false'}
                   aria-describedby={hayErrorNombreCliente ? 'error-nombre-cliente' : undefined}
                   className={`min-h-11 rounded-[var(--radius-sm)] border bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none transition-shadow duration-higNormal ease-hig focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] ${hayErrorNombreCliente ? 'border-[var(--color-danger)]' : 'border-[var(--color-border)]'
@@ -2379,6 +2427,21 @@ export default function Cotizador() {
                     El nombre es obligatorio para clientes.
                   </span>
                 ) : null}
+              </label>
+
+              <label htmlFor="apellidos-cliente" className="flex min-w-0 flex-col gap-1.5">
+                <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
+                  Apellidos
+                </span>
+                <input
+                  id="apellidos-cliente"
+                  type="text"
+                  value={apellidosCliente}
+                  onChange={(event) => setApellidosCliente(event.target.value)}
+                  placeholder="Ingrese los apellidos"
+                  autoComplete="family-name"
+                  className="min-h-11 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none transition-shadow duration-higNormal ease-hig focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+                />
               </label>
 
               <label htmlFor="email-cliente" className="flex min-w-0 flex-col gap-1.5 relative">
@@ -2393,12 +2456,12 @@ export default function Cotizador() {
                     onChange={(event) => {
                       setEmailCliente(event.target.value);
                       setEmailSeleccionadoIndex(-1);
-                      if (esAdmin && emailsRegistrados.length > 0) {
+                      if (esPrivilegiado && emailsRegistrados.length > 0) {
                         setMostrarDropdownEmails(true);
                       }
                     }}
                     onFocus={() => {
-                      if (esAdmin && emailsRegistrados.length > 0) {
+                      if (esPrivilegiado && emailsRegistrados.length > 0) {
                         setMostrarDropdownEmails(true);
                       }
                     }}
@@ -2419,6 +2482,7 @@ export default function Cotizador() {
                       } else if (event.key === 'Enter' && emailSeleccionadoIndex >= 0) {
                         event.preventDefault();
                         setNombreCliente('');
+                        setApellidosCliente('');
                         setTelefonoCliente('');
                         setEmailCliente(emailsFiltrados[emailSeleccionadoIndex]);
                         setMostrarDropdownEmails(false);
@@ -2439,7 +2503,7 @@ export default function Cotizador() {
                     className={`min-h-11 rounded-[var(--radius-sm)] border bg-[var(--color-surface)] px-3 pr-9 text-sm text-[var(--color-text)] outline-none transition-shadow duration-higNormal ease-hig focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] ${hayErrorEmailCliente ? 'border-[var(--color-danger)]' : 'border-[var(--color-border)]'
                       }`}
                   />
-                  {esAdmin && emailsRegistrados.length > 0 && (
+                  {esPrivilegiado && emailsRegistrados.length > 0 && (
                     <button
                       type="button"
                       onClick={() => setMostrarDropdownEmails(!mostrarDropdownEmails)}
@@ -2456,7 +2520,7 @@ export default function Cotizador() {
                       </svg>
                     </button>
                   )}
-                  {esAdmin && mostrarDropdownEmails && emailsFiltrados.length > 0 && (
+                  {esPrivilegiado && mostrarDropdownEmails && emailsFiltrados.length > 0 && (
                     <div
                       id="email-dropdown"
                       role="listbox"
@@ -2473,6 +2537,7 @@ export default function Cotizador() {
                           onMouseDown={(event) => {
                             event.preventDefault();
                             setNombreCliente('');
+                            setApellidosCliente('');
                             setTelefonoCliente('');
                             setEmailCliente(email);
                             setMostrarDropdownEmails(false);
@@ -2608,6 +2673,20 @@ export default function Cotizador() {
                 })}`}
               >
                 <div className="space-y-2">
+                  {/* Acción primaria: confirmar con ventas por WhatsApp */}
+                  <button
+                    type="button"
+                    onClick={confirmarPorWhatsApp}
+                    className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-sm)] bg-[#25D366] px-3 text-sm font-semibold text-white transition-colors hover:bg-[#1ebe5b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]"
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.51 5.26l-.999 3.648 3.728-.979zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                    </svg>
+                    Confirmar por WhatsApp
+                  </button>
+                  <p className="text-xs text-[var(--color-text-muted)]">
+                    Tu cotización queda <strong>Sin confirmar</strong> hasta que el área de ventas la confirme. Una vez confirmada, no podrá modificarse.
+                  </p>
                   {/* Visibles para todos los roles: código de ticket (en description) y descarga PDF */}
                   <button type="button" onClick={copiarTicket} className="min-h-11 w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 text-sm font-medium">Copiar codigo</button>
                   <button type="button" onClick={descargarPdf} className="min-h-11 w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 text-sm font-medium">Descargar PDF</button>

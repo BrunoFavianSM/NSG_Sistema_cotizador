@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Button from '../componentes/ui/Button';
@@ -6,14 +6,15 @@ import InputField from '../componentes/ui/InputField';
 import ErrorState from '../componentes/feedback/ErrorState';
 import TurnstileWidget from '../componentes/ui/TurnstileWidget';
 import { useAppContext } from '../contexto/AppContext';
+import { consultarDni } from '../servicios/api';
 import { evaluarFortalezaPassword } from '../utilidades/evaluarFortalezaPassword';
 
 export default function Registro() {
   const navigate = useNavigate();
   const { registrar } = useAppContext();
 
-  const [username, setUsername] = useState('');
-  const [nombreCompleto, setNombreCompleto] = useState('');
+  const [nombre, setNombre] = useState('');
+  const [apellidos, setApellidos] = useState('');
   const [correo, setCorreo] = useState('');
   const [telefono, setTelefono] = useState('');
   const [dni, setDni] = useState('');
@@ -24,25 +25,65 @@ export default function Registro() {
   const [error, setError] = useState('');
   const [captchaToken, setCaptchaToken] = useState(null);
 
+  // DNI → nombre/apellidos. Por defecto solo lectura (autocompletado de RENIEC).
+  // Si la consulta falla, se habilita la carga manual (modoManualNombre).
+  const [modoManualNombre, setModoManualNombre] = useState(false);
+  const [consultandoDni, setConsultandoDni] = useState(false);
+  const [avisoDni, setAvisoDni] = useState('');
+  const dniTimer = useRef(null);
+
   const fortaleza = evaluarFortalezaPassword(password);
   const contrasenasCoinciden = password === confirmarPassword;
   const mostrarAlertaCoincidencia = confirmarPassword.length > 0 && !contrasenasCoinciden;
+
+  const buscarDni = async (valor) => {
+    setConsultandoDni(true);
+    try {
+      const resultado = await consultarDni(valor);
+      if (resultado?.exito && resultado.datos) {
+        setNombre(resultado.datos.nombre || '');
+        setApellidos(resultado.datos.apellidos || '');
+        setModoManualNombre(false);
+        setAvisoDni('Datos verificados con RENIEC.');
+      } else {
+        setModoManualNombre(true);
+        setAvisoDni('No se pudieron obtener los datos del DNI. Ingrésalos manualmente.');
+      }
+    } catch (_) {
+      setModoManualNombre(true);
+      setAvisoDni('No se pudieron obtener los datos del DNI. Ingrésalos manualmente.');
+    } finally {
+      setConsultandoDni(false);
+    }
+  };
+
+  const manejarCambioDni = (event) => {
+    const valor = event.target.value.replace(/[^0-9]/g, '').slice(0, 8);
+    setDni(valor);
+    setError('');
+    // Resetear el autocompletado al cambiar el DNI.
+    setNombre('');
+    setApellidos('');
+    setModoManualNombre(false);
+    setAvisoDni('');
+    if (dniTimer.current) clearTimeout(dniTimer.current);
+    if (valor.length === 8) {
+      dniTimer.current = setTimeout(() => buscarDni(valor), 400);
+    }
+  };
 
   const manejarSubmit = async (event) => {
     event.preventDefault();
     setError('');
 
     // Validaciones del lado del cliente
-    if (!username.trim()) return setError('El usuario es obligatorio.');
-    if (username.trim().length < 3) return setError('El usuario debe tener al menos 3 caracteres.');
-    if (!/^[a-zA-Z0-9_]+$/.test(username.trim())) return setError('El usuario solo puede contener letras, números y guion bajo.');
-    if (!nombreCompleto.trim()) return setError('El nombre completo es obligatorio.');
-    if (nombreCompleto.trim().length < 2) return setError('El nombre debe tener al menos 2 caracteres.');
+    if (!dni.trim()) return setError('El DNI es obligatorio.');
+    if (!/^[0-9]{8}$/.test(dni.trim())) return setError('El DNI debe tener 8 dígitos.');
+    if (!nombre.trim() || nombre.trim().length < 2) return setError('El nombre es obligatorio.');
+    if (!apellidos.trim() || apellidos.trim().length < 2) return setError('Los apellidos son obligatorios.');
     if (!correo.trim()) return setError('El correo electrónico es obligatorio.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.trim())) return setError('El formato del correo no es válido.');
     if (!telefono.trim()) return setError('El teléfono es obligatorio.');
-    if (!dni.trim()) return setError('El DNI es obligatorio.');
-    if (!/^[0-9]{8,15}$/.test(dni.trim())) return setError('El DNI debe tener entre 8 y 15 dígitos.');
 
     if (!password) return setError('La contraseña es obligatoria.');
     if (password.length < 8) return setError('La contraseña debe tener al menos 8 caracteres.');
@@ -55,12 +96,13 @@ export default function Registro() {
     setCargando(true);
 
     try {
+      const correoNormalizado = correo.trim().toLowerCase();
       const resultado = await registrar({
-        username: username.trim(),
         password,
         confirmarPassword,
-        correo: correo.trim().toLowerCase(),
-        nombre_completo: nombreCompleto.trim(),
+        correo: correoNormalizado,
+        nombre: nombre.trim(),
+        apellidos: apellidos.trim(),
         telefono: telefono.trim(),
         dni: dni.trim(),
         captcha_token: captchaToken
@@ -71,9 +113,15 @@ export default function Registro() {
         return;
       }
 
-      setError(resultado?.error || 'No se pudo completar el registro.');
+      // Cuenta creada antes desde una cotización: enrutar a activación.
+      if (resultado?.codigo === 'CUENTA_PENDIENTE_ACTIVACION') {
+        navigate(`/activar?correo=${encodeURIComponent(correoNormalizado)}`);
+        return;
+      }
+
+      setError(resultado?.mensaje || resultado?.error || 'No se pudo completar el registro.');
     } catch (err) {
-      setError(err?.mensaje || 'Error al procesar el registro. Intenta nuevamente.');
+      setError(err?.error || err?.mensaje || 'Error al procesar el registro. Intenta nuevamente.');
     } finally {
       setCargando(false);
     }
@@ -85,7 +133,7 @@ export default function Registro() {
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Nueva cuenta</p>
         <h1 className="mt-1 text-2xl font-semibold text-[var(--color-text)] sm:text-3xl">Crear cuenta</h1>
         <p className="mt-2 max-w-xl text-sm text-[var(--color-text-muted)]">
-          Regístrate para ver precios, crear cotizaciones y usar el asistente de configuración.
+          Ingresa tu DNI para completar tus datos automáticamente. Te registras para ver precios, crear cotizaciones y usar el asistente.
         </p>
       </header>
 
@@ -108,23 +156,36 @@ export default function Registro() {
           ) : null}
 
           <InputField
-            id="registro-username"
-            label="Usuario"
+            id="registro-dni"
+            label="DNI"
             required
-            autoComplete="username"
-            value={username}
-            onChange={(e) => { setUsername(e.target.value); setError(''); }}
-            placeholder="Crea un nombre de usuario"
+            inputMode="numeric"
+            value={dni}
+            onChange={manejarCambioDni}
+            placeholder="Ej: 01234567"
+            hint={consultandoDni ? 'Consultando datos del DNI...' : avisoDni}
           />
 
           <InputField
             id="registro-nombre"
-            label="Nombre completo"
+            label="Nombre"
             required
-            autoComplete="name"
-            value={nombreCompleto}
-            onChange={(e) => { setNombreCompleto(e.target.value); setError(''); }}
-            placeholder="Ingresa tu nombre completo"
+            autoComplete="given-name"
+            value={nombre}
+            disabled={!modoManualNombre}
+            onChange={(e) => { setNombre(e.target.value); setError(''); }}
+            placeholder={modoManualNombre ? 'Ingresa tu nombre' : 'Se completa con tu DNI'}
+          />
+
+          <InputField
+            id="registro-apellidos"
+            label="Apellidos"
+            required
+            autoComplete="family-name"
+            value={apellidos}
+            disabled={!modoManualNombre}
+            onChange={(e) => { setApellidos(e.target.value); setError(''); }}
+            placeholder={modoManualNombre ? 'Ingresa tus apellidos' : 'Se completan con tu DNI'}
           />
 
           <InputField
@@ -147,16 +208,6 @@ export default function Registro() {
             value={telefono}
             onChange={(e) => { setTelefono(e.target.value); setError(''); }}
             placeholder="+51 999 999 999"
-          />
-
-          <InputField
-            id="registro-dni"
-            label="DNI"
-            required
-            inputMode="numeric"
-            value={dni}
-            onChange={(e) => { setDni(e.target.value.replace(/[^0-9]/g, '')); setError(''); }}
-            placeholder="Ej: 01234567 (admite ceros a la izquierda)"
           />
 
           <div className="space-y-1.5">

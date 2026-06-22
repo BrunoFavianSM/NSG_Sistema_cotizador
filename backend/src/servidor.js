@@ -233,7 +233,7 @@ app.use((req, res) => {
 // Solo iniciar el servidor si no estamos en modo test
 if (require.main === module) {
   app.listen(PUERTO, () => {
-    console.log(`🚀 Servidor corriendo en puerto ${PUERTO}`);
+    console.log(`Servidor corriendo en puerto ${PUERTO}`);
   });
 
   // Precargar caché de embeddings (no bloquea el inicio del servidor)

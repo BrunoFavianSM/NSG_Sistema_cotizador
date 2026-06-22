@@ -521,6 +521,10 @@ CREATE TABLE public.cotizaciones (
     fecha_reclamacion timestamp without time zone,
     id_vendedor integer,
     notas_vendedor text,
+    fecha_solicitud_confirmacion timestamp without time zone,
+    fecha_confirmacion timestamp without time zone,
+    id_confirmador integer,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     moneda_base character varying(3) DEFAULT 'USD'::character varying NOT NULL,
     subtotal_neto numeric(12,2) DEFAULT 0 NOT NULL,
     igv_porcentaje numeric(5,2) DEFAULT 18 NOT NULL,
@@ -530,7 +534,7 @@ CREATE TABLE public.cotizaciones (
     subtotal_neto_pen numeric(12,2) DEFAULT 0 NOT NULL,
     igv_monto_pen numeric(12,2) DEFAULT 0 NOT NULL,
     total_con_igv_pen numeric(12,2) DEFAULT 0 NOT NULL,
-    CONSTRAINT check_estado_valido CHECK (((estado)::text = ANY ((ARRAY['Pendiente'::character varying, 'Completada'::character varying, 'Caducada'::character varying, 'Reclamada'::character varying])::text[]))),
+    CONSTRAINT check_estado_valido CHECK (((estado)::text = ANY ((ARRAY['Pendiente'::character varying, 'Confirmada'::character varying, 'Completada'::character varying, 'Caducada'::character varying, 'Reclamada'::character varying])::text[]))),
     CONSTRAINT check_precio_total_positive CHECK ((precio_total > (0)::numeric))
 );
 
@@ -574,6 +578,8 @@ CREATE TABLE public.cuentas (
     correo_encrypted character varying(300),
     correo_hash character varying(64),
     nombre_completo character varying(100) NOT NULL,
+    nombre character varying(100),
+    apellidos character varying(100),
     telefono_encrypted character varying(100),
     telefono_hash character varying(64),
     rol character varying(20) DEFAULT 'usuario'::character varying NOT NULL,
@@ -584,7 +590,7 @@ CREATE TABLE public.cuentas (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     estado character varying(30) DEFAULT 'activa'::character varying NOT NULL,
-    CONSTRAINT cuentas_estado_check CHECK (((estado)::text = ANY ((ARRAY['activa'::character varying, 'pendiente_activacion'::character varying])::text[]))),
+    CONSTRAINT cuentas_estado_check CHECK (((estado)::text = ANY ((ARRAY['activa'::character varying, 'pendiente_activacion'::character varying, 'desactivada'::character varying])::text[]))),
     CONSTRAINT cuentas_intentos_fallidos_check CHECK ((intentos_fallidos >= 0)),
     CONSTRAINT cuentas_rol_check CHECK (((rol)::text = ANY ((ARRAY['admin'::character varying, 'usuario'::character varying])::text[])))
 );

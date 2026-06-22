@@ -33,7 +33,7 @@ async function obtenerMetricas(req, res) {
             COALESCE(SUM(precio_total), 0)::NUMERIC    AS ingresos_estimados
           FROM cotizaciones
           WHERE DATE(fecha_emision AT TIME ZONE 'UTC') = CURRENT_DATE
-            AND estado IN ('Pendiente', 'Completada')
+            AND estado IN ('Pendiente', 'Confirmada', 'Completada')
         ),
         cotizaciones_semana AS (
           SELECT
@@ -41,7 +41,7 @@ async function obtenerMetricas(req, res) {
             COALESCE(SUM(precio_total), 0)::NUMERIC    AS ingresos_estimados
           FROM cotizaciones
           WHERE fecha_emision >= (CURRENT_DATE - INTERVAL '6 days')
-            AND estado IN ('Pendiente', 'Completada')
+            AND estado IN ('Pendiente', 'Confirmada', 'Completada')
         ),
         productos_top AS (
           SELECT

@@ -14,6 +14,7 @@ import { useToast } from '../componentes/feedback/ToastProvider';
 import { useAppContext } from '../contexto/AppContext';
 import * as api from '../servicios/api';
 import { formatearMoneda as formatoMoneda } from '../utilidades/moneda';
+import { etiquetaEstado, varianteEstado } from '../utilidades/estadoCotizacion';
 
 function formatearFecha(fecha) {
   if (!fecha) return '-';
@@ -28,19 +29,6 @@ function formatearFecha(fecha) {
 
 function formatearMoneda(monto, moneda = 'USD') {
   return formatoMoneda(monto, moneda);
-}
-
-function estadoToBadgeVariant(estado) {
-  switch (estado) {
-    case 'Pendiente':
-      return 'warning';
-    case 'Completada':
-      return 'success';
-    case 'Caducada':
-      return 'danger';
-    default:
-      return 'neutral';
-  }
 }
 
 function disponibilidad(componente) {
@@ -82,6 +70,8 @@ export default function ValidadorCotizaciones() {
   const [error, setError] = useState('');
   const [cotizacion, setCotizacion] = useState(null);
   const [confirmarReclamoOpen, setConfirmarReclamoOpen] = useState(false);
+  const [confirmarOpen, setConfirmarOpen] = useState(false);
+  const [confirmandoEstado, setConfirmandoEstado] = useState(false);
 
   // Auto-validar ticket si viene por query param (?ticket=NSG-2026-XXXX) — Req. 8.1–8.6
   useEffect(() => {
@@ -243,6 +233,25 @@ export default function ValidadorCotizaciones() {
     }
   };
 
+  const confirmarCotizacionActual = async () => {
+    if (!cotizacion?.codigo_ticket) return;
+
+    setConfirmandoEstado(true);
+    setError('');
+
+    try {
+      await api.confirmarCotizacion(cotizacion.codigo_ticket);
+      setCotizacion((prev) => (prev ? { ...prev, estado: 'Confirmada' } : prev));
+      setConfirmarOpen(false);
+      toast.success('Cotizacion confirmada', 'La cotización quedó confirmada y fijada.');
+    } catch (err) {
+      setError(err?.mensaje || 'No se pudo confirmar la cotización.');
+      toast.error('Error al confirmar', 'Intenta nuevamente en unos segundos.');
+    } finally {
+      setConfirmandoEstado(false);
+    }
+  };
+
   const notificarClienteListo = async () => {
     if (!cotizacion?.codigo_ticket) return;
 
@@ -393,7 +402,7 @@ export default function ValidadorCotizaciones() {
                 <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Resumen</p>
                 <h2 className="text-xl font-semibold text-[var(--color-text)]">Detalle de validación</h2>
               </div>
-              <Badge variant={estadoToBadgeVariant(cotizacion.estado)}>{cotizacion.estado || 'Sin estado'}</Badge>
+              <Badge variant={varianteEstado(cotizacion.estado)}>{etiquetaEstado(cotizacion.estado)}</Badge>
             </div>
 
             {cotizacion.hay_cambios_precio ? (
@@ -415,14 +424,22 @@ export default function ValidadorCotizaciones() {
             ) : cotizacion.estado === 'Pendiente' ? (
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4">
                 <div>
-                  <p className="text-sm font-semibold text-[var(--color-text)]">¿Confirmar entrega/completado?</p>
-                  <p className="text-sm text-[var(--color-text-muted)]">Esta acción actualizará el estado del ticket en el sistema.</p>
+                  <p className="text-sm font-semibold text-[var(--color-text)]">¿Confirmar esta cotización?</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">Verifica el acuerdo con el cliente. Una vez confirmada, queda fijada y no caduca.</p>
+                </div>
+                <Button onClick={() => setConfirmarOpen(true)}>Confirmar cotización</Button>
+              </div>
+            ) : cotizacion.estado === 'Confirmada' ? (
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4">
+                <div>
+                  <p className="text-sm font-semibold text-[var(--color-text)]">¿Completar la venta?</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">Esta acción marcará el ticket como completado en el sistema.</p>
                 </div>
                 <Button onClick={() => setConfirmarReclamoOpen(true)}>Marcar como completada</Button>
               </div>
             ) : null}
 
-            {(cotizacion.estado === 'Completada' || cotizacion.estado === 'Pendiente') ? (
+            {(cotizacion.estado === 'Completada' || cotizacion.estado === 'Confirmada' || cotizacion.estado === 'Pendiente') ? (
               <div className="mt-3 flex justify-end">
                 <Button variant="secondary" onClick={notificarClienteListo} loading={notificando}>
                   Notificar equipo listo
@@ -469,6 +486,29 @@ export default function ValidadorCotizaciones() {
       >
         <p className="text-sm text-[var(--color-text-muted)]">
           Ticket <span className="font-semibold text-[var(--color-text)]">{cotizacion?.codigo_ticket || '-'}</span>. Verifica que el cliente esté presente antes de confirmar.
+        </p>
+      </Modal>
+
+      <Modal
+        open={confirmarOpen}
+        onClose={() => (confirmandoEstado ? null : setConfirmarOpen(false))}
+        title="Confirmar cotización"
+        description={`Ticket ${cotizacion?.codigo_ticket || ''}.`}
+        size="sm"
+        footer={(
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setConfirmarOpen(false)} disabled={confirmandoEstado}>
+              Cancelar
+            </Button>
+            <Button variant="primary" onClick={confirmarCotizacionActual} loading={confirmandoEstado}>
+              Confirmar
+            </Button>
+          </div>
+        )}
+      >
+        <p className="text-sm text-[var(--color-text)]">
+          Al confirmar, la cotización queda <strong>fijada</strong>: ya no caduca y el cliente no
+          podrá pedir cambios. Es el respaldo del acuerdo con ventas.
         </p>
       </Modal>
     </div>

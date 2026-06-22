@@ -230,7 +230,7 @@ function validarCotizacion(datos) {
  * @returns {Object} { valido: boolean, error?: string }
  */
 function validarEstadoCotizacion(estado) {
-  const estadosValidos = ['Pendiente', 'Completada', 'Caducada', 'Reclamada'];
+  const estadosValidos = ['Pendiente', 'Confirmada', 'Completada', 'Caducada', 'Reclamada'];
   
   if (!estado || typeof estado !== 'string') {
     return { valido: false, error: 'Estado es requerido' };
@@ -320,13 +320,17 @@ function validarCodigoTicket(codigo) {
  */
 function validarCredenciales(credenciales) {
   const errores = [];
-  
-  if (!credenciales.username || typeof credenciales.username !== 'string') {
-    errores.push({ campo: 'username', mensaje: 'Username es requerido' });
-  } else if (credenciales.username.length < 3) {
-    errores.push({ campo: 'username', mensaje: 'Username debe tener mínimo 3 caracteres' });
+
+  // Login por correo electrónico.
+  if (!credenciales.correo || typeof credenciales.correo !== 'string') {
+    errores.push({ campo: 'correo', mensaje: 'Correo es requerido' });
+  } else {
+    const validacionEmail = validarEmail(credenciales.correo);
+    if (!validacionEmail.valido) {
+      errores.push({ campo: 'correo', mensaje: validacionEmail.error || 'Correo inválido' });
+    }
   }
-  
+
   if (!credenciales.password || typeof credenciales.password !== 'string') {
     errores.push({ campo: 'password', mensaje: 'Password es requerido' });
   } else if (credenciales.password.length < 6) {
@@ -348,16 +352,7 @@ function validarCredenciales(credenciales) {
 function validarRegistro(datos) {
   const errores = [];
 
-  // Username: requerido, 3-50 chars, alfanumérico + guion bajo
-  if (!datos.username || typeof datos.username !== 'string') {
-    errores.push({ campo: 'username', mensaje: 'Username es requerido' });
-  } else if (datos.username.trim().length < 3) {
-    errores.push({ campo: 'username', mensaje: 'Username debe tener minimo 3 caracteres' });
-  } else if (datos.username.trim().length > 50) {
-    errores.push({ campo: 'username', mensaje: 'Username debe tener maximo 50 caracteres' });
-  } else if (!/^[a-zA-Z0-9_]+$/.test(datos.username.trim())) {
-    errores.push({ campo: 'username', mensaje: 'Username solo debe contener letras, numeros y guion bajo' });
-  }
+  // Login por correo: ya no se exige username.
 
   // Password: requerido, min 8 chars, mayuscula, minuscula, numero, especial
   if (!datos.password || typeof datos.password !== 'string') {
@@ -395,17 +390,27 @@ function validarRegistro(datos) {
     }
   }
 
-  // Nombre completo: requerido, 2-100 chars
-  if (!datos.nombre_completo || typeof datos.nombre_completo !== 'string') {
-    errores.push({ campo: 'nombre_completo', mensaje: 'Nombre completo es requerido' });
-  } else if (datos.nombre_completo.trim().length < 2) {
-    errores.push({ campo: 'nombre_completo', mensaje: 'Nombre debe tener minimo 2 caracteres' });
-  } else if (datos.nombre_completo.trim().length > 100) {
-    errores.push({ campo: 'nombre_completo', mensaje: 'Nombre debe tener maximo 100 caracteres' });
+  // Nombre: requerido, 2-60 chars
+  if (!datos.nombre || typeof datos.nombre !== 'string' || datos.nombre.trim().length < 2) {
+    errores.push({ campo: 'nombre', mensaje: 'El nombre es obligatorio (mínimo 2 caracteres)' });
+  } else if (datos.nombre.trim().length > 60) {
+    errores.push({ campo: 'nombre', mensaje: 'El nombre debe tener máximo 60 caracteres' });
   } else {
-    const validacionCodigo = validarSinCodigoMalicioso(datos.nombre_completo);
+    const validacionCodigo = validarSinCodigoMalicioso(datos.nombre);
     if (!validacionCodigo.valido) {
-      errores.push({ campo: 'nombre_completo', mensaje: validacionCodigo.error });
+      errores.push({ campo: 'nombre', mensaje: validacionCodigo.error });
+    }
+  }
+
+  // Apellidos: requerido, 2-60 chars
+  if (!datos.apellidos || typeof datos.apellidos !== 'string' || datos.apellidos.trim().length < 2) {
+    errores.push({ campo: 'apellidos', mensaje: 'Los apellidos son obligatorios (mínimo 2 caracteres)' });
+  } else if (datos.apellidos.trim().length > 60) {
+    errores.push({ campo: 'apellidos', mensaje: 'Los apellidos deben tener máximo 60 caracteres' });
+  } else {
+    const validacionCodigo = validarSinCodigoMalicioso(datos.apellidos);
+    if (!validacionCodigo.valido) {
+      errores.push({ campo: 'apellidos', mensaje: validacionCodigo.error });
     }
   }
 

@@ -81,6 +81,7 @@ const AppProviderInternal = ({ children }) => {
   const [margenGanancia, setMargenGanancia] = useState(20);
   const [tasaIgv, setTasaIgv] = useState(18);
   const [tipoCambioUsdPen, setTipoCambioUsdPen] = useState(3.75);
+  const [numeroWhatsAppVentas, setNumeroWhatsAppVentas] = useState('');
 
   // Modo de tipo de cambio: "manual" (valor de BD) | "automatico" (API externa)
   const [modoTipoCambio, setModoTipoCambio] = useState('manual');
@@ -250,6 +251,10 @@ const AppProviderInternal = ({ children }) => {
         if (respuesta.modo_tipo_cambio === 'manual' || respuesta.modo_tipo_cambio === 'automatico') {
           setModoTipoCambio(respuesta.modo_tipo_cambio);
         }
+
+        if (typeof respuesta.whatsapp_numero_ventas === 'string') {
+          setNumeroWhatsAppVentas(respuesta.whatsapp_numero_ventas);
+        }
       }
       return respuesta;
     } catch (error) {
@@ -264,9 +269,9 @@ const AppProviderInternal = ({ children }) => {
   /**
    * Inicia sesiÃ³n de administrador
    */
-  const login = async (username, password, captchaToken = null) => {
+  const login = async (correo, password, captchaToken = null) => {
     try {
-      const resultado = await api.login(username, password, captchaToken);
+      const resultado = await api.login(correo, password, captchaToken);
 
       if (resultado.exito) {
         setUsuario(resultado.usuario);
@@ -279,7 +284,7 @@ const AppProviderInternal = ({ children }) => {
       console.error('Error en login:', error);
       return {
         exito: false,
-        error: error.mensaje || 'Error al iniciar sesión'
+        error: error?.error || error?.mensaje || 'Error al iniciar sesión'
       };
     }
   };
@@ -296,13 +301,16 @@ const AppProviderInternal = ({ children }) => {
         setAutenticado(true);
         return { exito: true };
       } else {
-        return { exito: false, error: resultado.error, detalles: resultado.detalles };
+        return { exito: false, error: resultado.error, detalles: resultado.detalles, codigo: resultado.codigo, mensaje: resultado.mensaje };
       }
     } catch (error) {
       console.error('Error en registro:', error);
       return {
         exito: false,
-        error: error.mensaje || 'Error al procesar el registro'
+        error: error?.error || error?.mensaje || 'Error al procesar el registro',
+        detalles: error?.detalles,
+        codigo: error?.codigo,
+        mensaje: error?.mensaje
       };
     }
   };
@@ -728,11 +736,12 @@ const AppProviderInternal = ({ children }) => {
     return respuesta;
   };
 
-  const actualizarConfiguracionFinanciera = async ({ margen_ganancia_default, tasa_igv, tipo_cambio_usd_pen }) => {
+  const actualizarConfiguracionFinanciera = async ({ margen_ganancia_default, tasa_igv, tipo_cambio_usd_pen, whatsapp_numero_ventas }) => {
     const respuesta = await api.actualizarMargenGanancia(
       margen_ganancia_default,
       tasa_igv,
-      tipo_cambio_usd_pen
+      tipo_cambio_usd_pen,
+      whatsapp_numero_ventas
     );
     if (respuesta?.exito) {
       if (typeof respuesta.margen_ganancia_default === 'number') {
@@ -740,6 +749,9 @@ const AppProviderInternal = ({ children }) => {
       }
       if (typeof respuesta.tasa_igv === 'number') {
         setTasaIgv(respuesta.tasa_igv);
+      }
+      if (typeof respuesta.whatsapp_numero_ventas === 'string') {
+        setNumeroWhatsAppVentas(respuesta.whatsapp_numero_ventas);
       }
       // Actualizar solo el valor manual de BD; el useEffect de sincronizaciÃ³n
       // se encarga de reflejar el valor correcto segÃºn el modo activo.
@@ -796,6 +808,8 @@ const AppProviderInternal = ({ children }) => {
     margenGanancia,
     tasaIgv,
     tipoCambioUsdPen,
+    // Número de WhatsApp de ventas (para confirmar cotizaciones)
+    numeroWhatsAppVentas,
     // Tipo de cambio â€” modo y estados del hook (Requisitos 3.1â€“3.6)
     modoTipoCambio,
     cargandoTipoCambio,

@@ -12,7 +12,7 @@ const { encriptar, desencriptar, hashBusqueda } = require('../utilidades/encript
 const { hashPassword } = require('../servicios/servicioAuth');
 
 const ROLES_VALIDOS = ['admin', 'vendedor', 'usuario'];
-const ESTADOS_VALIDOS = ['activa', 'pendiente_activacion'];
+const ESTADOS_VALIDOS = ['activa', 'pendiente_activacion', 'desactivada'];
 
 function descifrarSeguro(valor) {
   if (!valor) return null;
@@ -22,7 +22,7 @@ function descifrarSeguro(valor) {
 async function listarCuentas(req, res) {
   try {
     const { rows } = await ejecutarQuery(
-      `SELECT id, username, nombre_completo, rol, estado, dni,
+      `SELECT id, username, nombre, apellidos, nombre_completo, rol, estado, dni,
               correo_encrypted, telefono_encrypted, created_at
          FROM cuentas
         ORDER BY created_at DESC`
@@ -30,6 +30,8 @@ async function listarCuentas(req, res) {
     const cuentas = rows.map((c) => ({
       id: c.id,
       username: c.username,
+      nombre: c.nombre,
+      apellidos: c.apellidos,
       nombre_completo: c.nombre_completo,
       rol: c.rol,
       estado: c.estado,
@@ -47,10 +49,15 @@ async function listarCuentas(req, res) {
 
 async function crearCuenta(req, res) {
   try {
-    const { username, password, correo, nombre_completo, telefono, dni, rol } = req.body || {};
+    const { password, correo, nombre, apellidos, nombre_completo, telefono, dni, rol } = req.body || {};
 
-    if (!username || !password || !correo || !nombre_completo || !rol) {
-      return res.status(400).json({ error: 'Datos inválidos', mensaje: 'username, password, correo, nombre_completo y rol son obligatorios' });
+    const nombreLimpio = nombre ? String(nombre).trim() : '';
+    const apellidosLimpio = apellidos ? String(apellidos).trim() : '';
+    const nombreCompleto = [nombreLimpio, apellidosLimpio].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim()
+      || (nombre_completo ? String(nombre_completo).trim() : '');
+
+    if (!password || !correo || !nombreCompleto || !rol) {
+      return res.status(400).json({ error: 'Datos inválidos', mensaje: 'correo, password, nombre/apellidos y rol son obligatorios' });
     }
     if (!ROLES_VALIDOS.includes(rol)) {
       return res.status(400).json({ error: 'Rol inválido', mensaje: `rol debe ser uno de: ${ROLES_VALIDOS.join(', ')}` });
@@ -64,9 +71,9 @@ async function crearCuenta(req, res) {
 
     const correoNorm = String(correo).trim().toLowerCase();
     const correoHash = hashBusqueda(correoNorm);
-    const existe = await ejecutarQuery('SELECT id FROM cuentas WHERE correo_hash = $1 OR username = $2', [correoHash, username.trim()]);
+    const existe = await ejecutarQuery('SELECT id FROM cuentas WHERE correo_hash = $1', [correoHash]);
     if (existe.rows.length > 0) {
-      return res.status(409).json({ error: 'Cuenta duplicada', mensaje: 'Ya existe una cuenta con ese correo o username' });
+      return res.status(409).json({ error: 'Cuenta duplicada', mensaje: 'Ya existe una cuenta con ese correo' });
     }
 
     const passwordHash = await hashPassword(password);
@@ -75,12 +82,13 @@ async function crearCuenta(req, res) {
     const telefonoEncrypted = tel ? encriptar(tel) : null;
     const telefonoHash = tel ? hashBusqueda(tel) : null;
 
+    // username queda NULL (login por correo).
     const insert = await ejecutarQuery(
-      `INSERT INTO cuentas (username, password_hash, correo_encrypted, correo_hash, nombre_completo,
+      `INSERT INTO cuentas (password_hash, correo_encrypted, correo_hash, nombre, apellidos, nombre_completo,
                             telefono_encrypted, telefono_hash, dni, rol, estado)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'activa')
-       RETURNING id, username, nombre_completo, rol, estado, dni`,
-      [username.trim(), passwordHash, correoEncrypted, correoHash, nombre_completo.trim(),
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'activa')
+       RETURNING id, username, nombre, apellidos, nombre_completo, rol, estado, dni`,
+      [passwordHash, correoEncrypted, correoHash, nombreLimpio || null, apellidosLimpio || null, nombreCompleto,
        telefonoEncrypted, telefonoHash, dni ? String(dni).trim() : null, rol]
     );
     return res.status(201).json({ exito: true, cuenta: insert.rows[0] });
@@ -96,7 +104,7 @@ async function actualizarCuenta(req, res) {
     const id = parseInt(req.params.id, 10);
     if (!Number.isInteger(id)) return res.status(400).json({ error: 'ID inválido' });
 
-    const { nombre_completo, rol, estado, dni, password } = req.body || {};
+    const { nombre, apellidos, nombre_completo, rol, estado, dni, password } = req.body || {};
 
     // Resguardo: el admin no puede quitarse a sí mismo el rol admin.
     if (req.usuario?.id === id && rol && rol !== 'admin') {
@@ -106,7 +114,17 @@ async function actualizarCuenta(req, res) {
     const sets = [];
     const valores = [];
     let i = 1;
-    if (nombre_completo !== undefined) { sets.push(`nombre_completo = $${i++}`); valores.push(String(nombre_completo).trim()); }
+    // Nombre/apellidos: si vienen ambos, se actualizan junto con nombre_completo derivado.
+    if (nombre !== undefined || apellidos !== undefined) {
+      const nombreLimpio = nombre !== undefined ? String(nombre).trim() : '';
+      const apellidosLimpio = apellidos !== undefined ? String(apellidos).trim() : '';
+      const nombreCompleto = [nombreLimpio, apellidosLimpio].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+      sets.push(`nombre = $${i++}`); valores.push(nombreLimpio || null);
+      sets.push(`apellidos = $${i++}`); valores.push(apellidosLimpio || null);
+      sets.push(`nombre_completo = $${i++}`); valores.push(nombreCompleto);
+    } else if (nombre_completo !== undefined) {
+      sets.push(`nombre_completo = $${i++}`); valores.push(String(nombre_completo).trim());
+    }
     if (rol !== undefined) {
       if (!ROLES_VALIDOS.includes(rol)) return res.status(400).json({ error: 'Rol inválido' });
       sets.push(`rol = $${i++}`); valores.push(rol);

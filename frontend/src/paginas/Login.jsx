@@ -7,12 +7,12 @@ import ErrorState from '../componentes/feedback/ErrorState';
 import TurnstileWidget from '../componentes/ui/TurnstileWidget';
 import { useAppContext } from '../contexto/AppContext';
 
-function validarCredenciales(username, password) {
-  if (!username.trim()) {
-    return 'El usuario es obligatorio.';
+function validarCredenciales(correo, password) {
+  if (!correo.trim()) {
+    return 'El correo es obligatorio.';
   }
-  if (username.trim().length < 3) {
-    return 'El usuario debe tener al menos 3 caracteres.';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.trim())) {
+    return 'Ingresa un correo válido.';
   }
   if (!password) {
     return 'La contraseña es obligatoria.';
@@ -27,7 +27,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useAppContext();
 
-  const [username, setUsername] = useState('');
+  const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [cargando, setCargando] = useState(false);
@@ -38,7 +38,7 @@ export default function Login() {
     event.preventDefault();
     setError('');
 
-    const validacion = validarCredenciales(username, password);
+    const validacion = validarCredenciales(correo, password);
     if (validacion) {
       setError(validacion);
       return;
@@ -47,7 +47,7 @@ export default function Login() {
     setCargando(true);
 
     try {
-      const resultado = await login(username.trim(), password, captchaToken);
+      const resultado = await login(correo.trim().toLowerCase(), password, captchaToken);
 
       if (resultado?.exito) {
         navigate(resultado.rol === 'admin' ? '/admin/productos' : '/cotizador');
@@ -91,16 +91,17 @@ export default function Login() {
           ) : null}
 
           <InputField
-            id="login-username"
-            label="Usuario"
+            id="login-correo"
+            label="Correo electrónico"
+            type="email"
             required
-            autoComplete="username"
-            value={username}
+            autoComplete="email"
+            value={correo}
             onChange={(event) => {
-              setUsername(event.target.value);
+              setCorreo(event.target.value);
               setError('');
             }}
-            placeholder="Usuario"
+            placeholder="tucorreo@dominio.com"
           />
 
           <div className="space-y-1.5">

@@ -11,15 +11,21 @@ import ErrorState from '../componentes/feedback/ErrorState';
 import LoadingSpinner from '../componentes/feedback/LoadingSpinner';
 import { useToast } from '../componentes/feedback/ToastProvider';
 import { useAppContext } from '../contexto/AppContext';
+import Modal from '../componentes/ui/Modal';
+import ModalDetalleCotizacion from '../componentes/cotizador/ModalDetalleCotizacion';
 import {
   consultarHistorialCliente,
   listarClientesRegistrados,
   obtenerCotizacionesPropias,
   exportarExcelCotizacion,
   descargarPdfCotizacion,
-  descargarPdfTecnico
+  descargarPdfTecnico,
+  confirmarCotizacion,
+  solicitarConfirmacionCotizacion
 } from '../servicios/api';
 import { formatearMoneda as formatoMoneda } from '../utilidades/moneda';
+import { etiquetaEstado, varianteEstado, OPCIONES_FILTRO_ESTADO } from '../utilidades/estadoCotizacion';
+import { construirEnlaceWhatsApp, construirMensajeConfirmacion } from '../utilidades/whatsapp';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -38,22 +44,6 @@ function formatearMoneda(monto, moneda = 'USD') {
   return formatoMoneda(monto, moneda);
 }
 
-// Mapa de estado backend → texto visible en UI (Req. 7)
-const ESTADO_LABELS = {
-  'Pendiente':  'Pendiente',
-  'Completada': 'Completada',
-  'Reclamada':  'Reclamada',
-  'Caducada':   'Vencida',   // ← "Caducada" en BD se muestra como "Vencida" en UI
-};
-
-// Mapa de estado → variant del Badge (Req. 7)
-const ESTADO_VARIANTS = {
-  'Pendiente':  'warning',
-  'Completada': 'success',
-  'Reclamada':  'info',
-  'Caducada':   'danger',
-};
-
 function StatCard({ label, value, helper }) {
   return (
     <article className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4">
@@ -67,9 +57,14 @@ function StatCard({ label, value, helper }) {
 export default function HistorialCliente() {
   const toast = useToast();
   const navigate = useNavigate();
-  const { monedaVista, formatearMontoSegunMonedaVista, esAdmin, esVendedor, esUsuario } = useAppContext();
+  const { monedaVista, formatearMontoSegunMonedaVista, esAdmin, esVendedor, esUsuario, numeroWhatsAppVentas } = useAppContext();
   // El vendedor ve todas las cotizaciones igual que el admin (gestiona ventas).
   const puedeVerTodas = esAdmin || esVendedor;
+
+  // Detalle en modal (todos los roles) y confirmación (admin/vendedor).
+  const [detalleTicket, setDetalleTicket] = useState(null);
+  const [ticketAConfirmar, setTicketAConfirmar] = useState(null);
+  const [confirmando, setConfirmando] = useState(false);
 
   const [email, setEmail] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
@@ -174,6 +169,57 @@ export default function HistorialCliente() {
         'No se pudo exportar el Excel',
         err?.mensaje || 'Verifica que estés autenticado e intenta nuevamente.'
       );
+    }
+  };
+
+  // El cliente confirma su cotización contactando a ventas por WhatsApp.
+  const confirmarPorWhatsApp = async (row) => {
+    const enlace = construirEnlaceWhatsApp({
+      numero: numeroWhatsAppVentas,
+      mensaje: construirMensajeConfirmacion({
+        codigoTicket: row.codigo_ticket,
+        montoFormateado: formatearMontoSegunMonedaVista({
+          montoUsd: row?.finanzas?.total?.usd ?? row.precio_total,
+          montoPen: row?.finanzas?.total?.pen,
+        }),
+      }),
+    });
+
+    if (!enlace) {
+      toast.error('WhatsApp no disponible', 'No hay un número de ventas configurado. Avisa al administrador.');
+      return;
+    }
+
+    try {
+      await solicitarConfirmacionCotizacion(row.codigo_ticket);
+    } catch {
+      // Silencioso: la marca es un complemento; el cliente igual contacta a ventas.
+    }
+
+    window.open(enlace, '_blank', 'noopener,noreferrer');
+  };
+
+  // Admin/vendedor verifica la cotización: 'Sin confirmar' → 'Confirmada'.
+  const ejecutarConfirmacion = async () => {
+    if (!ticketAConfirmar) return;
+    setConfirmando(true);
+    try {
+      const respuesta = await confirmarCotizacion(ticketAConfirmar);
+      if (respuesta?.exito) {
+        setCotizaciones((prev) =>
+          prev.map((c) =>
+            c.codigo_ticket === ticketAConfirmar ? { ...c, estado: 'Confirmada' } : c
+          )
+        );
+        toast.success('Cotización confirmada', `El ticket ${ticketAConfirmar} quedó confirmado.`);
+        setTicketAConfirmar(null);
+      } else {
+        toast.error('No se pudo confirmar', respuesta?.mensaje || 'Intenta nuevamente.');
+      }
+    } catch (err) {
+      toast.error('No se pudo confirmar', err?.mensaje || 'Intenta nuevamente.');
+    } finally {
+      setConfirmando(false);
     }
   };
 
@@ -326,7 +372,15 @@ export default function HistorialCliente() {
       key: 'estado',
       label: 'Estado',
       sortable: true,
-      render: (row) => <Badge variant={ESTADO_VARIANTS[row.estado] || 'neutral'}>{ESTADO_LABELS[row.estado] || row.estado || 'Sin estado'}</Badge>,
+      render: (row) => (
+        <div className="space-y-1">
+          <Badge variant={varianteEstado(row.estado)}>{etiquetaEstado(row.estado)}</Badge>
+          {/* Marca visible para admin/vendedor: el cliente ya pidió confirmar */}
+          {puedeVerTodas && row.estado === 'Pendiente' && row.fecha_solicitud_confirmacion ? (
+            <p className="text-[11px] font-medium text-[var(--color-accent)]">Solicitó confirmar</p>
+          ) : null}
+        </div>
+      ),
     },
     {
       key: 'precio_total',
@@ -378,7 +432,38 @@ export default function HistorialCliente() {
       label: 'PDF',
       align: 'right',
       render: (row) => (
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
+          {/* Ver detalle en la app (todos los roles): no descarga PDF */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setDetalleTicket(row.codigo_ticket)}
+            aria-label={`Ver detalle de ${row.codigo_ticket}`}
+          >
+            Ver detalle
+          </Button>
+          {/* Cliente: confirmar su cotización sin confirmar por WhatsApp */}
+          {esUsuario && row.estado === 'Pendiente' && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => confirmarPorWhatsApp(row)}
+              aria-label={`Confirmar ${row.codigo_ticket} por WhatsApp`}
+            >
+              Confirmar por WhatsApp
+            </Button>
+          )}
+          {/* Admin/vendedor: verificar la cotización */}
+          {puedeVerTodas && row.estado === 'Pendiente' && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setTicketAConfirmar(row.codigo_ticket)}
+              aria-label={`Confirmar ${row.codigo_ticket}`}
+            >
+              Confirmar
+            </Button>
+          )}
           {/* Validar y Técnico: solo visibles para admin (renderizado condicional, no CSS) */}
           {!esUsuario && (
             <Link
@@ -613,13 +698,7 @@ export default function HistorialCliente() {
                   value={filtroEstado}
                   onChange={(event) => setFiltroEstado(event.target.value)}
                   className="sm:max-w-[15rem]"
-                  options={[
-                    { value: 'todos', label: 'Todos' },
-                    { value: 'Pendiente', label: 'Pendiente' },
-                    { value: 'Completada', label: 'Completada' },
-                    { value: 'Reclamada', label: 'Reclamada' },
-                    { value: 'Caducada', label: 'Vencida' },
-                  ]}
+                  options={OPCIONES_FILTRO_ESTADO}
                 />
               )}
               rightToolbar={<p className="text-xs text-[var(--color-text-muted)]">{cotizacionesFiltradas.length} resultados</p>}
@@ -635,6 +714,37 @@ export default function HistorialCliente() {
           )}
         </>
       ) : null}
+
+      {/* Modal de detalle (solo lectura) */}
+      <ModalDetalleCotizacion
+        codigoTicket={detalleTicket}
+        open={Boolean(detalleTicket)}
+        onClose={() => setDetalleTicket(null)}
+      />
+
+      {/* Modal de confirmación (admin/vendedor) con advertencia de fijación */}
+      <Modal
+        open={Boolean(ticketAConfirmar)}
+        onClose={() => (confirmando ? null : setTicketAConfirmar(null))}
+        size="sm"
+        title="Confirmar cotización"
+        description={`Vas a confirmar el ticket ${ticketAConfirmar || ''}.`}
+        footer={(
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setTicketAConfirmar(null)} disabled={confirmando}>
+              Cancelar
+            </Button>
+            <Button variant="primary" onClick={ejecutarConfirmacion} loading={confirmando}>
+              Confirmar
+            </Button>
+          </div>
+        )}
+      >
+        <p className="text-sm text-[var(--color-text)]">
+          Al confirmar, la cotización queda <strong>fijada</strong>: ya no caduca y el cliente no
+          podrá pedir cambios. Esta acción es el respaldo del acuerdo con ventas.
+        </p>
+      </Modal>
     </div>
   );
 }

@@ -23,9 +23,17 @@ function parseTipoCambio(valor) {
   return numero;
 }
 
+// Número de WhatsApp de ventas: solo dígitos (código país + número), 8 a 15 dígitos.
+function parseNumeroWhatsApp(valor) {
+  if (valor === null || valor === undefined) return null;
+  const limpio = String(valor).replace(/[^\d]/g, '');
+  if (!/^\d{8,15}$/.test(limpio)) return null;
+  return limpio;
+}
+
 async function obtenerMapaConfiguracion() {
   const resultado = await ejecutarQuery(
-    "SELECT clave, valor, updated_at FROM configuracion WHERE clave IN ('margen_ganancia', 'margen_ganancia_default', 'tasa_igv', 'tipo_cambio_usd_pen', 'modo_tipo_cambio')",
+    "SELECT clave, valor, updated_at FROM configuracion WHERE clave IN ('margen_ganancia', 'margen_ganancia_default', 'tasa_igv', 'tipo_cambio_usd_pen', 'modo_tipo_cambio', 'whatsapp_numero_ventas')",
     []
   );
 
@@ -72,6 +80,11 @@ function construirPayloadConfiguracion(mapa) {
     mapa.tipo_cambio_usd_pen?.updated_at,
   ].find(Boolean);
 
+  // Número de WhatsApp de ventas: fuente de verdad en BD; fallback al .env.
+  const whatsappNumeroVentas = parseNumeroWhatsApp(mapa.whatsapp_numero_ventas?.valor)
+    ?? parseNumeroWhatsApp(process.env.WHATSAPP_NUMERO_ASESOR)
+    ?? '';
+
   return {
     exito: true,
     margen_ganancia: margenPorDefecto ?? 20,
@@ -79,6 +92,7 @@ function construirPayloadConfiguracion(mapa) {
     tasa_igv: tasaIgv ?? 18,
     tipo_cambio_usd_pen: tipoCambio ?? 3.75,
     modo_tipo_cambio: modoCambio,
+    whatsapp_numero_ventas: whatsappNumeroVentas,
     updated_at: updatedAt ?? null,
   };
 }
@@ -107,11 +121,21 @@ async function actualizarMargen(req, res) {
     const nuevoTipoCambio = req.body?.tipo_cambio_usd_pen === undefined
       ? undefined
       : parseTipoCambio(req.body?.tipo_cambio_usd_pen);
+    const nuevoNumeroWhatsApp = req.body?.whatsapp_numero_ventas === undefined
+      ? undefined
+      : parseNumeroWhatsApp(req.body?.whatsapp_numero_ventas);
 
     if (nuevoMargen === null || (req.body?.tasa_igv !== undefined && nuevaTasaIgv === null) || (req.body?.tipo_cambio_usd_pen !== undefined && nuevoTipoCambio === null)) {
       return res.status(400).json({
         error: 'Dato invalido',
         mensaje: 'margen_ganancia_default/tasa_igv deben estar entre 0 y 100 y tipo_cambio_usd_pen debe ser mayor a 0',
+      });
+    }
+
+    if (req.body?.whatsapp_numero_ventas !== undefined && nuevoNumeroWhatsApp === null) {
+      return res.status(400).json({
+        error: 'Dato invalido',
+        mensaje: 'whatsapp_numero_ventas debe contener entre 8 y 15 digitos (incluye codigo de pais)',
       });
     }
 
@@ -124,6 +148,10 @@ async function actualizarMargen(req, res) {
 
     if (nuevoTipoCambio !== undefined) {
       await guardarConfiguracion('tipo_cambio_usd_pen', nuevoTipoCambio, 'Tipo de cambio referencial USD a PEN');
+    }
+
+    if (nuevoNumeroWhatsApp !== undefined) {
+      await guardarConfiguracion('whatsapp_numero_ventas', nuevoNumeroWhatsApp, 'Numero de WhatsApp del area de ventas (codigo pais + numero)');
     }
 
     const mapaConfiguracion = await obtenerMapaConfiguracion();
@@ -542,10 +570,46 @@ async function actualizarModelosIAEnriquecimiento(req, res) {
   }
 }
 
+const CLAVE_TOKEN_DNI = 'decolecta_api_token_enc';
+
+// Estado del token de consulta de DNI (decolecta). No expone el valor (es secreto).
+async function obtenerEstadoTokenDni(req, res) {
+  try {
+    const { rows } = await ejecutarQuery('SELECT valor FROM configuracion WHERE clave = $1', [CLAVE_TOKEN_DNI]);
+    const configurado = !!(rows[0]?.valor && String(rows[0].valor).trim()) || !!process.env.DECOLECTA_API_TOKEN;
+    return res.json({ exito: true, configurado });
+  } catch (error) {
+    console.error('Error al obtener estado del token DNI:', error);
+    return res.status(500).json({ error: 'Error interno', mensaje: 'No se pudo obtener el estado del token de DNI' });
+  }
+}
+
+// Guarda (encriptado) el token de decolecta. Solo admin.
+async function actualizarTokenDni(req, res) {
+  try {
+    const token = req.body?.token;
+    if (!token || typeof token !== 'string' || token.trim() === '') {
+      return res.status(400).json({ error: 'Dato inválido', mensaje: 'El token es requerido' });
+    }
+    await ejecutarQuery(
+      `INSERT INTO configuracion (clave, valor)
+       VALUES ($1, $2)
+       ON CONFLICT (clave) DO UPDATE SET valor = EXCLUDED.valor, updated_at = NOW()`,
+      [CLAVE_TOKEN_DNI, encriptar(token.trim())]
+    );
+    return res.json({ exito: true, mensaje: 'Token de consulta de DNI actualizado' });
+  } catch (error) {
+    console.error('Error al actualizar token DNI:', error);
+    return res.status(500).json({ error: 'Error interno', mensaje: 'No se pudo guardar el token de DNI' });
+  }
+}
+
 module.exports = {
   obtenerMargen,
   actualizarMargen,
   actualizarModoTipoCambio,
+  obtenerEstadoTokenDni,
+  actualizarTokenDni,
   obtenerModelosIA,
   actualizarModelosIA,
   obtenerApiKeysIA,

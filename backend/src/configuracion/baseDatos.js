@@ -18,7 +18,7 @@ const pool = new Pool({
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : false,
 });
 
-pool.on('connect', () => console.log('✓ Conectado a PostgreSQL'));
+pool.on('connect', () => console.log('Conectado a PostgreSQL'));
 pool.on('error', (err) => {
   console.error('Error en PostgreSQL:', err);
   process.exit(-1);
