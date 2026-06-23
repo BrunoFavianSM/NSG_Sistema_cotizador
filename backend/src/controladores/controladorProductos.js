@@ -34,9 +34,6 @@ const SELECT_PRODUCTO_NORMALIZADO = `
     NULL::INTEGER AS tiempo_entrega_dias,
     p.descripcion_general AS descripcion_tecnica,
     p.imagen_url,
-    p.imagen_path,
-    p.garantia,
-    p.flete,
     p.created_at,
     p.updated_at,
     -- specs_procesador
@@ -481,9 +478,9 @@ async function crearProducto(req, res) {
     const insert = await ejecutarQuery(
       `INSERT INTO productos (
          id_categoria, id_marca, subcategoria, categoria_proveedor, codigo_proveedor,
-         nombre, descripcion_general, precio_base, stock, disponible_a_pedido, garantia, flete, imagen_url,
+         nombre, descripcion_general, precio_base, stock, disponible_a_pedido, imagen_url,
          id_etiqueta
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
        RETURNING id`,
       [
         idCategoria,
@@ -496,8 +493,6 @@ async function crearProducto(req, res) {
         precio,
         stock,
         Boolean(datosSanitizados.disponible_a_pedido),
-        datosSanitizados.garantia || null,
-        null,
         datosSanitizados.imagen_url || null,
         idEtiqueta,
       ]
@@ -580,17 +575,9 @@ async function actualizarProducto(req, res) {
       actualizaciones.push(`disponible_a_pedido = $${i++}`);
       valores.push(Boolean(datosSanitizados.disponible_a_pedido));
     }
-    if (Object.prototype.hasOwnProperty.call(datosSanitizados, 'garantia')) {
-      actualizaciones.push(`garantia = $${i++}`);
-      valores.push(datosSanitizados.garantia || null);
-    }
     if (Object.prototype.hasOwnProperty.call(datosSanitizados, 'imagen_url')) {
       actualizaciones.push(`imagen_url = $${i++}`);
       valores.push(datosSanitizados.imagen_url || null);
-    }
-    if (Object.prototype.hasOwnProperty.call(datosSanitizados, 'imagen_path')) {
-      actualizaciones.push(`imagen_path = $${i++}`);
-      valores.push(datosSanitizados.imagen_path || null);
     }
     if (Object.prototype.hasOwnProperty.call(datosSanitizados, 'marca')) {
       const idMarca = await obtenerIdMarcaSiExiste(datosSanitizados.marca);
@@ -691,39 +678,6 @@ async function eliminarProducto(req, res) {
     }
     console.error('Error al eliminar producto:', error);
     return res.status(500).json({ error: 'Error al eliminar producto', mensaje: 'No se pudo eliminar el producto' });
-  }
-}
-
-async function subirImagenProducto(req, res) {
-  try {
-    const destino = resolverDestinoOperacion(req.params.categoria, req.query.subcategoria);
-    const validacionId = validarId(req.params.id);
-    if (!validacionId.valido) return res.status(400).json({ error: 'ID invalido', mensaje: validacionId.error });
-    if (!req.file) return res.status(400).json({ error: 'Imagen no recibida', mensaje: 'Debe enviar una imagen en el campo "imagen"' });
-
-    const imagenPath = `/uploads/${req.file.filename}`;
-    const resultado = await ejecutarQuery(
-      `UPDATE productos p
-       SET imagen_path = $1
-       FROM categorias c
-       WHERE p.id = $2 AND c.id = p.id_categoria AND c.nombre = $3
-       ${destino.subcategoria ? 'AND p.subcategoria = $4' : ''}
-       RETURNING p.id, p.nombre, p.imagen_path`,
-      destino.subcategoria
-        ? [imagenPath, validacionId.id, destino.categoriaCanonica, destino.subcategoria]
-        : [imagenPath, validacionId.id, destino.categoriaCanonica]
-    );
-
-    if (resultado.rows.length === 0) {
-      return res.status(404).json({ error: 'Producto no encontrado', mensaje: `No existe un producto con ID ${validacionId.id}` });
-    }
-    return res.json({ exito: true, mensaje: 'Imagen subida exitosamente', producto: resultado.rows[0] });
-  } catch (error) {
-    if (error.message.includes('Categoria') || error.message.includes('Subcategoria')) {
-      return res.status(400).json({ error: 'Categoria invalida', mensaje: error.message });
-    }
-    console.error('Error al subir imagen:', error);
-    return res.status(500).json({ error: 'Error al subir imagen', mensaje: 'No se pudo subir la imagen del producto' });
   }
 }
 
@@ -930,7 +884,6 @@ module.exports = {
   crearProducto,
   actualizarProducto,
   eliminarProducto,
-  subirImagenProducto,
   limpiarCatalogo,
   obtenerHistorialPrecios,
   buscarProductosCompatibles,

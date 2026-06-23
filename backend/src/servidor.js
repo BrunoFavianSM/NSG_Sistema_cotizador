@@ -134,9 +134,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // Rutas
 app.use('/api/dashboard', require('./rutas/dashboard'));
-// Favoritos debe registrarse antes de /api/productos para que Express no interprete
-// "favoritos" como un parámetro de ruta de productos.
-app.use('/api/productos/favoritos', require('./rutas/favoritos'));
 app.use('/api/productos', require('./rutas/productos'));
 app.use('/api/cotizaciones', require('./rutas/cotizaciones'));
 app.use('/api/compatibilidad', require('./rutas/compatibilidad'));

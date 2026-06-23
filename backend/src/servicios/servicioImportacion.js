@@ -370,7 +370,6 @@ function parsearCSV(buffer) {
       stock: encabezado.indexOf('stock'),
       disponible_a_pedido: encabezado.indexOf('disponible_a_pedido'),
       precio_base: encabezado.indexOf('precio_base'),
-      garantia: encabezado.indexOf('garantia'),
       socket: encabezado.indexOf('socket'),
       arquitectura: encabezado.indexOf('arquitectura'),
       cpu_nucleos: encabezado.indexOf('cpu_nucleos'),
@@ -439,7 +438,6 @@ function parsearCSV(buffer) {
           descripcion_general: limpiar(campos[idx.descripcion_general]),
           stock_raw: stockRaw,
           precio_usd_raw: limpiar(campos[idx.precio_base]),
-          garantia: limpiar(campos[idx.garantia]),
           marca: limpiar(campos[idx.marca]),
           socket: limpiar(campos[idx.socket]),
           arquitectura: limpiar(campos[idx.arquitectura]),
@@ -510,7 +508,6 @@ function parsearCSV(buffer) {
       nombre_descripcion: limpiar(campos[2]),
       stock_raw: String(campos[3] || '').trim(),
       precio_usd_raw: String(campos[4] || '').trim(),
-      garantia: limpiar(campos[6]),
       marca: limpiar(campos[8]),
     });
   }
@@ -1099,8 +1096,6 @@ function construirRegistroNormalizado(fila) {
     stock: stockInfo.stock,
     disponible_a_pedido: stockInfo.disponible_a_pedido,
     precio_base: Number(precio.toFixed(2)),
-    garantia: fila.garantia || '',
-    flete: '',
     es_componente_principal: esCategoriaPrincipal(destino.categoria),
     estado_enriquecimiento: estadoEnriquecimiento,
     ...specs,
@@ -1295,9 +1290,9 @@ async function importar(filas, db) {
       const upsertProducto = await db(
         `INSERT INTO productos (
           id_categoria, id_marca, subcategoria, categoria_proveedor, codigo_proveedor,
-          nombre, descripcion_general, precio_base, stock, disponible_a_pedido, garantia, flete,
+          nombre, descripcion_general, precio_base, stock, disponible_a_pedido,
           estado_enriquecimiento
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
         ON CONFLICT (codigo_proveedor) DO UPDATE SET
           id_categoria = EXCLUDED.id_categoria,
           id_marca = EXCLUDED.id_marca,
@@ -1308,8 +1303,6 @@ async function importar(filas, db) {
           precio_base = EXCLUDED.precio_base,
           stock = EXCLUDED.stock,
           disponible_a_pedido = EXCLUDED.disponible_a_pedido,
-          garantia = EXCLUDED.garantia,
-          flete = EXCLUDED.flete,
           estado_enriquecimiento = EXCLUDED.estado_enriquecimiento
         RETURNING id, (xmax = 0) AS es_insercion`,
         [
@@ -1323,8 +1316,6 @@ async function importar(filas, db) {
           registro.precio_base,
           registro.stock,
           registro.disponible_a_pedido,
-          registro.garantia || null,
-          null,
           registro.estado_enriquecimiento,
         ]
       );

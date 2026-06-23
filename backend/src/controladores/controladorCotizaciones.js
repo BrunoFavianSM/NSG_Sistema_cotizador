@@ -1128,7 +1128,7 @@ async function validarCotizacion(req, res) {
  * Marcar cotizaciÃ³n como reclamada
  * 
  * PUT /api/cotizaciones/:codigoTicket/reclamar
- * Body: { id_vendedor?: number, notas_vendedor?: string }
+ * Body: { id_vendedor?: number }
  * 
  * @param {Object} req - Request de Express
  * @param {Object} res - Response de Express
@@ -1423,8 +1423,8 @@ async function marcarComoReclamada(req, res) {
     // (cantidad del detalle ya incluye el multiplicador de equipos). Atomico.
     const resultado = await ejecutarTransaccion(async (clienteTx) => {
       const upd = await clienteTx.query(
-        'UPDATE cotizaciones SET estado = $1, fecha_reclamacion = CURRENT_TIMESTAMP, id_vendedor = $2, notas_vendedor = $3 WHERE id = $4 RETURNING id, codigo_ticket, estado, fecha_reclamacion',
-        [ESTADO_COMPLETADA, datosSanitizados.id_vendedor || null, datosSanitizados.notas_vendedor || null, cotizacionData.id]
+        'UPDATE cotizaciones SET estado = $1, fecha_reclamacion = CURRENT_TIMESTAMP, id_vendedor = $2 WHERE id = $3 RETURNING id, codigo_ticket, estado, fecha_reclamacion',
+        [ESTADO_COMPLETADA, datosSanitizados.id_vendedor || null, cotizacionData.id]
       );
 
       // Descontar stock por producto (solo los que aún existen). No baja de 0.
