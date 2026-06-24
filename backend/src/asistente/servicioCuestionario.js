@@ -26,11 +26,6 @@ const PATRONES_MULTITAREA = [
   { patron: /\b(no\s*(?:necesito|quiero|hago)|sin streaming|no stream|no gras)\b/i, multitarea: false },
 ];
 
-const PATRONES_RUIDO = [
-  { patron: /\b(silencios[ao]|tranquil[ao]|noche|dormir|silencio|baj[oa] ruido|quiet[ao])\b/i, ruido: 'silenciosa' },
-  { patron: /\b(me da igual|no importa|no me importa|ruido no|indiferente|da lo mismo)\b/i, ruido: 'indiferente' },
-];
-
 // ── Funciones de detección ──
 
 function detectarUsoPrincipal(historial) {
@@ -75,20 +70,10 @@ function detectarMultitarea(historial) {
   return null;
 }
 
-function detectarPreferenciaRuido(historial) {
-  for (const msg of historial) {
-    if (msg.rol !== 'user') continue;
-    for (const { patron, ruido } of PATRONES_RUIDO) {
-      if (patron.test(msg.contenido)) return ruido;
-    }
-  }
-  return null;
-}
-
 // ── Campos relevantes según uso ──
 
 function camposRelevantesPorUso(uso) {
-  const base = ['uso', 'presupuesto', 'ruido'];
+  const base = ['uso', 'presupuesto'];
   if (!uso) return [...base, 'resolucion', 'multitarea'];
 
   if (uso === 'gaming') return [...base, 'resolucion', 'multitarea'];
@@ -104,7 +89,6 @@ function construirEstadoCuestionario(historial) {
   const presupuesto = extraerPresupuestoPen(historial);
   const resolucion = detectarResolucion(historial);
   const multitarea = detectarMultitarea(historial);
-  const ruido = detectarPreferenciaRuido(historial);
 
   const relevantes = camposRelevantesPorUso(uso);
 
@@ -114,7 +98,6 @@ function construirEstadoCuestionario(historial) {
     presupuestoPen: presupuesto,
     resolucion,
     multitarea,
-    ruido,
   };
 
   const faltantes = relevantes.filter((campo) => {
@@ -146,10 +129,6 @@ const PREGUNTAS_CUESTIONARIO = {
     respuesta: '¿Vas a hacer streaming o grabar mientras juegas/trabajas?',
     quick_replies: ['Sí, stream + juego', 'No, solo juego/trabajo'],
   },
-  ruido: {
-    respuesta: '¿Te importa que la PC sea silenciosa?',
-    quick_replies: ['Sí, lo más silenciosa posible', 'Me da igual'],
-  },
 };
 
 function construirSiguientePregunta(cuestionario) {
@@ -167,7 +146,6 @@ function construirContextoConversacion(cuestionario, historial) {
     presupuestoPen: 'Presupuesto PEN',
     resolucion: 'Resolución',
     multitarea: 'Multitarea/streaming',
-    ruido: 'Preferencia ruido',
   };
 
   for (const [campo, valor] of Object.entries(cuestionario)) {
@@ -193,5 +171,4 @@ module.exports = {
   extraerPresupuestoPen,
   detectarResolucion,
   detectarMultitarea,
-  detectarPreferenciaRuido,
 };

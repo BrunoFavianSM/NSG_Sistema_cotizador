@@ -208,22 +208,12 @@ class ServicioCompatibilidad {
     return { compatible: errores.length === 0, errores, advertencias };
   }
 
-  async obtenerMapaComponentesDesdeBD(componentes, ejecutarQuery) {
-    const ids = [];
-    const pushId = (comp) => {
-      if (comp && Number.isInteger(Number(comp.id))) ids.push(Number(comp.id));
-    };
-
-    pushId(componentes.procesador);
-    pushId(componentes.placa_madre);
-    (componentes.ram || []).forEach(pushId);
-    if (Array.isArray(componentes.almacenamiento)) componentes.almacenamiento.forEach(pushId);
-    else pushId(componentes.almacenamiento);
-    pushId(componentes.gpu);
-    pushId(componentes.fuente);
-    pushId(componentes.case);
-
-    const idsUnicos = [...new Set(ids)];
+  async obtenerMapaSpecsPorIds(ids, ejecutarQuery) {
+    const idsUnicos = [...new Set(
+      (Array.isArray(ids) ? ids : [])
+        .map((id) => Number(id))
+        .filter((id) => Number.isInteger(id))
+    )];
     if (idsUnicos.length === 0) return new Map();
 
     const resultado = await ejecutarQuery(
@@ -265,6 +255,24 @@ class ServicioCompatibilidad {
     );
 
     return new Map(resultado.rows.map((r) => [r.id, r]));
+  }
+
+  async obtenerMapaComponentesDesdeBD(componentes, ejecutarQuery) {
+    const ids = [];
+    const pushId = (comp) => {
+      if (comp && Number.isInteger(Number(comp.id))) ids.push(Number(comp.id));
+    };
+
+    pushId(componentes.procesador);
+    pushId(componentes.placa_madre);
+    (componentes.ram || []).forEach(pushId);
+    if (Array.isArray(componentes.almacenamiento)) componentes.almacenamiento.forEach(pushId);
+    else pushId(componentes.almacenamiento);
+    pushId(componentes.gpu);
+    pushId(componentes.fuente);
+    pushId(componentes.case);
+
+    return this.obtenerMapaSpecsPorIds(ids, ejecutarQuery);
   }
 
   convertirComponenteBD(comp, mapa) {

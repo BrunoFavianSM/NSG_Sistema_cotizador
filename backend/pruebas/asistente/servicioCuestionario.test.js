@@ -8,7 +8,6 @@ const {
   extraerPresupuestoPen,
   detectarResolucion,
   detectarMultitarea,
-  detectarPreferenciaRuido,
   construirEstadoCuestionario,
   construirSiguientePregunta,
 } = require('../../src/asistente/servicioCuestionario');
@@ -117,23 +116,6 @@ describe('servicioCuestionario', () => {
     });
   });
 
-  describe('detectarPreferenciaRuido', () => {
-    test('detecta silenciosa', () => {
-      const h = [{ rol: 'user', contenido: 'La quiero silenciosa' }];
-      expect(detectarPreferenciaRuido(h)).toBe('silenciosa');
-    });
-
-    test('detecta indiferente', () => {
-      const h = [{ rol: 'user', contenido: 'Me da igual el ruido' }];
-      expect(detectarPreferenciaRuido(h)).toBe('indiferente');
-    });
-
-    test('retorna null si no menciona', () => {
-      const h = [{ rol: 'user', contenido: 'Gaming' }];
-      expect(detectarPreferenciaRuido(h)).toBeNull();
-    });
-  });
-
   describe('construirEstadoCuestionario', () => {
     test('cuestionario completo con todos los campos', () => {
       const h = [
@@ -168,7 +150,7 @@ describe('servicioCuestionario', () => {
 
   describe('construirSiguientePregunta', () => {
     test('primera pregunta es uso', () => {
-      const estado = { faltantes: ['uso', 'presupuesto', 'ruido'], completo: false };
+      const estado = { faltantes: ['uso', 'presupuesto'], completo: false };
       const pregunta = construirSiguientePregunta(estado);
       expect(pregunta.respuesta).toContain('usar principalmente');
     });

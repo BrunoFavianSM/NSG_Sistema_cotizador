@@ -1,41 +1,18 @@
 /**
- * Agente Buscador del Pipeline Multi-Agente
- * Modelo: nvidia/nv-embed-v1 (o el configurado en NVIDIA_EMBEDDING_MODEL)
- * Busca productos candidatos en el catálogo usando embeddings semánticos.
- * Fallback: búsqueda SQL con ILIKE cuando el servicio de embeddings no está disponible.
+ * Buscador determinístico de candidatos del catálogo.
+ * Agrupa por categoría y selecciona candidatos según cercanía al presupuesto.
+ * Sin IA: arquitectura single-AI (solo el conversador usa modelo).
  */
 
-const servicioEmbeddings = require('./servicioEmbeddings');
 const { ejecutarQuery } = require('../configuracion/baseDatos');
 
-// ── Búsqueda semántica principal ──
+// ── Búsqueda de candidatos (determinística) ──
 
-async function buscarProductos(clasificacion, productos, ejecutarQueryFn, apiKey) {
-  // Intentar búsqueda semántica solo si hay caché existente (evitar timeout en cold start)
-  const cacheDisponible = servicioEmbeddings.cacheDisponible();
-
-  if (cacheDisponible) {
-    try {
-      const resultados = await servicioEmbeddings.buscarSemantico(
-        clasificacion,
-        productos,
-        ejecutarQueryFn,
-        5, // top-K por categoría
-        apiKey
-      );
-      return resultados;
-    } catch (error) {
-      console.warn('[Buscador] Búsqueda semántica falló, usando fallback SQL:', error.message);
-      return buscarProductosFallback(clasificacion, productos, ejecutarQueryFn);
-    }
-  }
-
-  // Sin caché: usar fallback SQL directamente (evita timeout generando ~500 embeddings)
-  console.info('[Buscador] Sin caché de embeddings, usando fallback SQL');
+async function buscarProductos(clasificacion, productos, ejecutarQueryFn) {
   return buscarProductosFallback(clasificacion, productos, ejecutarQueryFn);
 }
 
-// ── Fallback: búsqueda SQL por filtros ──
+// ── Selección SQL por filtros de presupuesto ──
 
 async function buscarProductosFallback(clasificacion, productos, ejecutarQueryFn) {
   const presupuestoUsd = clasificacion.presupuesto_pen

@@ -10,7 +10,9 @@ const sistemaPrompt = require('./sistemaPrompt');
 const servicioLLM = require('./servicioLLM');
 const servicioSemaforo = require('./servicioSemaforo');
 const servicioCompatibilidad = require('../servicios/servicioCompatibilidad');
-const orquestadorAgentes = require('./orquestadorAgentes');
+const agenteBuscador = require('./agenteBuscador');
+const agenteReranker = require('./agenteReranker');
+const utilIntencion = require('./utilIntencion');
 const servicioConfigIA = require('./servicioConfigIA');
 const { sanitizarInput } = require('../utilidades/sanitizacion');
 const { ejecutarQuery } = require('../configuracion/baseDatos');
@@ -80,84 +82,137 @@ async function procesarMensaje(req, res) {
     // Construir contexto de conversación
     const contextoConversacion = servicioCuestionario.construirContextoConversacion(cuestionario, historial);
 
-    // Construir system prompt
+    // Leer configuración de IA dinámicamente desde BD (con fallback a .env)
+    const configIA = await servicioConfigIA.obtenerConfigIA();
+
+    // ── Gate de scope: temas comerciales/negociación → derivar a asesor humano ──
+    // El asistente solo arma/cotiza PCs. El chat sigue activo para temas de PC.
+    if (utilIntencion.detectarNegociacion(mensajeSanitizado)) {
+      const respuestaDeriva = {
+        respuesta:
+          'Para precios especiales, descuentos, garantía o financiamiento te conviene un asesor humano. Te puedo conectar por WhatsApp. Mientras tanto, seguimos armando tu PC cuando quieras.',
+        quick_replies: ['Seguir armando mi PC', 'Hablar con un asesor'],
+        perfil_usuario: cuestionario.uso || null,
+        requiere_asesor: true,
+      };
+      await servicioSesion.guardarMensaje(sesion_id, 'assistant', respuestaDeriva.respuesta, {
+        quick_replies: respuestaDeriva.quick_replies,
+        requiere_asesor: true,
+      });
+      return res.json({
+        exito: true,
+        respuesta: respuestaDeriva.respuesta,
+        quick_replies: respuestaDeriva.quick_replies,
+        perfil_usuario: respuestaDeriva.perfil_usuario,
+        requiere_asesor: true,
+        configuracion_propuesta: null,
+        semaforo: null,
+      });
+    }
+
+    // ── Armado determinístico de la configuración (NO lo hace la IA) ──
+    // Se construye cuando el cuestionario está completo y el usuario quiere verla.
+    const quiereCotizar = utilIntencion.detectarIntencionCotizar(mensajeSanitizado);
+    let configRaw = null;
+    let configNarracion = null;
+
+    if (cuestionario.completo && quiereCotizar && productos && productos.length > 0) {
+      try {
+        const clasificacionLike = {
+          uso_principal: cuestionario.uso,
+          presupuesto_pen: cuestionario.presupuestoPen,
+          resolucion: cuestionario.resolucion,
+          multitarea_stream: cuestionario.multitarea,
+          perfil: null,
+        };
+        const candidatos = await agenteBuscador.buscarProductos(
+          clasificacionLike,
+          productos,
+          ejecutarQuery,
+          configIA.nvidia_api_key
+        );
+        if (candidatos && candidatos.size > 0) {
+          // Traer specs de todos los candidatos para imponer compatibilidad al armar
+          const idsCandidatos = [];
+          for (const items of candidatos.values()) {
+            for (const c of items) idsCandidatos.push(c.id ?? c.producto?.id);
+          }
+          let specsMap = null;
+          try {
+            specsMap = await servicioCompatibilidad.obtenerMapaSpecsPorIds(idsCandidatos, ejecutarQuery);
+          } catch (errorSpecs) {
+            console.warn('[Asistente] No se pudieron cargar specs de candidatos:', errorSpecs.message);
+          }
+          const armado = await agenteReranker.rerank(clasificacionLike, candidatos, { tipoCambio, margen, igv, specsMap });
+          configRaw = armado?.configuracion_propuesta || null;
+        }
+      } catch (errorArmado) {
+        console.warn('[Asistente] Armado determinístico falló:', errorArmado.message);
+      }
+
+      if (configRaw) {
+        const enriquecida = enriquecerPreciosPEN(configRaw, productos, margen, igv, tipoCambio);
+        configNarracion = formatearConfigParaNarrar(enriquecida, cuestionario.presupuestoPen);
+      }
+    }
+
+    // Config actual del cotizador (si el frontend la envía) → contexto para el LLM
+    const configActualNarracion = formatearConfigActual(req.body?.configuracion_actual, productos, margen, igv, tipoCambio);
+
+    // Construir system prompt con la config armada y/o la actual
     const systemPrompt = sistemaPrompt.construirSystemPrompt({
       productos,
       tipoCambio,
       margen,
       igv,
       contextoConversacion,
+      configuracionArmada: configNarracion,
+      configuracionActual: configActualNarracion,
     });
 
-    // Leer configuración de IA dinámicamente desde BD (con fallback a .env)
-    const configIA = await servicioConfigIA.obtenerConfigIA();
-
-    // Intentar pipeline multi-agente (Clasificador → Buscador → Reranker) primero
+    // ── Conversador: único modelo de IA. Proveedor según modo_activo ──
     let respuestaLLM;
-    let modoPipeline = false;
-
-    if (configIA.pipeline_enabled) {
-      try {
-        respuestaLLM = await orquestadorAgentes.ejecutarPipeline({
-          mensaje: mensajeSanitizado,
-          historial,
-          productos,
-          tipoCambio,
-          margen,
-          igv,
-          contextoConversacion,
-          cuestionario,
-          ejecutarQuery,
-          configIA,
-        });
-        modoPipeline = true;
-        console.info('[Asistente] Pipeline multi-agente completado exitosamente');
-      } catch (errorPipeline) {
-        console.warn('[Asistente] Pipeline multi-agente fallo, usando LLM legacy:', errorPipeline.message);
-      }
+    try {
+      const prioridad = configIA.modo_activo === 'gemini' ? ['gemini', 'nvidia'] : ['nvidia', 'gemini'];
+      respuestaLLM = await servicioLLM.generarRespuestaConPrioridad({
+        systemPrompt,
+        historial,
+        mensajeActual: mensajeSanitizado,
+        configIA,
+        prioridadProveedores: prioridad,
+      });
+    } catch (errorLLM) {
+      const msg =
+        errorLLM.tipo === 'rate_limit'
+          ? 'El servicio de IA esta saturado. Intenta en un momento.'
+          : errorLLM.tipo === 'invalid_json'
+            ? 'No se pudo procesar la respuesta. Intenta de nuevo.'
+            : 'El servicio de IA no esta disponible temporalmente.';
+      return res.status(502).json({ exito: false, mensaje: msg });
     }
 
-    // Fallback al LLM legacy (Gemini → NVIDIA) si el pipeline no esta habilitado o fallo
-    if (!modoPipeline) {
-      try {
-        respuestaLLM = await servicioLLM.generarRespuesta({
-          systemPrompt,
-          historial,
-          mensajeActual: mensajeSanitizado,
-          configIA,
-        });
-      } catch (errorLLM) {
-        const status = errorLLM.tipo === 'rate_limit' ? 502 : 502;
-        const msg =
-          errorLLM.tipo === 'rate_limit'
-            ? 'El servicio de IA esta saturado. Intenta en un momento.'
-            : errorLLM.tipo === 'invalid_json'
-              ? 'No se pudo procesar la respuesta. Intenta de nuevo.'
-              : 'El servicio de IA no esta disponible temporalmente.';
-        return res.status(status).json({ exito: false, mensaje: msg });
-      }
-    }
     // Validar campos requeridos del LLM response
     respuestaLLM.respuesta = respuestaLLM.respuesta || '';
-  if (!respuestaLLM.respuesta.trim()) {
-    respuestaLLM.respuesta = 'No pude generar una respuesta. Intenta de nuevo o consulta con un asesor.';
-  }
+    if (!respuestaLLM.respuesta.trim()) {
+      respuestaLLM.respuesta = 'No pude generar una respuesta. Intenta de nuevo o consulta con un asesor.';
+    }
     respuestaLLM.quick_replies = Array.isArray(respuestaLLM.quick_replies) ? respuestaLLM.quick_replies : [];
-    respuestaLLM.configuracion_propuesta = respuestaLLM.configuracion_propuesta || null;
     respuestaLLM.perfil_usuario = respuestaLLM.perfil_usuario || null;
     respuestaLLM.requiere_asesor = respuestaLLM.requiere_asesor || false;
+    // La configuración SIEMPRE la decide el motor determinístico, nunca la IA.
+    respuestaLLM.configuracion_propuesta = configRaw;
 
     let semaforo = null;
     let validacion = null;
     let configuracionGuardada = null;
 
-    // Si el LLM propuso una configuración → Double-Check
+    // Si el motor armó una configuración → Double-Check determinístico
     if (respuestaLLM.configuracion_propuesta && typeof respuestaLLM.configuracion_propuesta === 'object') {
-      const configRaw = respuestaLLM.configuracion_propuesta;
+      const configParaValidar = respuestaLLM.configuracion_propuesta;
 
       // Double-Check con servicioCompatibilidad
       try {
-        validacion = await servicioCompatibilidad.validarConfiguracionConBD(configRaw, ejecutarQuery);
+        validacion = await servicioCompatibilidad.validarConfiguracionConBD(configParaValidar, ejecutarQuery);
       } catch (errorCompat) {
         console.error('[Asistente] Error en Double-Check:', errorCompat.message);
         validacion = { compatible: false, errores: ['Error al validar compatibilidad'], advertencias: [] };
@@ -167,14 +222,14 @@ async function procesarMensaje(req, res) {
       const esValida = validacion && validacion.compatible;
       configuracionGuardada = await servicioSesion.guardarConfiguracion(
         sesion_id,
-        configRaw,
+        configParaValidar,
         esValida,
         1
       );
 
       // Enriquecer con precios en PEN
       respuestaLLM.configuracion_propuesta = enriquecerPreciosPEN(
-        configRaw,
+        configParaValidar,
         productos,
         margen,
         igv,
@@ -183,21 +238,19 @@ async function procesarMensaje(req, res) {
 
       // Calcular semáforo (necesitamos los componentes normalizados con specs)
       try {
-        const mapa = await servicioCompatibilidad.obtenerMapaComponentesDesdeBD(configRaw, ejecutarQuery);
+        const mapa = await servicioCompatibilidad.obtenerMapaComponentesDesdeBD(configParaValidar, ejecutarQuery);
         const normalizados = {
-          procesador: servicioCompatibilidad.convertirComponenteBD(configRaw.procesador, mapa),
-          placa_madre: servicioCompatibilidad.convertirComponenteBD(configRaw.placa_madre, mapa),
-          ram: (configRaw.ram || []).map((r) => servicioCompatibilidad.convertirComponenteBD(r, mapa)).filter(Boolean),
-          almacenamiento: Array.isArray(configRaw.almacenamiento)
-            ? configRaw.almacenamiento.map((a) => servicioCompatibilidad.convertirComponenteBD(a, mapa)).filter(Boolean)
-            : servicioCompatibilidad.convertirComponenteBD(configRaw.almacenamiento, mapa),
-          gpu: servicioCompatibilidad.convertirComponenteBD(configRaw.gpu, mapa),
-          fuente: servicioCompatibilidad.convertirComponenteBD(configRaw.fuente, mapa),
-          case: servicioCompatibilidad.convertirComponenteBD(configRaw.case, mapa),
+          procesador: servicioCompatibilidad.convertirComponenteBD(configParaValidar.procesador, mapa),
+          placa_madre: servicioCompatibilidad.convertirComponenteBD(configParaValidar.placa_madre, mapa),
+          ram: (configParaValidar.ram || []).map((r) => servicioCompatibilidad.convertirComponenteBD(r, mapa)).filter(Boolean),
+          almacenamiento: Array.isArray(configParaValidar.almacenamiento)
+            ? configParaValidar.almacenamiento.map((a) => servicioCompatibilidad.convertirComponenteBD(a, mapa)).filter(Boolean)
+            : servicioCompatibilidad.convertirComponenteBD(configParaValidar.almacenamiento, mapa),
+          gpu: servicioCompatibilidad.convertirComponenteBD(configParaValidar.gpu, mapa),
+          fuente: servicioCompatibilidad.convertirComponenteBD(configParaValidar.fuente, mapa),
+          case: servicioCompatibilidad.convertirComponenteBD(configParaValidar.case, mapa),
         };
 
-        // Agregar specs al mapa para el semáforo
-        const mapaConSpecs = new Map(mapa);
         semaforo = servicioSemaforo.calcularSemaforo(normalizados);
       } catch (errorSemaforo) {
         console.error('[Asistente] Error calculando semáforo:', errorSemaforo.message);
@@ -218,7 +271,12 @@ async function procesarMensaje(req, res) {
       const nuevoEstado = cuestionario.completo
         ? 'listo_para_cotizar'
         : 'cuestionario';
-      const perfilParaGuardar = respuestaLLM.perfil_usuario || cuestionario.uso || null;
+      // perfil_usuario tiene un CHECK en BD: solo basico|intermedio|avanzado|gamer_full.
+      // Nunca guardar el uso (p.ej. 'gaming') como perfil.
+      const PERFILES_VALIDOS = ['basico', 'intermedio', 'avanzado', 'gamer_full'];
+      const perfilParaGuardar = PERFILES_VALIDOS.includes(respuestaLLM.perfil_usuario)
+        ? respuestaLLM.perfil_usuario
+        : null;
       const presupuesto = cuestionario.presupuestoPen || null;
 
       await servicioSesion.actualizarEstadoSesion(sesion_id, nuevoEstado, perfilParaGuardar, presupuesto);
@@ -321,6 +379,78 @@ async function obtenerSesion(req, res) {
     console.error('[Asistente] Error en obtenerSesion:', error.message);
     return res.status(500).json({ exito: false, mensaje: 'Error interno. Intenta de nuevo.' });
   }
+}
+
+// ── Utilidad: formatear config armada por el motor para que el LLM la narre ──
+
+function formatearConfigParaNarrar(enriquecida, presupuestoPen) {
+  if (!enriquecida) return null;
+  const lineas = [];
+  const fmt = (pen) => `S/${Math.round(pen || 0).toLocaleString('es-PE')}`;
+  const item = (label, comp) => {
+    if (!comp || !comp.nombre) return;
+    lineas.push(`- ${label}: ${comp.nombre} (${fmt(comp.precio_pen)})`);
+  };
+
+  item('Procesador', enriquecida.procesador);
+  item('Placa madre', enriquecida.placa_madre);
+  (enriquecida.ram || []).forEach((r) => item('RAM', r));
+  item('Almacenamiento', enriquecida.almacenamiento);
+  item('GPU', enriquecida.gpu);
+  item('Fuente', enriquecida.fuente);
+  item('Case', enriquecida.case);
+
+  if (enriquecida.precio_total_pen) {
+    lineas.push(`Total estimado: ${fmt(enriquecida.precio_total_pen)}`);
+    if (presupuestoPen) {
+      const pct = Math.round((enriquecida.precio_total_pen / presupuestoPen) * 100);
+      lineas.push(`Presupuesto del usuario: ${fmt(presupuestoPen)} (la propuesta es ~${pct}% del presupuesto).`);
+    }
+  }
+
+  return lineas.length > 0 ? lineas.join('\n') : null;
+}
+
+// ── Utilidad: formatear la config que el usuario ya tiene en el cotizador ──
+
+function formatearConfigActual(configuracionActual, productos, margen, igv, tipoCambio) {
+  if (!configuracionActual || typeof configuracionActual !== 'object') return null;
+
+  const productosMap = new Map((productos || []).map((p) => [p.id, p]));
+  const factor = (1 + margen / 100) * (1 + igv / 100) * tipoCambio;
+  const fmt = (usd) => `S/${Math.round((usd || 0) * factor).toLocaleString('es-PE')}`;
+
+  const nombreDe = (comp) => {
+    if (!comp) return null;
+    if (comp.nombre) {
+      const precio = comp.precio_usd != null ? ` (${fmt(comp.precio_usd)})` : '';
+      return `${comp.nombre}${precio}`;
+    }
+    if (comp.id) {
+      const prod = productosMap.get(Number(comp.id));
+      if (prod) return `${prod.nombre} (${fmt(prod.precio_usd)})`;
+    }
+    return null;
+  };
+
+  const lineas = [];
+  const push = (label, comp) => {
+    const n = nombreDe(comp);
+    if (n) lineas.push(`- ${label}: ${n}`);
+  };
+
+  push('Procesador', configuracionActual.procesador);
+  push('Placa madre', configuracionActual.placa_madre);
+  (configuracionActual.ram || []).forEach((r) => push('RAM', r));
+  const alm = Array.isArray(configuracionActual.almacenamiento)
+    ? configuracionActual.almacenamiento
+    : [configuracionActual.almacenamiento];
+  alm.forEach((a) => push('Almacenamiento', a));
+  push('GPU', configuracionActual.gpu);
+  push('Fuente', configuracionActual.fuente);
+  push('Case', configuracionActual.case);
+
+  return lineas.length > 0 ? lineas.join('\n') : null;
 }
 
 // ── Utilidad: Enriquecer precios PEN ──

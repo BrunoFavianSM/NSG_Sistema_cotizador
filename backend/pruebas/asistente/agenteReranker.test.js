@@ -81,6 +81,41 @@ describe('agenteReranker', () => {
       }
     });
 
+    test('prioriza stock disponible sobre componentes a pedido', async () => {
+      const candidatos = new Map([
+        ['procesador', [
+          // a pedido (stock 0), barato y dentro de presupuesto
+          { id: 1, score: 0.9, producto: { id: 1, nombre: 'CPU a pedido', precio_usd: 150, stock: 0, disponible_a_pedido: true, socket: 'AM5' } },
+          // en stock, también dentro de presupuesto
+          { id: 2, score: 0.8, producto: { id: 2, nombre: 'CPU en stock', precio_usd: 180, stock: 5, disponible_a_pedido: false, socket: 'AM5' } },
+        ]],
+        ['placa_madre', [
+          { id: 10, score: 0.8, producto: { id: 10, nombre: 'B650', precio_usd: 150, stock: 3, socket: 'AM5' } },
+        ]],
+      ]);
+      const result = await rerank(CLASIFICACION_GAMING, candidatos, { tipoCambio: 3.7, margen: 15, igv: 18 });
+      // Debe elegir el que tiene stock, no el "a pedido"
+      expect(result.configuracion_propuesta.procesador.id).toBe(2);
+    });
+
+    test('filtra RAM incompatible con el tipo de la placa', async () => {
+      const candidatos = new Map([
+        ['procesador', [
+          { id: 1, score: 0.9, producto: { id: 1, nombre: 'CPU', precio_usd: 150, stock: 5, socket: 'AM5' } },
+        ]],
+        ['placa_madre', [
+          { id: 10, score: 0.8, producto: { id: 10, nombre: 'Placa DDR5', precio_usd: 150, stock: 5, socket: 'AM5', ram_tipo: 'DDR5' } },
+        ]],
+        ['ram', [
+          { id: 20, score: 0.9, producto: { id: 20, nombre: 'RAM DDR4', precio_usd: 50, stock: 5, ram_type: 'DDR4' } },
+          { id: 21, score: 0.7, producto: { id: 21, nombre: 'RAM DDR5', precio_usd: 70, stock: 5, ram_type: 'DDR5' } },
+        ]],
+      ]);
+      const result = await rerank(CLASIFICACION_GAMING, candidatos, { tipoCambio: 3.7, margen: 15, igv: 18 });
+      // Debe elegir DDR5 (compatible con la placa), no DDR4 aunque tenga mejor score
+      expect(result.configuracion_propuesta.ram[0].id).toBe(21);
+    });
+
     test('incluye perfil inferido si no viene en clasificación', async () => {
       const sinPerfil = { ...CLASIFICACION_GAMING, perfil: null };
       const result = await rerank(sinPerfil, CANDIDATOS_EJEMPLO, {

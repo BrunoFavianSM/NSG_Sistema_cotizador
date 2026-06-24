@@ -54,11 +54,14 @@ export const nuevaSesion = async (usuario_id = null) => {
  *   error?: string
  * }>}
  */
-export const enviarMensaje = async (sesion_id, mensaje, usuario_id = null) => {
+export const enviarMensaje = async (sesion_id, mensaje, usuario_id = null, configuracion_actual = null) => {
   try {
     const payload = { sesion_id, mensaje };
     if (usuario_id !== null && usuario_id !== undefined) {
       payload.usuario_id = usuario_id;
+    }
+    if (configuracion_actual) {
+      payload.configuracion_actual = configuracion_actual;
     }
     const response = await api.post('/asistente/mensaje', payload, { timeout: ASISTENTE_TIMEOUT_MS });
     return response.data;

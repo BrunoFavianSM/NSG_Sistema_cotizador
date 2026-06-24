@@ -41,16 +41,11 @@ const CLAVES_IA = [
   'ia_nvidia_reranker_model',
 ];
 
-// ── Modos válidos ──
-const MODOS_VALIDOS = ['pipeline', 'nvidia', 'gemini'];
+// ── Modos válidos (single-AI: solo conversador) ──
+const MODOS_VALIDOS = ['nvidia', 'gemini'];
 
 // ── Modelos requeridos por modo ──
 const MODELOS_POR_MODO = {
-  pipeline: {
-    nvidia_classifier_model: 'meta/llama-3.2-3b-instruct',
-    nvidia_embedding_model: 'nvidia/nv-embed-v1',
-    nvidia_reranker_model: 'nvidia/rerank-qa-mistral-4b',
-  },
   nvidia: {
     nvidia_model: 'mistralai/mistral-small-4-119b-2603',
   },
@@ -241,15 +236,8 @@ describe('Property 4: actualizarModelosIA() rechaza modos no permitidos con HTTP
       const body = { modo_activo: modo, ...MODELOS_POR_MODO[modo] };
       const { req, res } = crearMocks(body);
 
-      // Mockear ejecutarQuery para el INSERT y el SELECT final
-      ejecutarQuery
-        .mockResolvedValueOnce({ rows: [] }) // INSERT modo_activo
-        .mockResolvedValueOnce({ rows: [] }) // INSERT gemini_model
-        .mockResolvedValueOnce({ rows: [] }) // INSERT nvidia_model
-        .mockResolvedValueOnce({ rows: [] }) // INSERT nvidia_classifier_model
-        .mockResolvedValueOnce({ rows: [] }) // INSERT nvidia_embedding_model
-        .mockResolvedValueOnce({ rows: [] }) // INSERT nvidia_reranker_model
-        .mockResolvedValueOnce({ rows: [] }); // SELECT final
+      // Cualquier INSERT/SELECT del flujo resuelve vacío
+      ejecutarQuery.mockResolvedValue({ rows: [] });
 
       await actualizarModelosIA(req, res);
 

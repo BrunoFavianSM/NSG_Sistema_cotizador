@@ -24,8 +24,21 @@ const CLAVES = {
   ENRIQUECIMIENTO_NVIDIA_HABILITADO: 'ia_enriquecimiento_nvidia_habilitado',
 };
 
+// Proveedores de conversador válidos. Arquitectura single-AI: un único modelo
+// conversa; los motores determinísticos (compatibilidad, armado) corren aparte.
+const PROVEEDORES_VALIDOS = ['nvidia', 'gemini'];
+
+function normalizarModoActivo(valor) {
+  const texto = String(valor || '').trim().toLowerCase();
+  if (PROVEEDORES_VALIDOS.includes(texto)) return texto;
+  // Valores legados ('pipeline') o desconocidos → proveedor por defecto.
+  return DEFAULTS.modo_activo;
+}
+
 const DEFAULTS = {
-  modo_activo: process.env.AGENT_PIPELINE_ENABLED !== 'false' ? 'pipeline' : 'gemini',
+  modo_activo: PROVEEDORES_VALIDOS.includes(String(process.env.IA_MODO_ACTIVO || '').toLowerCase())
+    ? String(process.env.IA_MODO_ACTIVO).toLowerCase()
+    : 'nvidia',
   gemini_model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
   nvidia_model: process.env.NVIDIA_MODEL || 'mistralai/mistral-small-4-119b-2603',
   nvidia_classifier_model: process.env.NVIDIA_CLASSIFIER_MODEL || 'meta/llama-3.2-3b-instruct',
@@ -107,24 +120,32 @@ async function obtenerConfigIA() {
     );
 
     const mapa = Object.fromEntries(rows.map((r) => [r.clave, r.valor]));
-    const modoActivo = mapa[CLAVES.MODO_ACTIVO] || DEFAULTS.modo_activo;
+    const modoActivo = normalizarModoActivo(mapa[CLAVES.MODO_ACTIVO] || DEFAULTS.modo_activo);
 
     return {
       modo_activo: modoActivo,
       gemini_model: mapa[CLAVES.GEMINI_MODEL] || DEFAULTS.gemini_model,
       nvidia_model: mapa[CLAVES.NVIDIA_MODEL] || DEFAULTS.nvidia_model,
+      // Campos legados de modelos auxiliares: conservados como passthrough para
+      // compatibilidad de la config admin. El flujo single-AI no los usa.
       nvidia_classifier_model: mapa[CLAVES.NVIDIA_CLASSIFIER_MODEL] || DEFAULTS.nvidia_classifier_model,
       nvidia_embedding_model: mapa[CLAVES.NVIDIA_EMBEDDING_MODEL] || DEFAULTS.nvidia_embedding_model,
       nvidia_reranker_model: mapa[CLAVES.NVIDIA_RERANKER_MODEL] || DEFAULTS.nvidia_reranker_model,
-      pipeline_enabled: modoActivo === 'pipeline',
+      // pipeline multi-agente eliminado: el armado de config es determinístico.
+      pipeline_enabled: false,
       gemini_api_key: desencriptarApiKey(mapa, CLAVES.GEMINI_API_KEY_ENC, process.env.GEMINI_API_KEY, 'gemini_api_key'),
       nvidia_api_key: desencriptarApiKey(mapa, CLAVES.NVIDIA_API_KEY_ENC, process.env.NVIDIA_API_KEY, 'nvidia_api_key'),
     };
   } catch (error) {
     console.warn('[ConfigIA] Error leyendo BD, usando defaults del .env:', error.message);
     return {
-      ...DEFAULTS,
-      pipeline_enabled: DEFAULTS.modo_activo === 'pipeline',
+      modo_activo: DEFAULTS.modo_activo,
+      gemini_model: DEFAULTS.gemini_model,
+      nvidia_model: DEFAULTS.nvidia_model,
+      nvidia_classifier_model: DEFAULTS.nvidia_classifier_model,
+      nvidia_embedding_model: DEFAULTS.nvidia_embedding_model,
+      nvidia_reranker_model: DEFAULTS.nvidia_reranker_model,
+      pipeline_enabled: false,
       gemini_api_key: process.env.GEMINI_API_KEY || '',
       nvidia_api_key: process.env.NVIDIA_API_KEY || '',
     };

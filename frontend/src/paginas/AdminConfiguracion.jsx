@@ -58,9 +58,8 @@ function SelectorModoTipoCambio({ modo, onChange, disabled }) {
  */
 function SelectorModoIA({ modo, onChange, disabled }) {
   const opciones = [
-    { valor: 'pipeline', etiqueta: 'Pipeline Multi-Agente NVIDIA' },
-    { valor: 'nvidia',   etiqueta: 'Uni-modelo NVIDIA' },
-    { valor: 'gemini',   etiqueta: 'Uni-modelo Gemini' },
+    { valor: 'nvidia', etiqueta: 'NVIDIA NIM' },
+    { valor: 'gemini', etiqueta: 'Google Gemini' },
   ];
 
   return (
@@ -151,13 +150,10 @@ export default function AdminConfiguracion() {
   const [limpiando, setLimpiando] = useState(false);
 
   // ── Estado sección Asistente de IA (Requisitos 2.10–2.17) ──────────────────
-  const [modoIA, setModoIA] = useState('pipeline');
+  const [modoIA, setModoIA] = useState('nvidia');
   const [modelos, setModelos] = useState({
     gemini_model: '',
     nvidia_model: '',
-    nvidia_classifier_model: '',
-    nvidia_embedding_model: '',
-    nvidia_reranker_model: '',
   });
   const [erroresModelos, setErroresModelos] = useState({});
   const [cargandoModelosIA, setCargandoModelosIA] = useState(true);
@@ -241,13 +237,10 @@ export default function AdminConfiguracion() {
     setCargandoModelosIA(true);
     try {
       const config = await api.obtenerModelosIA();
-      setModoIA(config.modo_activo || 'pipeline');
+      setModoIA(config.modo_activo || 'nvidia');
       setModelos({
-        gemini_model:            config.gemini_model            || '',
-        nvidia_model:            config.nvidia_model            || '',
-        nvidia_classifier_model: config.nvidia_classifier_model || '',
-        nvidia_embedding_model:  config.nvidia_embedding_model  || '',
-        nvidia_reranker_model:   config.nvidia_reranker_model   || '',
+        gemini_model: config.gemini_model || '',
+        nvidia_model: config.nvidia_model || '',
       });
     } catch {
       // Silencioso: la sección mostrará campos vacíos con valores por defecto
@@ -301,11 +294,7 @@ export default function AdminConfiguracion() {
    */
   const validarCamposModelos = (modo, vals) => {
     const errores = {};
-    if (modo === 'pipeline') {
-      if (!vals.nvidia_classifier_model?.trim()) errores.nvidia_classifier_model = 'Campo requerido para el modo Pipeline.';
-      if (!vals.nvidia_embedding_model?.trim())  errores.nvidia_embedding_model  = 'Campo requerido para el modo Pipeline.';
-      if (!vals.nvidia_reranker_model?.trim())   errores.nvidia_reranker_model   = 'Campo requerido para el modo Pipeline.';
-    } else if (modo === 'nvidia') {
+    if (modo === 'nvidia') {
       if (!vals.nvidia_model?.trim()) errores.nvidia_model = 'Campo requerido para el modo NVIDIA.';
     } else if (modo === 'gemini') {
       if (!vals.gemini_model?.trim()) errores.gemini_model = 'Campo requerido para el modo Gemini.';
@@ -322,9 +311,8 @@ export default function AdminConfiguracion() {
     try {
       await api.actualizarModelosIA({ modo_activo: modoIA, ...modelos });
       const etiquetaModo = {
-        pipeline: 'Pipeline Multi-Agente NVIDIA',
-        nvidia:   'Uni-modelo NVIDIA',
-        gemini:   'Uni-modelo Gemini',
+        nvidia: 'NVIDIA NIM',
+        gemini: 'Google Gemini',
       }[modoIA] || modoIA;
       toast.success('Configuración de IA guardada', `Modo activo: ${etiquetaModo}.`);
     } catch (error) {
@@ -746,138 +734,13 @@ export default function AdminConfiguracion() {
                 disabled={guardandoModelosIA}
               />
               <p className="text-xs text-[var(--color-text-muted)]">
-                {modoIA === 'pipeline' && 'Usa tres modelos NVIDIA especializados en clasificación, embeddings y reranking.'}
-                {modoIA === 'nvidia'   && 'Usa un único modelo NVIDIA para todas las respuestas del asistente.'}
-                {modoIA === 'gemini'   && 'Usa un único modelo Gemini de Google para todas las respuestas del asistente.'}
+                {modoIA === 'nvidia' && 'Usa un único modelo NVIDIA NIM como asesor conversacional. El armado y la compatibilidad son determinísticos.'}
+                {modoIA === 'gemini' && 'Usa un único modelo Google Gemini como asesor conversacional. El armado y la compatibilidad son determinísticos.'}
               </p>
             </div>
 
             {/* ── Campos condicionales según modo ── */}
             <div className="grid gap-4 sm:grid-cols-2">
-              {modoIA === 'pipeline' && (
-                <>
-                  <div className="space-y-1">
-                    <label
-                      htmlFor="ia-classifier-model"
-                      className="block text-sm font-medium text-[var(--color-text)]"
-                    >
-                      Modelo clasificador
-                    </label>
-                    <input
-                      id="ia-classifier-model"
-                      type="text"
-                      aria-label="Modelo NVIDIA clasificador para el pipeline multi-agente"
-                      aria-describedby={erroresModelos.nvidia_classifier_model ? 'ia-classifier-error' : undefined}
-                      aria-invalid={!!erroresModelos.nvidia_classifier_model}
-                      value={modelos.nvidia_classifier_model}
-                      onChange={(e) => setModelos((prev) => ({ ...prev, nvidia_classifier_model: e.target.value }))}
-                      disabled={guardandoModelosIA}
-                      placeholder="meta/llama-3.2-3b-instruct"
-                      className={[
-                        'w-full min-h-[44px] rounded-[var(--radius-sm)] border px-3 py-2 text-sm',
-                        'bg-[var(--color-surface)] text-[var(--color-text)]',
-                        'placeholder:text-[var(--color-text-muted)]',
-                        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]',
-                        'disabled:opacity-50 disabled:cursor-not-allowed',
-                        'transition-colors',
-                        erroresModelos.nvidia_classifier_model
-                          ? 'border-[var(--color-danger)] focus-visible:outline-[var(--color-danger)]'
-                          : 'border-[var(--color-border)]',
-                      ].join(' ')}
-                    />
-                    {erroresModelos.nvidia_classifier_model && (
-                      <p
-                        id="ia-classifier-error"
-                        role="alert"
-                        className="text-xs font-medium text-[var(--color-danger)]"
-                      >
-                        {erroresModelos.nvidia_classifier_model}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <label
-                      htmlFor="ia-embedding-model"
-                      className="block text-sm font-medium text-[var(--color-text)]"
-                    >
-                      Modelo embeddings
-                    </label>
-                    <input
-                      id="ia-embedding-model"
-                      type="text"
-                      aria-label="Modelo NVIDIA de embeddings para el pipeline multi-agente"
-                      aria-describedby={erroresModelos.nvidia_embedding_model ? 'ia-embedding-error' : undefined}
-                      aria-invalid={!!erroresModelos.nvidia_embedding_model}
-                      value={modelos.nvidia_embedding_model}
-                      onChange={(e) => setModelos((prev) => ({ ...prev, nvidia_embedding_model: e.target.value }))}
-                      disabled={guardandoModelosIA}
-                      placeholder="nvidia/nv-embed-v1"
-                      className={[
-                        'w-full min-h-[44px] rounded-[var(--radius-sm)] border px-3 py-2 text-sm',
-                        'bg-[var(--color-surface)] text-[var(--color-text)]',
-                        'placeholder:text-[var(--color-text-muted)]',
-                        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]',
-                        'disabled:opacity-50 disabled:cursor-not-allowed',
-                        'transition-colors',
-                        erroresModelos.nvidia_embedding_model
-                          ? 'border-[var(--color-danger)] focus-visible:outline-[var(--color-danger)]'
-                          : 'border-[var(--color-border)]',
-                      ].join(' ')}
-                    />
-                    {erroresModelos.nvidia_embedding_model && (
-                      <p
-                        id="ia-embedding-error"
-                        role="alert"
-                        className="text-xs font-medium text-[var(--color-danger)]"
-                      >
-                        {erroresModelos.nvidia_embedding_model}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-1 sm:col-span-2">
-                    <label
-                      htmlFor="ia-reranker-model"
-                      className="block text-sm font-medium text-[var(--color-text)]"
-                    >
-                      Modelo reranker
-                    </label>
-                    <input
-                      id="ia-reranker-model"
-                      type="text"
-                      aria-label="Modelo NVIDIA reranker para el pipeline multi-agente"
-                      aria-describedby={erroresModelos.nvidia_reranker_model ? 'ia-reranker-error' : undefined}
-                      aria-invalid={!!erroresModelos.nvidia_reranker_model}
-                      value={modelos.nvidia_reranker_model}
-                      onChange={(e) => setModelos((prev) => ({ ...prev, nvidia_reranker_model: e.target.value }))}
-                      disabled={guardandoModelosIA}
-                      placeholder="nvidia/rerank-qa-mistral-4b"
-                      className={[
-                        'w-full min-h-[44px] rounded-[var(--radius-sm)] border px-3 py-2 text-sm',
-                        'bg-[var(--color-surface)] text-[var(--color-text)]',
-                        'placeholder:text-[var(--color-text-muted)]',
-                        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]',
-                        'disabled:opacity-50 disabled:cursor-not-allowed',
-                        'transition-colors',
-                        erroresModelos.nvidia_reranker_model
-                          ? 'border-[var(--color-danger)] focus-visible:outline-[var(--color-danger)]'
-                          : 'border-[var(--color-border)]',
-                      ].join(' ')}
-                    />
-                    {erroresModelos.nvidia_reranker_model && (
-                      <p
-                        id="ia-reranker-error"
-                        role="alert"
-                        className="text-xs font-medium text-[var(--color-danger)]"
-                      >
-                        {erroresModelos.nvidia_reranker_model}
-                      </p>
-                    )}
-                  </div>
-                </>
-              )}
-
               {modoIA === 'nvidia' && (
                 <div className="space-y-1 sm:col-span-2">
                   <label

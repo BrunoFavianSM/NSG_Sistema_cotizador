@@ -15,14 +15,54 @@ const MENSAJE_BIENVENIDA_BASE = {
   },
 };
 
-function crearMensajeBienvenida() {
+const MENSAJE_BIENVENIDA_CON_CONFIG = {
+  rol: 'assistant',
+  contenido:
+    'Hola, soy tu asesor de NSG. Veo que ya tenes componentes elegidos en el cotizador. ¿Querés que analice tu configuracion y te sugiera mejoras, o preferis armar una desde cero?',
+  metadata: {
+    quick_replies: ['Analiza mi configuracion', 'Empezar de cero'],
+    semaforo: null,
+    configuracion_propuesta: null,
+  },
+};
+
+function crearMensajeBienvenida(tieneConfig = false) {
+  const base = tieneConfig ? MENSAJE_BIENVENIDA_CON_CONFIG : MENSAJE_BIENVENIDA_BASE;
   return {
     id: `assistant-bienvenida-${Date.now()}`,
-    rol: MENSAJE_BIENVENIDA_BASE.rol,
-    contenido: MENSAJE_BIENVENIDA_BASE.contenido,
+    rol: base.rol,
+    contenido: base.contenido,
     timestamp: new Date().toISOString(),
-    metadata: MENSAJE_BIENVENIDA_BASE.metadata,
+    metadata: base.metadata,
   };
+}
+
+// Construye una versión compacta de la configuración del cotizador para enviar al
+// asistente. Devuelve null si no hay ningún componente seleccionado.
+function construirConfigActual(seleccion) {
+  if (!seleccion || typeof seleccion !== 'object') return null;
+
+  const comp = (p) =>
+    p && (p.id || p.nombre)
+      ? { id: p.id, nombre: p.nombre, precio_usd: p.precio_usd ?? p.precio_base ?? null }
+      : null;
+
+  const ram = (seleccion.ram || []).map(comp).filter(Boolean);
+  const config = {
+    procesador: comp(seleccion.procesador),
+    placa_madre: comp(seleccion.placa_madre),
+    ram,
+    almacenamiento: comp(seleccion.almacenamiento),
+    gpu: comp(seleccion.gpu),
+    fuente: comp(seleccion.fuente),
+    case: comp(seleccion.case),
+  };
+
+  const tieneAlgo =
+    config.procesador || config.placa_madre || ram.length > 0 ||
+    config.almacenamiento || config.gpu || config.fuente || config.case;
+
+  return tieneAlgo ? config : null;
 }
 
 export function useAsistenteIA({ sesionId: sesionIdProp = null, usuarioId = null, activo = true } = {}) {
@@ -50,7 +90,13 @@ export function useAsistenteIA({ sesionId: sesionIdProp = null, usuarioId = null
     };
   }, []);
 
-  const { tipoCambioUsdPen, autenticado, usuario, aplicarConfiguracion: aplicarConfiguracionContexto } = useAppContext();
+  const { tipoCambioUsdPen, autenticado, usuario, aplicarConfiguracion: aplicarConfiguracionContexto, configuracionSeleccionada } = useAppContext();
+
+  // Ref para leer la config del cotizador sin recrear callbacks en cada cambio.
+  const configSeleccionadaRef = useRef(configuracionSeleccionada);
+  useEffect(() => {
+    configSeleccionadaRef.current = configuracionSeleccionada;
+  }, [configuracionSeleccionada]);
 
   const resolverUsuarioId = useCallback(() => {
     if (usuarioId !== null && usuarioId !== undefined) return usuarioId;
@@ -70,11 +116,16 @@ export function useAsistenteIA({ sesionId: sesionIdProp = null, usuarioId = null
   }, []);
 
   const sembrarBienvenida = useCallback(() => {
+    const tieneConfig = !!construirConfigActual(configSeleccionadaRef.current);
     setMensajes((prev) => {
       if (prev.length > 0) return prev;
-      return [crearMensajeBienvenida()];
+      return [crearMensajeBienvenida(tieneConfig)];
     });
-    setQuickReplies(MENSAJE_BIENVENIDA_BASE.metadata.quick_replies);
+    setQuickReplies(
+      tieneConfig
+        ? MENSAJE_BIENVENIDA_CON_CONFIG.metadata.quick_replies
+        : MENSAJE_BIENVENIDA_BASE.metadata.quick_replies
+    );
   }, []);
 
   useEffect(() => {
@@ -179,8 +230,9 @@ export function useAsistenteIA({ sesionId: sesionIdProp = null, usuarioId = null
 
       try {
         const uid = resolverUsuarioId();
+        const configActual = construirConfigActual(configSeleccionadaRef.current);
         const resultado = await llamarConRetry(
-          () => asistente.enviarMensaje(sesionActual, texto.trim(), uid),
+          () => asistente.enviarMensaje(sesionActual, texto.trim(), uid, configActual),
           2
         );
         registrarDebug('respuesta_api', {

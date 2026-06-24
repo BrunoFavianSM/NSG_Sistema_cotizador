@@ -47,37 +47,83 @@ function normalizarCategoria(nombre) {
   return MAPA_CATEGORIAS[clave] || clave;
 }
 
-// ── Seleccionar mejor producto de una categoría ──
+// ── Specs de un candidato (desde specsMap de BD o campos del producto) ──
 
-function seleccionarMejor(candidatos, presupuestoMax, porcentajePresupuesto) {
-  if (!candidatos || candidatos.length === 0) return null;
+function specsDe(candidato, specsMap) {
+  const producto = candidato.producto || {};
+  const id = candidato.id ?? producto.id;
+  const bd = specsMap ? (servicioCompatibilidad.convertirComponenteBD({ id }, specsMap) || {}) : {};
 
-  const presupuestoCategoria = presupuestoMax ? presupuestoMax * porcentajePresupuesto : null;
+  // El specsMap de BD tiene prioridad; si falta, se usan campos del producto.
+  return {
+    socket: bd.socket ?? producto.socket ?? null,
+    ram_tipo: bd.ram_tipo ?? producto.ram_tipo ?? producto.ram_type ?? null,
+    form_factor: bd.form_factor ?? producto.form_factor ?? null,
+    m2_slots: bd.m2_slots ?? producto.m2_slots ?? null,
+    tipo_almacenamiento: bd.tipo_almacenamiento ?? producto.tipo_almacenamiento ?? null,
+    tdp_w: bd.tdp_w ?? producto.tdp_w ?? null,
+    longitud_mm: bd.longitud_mm ?? producto.longitud_mm ?? null,
+    wattage: bd.wattage ?? producto.wattage ?? null,
+    max_gpu_mm: bd.max_gpu_mm ?? producto.max_gpu_mm ?? null,
+    compatibilidad_placa: bd.compatibilidad_placa ?? producto.compatibilidad_placa ?? null,
+  };
+}
 
-  // Ordenar: primero los que están dentro del presupuesto (con mejor score),
-  // luego los más cercanos al presupuesto
-  const ordenados = [...candidatos].sort((a, b) => {
-    const precioA = a.producto?.precio_usd || 0;
-    const precioB = b.producto?.precio_usd || 0;
+function infoCandidato(candidato, specsMap) {
+  const producto = candidato.producto || {};
+  return {
+    id: candidato.id ?? producto.id,
+    producto,
+    specs: specsDe(candidato, specsMap),
+    precio: producto.precio_usd || 0,
+    stock: producto.stock || 0,
+    score: candidato.score || 0,
+  };
+}
+
+// ── Seleccionar el mejor candidato de una categoría ──
+// Prioriza: (1) stock disponible, (2) dentro del presupuesto de categoría,
+// (3) mejor score / cercanía al presupuesto. Aplica un filtro de compatibilidad
+// opcional; si el filtro deja la lista vacía, se relaja (el Double-Check avisará).
+
+function elegirMejor(infos, presupuestoCategoria, filtroCompat) {
+  if (!infos || infos.length === 0) return null;
+
+  let pool = infos;
+  if (typeof filtroCompat === 'function') {
+    const filtrados = infos.filter(filtroCompat);
+    if (filtrados.length > 0) pool = filtrados;
+  }
+
+  const ordenados = [...pool].sort((a, b) => {
+    // 1) Stock disponible primero (los "a pedido" tienen stock 0)
+    const stockA = a.stock > 0 ? 1 : 0;
+    const stockB = b.stock > 0 ? 1 : 0;
+    if (stockA !== stockB) return stockB - stockA;
 
     if (presupuestoCategoria) {
-      // Preferir precio dentro del presupuesto de categoría
-      const dentroA = precioA <= presupuestoCategoria ? 1 : 0;
-      const dentroB = precioB <= presupuestoCategoria ? 1 : 0;
-      if (dentroA !== dentroB) return dentroB - dentroA; // los que caben primero
-
-      // Entre los que caben, mejor score
-      if (dentroA) return (b.score || 0) - (a.score || 0);
-      // Entre los que no caben, el más cercano al presupuesto
-      const diffA = Math.abs(precioA - presupuestoCategoria);
-      const diffB = Math.abs(precioB - presupuestoCategoria);
-      return diffA - diffB;
+      const dentroA = a.precio <= presupuestoCategoria ? 1 : 0;
+      const dentroB = b.precio <= presupuestoCategoria ? 1 : 0;
+      if (dentroA !== dentroB) return dentroB - dentroA;
+      if (dentroA) return (b.score - a.score) || (b.precio - a.precio);
+      return Math.abs(a.precio - presupuestoCategoria) - Math.abs(b.precio - presupuestoCategoria);
     }
-    // Sin presupuesto, mejor score primero
-    return (b.score || 0) - (a.score || 0);
+    return b.score - a.score;
   });
 
-  return ordenados[0].producto || null;
+  return ordenados[0] || null;
+}
+
+// ── Consumo estimado del sistema (para dimensionar la fuente) ──
+
+function estimarConsumo(seleccion) {
+  return servicioCompatibilidad.calcularConsumoTotal({
+    procesador: seleccion.procesador ? { tdp_w: seleccion.procesador.specs.tdp_w } : null,
+    gpu: seleccion.gpu ? { tdp_w: seleccion.gpu.specs.tdp_w } : null,
+    placa_madre: seleccion.placa_madre ? { tdp_w: seleccion.placa_madre.specs.tdp_w } : null,
+    ram: seleccion.ram ? [{}] : [],
+    almacenamiento: seleccion.almacenamiento ? {} : null,
+  });
 }
 
 // ── Distribución de presupuesto por uso ──
@@ -107,7 +153,7 @@ function obtenerDistribucion(uso, resolucion) {
 
 // ── Función principal ──
 
-async function rerank(clasificacion, candidatosPorCategoria, { tipoCambio, margen, igv }) {
+async function rerank(clasificacion, candidatosPorCategoria, { tipoCambio, margen, igv, specsMap } = {}) {
   const uso = clasificacion.uso_principal || 'default';
   const resolucion = clasificacion.resolucion;
   const distribucion = obtenerDistribucion(uso, resolucion);
@@ -117,48 +163,89 @@ async function rerank(clasificacion, candidatosPorCategoria, { tipoCambio, marge
     ? clasificacion.presupuesto_pen / tipoCambio / ((1 + margen / 100) * (1 + igv / 100))
     : null;
 
-  // Normalizar claves del Map de categorías
-  const candidatosNormalizados = new Map();
+  // Normalizar candidatos por categoría → info enriquecida con specs
+  const infosPorCat = new Map();
   for (const [clave, items] of candidatosPorCategoria) {
     const cat = normalizarCategoria(clave);
     if (cat && items && items.length > 0) {
-      candidatosNormalizados.set(cat, items);
+      infosPorCat.set(cat, items.map((i) => infoCandidato(i, specsMap)));
     }
   }
 
-  // Seleccionar mejor producto para cada categoría
+  const presupuestoCat = (cat) => (presupuestoUsd ? presupuestoUsd * (distribucion[cat] || 0.10) : null);
   const seleccion = {};
-  const ordenCategorias = ['procesador', 'placa_madre', 'ram', 'almacenamiento', 'gpu', 'fuente', 'case'];
 
-  for (const cat of ordenCategorias) {
-    const items = candidatosNormalizados.get(cat) || [];
-    const pct = distribucion[cat] || 0.10;
-    seleccion[cat] = seleccionarMejor(items, presupuestoUsd, pct);
-  }
+  // 1) Procesador
+  seleccion.procesador = elegirMejor(infosPorCat.get('procesador'), presupuestoCat('procesador'));
+  const cpuSocket = seleccion.procesador?.specs?.socket || null;
 
-  // Verificar compatibilidad CPU↔Placa (filtro básico por socket si hay datos)
-  const cpuSocket = seleccion.procesador?.socket || null;
-  const placaSocket = seleccion.placa_madre?.socket || null;
-  if (cpuSocket && placaSocket && cpuSocket !== placaSocket) {
-    // Incompatibilidad detectada: buscar placa compatible
-    const placasCompatibles = (candidatosNormalizados.get('placa_madre') || [])
-      .filter((p) => (p.producto?.socket || null) === cpuSocket);
-    if (placasCompatibles.length > 0) {
-      seleccion.placa_madre = seleccionarMejor(placasCompatibles, presupuestoUsd, distribucion.placa_madre || 0.14);
-    } else {
-      console.warn('[Reranker] No se encontró placa compatible con socket', cpuSocket);
+  // 2) Placa madre — debe compartir socket con el CPU
+  seleccion.placa_madre = elegirMejor(
+    infosPorCat.get('placa_madre'),
+    presupuestoCat('placa_madre'),
+    cpuSocket ? (i) => !i.specs.socket || i.specs.socket === cpuSocket : null
+  );
+  const placaRamTipo = seleccion.placa_madre?.specs?.ram_tipo || null;
+  const placaFormFactor = seleccion.placa_madre?.specs?.form_factor || null;
+  const placaM2 = Number(seleccion.placa_madre?.specs?.m2_slots || 0);
+
+  // 3) RAM — tipo (DDR4/DDR5) debe coincidir con la placa
+  seleccion.ram = elegirMejor(
+    infosPorCat.get('ram'),
+    presupuestoCat('ram'),
+    placaRamTipo ? (i) => !i.specs.ram_tipo || i.specs.ram_tipo === placaRamTipo : null
+  );
+
+  // 4) Almacenamiento — si la placa no tiene M.2, evitar M.2/NVMe
+  seleccion.almacenamiento = elegirMejor(
+    infosPorCat.get('almacenamiento'),
+    presupuestoCat('almacenamiento'),
+    placaM2 <= 0 && seleccion.placa_madre
+      ? (i) => !/m\.2|nvme/i.test(String(i.specs.tipo_almacenamiento || ''))
+      : null
+  );
+
+  // 5) GPU
+  seleccion.gpu = elegirMejor(infosPorCat.get('gpu'), presupuestoCat('gpu'));
+  const gpuLargo = Number(seleccion.gpu?.specs?.longitud_mm || 0);
+
+  // 6) Fuente — wattaje suficiente para el consumo estimado
+  const consumoEstimado = estimarConsumo(seleccion);
+  seleccion.fuente = elegirMejor(
+    infosPorCat.get('fuente'),
+    presupuestoCat('fuente'),
+    consumoEstimado > 0 ? (i) => !i.specs.wattage || Number(i.specs.wattage) >= consumoEstimado : null
+  );
+
+  // 7) Case — soporta el form factor de la placa y el largo de la GPU
+  seleccion.case = elegirMejor(
+    infosPorCat.get('case'),
+    presupuestoCat('case'),
+    (i) => {
+      if (placaFormFactor && i.specs.compatibilidad_placa) {
+        const soportados = servicioCompatibilidad
+          .parsearListaFormFactor(i.specs.compatibilidad_placa)
+          .map((ff) => servicioCompatibilidad.normalizarFormFactor(ff));
+        const ffPlaca = servicioCompatibilidad.normalizarFormFactor(placaFormFactor);
+        if (soportados.length > 0 && ffPlaca && !soportados.includes(ffPlaca)) return false;
+      }
+      const maxGpu = Number(i.specs.max_gpu_mm || 0);
+      if (gpuLargo > 0 && maxGpu > 0 && gpuLargo > maxGpu) return false;
+      return true;
     }
-  }
+  );
+
+  const idDe = (sel) => (sel && sel.id ? { id: sel.id } : null);
 
   return {
     configuracion_propuesta: {
-      procesador: seleccion.procesador ? { id: seleccion.procesador.id } : null,
-      placa_madre: seleccion.placa_madre ? { id: seleccion.placa_madre.id } : null,
+      procesador: idDe(seleccion.procesador),
+      placa_madre: idDe(seleccion.placa_madre),
       ram: seleccion.ram ? [{ id: seleccion.ram.id }] : [],
-      almacenamiento: seleccion.almacenamiento ? { id: seleccion.almacenamiento.id } : null,
-      gpu: seleccion.gpu ? { id: seleccion.gpu.id } : null,
-      fuente: seleccion.fuente ? { id: seleccion.fuente.id } : null,
-      case: seleccion.case ? { id: seleccion.case.id } : null,
+      almacenamiento: idDe(seleccion.almacenamiento),
+      gpu: idDe(seleccion.gpu),
+      fuente: idDe(seleccion.fuente),
+      case: idDe(seleccion.case),
     },
     perfil: clasificacion.perfil || inferirPerfil(clasificacion),
     confianza: 0.7,
@@ -166,10 +253,10 @@ async function rerank(clasificacion, candidatosPorCategoria, { tipoCambio, marge
   };
 }
 
-// ── Fallback: selección directa por categoría (sin compatibilidad) ──
+// ── Fallback: misma lógica determinística (sin specsMap) ──
 
-function rerankFallback(clasificacion, candidatosPorCategoria, { tipoCambio, margen, igv }) {
-  return rerank(clasificacion, candidatosPorCategoria, { tipoCambio, margen, igv });
+function rerankFallback(clasificacion, candidatosPorCategoria, opciones) {
+  return rerank(clasificacion, candidatosPorCategoria, opciones || {});
 }
 
 // ── Inferir perfil ──

@@ -200,20 +200,19 @@ async function actualizarModoTipoCambio(req, res) {
   }
 }
 
-const MODOS_VALIDOS = ['pipeline', 'nvidia', 'gemini'];
+// Arquitectura single-AI: el único modelo es el conversador (nvidia o gemini).
+const MODOS_VALIDOS = ['nvidia', 'gemini'];
 const MODELOS_REQUERIDOS_POR_MODO = {
-  pipeline: ['nvidia_classifier_model', 'nvidia_embedding_model', 'nvidia_reranker_model'],
   nvidia: ['nvidia_model'],
   gemini: ['gemini_model'],
 };
 
 const DEFAULTS_IA = {
-  modo_activo: process.env.AGENT_PIPELINE_ENABLED !== 'false' ? 'pipeline' : 'gemini',
+  modo_activo: ['nvidia', 'gemini'].includes(String(process.env.IA_MODO_ACTIVO || '').toLowerCase())
+    ? String(process.env.IA_MODO_ACTIVO).toLowerCase()
+    : 'nvidia',
   gemini_model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
   nvidia_model: process.env.NVIDIA_MODEL || 'mistralai/mistral-small-4-119b-2603',
-  nvidia_classifier_model: process.env.NVIDIA_CLASSIFIER_MODEL || 'meta/llama-3.2-3b-instruct',
-  nvidia_embedding_model: process.env.NVIDIA_EMBEDDING_MODEL || 'nvidia/nv-embed-v1',
-  nvidia_reranker_model: process.env.NVIDIA_RERANKER_MODEL || 'nvidia/rerank-qa-mistral-4b',
 };
 
 const PROVEEDORES_ENRIQUECIMIENTO_VALIDOS = ['nvidia', 'gemini'];
@@ -239,22 +238,18 @@ async function obtenerModelosIA(req, res) {
         CLAVES.MODO_ACTIVO,
         CLAVES.GEMINI_MODEL,
         CLAVES.NVIDIA_MODEL,
-        CLAVES.NVIDIA_CLASSIFIER_MODEL,
-        CLAVES.NVIDIA_EMBEDDING_MODEL,
-        CLAVES.NVIDIA_RERANKER_MODEL,
       ]]
     );
 
     const mapa = Object.fromEntries(rows.map((r) => [r.clave, r.valor]));
+    const modoGuardado = mapa[CLAVES.MODO_ACTIVO];
+    const modoActivo = MODOS_VALIDOS.includes(modoGuardado) ? modoGuardado : DEFAULTS_IA.modo_activo;
 
     return res.json({
       exito: true,
-      modo_activo: mapa[CLAVES.MODO_ACTIVO] || DEFAULTS_IA.modo_activo,
+      modo_activo: modoActivo,
       gemini_model: mapa[CLAVES.GEMINI_MODEL] || DEFAULTS_IA.gemini_model,
       nvidia_model: mapa[CLAVES.NVIDIA_MODEL] || DEFAULTS_IA.nvidia_model,
-      nvidia_classifier_model: mapa[CLAVES.NVIDIA_CLASSIFIER_MODEL] || DEFAULTS_IA.nvidia_classifier_model,
-      nvidia_embedding_model: mapa[CLAVES.NVIDIA_EMBEDDING_MODEL] || DEFAULTS_IA.nvidia_embedding_model,
-      nvidia_reranker_model: mapa[CLAVES.NVIDIA_RERANKER_MODEL] || DEFAULTS_IA.nvidia_reranker_model,
     });
   } catch (error) {
     console.error('[ConfigIA] Error al obtener modelos IA:', error);
@@ -271,9 +266,6 @@ async function actualizarModelosIA(req, res) {
       modo_activo,
       gemini_model,
       nvidia_model,
-      nvidia_classifier_model,
-      nvidia_embedding_model,
-      nvidia_reranker_model,
     } = req.body || {};
 
     if (!modo_activo || !MODOS_VALIDOS.includes(modo_activo)) {
@@ -287,9 +279,6 @@ async function actualizarModelosIA(req, res) {
     const valoresRecibidos = {
       gemini_model,
       nvidia_model,
-      nvidia_classifier_model,
-      nvidia_embedding_model,
-      nvidia_reranker_model,
     };
 
     const camposRequeridos = MODELOS_REQUERIDOS_POR_MODO[modo_activo];
@@ -309,18 +298,12 @@ async function actualizarModelosIA(req, res) {
       modo_activo: CLAVES.MODO_ACTIVO,
       gemini_model: CLAVES.GEMINI_MODEL,
       nvidia_model: CLAVES.NVIDIA_MODEL,
-      nvidia_classifier_model: CLAVES.NVIDIA_CLASSIFIER_MODEL,
-      nvidia_embedding_model: CLAVES.NVIDIA_EMBEDDING_MODEL,
-      nvidia_reranker_model: CLAVES.NVIDIA_RERANKER_MODEL,
     };
 
     const entradas = [
       ['modo_activo', modo_activo],
       ['gemini_model', gemini_model],
       ['nvidia_model', nvidia_model],
-      ['nvidia_classifier_model', nvidia_classifier_model],
-      ['nvidia_embedding_model', nvidia_embedding_model],
-      ['nvidia_reranker_model', nvidia_reranker_model],
     ];
 
     for (const [campo, valor] of entradas) {
@@ -340,9 +323,6 @@ async function actualizarModelosIA(req, res) {
         CLAVES.MODO_ACTIVO,
         CLAVES.GEMINI_MODEL,
         CLAVES.NVIDIA_MODEL,
-        CLAVES.NVIDIA_CLASSIFIER_MODEL,
-        CLAVES.NVIDIA_EMBEDDING_MODEL,
-        CLAVES.NVIDIA_RERANKER_MODEL,
       ]]
     );
     const mapa = Object.fromEntries(rows.map((r) => [r.clave, r.valor]));
@@ -353,9 +333,6 @@ async function actualizarModelosIA(req, res) {
       modo_activo: mapa[CLAVES.MODO_ACTIVO] || DEFAULTS_IA.modo_activo,
       gemini_model: mapa[CLAVES.GEMINI_MODEL] || DEFAULTS_IA.gemini_model,
       nvidia_model: mapa[CLAVES.NVIDIA_MODEL] || DEFAULTS_IA.nvidia_model,
-      nvidia_classifier_model: mapa[CLAVES.NVIDIA_CLASSIFIER_MODEL] || DEFAULTS_IA.nvidia_classifier_model,
-      nvidia_embedding_model: mapa[CLAVES.NVIDIA_EMBEDDING_MODEL] || DEFAULTS_IA.nvidia_embedding_model,
-      nvidia_reranker_model: mapa[CLAVES.NVIDIA_RERANKER_MODEL] || DEFAULTS_IA.nvidia_reranker_model,
     });
   } catch (error) {
     console.error('[ConfigIA] Error al actualizar modelos IA:', error);

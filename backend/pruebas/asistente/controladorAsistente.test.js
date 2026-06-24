@@ -27,6 +27,13 @@ jest.mock('../../src/asistente/sistemaPrompt', () => ({
 }));
 
 jest.mock('../../src/asistente/servicioLLM', () => ({
+  generarRespuestaConPrioridad: jest.fn().mockResolvedValue({
+    respuesta: '¿Para qué usarás tu PC?',
+    quick_replies: ['Gaming'],
+    configuracion_propuesta: null,
+    perfil_usuario: null,
+    requiere_asesor: false,
+  }),
   generarRespuesta: jest.fn().mockResolvedValue({
     respuesta: '¿Para qué usarás tu PC?',
     quick_replies: ['Gaming'],
@@ -39,8 +46,23 @@ jest.mock('../../src/asistente/servicioLLM', () => ({
   },
 }));
 
-jest.mock('../../src/asistente/orquestadorAgentes', () => ({
-  ejecutarPipeline: jest.fn().mockRejectedValue(new Error('Pipeline deshabilitado')),
+jest.mock('../../src/asistente/servicioConfigIA', () => ({
+  obtenerConfigIA: jest.fn().mockResolvedValue({
+    modo_activo: 'nvidia',
+    gemini_model: 'gemini-2.5-flash',
+    nvidia_model: 'modelo-nvidia',
+    pipeline_enabled: false,
+    gemini_api_key: '',
+    nvidia_api_key: '',
+  }),
+}));
+
+jest.mock('../../src/asistente/agenteBuscador', () => ({
+  buscarProductos: jest.fn().mockResolvedValue(new Map()),
+}));
+
+jest.mock('../../src/asistente/agenteReranker', () => ({
+  rerank: jest.fn().mockResolvedValue({ configuracion_propuesta: null }),
 }));
 
 jest.mock('../../src/asistente/servicioSemaforo', () => ({
@@ -142,7 +164,7 @@ describe('controladorAsistente', () => {
     });
 
     test('fallback si respuesta del LLM está vacía', async () => {
-      servicioLLM.generarRespuesta.mockResolvedValueOnce({
+      servicioLLM.generarRespuestaConPrioridad.mockResolvedValueOnce({
         respuesta: '',
         quick_replies: [],
         configuracion_propuesta: null,
@@ -161,7 +183,7 @@ describe('controladorAsistente', () => {
 
     test('502 si el LLM falla con rate_limit', async () => {
       const err = new (require('../../src/asistente/servicioLLM').ErrorLLM)('Rate limited', 'rate_limit');
-      servicioLLM.generarRespuesta.mockRejectedValueOnce(err);
+      servicioLLM.generarRespuestaConPrioridad.mockRejectedValueOnce(err);
 
       const req = { body: { sesion_id: 'uuid-1', mensaje: 'hola' } };
       const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
@@ -169,6 +191,19 @@ describe('controladorAsistente', () => {
       await controlador.procesarMensaje(req, res);
 
       expect(res.status).toHaveBeenCalledWith(502);
+    });
+
+    test('gate off-domain — deriva a asesor sin llamar al LLM', async () => {
+      const req = { body: { sesion_id: 'uuid-1', mensaje: 'me haces un descuento?' } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await controlador.procesarMensaje(req, res);
+
+      const responseArg = res.json.mock.calls[0][0];
+      expect(responseArg.requiere_asesor).toBe(true);
+      expect(responseArg.configuracion_propuesta).toBeNull();
+      // No debe invocar al conversador para temas comerciales
+      expect(servicioLLM.generarRespuestaConPrioridad).not.toHaveBeenCalled();
     });
   });
 

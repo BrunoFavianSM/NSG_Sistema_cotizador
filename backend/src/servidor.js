@@ -232,10 +232,6 @@ if (require.main === module) {
   app.listen(PUERTO, () => {
     console.log(`Servidor corriendo en puerto ${PUERTO}`);
   });
-
-  // Precargar caché de embeddings (no bloquea el inicio del servidor)
-  const { inicializarCacheProductos } = require('./asistente/inicializarCache');
-  inicializarCacheProductos();
 }
 
 module.exports = app;
