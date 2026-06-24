@@ -276,11 +276,114 @@ async function generarRespuestaConPrioridad({ systemPrompt, historial, mensajeAc
   );
 }
 
+// ── Generación en TEXTO PLANO (sin JSON) ──
+// El conversador devuelve solo el mensaje; los quick_replies/perfil se derivan
+// determinísticamente en el controlador. Elimina los errores "no es JSON válido".
+
+async function llamarGeminiTexto(systemPrompt, historial, mensajeActual, configIA) {
+  const geminiKey = configIA?.gemini_api_key || GEMINI_API_KEY;
+  if (!geminiKey) throw new ErrorLLM('GEMINI_API_KEY no configurada', 'no_provider');
+
+  const modeloGemini = configIA?.gemini_model || GEMINI_MODEL;
+  const genAI = new GoogleGenerativeAI(geminiKey);
+  const modelo = genAI.getGenerativeModel({
+    model: modeloGemini,
+    generationConfig: { temperature: 0.7, maxOutputTokens: 1200, topP: 0.9 },
+  });
+
+  return await llamarConReintentos(async () => {
+    const contenido = construirContenidoGemini(historial, mensajeActual);
+    const resultado = await Promise.race([
+      modelo.generateContent({ contents: contenido, systemInstruction: systemPrompt }),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`Gemini excedió timeout de ${GEMINI_TIMEOUT_MS}ms`)), GEMINI_TIMEOUT_MS)
+      ),
+    ]);
+    const texto = (resultado.response?.text?.() || '').trim();
+    if (!texto) throw new ErrorLLM('Respuesta de Gemini vacía', 'server_error');
+    return texto;
+  }, 'Gemini');
+}
+
+async function llamarNVIDIATexto(systemPrompt, historial, mensajeActual, configIA) {
+  const nvidiaKey = configIA?.nvidia_api_key || NVIDIA_API_KEY;
+  if (!nvidiaKey) throw new ErrorLLM('NVIDIA_API_KEY no configurada', 'no_provider');
+
+  const modeloNVIDIA = configIA?.nvidia_model || NVIDIA_MODEL;
+
+  return await llamarConReintentos(async () => {
+    const mensajes = construirMensajesNVIDIA(systemPrompt, historial, mensajeActual);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), NVIDIA_FETCH_TIMEOUT_MS);
+
+    let respuesta;
+    try {
+      respuesta = await fetch(`${NVIDIA_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${nvidiaKey}` },
+        body: JSON.stringify({ model: modeloNVIDIA, messages: mensajes, temperature: 0.5, max_tokens: 1200, top_p: 0.9 }),
+        signal: controller.signal,
+      });
+    } catch (error) {
+      if (error?.name === 'AbortError') throw new ErrorLLM(`NVIDIA excedió timeout de ${NVIDIA_FETCH_TIMEOUT_MS}ms`, 'timeout');
+      throw error;
+    } finally {
+      clearTimeout(timer);
+    }
+
+    if (!respuesta.ok) {
+      const errorBody = await respuesta.text().catch(() => '');
+      const err = new Error(`NVIDIA ${respuesta.status}: ${errorBody}`);
+      err.status = respuesta.status;
+      throw err;
+    }
+
+    const data = await respuesta.json();
+    const texto = (data?.choices?.[0]?.message?.content || '').trim();
+    if (!texto) throw new ErrorLLM('Respuesta de NVIDIA vacía', 'server_error');
+    return texto;
+  }, 'NVIDIA');
+}
+
+async function generarTextoConPrioridad({ systemPrompt, historial, mensajeActual, configIA, prioridadProveedores }) {
+  const prioridad = Array.isArray(prioridadProveedores) && prioridadProveedores.length > 0
+    ? prioridadProveedores
+    : ['gemini', 'nvidia'];
+
+  const errores = [];
+  for (const proveedor of prioridad) {
+    try {
+      if (proveedor === 'nvidia') {
+        return { texto: await llamarNVIDIATexto(systemPrompt, historial, mensajeActual, configIA) };
+      }
+      if (proveedor === 'gemini') {
+        return { texto: await llamarGeminiTexto(systemPrompt, historial, mensajeActual, configIA) };
+      }
+    } catch (error) {
+      errores.push({ proveedor, error });
+      console.warn(`[LLM] ${proveedor} (texto) falló, intentando siguiente proveedor:`, error.message);
+    }
+  }
+
+  const ultimoError = errores[errores.length - 1]?.error;
+  if (!ultimoError) throw new ErrorLLM('No hay proveedores de IA configurados', 'no_provider');
+  if (errores.every(({ error }) => error?.tipo === 'no_provider')) {
+    throw new ErrorLLM('No hay proveedor LLM configurado', 'no_provider');
+  }
+  throw new ErrorLLM(
+    'El servicio de IA no está disponible temporalmente. Intenta en un momento.',
+    ultimoError.tipo || clasificarError(ultimoError) || 'server_error'
+  );
+}
+
 module.exports = {
   generarRespuesta,
   generarRespuestaConPrioridad,
+  generarTextoConPrioridad,
   llamarGemini,
   llamarNVIDIA,
+  llamarGeminiTexto,
+  llamarNVIDIATexto,
   extraerJSON,
   ErrorLLM,
 };

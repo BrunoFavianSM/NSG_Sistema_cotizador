@@ -1,8 +1,12 @@
-﻿/**
+/**
  * MensajeAsistente.jsx
  *
- * Burbuja de mensaje del asistente IA.
+ * Burbuja de mensaje del asistente IA. Renderiza el contenido como Markdown
+ * (GFM: negritas, listas, tablas) para que las respuestas se vean formateadas.
  */
+
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 /**
  * Formatea un timestamp a hora legible en espanol.
@@ -19,61 +23,36 @@ function formatearHora(timestamp) {
   }
 }
 
-function renderTextoConNegrita(texto = '') {
-  const partes = String(texto).split(/(\*\*[^*]+\*\*)/g);
-  return partes.map((parte, idx) => {
-    if (parte.startsWith('**') && parte.endsWith('**')) {
-      return <strong key={idx}>{parte.slice(2, -2)}</strong>;
-    }
-    return <span key={idx}>{parte}</span>;
-  });
-}
-
-function renderContenidoFormateado(contenido = '') {
-  const lineas = String(contenido).split(/\r?\n/);
-  const bloques = [];
-  let listaActual = [];
-  const patronItemLista = /^((\d+[\).\s]+)|[-*•]\s+|\.\s+)/;
-
-  const cerrarLista = () => {
-    if (listaActual.length > 0) {
-      bloques.push(
-        <ul key={`lista-${bloques.length}`} className="list-disc pl-5 space-y-1">
-          {listaActual.map((item, idx) => (
-            <li key={idx} className="leading-relaxed">
-              {renderTextoConNegrita(item)}
-            </li>
-          ))}
-        </ul>
-      );
-      listaActual = [];
-    }
-  };
-
-  lineas.forEach((linea) => {
-    const l = linea.trim();
-    const esItem = patronItemLista.test(l);
-    if (esItem) {
-      listaActual.push(l.replace(patronItemLista, ''));
-      return;
-    }
-
-    cerrarLista();
-    if (l === '') {
-      bloques.push(<div key={`esp-${bloques.length}`} className="h-2" />);
-      return;
-    }
-
-    bloques.push(
-      <p key={`p-${bloques.length}`} className="leading-relaxed">
-        {renderTextoConNegrita(l)}
-      </p>
-    );
-  });
-
-  cerrarLista();
-  return bloques;
-}
+// Overrides de estilo para los elementos Markdown (sin depender de plugins de tipografía).
+const componentesMarkdown = {
+  p: ({ children }) => <p className="leading-relaxed mb-2 last:mb-0">{children}</p>,
+  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+  em: ({ children }) => <em className="italic">{children}</em>,
+  ul: ({ children }) => <ul className="list-disc pl-5 space-y-1 mb-2">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal pl-5 space-y-1 mb-2">{children}</ol>,
+  li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+  a: ({ children, href }) => (
+    <a href={href} target="_blank" rel="noreferrer" className="underline text-[var(--color-accent)]">
+      {children}
+    </a>
+  ),
+  hr: () => <hr className="my-3 border-[var(--color-border)]" />,
+  table: ({ children }) => (
+    <div className="overflow-x-auto my-2">
+      <table className="w-full text-xs border-collapse">{children}</table>
+    </div>
+  ),
+  thead: ({ children }) => <thead className="bg-[var(--color-surface-soft)]">{children}</thead>,
+  th: ({ children }) => (
+    <th className="border border-[var(--color-border)] px-2 py-1 text-left font-semibold">{children}</th>
+  ),
+  td: ({ children }) => (
+    <td className="border border-[var(--color-border)] px-2 py-1 align-top">{children}</td>
+  ),
+  code: ({ children }) => (
+    <code className="rounded bg-[var(--color-surface-soft)] px-1 py-0.5 text-[0.85em]">{children}</code>
+  ),
+};
 
 export default function MensajeAsistente({ contenido, timestamp, children }) {
   const hora = formatearHora(timestamp);
@@ -89,7 +68,11 @@ export default function MensajeAsistente({ contenido, timestamp, children }) {
         ].join(' ')}
       >
         {contenido && (
-          <div className="break-words text-sm">{renderContenidoFormateado(contenido)}</div>
+          <div className="break-words text-sm">
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={componentesMarkdown}>
+              {String(contenido)}
+            </ReactMarkdown>
+          </div>
         )}
 
         {children && (

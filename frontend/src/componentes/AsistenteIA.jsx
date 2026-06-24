@@ -195,6 +195,8 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
   // �"?�"? Estado del input �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   const [textoInput, setTextoInput] = useState('');
   const [estaEscribiendo, setEstaEscribiendo] = useState(false);
+  // Indica que el turno en curso está armando la configuración (loading contextual).
+  const [armandoConfig, setArmandoConfig] = useState(false);
 
   // �"?�"? Estado de historial previo �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   const [sesionPrevia, setSesionPrevia] = useState(null);
@@ -240,6 +242,11 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [mensajes, cargando]);
+
+  // Al terminar la carga, limpiar el estado de "armando configuración".
+  useEffect(() => {
+    if (!cargando) setArmandoConfig(false);
+  }, [cargando]);
 
   // �"?�"? Foco en input al abrir modal �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   useEffect(() => {
@@ -293,20 +300,15 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
   const cerrarModal = () => setModalAbierto(false);
 
   const manejarCambioInput = (e) => {
-    const valor = e.target.value;
-    setTextoInput(valor);
-
-    // Ocultar quick replies cuando el usuario empieza a escribir (Req 10.6)
-    if (valor.length > 0 && !estaEscribiendo) {
-      setEstaEscribiendo(true);
-      ocultarQuickReplies();
-    }
-
-    // Resetear flag de "escribiendo" si borra todo el texto
-    if (valor.length === 0) {
-      setEstaEscribiendo(false);
-    }
+    // Las quick replies se mantienen visibles aunque el usuario escriba;
+    // se reemplazan recién cuando llega una nueva respuesta del asistente.
+    setTextoInput(e.target.value);
   };
+
+  // Heurística para el indicador de carga: ¿el mensaje pide ver/armar la config?
+  const pareceVerConfig = (t) =>
+    /\b(ver|mostrar|muestra|arma|armar|cotiz|configuraci|recomien|propuesta)\b/i.test(t) ||
+    /^(dale|si|sí|listo|vamos|ok|de una)\b/i.test(String(t).trim());
 
   const manejarEnvio = useCallback(async () => {
     const texto = textoInput.trim();
@@ -315,6 +317,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
     setTextoInput('');
     setEstaEscribiendo(false);
     setMostrarBannerHistorial(false);
+    setArmandoConfig(pareceVerConfig(texto));
 
     // Si el mensaje parece una consulta de compatibilidad, buscar productos
     // compatibles en paralelo con la respuesta del LLM (Req. 8.5, 8.6)
@@ -338,6 +341,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
 
   const manejarSeleccionQuickReply = (texto) => {
     setMostrarBannerHistorial(false);
+    setArmandoConfig(pareceVerConfig(texto));
     seleccionarQuickReply(texto);
   };
 
@@ -390,7 +394,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
     : { initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.15 } };
 
   // �"?�"? Determinar si mostrar quick replies �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
-  const mostrarQuickReplies = quickReplies.length > 0 && !estaEscribiendo;
+  const mostrarQuickReplies = quickReplies.length > 0;
   const hayConfigEnMensajes = mensajes.some(
     (mensaje) => mensaje.rol === 'assistant' && Boolean(mensaje.metadata?.configuracion_propuesta)
   );
@@ -672,6 +676,11 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                       className="bg-[var(--color-surface-soft)] shadow-[var(--shadow-2)]"
                       style={{ borderRadius: '24px 24px 24px 4px' }}
                     >
+                      {armandoConfig && (
+                        <p className="px-4 pt-2 text-xs text-[var(--color-text-muted)]">
+                          Armando tu configuración…
+                        </p>
+                      )}
                       <TypingIndicator />
                     </div>
                   </motion.div>

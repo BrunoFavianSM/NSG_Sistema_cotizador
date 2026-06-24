@@ -25,10 +25,12 @@ const KEYWORDS_NEGOCIACION = [
 // Confirmaciones / pedidos explícitos de ver la configuración armada.
 const KEYWORDS_COTIZAR = [
   'ver mi configuracion', 'ver configuracion', 'mostrar configuracion', 'mostrar propuesta',
-  'ver propuesta', 'armar pc', 'arma la pc', 'arma una pc', 'armame', 'cotizar', 'cotizacion',
-  'ver config', 'ver mi pc', 'generar configuracion', 'pasemos a ver', 'pasar a ver',
-  'vamos a verla', 'quiero verla', 'muestrame', 'muestramela', 'ver la configuracion',
-  'recomiendame', 'que me recomiendas', 'recomendacion',
+  'ver propuesta', 'armar pc', 'arma la pc', 'arma una pc', 'armame', 'armala', 'arma mi',
+  'cotizar', 'cotizacion', 'ver config', 'ver mi pc', 'generar configuracion',
+  'pasemos a ver', 'pasar a ver', 'vamos a verla', 'quiero verla', 'muestrame', 'muestramela',
+  'ver la configuracion', 'recomiendame', 'que me recomiendas', 'recomendacion',
+  'dame la configuracion', 'dame la config', 'dame mi configuracion', 'dame una configuracion',
+  'quiero la configuracion', 'la configuracion', 'mi configuracion',
 ];
 
 // Afirmaciones cortas tras el checkpoint ("¿pasamos a ver la configuración?").

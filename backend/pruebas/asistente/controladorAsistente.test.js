@@ -20,6 +20,7 @@ jest.mock('../../src/asistente/servicioSesion', () => ({
 jest.mock('../../src/asistente/servicioCuestionario', () => ({
   construirEstadoCuestionario: jest.fn().mockReturnValue({ uso: null, faltantes: ['uso'], completo: false }),
   construirContextoConversacion: jest.fn().mockReturnValue({ campos_detectados: {}, campos_faltantes: ['uso'] }),
+  construirSiguientePregunta: jest.fn().mockReturnValue({ respuesta: '¿Para qué usarás tu PC?', quick_replies: ['Gaming'] }),
 }));
 
 jest.mock('../../src/asistente/sistemaPrompt', () => ({
@@ -27,20 +28,7 @@ jest.mock('../../src/asistente/sistemaPrompt', () => ({
 }));
 
 jest.mock('../../src/asistente/servicioLLM', () => ({
-  generarRespuestaConPrioridad: jest.fn().mockResolvedValue({
-    respuesta: '¿Para qué usarás tu PC?',
-    quick_replies: ['Gaming'],
-    configuracion_propuesta: null,
-    perfil_usuario: null,
-    requiere_asesor: false,
-  }),
-  generarRespuesta: jest.fn().mockResolvedValue({
-    respuesta: '¿Para qué usarás tu PC?',
-    quick_replies: ['Gaming'],
-    configuracion_propuesta: null,
-    perfil_usuario: null,
-    requiere_asesor: false,
-  }),
+  generarTextoConPrioridad: jest.fn().mockResolvedValue({ texto: '¿Para qué usarás tu PC?' }),
   ErrorLLM: class ErrorLLM extends Error {
     constructor(mensaje, tipo) { super(mensaje); this.tipo = tipo; this.name = 'ErrorLLM'; }
   },
@@ -63,6 +51,7 @@ jest.mock('../../src/asistente/agenteBuscador', () => ({
 
 jest.mock('../../src/asistente/agenteReranker', () => ({
   rerank: jest.fn().mockResolvedValue({ configuracion_propuesta: null }),
+  inferirPerfil: jest.fn().mockReturnValue('intermedio'),
 }));
 
 jest.mock('../../src/asistente/servicioSemaforo', () => ({
@@ -164,13 +153,7 @@ describe('controladorAsistente', () => {
     });
 
     test('fallback si respuesta del LLM está vacía', async () => {
-      servicioLLM.generarRespuestaConPrioridad.mockResolvedValueOnce({
-        respuesta: '',
-        quick_replies: [],
-        configuracion_propuesta: null,
-        perfil_usuario: null,
-        requiere_asesor: false,
-      });
+      servicioLLM.generarTextoConPrioridad.mockResolvedValueOnce({ texto: '' });
 
       const req = { body: { sesion_id: 'uuid-1', mensaje: 'cotizar' } };
       const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
@@ -183,7 +166,7 @@ describe('controladorAsistente', () => {
 
     test('502 si el LLM falla con rate_limit', async () => {
       const err = new (require('../../src/asistente/servicioLLM').ErrorLLM)('Rate limited', 'rate_limit');
-      servicioLLM.generarRespuestaConPrioridad.mockRejectedValueOnce(err);
+      servicioLLM.generarTextoConPrioridad.mockRejectedValueOnce(err);
 
       const req = { body: { sesion_id: 'uuid-1', mensaje: 'hola' } };
       const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
@@ -203,7 +186,7 @@ describe('controladorAsistente', () => {
       expect(responseArg.requiere_asesor).toBe(true);
       expect(responseArg.configuracion_propuesta).toBeNull();
       // No debe invocar al conversador para temas comerciales
-      expect(servicioLLM.generarRespuestaConPrioridad).not.toHaveBeenCalled();
+      expect(servicioLLM.generarTextoConPrioridad).not.toHaveBeenCalled();
     });
   });
 

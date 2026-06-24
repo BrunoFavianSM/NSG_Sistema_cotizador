@@ -10,6 +10,7 @@ const EMPRESA_SUBTITULO = 'Soluciones en Tecnologia';
 const RUTAS_LOGO_CANDIDATAS = [
   path.resolve(__dirname, '../../../resources/logo vector-1.png'),
   path.resolve(__dirname, '../../assets/logo-nsg.png'),
+  path.resolve(__dirname, '../../../frontend/public/favicon.png'),
   path.resolve(__dirname, '../../../frontend/dist/favicon.png'),
 ];
 
@@ -365,6 +366,25 @@ class ServicioPDF {
     return resolverRutaLogo();
   }
 
+  /**
+   * Devuelve el logo como objeto { data: Buffer, format } para @react-pdf.
+   * Pasar un Buffer (en vez de una ruta) evita que @react-pdf intente
+   * "fetchear" la ruta como URL y falle silenciosamente (recuadro vacío).
+   * @returns {{data: Buffer, format: string}|null}
+   */
+  obtenerLogoImagen() {
+    const ruta = resolverRutaLogo();
+    if (!ruta) return null;
+    try {
+      const data = fs.readFileSync(ruta);
+      const format = ruta.toLowerCase().endsWith('.jpg') || ruta.toLowerCase().endsWith('.jpeg') ? 'jpg' : 'png';
+      return { data, format };
+    } catch (error) {
+      console.warn('[ServicioPDF] No se pudo leer el logo:', error.message);
+      return null;
+    }
+  }
+
   renderFilaComponente(comp, index, incluirPrecios, moneda) {
     const h = this.react.createElement;
     const estilos = this.estilos;
@@ -409,7 +429,7 @@ class ServicioPDF {
     const h = this.react.createElement;
     const { Document, Page, Text, View, Image } = this.renderer;
     const estilos = this.estilos;
-    const rutaLogo = this.obtenerRutaLogo();
+    const logoImagen = this.obtenerLogoImagen();
     const totalNormalizado = normalizarMontoTotal(datos);
     const total = resolverMontoPorMoneda({
       moneda,
@@ -428,7 +448,7 @@ class ServicioPDF {
         h(
           View,
           { style: estilos.cabecera },
-          rutaLogo ? h(Image, { src: rutaLogo, style: estilos.logo }) : h(View, { style: estilos.logo }),
+          logoImagen ? h(Image, { src: logoImagen, style: estilos.logo }) : h(View, { style: estilos.logo }),
           h(
             View,
             { style: estilos.cabeceraTexto },
@@ -492,7 +512,7 @@ class ServicioPDF {
     const h = this.react.createElement;
     const { Document, Page, Text, View, Image } = this.renderer;
     const estilos = this.estilos;
-    const rutaLogo = this.obtenerRutaLogo();
+    const logoImagen = this.obtenerLogoImagen();
 
     return h(
       Document,
@@ -503,7 +523,7 @@ class ServicioPDF {
         h(
           View,
           { style: estilos.cabecera },
-          rutaLogo ? h(Image, { src: rutaLogo, style: estilos.logo }) : h(View, { style: estilos.logo }),
+          logoImagen ? h(Image, { src: logoImagen, style: estilos.logo }) : h(View, { style: estilos.logo }),
           h(
             View,
             { style: estilos.cabeceraTexto },

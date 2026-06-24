@@ -113,10 +113,13 @@ async function procesarMensaje(req, res) {
     // ── Armado determinístico de la configuración (NO lo hace la IA) ──
     // Se construye cuando el cuestionario está completo y el usuario quiere verla.
     const quiereCotizar = utilIntencion.detectarIntencionCotizar(mensajeSanitizado);
+    // Datos mínimos para armar: uso + presupuesto. Resolución y multitarea son
+    // refinamientos opcionales (el motor usa defaults sensatos si faltan).
+    const listoParaArmar = Boolean(cuestionario.uso && cuestionario.presupuestoPen);
     let configRaw = null;
     let configNarracion = null;
 
-    if (cuestionario.completo && quiereCotizar && productos && productos.length > 0) {
+    if (listoParaArmar && quiereCotizar && productos && productos.length > 0) {
       try {
         const clasificacionLike = {
           uso_principal: cuestionario.uso,
@@ -170,37 +173,37 @@ async function procesarMensaje(req, res) {
       configuracionActual: configActualNarracion,
     });
 
-    // ── Conversador: único modelo de IA. Proveedor según modo_activo ──
-    let respuestaLLM;
+    // ── Conversador: único modelo de IA (TEXTO PLANO). Proveedor según modo_activo ──
+    // Devuelve solo el mensaje; los quick_replies/perfil se derivan determinísticamente.
+    let textoConversador;
     try {
       const prioridad = configIA.modo_activo === 'gemini' ? ['gemini', 'nvidia'] : ['nvidia', 'gemini'];
-      respuestaLLM = await servicioLLM.generarRespuestaConPrioridad({
+      const r = await servicioLLM.generarTextoConPrioridad({
         systemPrompt,
         historial,
         mensajeActual: mensajeSanitizado,
         configIA,
         prioridadProveedores: prioridad,
       });
+      textoConversador = r.texto;
     } catch (errorLLM) {
       const msg =
         errorLLM.tipo === 'rate_limit'
           ? 'El servicio de IA esta saturado. Intenta en un momento.'
-          : errorLLM.tipo === 'invalid_json'
-            ? 'No se pudo procesar la respuesta. Intenta de nuevo.'
-            : 'El servicio de IA no esta disponible temporalmente.';
+          : 'El servicio de IA no esta disponible temporalmente.';
       return res.status(502).json({ exito: false, mensaje: msg });
     }
 
-    // Validar campos requeridos del LLM response
-    respuestaLLM.respuesta = respuestaLLM.respuesta || '';
-    if (!respuestaLLM.respuesta.trim()) {
-      respuestaLLM.respuesta = 'No pude generar una respuesta. Intenta de nuevo o consulta con un asesor.';
-    }
-    respuestaLLM.quick_replies = Array.isArray(respuestaLLM.quick_replies) ? respuestaLLM.quick_replies : [];
-    respuestaLLM.perfil_usuario = respuestaLLM.perfil_usuario || null;
-    respuestaLLM.requiere_asesor = respuestaLLM.requiere_asesor || false;
-    // La configuración SIEMPRE la decide el motor determinístico, nunca la IA.
-    respuestaLLM.configuracion_propuesta = configRaw;
+    const datosPerfil = { uso_principal: cuestionario.uso, presupuesto_pen: cuestionario.presupuestoPen };
+    const respuestaLLM = {
+      respuesta: (textoConversador || '').trim() || 'No pude generar una respuesta. Intenta de nuevo o consulta con un asesor.',
+      // Quick replies y perfil: determinísticos, no del LLM.
+      quick_replies: derivarQuickReplies(cuestionario, configRaw),
+      perfil_usuario: configRaw ? agenteReranker.inferirPerfil(datosPerfil) : null,
+      requiere_asesor: false,
+      // La configuración SIEMPRE la decide el motor determinístico, nunca la IA.
+      configuracion_propuesta: configRaw,
+    };
 
     let semaforo = null;
     let validacion = null;
@@ -379,6 +382,29 @@ async function obtenerSesion(req, res) {
     console.error('[Asistente] Error en obtenerSesion:', error.message);
     return res.status(500).json({ exito: false, mensaje: 'Error interno. Intenta de nuevo.' });
   }
+}
+
+// ── Utilidad: quick replies determinísticos (no del LLM) ──
+
+function derivarQuickReplies(cuestionario, configRaw) {
+  if (configRaw) {
+    return ['Aplicar al cotizador', 'Ajustar presupuesto', 'Comparar alternativas', 'Hablar con un asesor'];
+  }
+  // Con uso + presupuesto ya se puede armar: ofrecer ver ahora o afinar detalles.
+  const listoParaArmar = Boolean(cuestionario.uso && cuestionario.presupuestoPen);
+  if (listoParaArmar) {
+    const siguiente = servicioCuestionario.construirSiguientePregunta(cuestionario);
+    const refinamiento = siguiente && Array.isArray(siguiente.quick_replies)
+      ? siguiente.quick_replies.slice(0, 3)
+      : [];
+    return ['Ver mi configuración', ...refinamiento].slice(0, 5);
+  }
+  // Falta uso o presupuesto: pedir el siguiente dato.
+  const siguiente = servicioCuestionario.construirSiguientePregunta(cuestionario);
+  if (siguiente && Array.isArray(siguiente.quick_replies) && siguiente.quick_replies.length > 0) {
+    return siguiente.quick_replies.slice(0, 5);
+  }
+  return [];
 }
 
 // ── Utilidad: formatear config armada por el motor para que el LLM la narre ──

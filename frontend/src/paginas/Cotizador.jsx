@@ -2652,6 +2652,22 @@ export default function Cotizador() {
                 >
                   {generando ? 'Generando cotizacion...' : 'Generar cotizacion'}
                 </button>
+                {(configuracionSeleccionada.procesador
+                  || configuracionSeleccionada.placa_madre
+                  || configuracionSeleccionada.ram?.length > 0
+                  || configuracionSeleccionada.almacenamiento
+                  || configuracionSeleccionada.gpu
+                  || configuracionSeleccionada.fuente
+                  || configuracionSeleccionada.case) && (
+                  <button
+                    type="button"
+                    onClick={nuevaCotizacion}
+                    disabled={generando}
+                    className="min-h-11 w-full rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-surface-soft)] disabled:opacity-45"
+                  >
+                    Nueva cotización (limpiar todo)
+                  </button>
+                )}
               </>
             )}
 
