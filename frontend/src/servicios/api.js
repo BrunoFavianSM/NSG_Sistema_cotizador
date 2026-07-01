@@ -89,7 +89,7 @@ api.interceptors.response.use(
 );
 
 // ============================================
-// FUNCIONES DE AUTENTICACI�"N
+// FUNCIONES DE AUTENTICACIÓN
 // ============================================
 
 /**

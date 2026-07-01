@@ -24,6 +24,13 @@ pool.on('error', (err) => {
   process.exit(-1);
 });
 
+/**
+ * Ejecuta una consulta parametrizada contra el pool de PostgreSQL.
+ * Registra en consola las queries que superan 1s para detectar cuellos de botella.
+ * @param {string} texto - SQL con placeholders ($1, $2, ...); nunca concatenar valores directamente.
+ * @param {Array} [parametros] - Valores que reemplazan los placeholders (previene inyección SQL).
+ * @returns {Promise<import('pg').QueryResult>} Resultado de la consulta.
+ */
 const ejecutarQuery = async (texto, parametros) => {
   const inicio = Date.now();
   try {
@@ -39,6 +46,14 @@ const ejecutarQuery = async (texto, parametros) => {
   }
 };
 
+/**
+ * Ejecuta una serie de operaciones dentro de una transacción SQL.
+ * Hace COMMIT si el callback termina sin error y ROLLBACK ante cualquier fallo,
+ * garantizando atomicidad. Siempre libera el cliente al pool (bloque finally).
+ * @param {(cliente: import('pg').PoolClient) => Promise<any>} callback - Recibe el cliente
+ *        transaccional; todas las queries internas deben usar ese cliente, no el pool.
+ * @returns {Promise<any>} Lo que retorne el callback.
+ */
 const ejecutarTransaccion = async (callback) => {
   const cliente = await pool.connect();
   try {

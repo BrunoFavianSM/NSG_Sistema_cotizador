@@ -30,14 +30,22 @@ function resolverRutaLogo() {
   return null;
 }
 
+/** Normaliza la moneda del documento a 'PEN' o 'USD' (por defecto 'USD'). */
 function resolverMoneda(valor) {
   return String(valor || 'USD').toUpperCase() === 'PEN' ? 'PEN' : 'USD';
 }
 
+/** Selecciona el monto correspondiente a la moneda del documento (PEN o USD). */
 function resolverMontoPorMoneda({ moneda, usd, pen }) {
   return moneda === 'PEN' ? Number(pen || 0) : Number(usd || 0);
 }
 
+/**
+ * Obtiene el total en ambas monedas soportando dos formas de entrada:
+ * `precioTotal` como número (USD, convertido a PEN con `tipoCambioUsdPen`)
+ * o como objeto ya desglosado `{ usd, pen }`.
+ * @returns {{usd: number, pen: number}}
+ */
 function normalizarMontoTotal(datos) {
   if (typeof datos?.precioTotal === 'number') {
     const totalUsd = Number(datos.precioTotal || 0);
@@ -122,6 +130,15 @@ async function generarQRDataUrl(codigoTicket) {
   }
 }
 
+/**
+ * Servicio de generación de PDFs (cotización y listado técnico).
+ *
+ * Usa dos motores según el entorno:
+ *   - Producción: @react-pdf/renderer (importado dinámicamente y cacheado) para
+ *     un layout rico con estilos, tabla de componentes, total y código QR.
+ *   - Tests (NODE_ENV=test): pdfkit, mucho más liviano y sin dependencias ESM,
+ *     para evitar el costo de cargar react-pdf en la batería de pruebas.
+ */
 class ServicioPDF {
   constructor() {
     this.react = null;
@@ -129,6 +146,11 @@ class ServicioPDF {
     this.estilos = null;
   }
 
+  /**
+   * Carga de forma diferida (dynamic import) React y @react-pdf/renderer y
+   * construye la hoja de estilos una sola vez. Idempotente: si ya están cargados,
+   * retorna de inmediato. Necesario porque @react-pdf es un módulo ESM.
+   */
   async cargarRenderer() {
     if (this.react && this.renderer && this.estilos) {
       return;
@@ -385,6 +407,11 @@ class ServicioPDF {
     }
   }
 
+  /**
+   * Construye una fila (View) de la tabla de componentes para react-pdf, con
+   * categoría, nombre, disponibilidad (stock / a pedido / no disponible) y,
+   * opcionalmente, el precio. Aplica fondo alternado en las filas pares.
+   */
   renderFilaComponente(comp, index, incluirPrecios, moneda) {
     const h = this.react.createElement;
     const estilos = this.estilos;
@@ -425,6 +452,12 @@ class ServicioPDF {
     );
   }
 
+  /**
+   * Arma el árbol de elementos react-pdf de la cotización completa: cabecera con
+   * logo, metadatos (ticket, UUID, emisión/caducidad, moneda y TC), tabla de
+   * componentes, total con referencia en la otra moneda, instrucciones de reclamo,
+   * política de precios y, si se provee, el código QR de validación.
+   */
   construirDocumentoCotizacion(datos, moneda, qrDataUrl = null) {
     const h = this.react.createElement;
     const { Document, Page, Text, View, Image } = this.renderer;
@@ -508,6 +541,10 @@ class ServicioPDF {
     );
   }
 
+  /**
+   * Arma el árbol react-pdf del listado técnico: mismo encabezado pero sin precios
+   * ni total, pensado como documento de referencia técnica interna.
+   */
   construirDocumentoListado(codigoTicket, componentes) {
     const h = this.react.createElement;
     const { Document, Page, Text, View, Image } = this.renderer;
@@ -547,6 +584,11 @@ class ServicioPDF {
     );
   }
 
+  /**
+   * Renderiza un documento react-pdf a un Buffer. Soporta tanto la API que
+   * devuelve el Buffer directamente como la que devuelve un stream (acumula chunks).
+   * @returns {Promise<Buffer>}
+   */
   async renderBuffer(documento) {
     const instancia = this.renderer.pdf(documento);
     const salida = await instancia.toBuffer();
@@ -563,6 +605,14 @@ class ServicioPDF {
     });
   }
 
+  /**
+   * Punto de entrada para generar el PDF de una cotización.
+   * En entorno de test usa el motor pdfkit; en el resto, react-pdf con QR.
+   * @param {object} datos - Debe incluir codigoTicket y el arreglo componentes.
+   * @param {object} [opciones] - { moneda } del documento.
+   * @returns {Promise<Buffer>} PDF listo para enviar/descargar.
+   * @throws {Error} Si faltan datos obligatorios.
+   */
   async generarPDFCotizacion(datos, opciones = {}) {
     if (!datos?.codigoTicket || !Array.isArray(datos.componentes)) {
       throw new Error('Datos de cotizacion incompletos para generar PDF');
@@ -579,6 +629,12 @@ class ServicioPDF {
     return this.renderBuffer(documento);
   }
 
+  /**
+   * Punto de entrada para generar el PDF del listado técnico (sin precios).
+   * En test usa pdfkit; en el resto, react-pdf.
+   * @returns {Promise<Buffer>}
+   * @throws {Error} Si faltan datos obligatorios.
+   */
   async generarPDFListado(codigoTicket, componentes, opciones = {}) {
     if (!codigoTicket || !Array.isArray(componentes)) {
       throw new Error('Datos de listado tecnico incompletos para generar PDF');
@@ -594,6 +650,11 @@ class ServicioPDF {
     return this.renderBuffer(documento);
   }
 
+  /**
+   * Motor alternativo (pdfkit) para la cotización, usado en tests.
+   * Produce un PDF simplificado equivalente, incluyendo el QR de validación.
+   * @returns {Promise<Buffer>}
+   */
   async generarPdfKitCotizacion(datos, opciones = {}) {
     const moneda = resolverMoneda(opciones.moneda);
     const totalNormalizado = normalizarMontoTotal(datos);
@@ -643,6 +704,7 @@ class ServicioPDF {
     });
   }
 
+  /** Motor alternativo (pdfkit) para el listado técnico, usado en tests. */
   async generarPdfKitListado(codigoTicket, componentes) {
     return new Promise((resolve, reject) => {
       const doc = new PDFDocument({ size: 'A4', margin: 50 });

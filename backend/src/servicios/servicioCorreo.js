@@ -2,6 +2,17 @@ const nodemailer = require('nodemailer');
 const dns = require('dns').promises;
 const path = require('path');
 
+/**
+ * Servicio de correo transaccional (SMTP vía nodemailer).
+ * Actualmente cubre el envío del correo de recuperación de contraseña.
+ */
+
+/**
+ * Construye la configuración del transporte SMTP a partir de variables de entorno.
+ * Permite fijar la IP del host (SMTP_HOST_IP) manteniendo el nombre real en el
+ * `servername` TLS, útil cuando la resolución DNS del proveedor es inestable.
+ * Fuerza IPv4 (family: 4) y define timeouts de conexión/saludo/socket.
+ */
 function obtenerConfiguracionSMTP() {
   const host = process.env.SMTP_HOST_IP || process.env.SMTP_HOST;
   const servername = process.env.SMTP_HOST || host;
@@ -23,6 +34,11 @@ function obtenerConfiguracionSMTP() {
   };
 }
 
+/**
+ * Verifica que estén presentes las variables de entorno necesarias para enviar correo.
+ * Acepta indistintamente SMTP_HOST o SMTP_HOST_IP como host.
+ * @returns {{valida: boolean, faltantes: string[]}}
+ */
 function validarConfiguracionCorreo() {
   const requeridas = ['SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'EMAIL_FROM'];
   if (!process.env.SMTP_HOST && !process.env.SMTP_HOST_IP) {
@@ -32,6 +48,18 @@ function validarConfiguracionCorreo() {
   return { valida: faltantes.length === 0, faltantes };
 }
 
+/**
+ * Envía el correo de recuperación de contraseña con el enlace de restablecimiento
+ * (válido por 5 minutos) y el logo embebido como adjunto inline (cid:nsg-logo).
+ *
+ * Estrategia de resiliencia ante fallos de DNS: primero intenta con la configuración
+ * base; si falla por error de resolución/timeout (EDNS/ETIMEOUT) y no se fijó una IP
+ * manual, resuelve las IPv4 del host y reintenta contra las dos primeras.
+ *
+ * @param {string} destinatario - Dirección de correo del usuario.
+ * @param {string} enlace - URL de restablecimiento de contraseña.
+ * @throws {Error} Si la configuración es incompleta o no se pudo enviar por ninguna vía.
+ */
 async function enviarCorreoRecuperacion(destinatario, enlace) {
   const validacion = validarConfiguracionCorreo();
   if (!validacion.valida) {

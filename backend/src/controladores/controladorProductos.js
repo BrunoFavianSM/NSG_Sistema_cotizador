@@ -19,6 +19,9 @@ const {
 
 const TABLAS_VALIDAS = CATEGORIAS_PUBLICAS_VALIDAS;
 
+// SELECT canónico que reconstruye el producto "aplanado": une la tabla maestra
+// `productos` con categorías, marcas, etiquetas y las siete tablas specs_* (LEFT JOIN),
+// exponiendo columnas unificadas por COALESCE. Reutilizado por todos los endpoints de lectura.
 const SELECT_PRODUCTO_NORMALIZADO = `
   SELECT
     p.id,
@@ -118,6 +121,8 @@ const SELECT_PRODUCTO_NORMALIZADO = `
   ) hp ON true
 `;
 
+// Mapa categoría -> { tabla specs_*, campos }. `campos` traduce el nombre de columna
+// de la tabla specs al nombre que llega en el body sanitizado. Guía el upsert de specs.
 const MAPA_SPECS_POR_CATEGORIA = {
   procesador: {
     tabla: 'specs_procesador',
@@ -207,12 +212,19 @@ const MAPA_SPECS_POR_CATEGORIA = {
   },
 };
 
+/** Resuelve la tabla de specs correspondiente a una categoría; lanza si la categoría es inválida. */
 function resolverTabla(categoriaEntrada) {
   const tabla = resolverTablaPorCategoria(categoriaEntrada);
   if (!tabla) throw new Error(`Categoria invalida: "${categoriaEntrada}"`);
   return tabla;
 }
 
+/**
+ * Resuelve la categoría (y subcategoría) de entrada a su forma canónica, validando
+ * que la subcategoría sea coherente cuando la categoría la requiere.
+ * @returns {{categoriaCanonica: string, subcategoria: string|null, tabla: 'productos'}}
+ * @throws {Error} Si la categoría o la subcategoría no son válidas.
+ */
 function resolverDestinoOperacion(categoriaEntrada, subcategoriaEntrada = null) {
   const destino = resolverCategoria(categoriaEntrada);
   if (!destino) throw new Error(`Categoria invalida: "${categoriaEntrada}"`);
@@ -239,6 +251,7 @@ function resolverDestinoOperacion(categoriaEntrada, subcategoriaEntrada = null) 
   };
 }
 
+/** Devuelve el id de una categoría por nombre, creándola si no existe. */
 async function obtenerIdCategoriaPorNombre(nombreCategoria) {
   const r = await ejecutarQuery('SELECT id FROM categorias WHERE nombre = $1', [nombreCategoria]);
   if (r.rows.length > 0) return r.rows[0].id;
@@ -249,6 +262,7 @@ async function obtenerIdCategoriaPorNombre(nombreCategoria) {
   return creado.rows[0].id;
 }
 
+/** Devuelve el id de una marca (upsert por nombre único), o null si el nombre viene vacío. */
 async function obtenerIdMarcaSiExiste(marca) {
   const nombre = String(marca || '').trim();
   if (!nombre) return null;
@@ -259,6 +273,7 @@ async function obtenerIdMarcaSiExiste(marca) {
   return r.rows[0].id;
 }
 
+/** Genera un código de proveedor temporal (slug del nombre + timestamp) para productos creados a mano sin código. */
 function generarCodigoProveedorTemporal(nombre, categoria) {
   const base = String(nombre || categoria || 'producto')
     .toLowerCase()
@@ -271,6 +286,12 @@ function generarCodigoProveedorTemporal(nombre, categoria) {
   return `${base}-${Date.now()}`;
 }
 
+/**
+ * Inserta o actualiza la fila de especificaciones (specs_*) del producto según su
+ * categoría, tomando solo los campos presentes en el body sanitizado. Si no hay
+ * specs para escribir, garantiza al menos la fila vacía con el id_producto.
+ * El nombre de tabla proviene del mapa cerrado MAPA_SPECS_POR_CATEGORIA (no del input).
+ */
 async function upsertSpecsProducto(idProducto, categoria, datosSanitizados) {
   const def = MAPA_SPECS_POR_CATEGORIA[categoria];
   if (!def) return;
@@ -307,6 +328,10 @@ async function upsertSpecsProducto(idProducto, categoria, datosSanitizados) {
   );
 }
 
+/**
+ * Construye el fragmento WHERE por categoría (y subcategoría si aplica), agregando
+ * los valores a `params` y devolviendo el próximo índice de placeholder disponible.
+ */
 function construirWhereDestino(destino, params, indiceInicial = 1) {
   let i = indiceInicial;
   let where = ' WHERE c.nombre = $' + i++;
@@ -322,6 +347,12 @@ function construirWhereDestino(destino, params, indiceInicial = 1) {
   return { where, nextIndex: i };
 }
 
+/**
+ * GET /api/productos
+ * Lista productos con filtros opcionales (categoría, socket, marca, búsqueda, etiqueta)
+ * y paginación. Solo devuelve productos con stock o disponibles a pedido. A los
+ * invitados (no autenticados) se les oculta `precio_base`.
+ */
 async function obtenerProductos(req, res) {
   try {
     const { categoria, socket, marca, busqueda, subcategoria, etiqueta, page, limit } = req.query;
@@ -411,6 +442,11 @@ async function obtenerProductos(req, res) {
   }
 }
 
+/**
+ * GET /api/productos/:categoria/:id
+ * Devuelve un producto por id dentro de su categoría (con todas sus specs aplanadas).
+ * Oculta `precio_base` a invitados. 404 si no existe en esa categoría.
+ */
 async function obtenerProductoPorId(req, res) {
   try {
     const destino = resolverDestinoOperacion(req.params.categoria, req.query.subcategoria);
@@ -446,6 +482,12 @@ async function obtenerProductoPorId(req, res) {
   }
 }
 
+/**
+ * POST /api/productos
+ * Crea un producto: valida nombre/precio/stock, resuelve categoría y marca (creándolas
+ * si hace falta), genera un código de proveedor temporal si no vino, inserta en
+ * `productos` y, si es componente principal, escribe sus specs. Devuelve el producto creado.
+ */
 async function crearProducto(req, res) {
   try {
     const datosSanitizados = sanitizarObjeto(req.body);
@@ -518,6 +560,12 @@ async function crearProducto(req, res) {
   }
 }
 
+/**
+ * PUT /api/productos/:categoria/:id
+ * Actualiza dinámicamente solo los campos enviados. Si cambia el precio, ejecuta el
+ * UPDATE y el INSERT en `historial_precios_producto` dentro de una transacción atómica.
+ * Actualiza también las specs si es componente principal.
+ */
 async function actualizarProducto(req, res) {
   try {
     const destino = resolverDestinoOperacion(req.params.categoria, req.body?.subcategoria || req.query.subcategoria);
@@ -635,6 +683,11 @@ async function actualizarProducto(req, res) {
     return res.status(500).json({ error: 'Error al actualizar producto', mensaje: 'No se pudo actualizar el producto' });
   }
 }
+/**
+ * DELETE /api/productos/:categoria/:id
+ * Elimina un producto, salvo que esté referenciado en cotizaciones existentes
+ * (responde 409 en ese caso para no romper el historial de cotizaciones).
+ */
 async function eliminarProducto(req, res) {
   try {
     const destino = resolverDestinoOperacion(req.params.categoria, req.query.subcategoria);
@@ -681,6 +734,11 @@ async function eliminarProducto(req, res) {
   }
 }
 
+/**
+ * DELETE /api/productos (limpiar catálogo)
+ * Operación destructiva de admin: vacía productos, marcas y todas las tablas specs_*
+ * con TRUNCATE ... RESTART IDENTITY CASCADE (reinicia los IDs).
+ */
 async function limpiarCatalogo(req, res) {
   try {
     await ejecutarQuery('TRUNCATE TABLE specs_case, specs_fuente, specs_gpu, specs_almacenamiento, specs_ram, specs_placa_madre, specs_procesador, productos, marcas RESTART IDENTITY CASCADE');

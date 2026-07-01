@@ -1,9 +1,21 @@
 /**
- * Servicio de Compatibilidad de Componentes
- * Reglas basadas en tablas specs_* (fuente de verdad en BD)
+ * Servicio de Compatibilidad de Componentes.
+ *
+ * Valida que los componentes de un armado de PC sean compatibles entre sí
+ * (socket CPU/placa, tipo de RAM, factor de forma, espacio físico de la GPU,
+ * potencia de la fuente y disponibilidad de stock).
+ *
+ * La fuente de verdad son las tablas specs_* en la base de datos. Expone dos
+ * caminos de validación:
+ *   - validarConfiguracion:        validación en memoria con los datos recibidos.
+ *   - validarConfiguracionConBD:   validación autoritativa leyendo specs reales de la BD.
  */
-
 class ServicioCompatibilidad {
+  /**
+   * Normaliza un texto de factor de forma a un valor canónico en mayúsculas
+   * (MINI-ITX, MICRO-ATX, E-ATX o ATX). Devuelve el valor original en mayúsculas
+   * si no reconoce el patrón, o null si el valor está vacío.
+   */
   normalizarFormFactor(valor) {
     if (!valor) return null;
     const texto = String(valor).toLowerCase().replace(/\s+/g, '').replace('_', '-');
@@ -16,12 +28,23 @@ class ServicioCompatibilidad {
     return String(valor).toUpperCase();
   }
 
+  /**
+   * Separa una lista de factores de forma (delimitada por ; , / o |),
+   * normaliza cada elemento y elimina duplicados.
+   * @returns {string[]} Factores de forma canónicos y únicos.
+   */
   parsearListaFormFactor(valor) {
     if (!valor) return [];
     const texto = String(valor).split(/[;,/|]/).map((x) => this.normalizarFormFactor(x)).filter(Boolean);
     return [...new Set(texto)];
   }
 
+  /**
+   * Deduce los factores de forma que soporta un gabinete a partir de su
+   * descripción técnica en texto libre. Aplica compatibilidad descendente:
+   * un gabinete que admite ATX también admite Micro-ATX y Mini-ITX.
+   * Si no detecta ninguno, asume soporte para los tres tamaños estándar.
+   */
   parsearFormFactors(descripcion) {
     const ff = [];
     const desc = String(descripcion || '').toLowerCase();
@@ -39,22 +62,26 @@ class ServicioCompatibilidad {
     return ff.length > 0 ? ff : ['ATX', 'Micro-ATX', 'Mini-ITX'];
   }
 
+  /** Filtra la lista de placas madre dejando solo las que coinciden con el socket del procesador. */
   filtrarPlacasPorSocket(placasMadre, socketProcesador) {
     if (!socketProcesador) return placasMadre;
     return placasMadre.filter((placa) => placa.socket === socketProcesador);
   }
 
+  /** Verifica que el socket del procesador y el de la placa coincidan. True si falta alguno de los dos. */
   validarSocket(procesador, placaMadre) {
     if (!procesador || !placaMadre) return true;
     return procesador.socket === placaMadre.socket;
   }
 
+  /** Verifica que el tipo de RAM (DDR4/DDR5) de los módulos coincida con el que soporta la placa. */
   validarTipoRAM(placaMadre, modulosRAM) {
     if (!placaMadre || !modulosRAM || modulosRAM.length === 0) return true;
     const tipoRAM = modulosRAM[0].ram_type || modulosRAM[0].ram_tipo;
     return (placaMadre.ram_type || placaMadre.ram_tipo) === tipoRAM;
   }
 
+  /** Verifica que el factor de forma de la placa esté entre los que soporta el gabinete. */
   validarFormFactor(placaMadre, caseGabinete) {
     if (!placaMadre || !caseGabinete) return true;
     const soportados = this
@@ -63,6 +90,11 @@ class ServicioCompatibilidad {
     return soportados.includes(this.normalizarFormFactor(placaMadre.form_factor));
   }
 
+  /**
+   * Obtiene el wattaje de una fuente. Usa el campo numérico `wattage` si existe;
+   * en su defecto lo extrae por expresión regular del nombre/descripción (ej. "650W").
+   * @returns {number} Wattaje detectado, o 0 si no se pudo determinar.
+   */
   extraerPotenciaFuente(fuente) {
     if (!fuente) return 0;
     if (typeof fuente.wattage === 'number' && fuente.wattage > 0) return fuente.wattage;
@@ -73,6 +105,13 @@ class ServicioCompatibilidad {
     return 0;
   }
 
+  /**
+   * Estima el consumo eléctrico total del armado en vatios.
+   * Suma el TDP real de CPU y GPU, más estimaciones para placa (35W si no hay dato),
+   * RAM (4W por módulo), almacenamiento (6W por unidad) y base del sistema (20W).
+   * Aplica un margen de seguridad del 25% (×1.25) sobre el subtotal.
+   * @returns {number} Consumo estimado en vatios, redondeado hacia arriba.
+   */
   calcularConsumoTotal(componentes) {
     const cpuTdp = Number(componentes.procesador?.tdp_w ?? componentes.procesador?.tdp ?? 0) || 0;
     const gpuTdp = Number(componentes.gpu?.tdp_w ?? componentes.gpu?.tdp ?? 0) || 0;
@@ -92,6 +131,12 @@ class ServicioCompatibilidad {
     return Math.ceil(subtotal * 1.25);
   }
 
+  /**
+   * Compara el consumo estimado del armado contra el wattaje de la fuente.
+   * Se considera suficiente si la fuente cubre el consumo, o si no se pudo
+   * determinar su wattaje (0, para no bloquear el armado por falta de dato).
+   * @returns {{suficiente: boolean, consumoTotal: number, wattajeFuente: number}}
+   */
   validarPotencia(componentes) {
     if (!componentes.fuente) {
       return { suficiente: true, consumoTotal: this.calcularConsumoTotal(componentes), wattajeFuente: 0 };
@@ -111,6 +156,7 @@ class ServicioCompatibilidad {
     };
   }
 
+  /** Devuelve los componentes sin stock pero marcados como disponibles a pedido. */
   identificarComponentesAPedido(componentes) {
     const aPedido = [];
 
@@ -125,6 +171,7 @@ class ServicioCompatibilidad {
     return aPedido;
   }
 
+  /** Verifica que el largo de la GPU (mm) no exceda el máximo admitido por el gabinete. */
   verificarEspacioFisico(gpu, caseGabinete) {
     if (!gpu || !caseGabinete) return { ok: true };
     const largoGpu = Number(gpu.longitud_mm || 0);
@@ -138,6 +185,10 @@ class ServicioCompatibilidad {
     return { ok: true };
   }
 
+  /**
+   * Si el armado no incluye GPU dedicada, exige que el procesador tenga gráficos
+   * integrados; de lo contrario el sistema no tendría salida de video.
+   */
   verificarGraficosIntegrados(cpu, gpu) {
     if (gpu) return { ok: true };
     if (!cpu) return { ok: true };
@@ -155,6 +206,12 @@ class ServicioCompatibilidad {
     return { ok: true };
   }
 
+  /**
+   * Validación en memoria del armado usando los datos ya presentes en `componentes`
+   * (sin consultar la BD). Reúne incompatibilidades bloqueantes en `errores` y
+   * situaciones no bloqueantes en `advertencias`.
+   * @returns {{compatible: boolean, errores: string[], advertencias: string[]}}
+   */
   validarConfiguracion(componentes) {
     const errores = [];
     const advertencias = [];
@@ -208,6 +265,13 @@ class ServicioCompatibilidad {
     return { compatible: errores.length === 0, errores, advertencias };
   }
 
+  /**
+   * Consulta las especificaciones técnicas (tablas specs_*) de los productos indicados
+   * y las devuelve indexadas por id para acceso O(1). Deduplica y filtra ids no enteros.
+   * @param {Array} ids - Ids de producto a consultar.
+   * @param {Function} ejecutarQuery - Helper de acceso a BD inyectado.
+   * @returns {Promise<Map<number, object>>} Mapa id -> fila con specs unificadas.
+   */
   async obtenerMapaSpecsPorIds(ids, ejecutarQuery) {
     const idsUnicos = [...new Set(
       (Array.isArray(ids) ? ids : [])
@@ -257,6 +321,7 @@ class ServicioCompatibilidad {
     return new Map(resultado.rows.map((r) => [r.id, r]));
   }
 
+  /** Recolecta los ids de todos los componentes del armado y obtiene sus specs desde la BD. */
   async obtenerMapaComponentesDesdeBD(componentes, ejecutarQuery) {
     const ids = [];
     const pushId = (comp) => {
@@ -275,6 +340,11 @@ class ServicioCompatibilidad {
     return this.obtenerMapaSpecsPorIds(ids, ejecutarQuery);
   }
 
+  /**
+   * Transforma una fila de specs de la BD al formato que esperan los validadores,
+   * seleccionando los campos relevantes según la categoría del componente.
+   * @returns {object|null} Componente normalizado, o null si no hay fila para ese id.
+   */
   convertirComponenteBD(comp, mapa) {
     if (!comp || !comp.id) return null;
     const row = mapa.get(Number(comp.id));
@@ -330,6 +400,13 @@ class ServicioCompatibilidad {
     return base;
   }
 
+  /**
+   * Validación autoritativa del armado: lee las specs reales desde la BD (fuente de
+   * verdad) en lugar de confiar en los datos del cliente. Verifica socket, tipo de RAM,
+   * slots M.2, versión PCIe, gráficos integrados, potencia y espacio físico.
+   * Si no encuentra specs en la BD, cae a la validación en memoria (validarConfiguracion).
+   * @returns {Promise<{compatible: boolean, errores: string[], advertencias: string[]}>}
+   */
   async validarConfiguracionConBD(componentes, ejecutarQuery) {
     const errores = [];
     const advertencias = [];

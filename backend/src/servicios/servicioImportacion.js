@@ -160,6 +160,12 @@ function calcularSpecsFaltantes(categoria, registro) {
     .map((campo) => ({ campo, tipo: TIPOS_CAMPOS[campo] || 'string' }));
 }
 
+/**
+ * Traduce la categoría de proveedor (texto de Deltron) a la categoría interna del
+ * sistema, comparando contra MAPA_CATEGORIAS. Evalúa las claves de más larga a más
+ * corta (prefijo) para que la coincidencia más específica gane. Devuelve null si
+ * no reconoce la categoría.
+ */
 function mapearCategoria(categoriaCSV) {
   const normalizada = String(categoriaCSV || '').toLowerCase().trim();
   for (const clave of _CLAVES_ORDENADAS) {
@@ -168,6 +174,7 @@ function mapearCategoria(categoriaCSV) {
   return null;
 }
 
+/** Limpia la descripción raw a un nombre legible: corta el sufijo [@@@], normaliza acentos/espacios y trunca a 200 caracteres. */
 function limpiarNombre(descripcion) {
   // Mantener compatibilidad: si no conocemos la categoría, devolvemos el texto limpio completo.
   const texto = String(descripcion || '');
@@ -186,6 +193,7 @@ function limpiarDescripcionBase(descripcion) {
     .trim();
 }
 
+/** Capitaliza cada palabra (Title Case), útil para normalizar nombres de marca. */
 function capitalizarMarca(texto) {
   return String(texto || '')
     .trim()
@@ -195,6 +203,12 @@ function capitalizarMarca(texto) {
     .join(' ');
 }
 
+/**
+ * Genera un nombre comercial corto y legible a partir de la descripción técnica raw.
+ * Primero recorta las specs embebidas (GHz, cores, TDP, capacidades, interfaces) y
+ * luego aplica reglas específicas por categoría para extraer el modelo relevante
+ * (ej. "AMD Ryzen 5 5600", "MSI RTX 4060", "Kingston 16GB 3200MHz").
+ */
 function generarNombreComercial(categoria, descripcion, marca) {
   const texto = limpiarDescripcionBase(descripcion);
   if (!texto) return '';
@@ -274,6 +288,13 @@ function limpiarDescripcionGeneral(descripcionRaw) {
   return descripcionCompuesta.slice(0, 1000);
 }
 
+/**
+ * Interpreta el valor de stock del CSV. Convenciones de Deltron:
+ *   ">20"  -> stock 21 (hay bastante), en stock.
+ *   ""     -> stock 0, marcado como disponible a pedido.
+ *   número -> ese stock exacto, en stock.
+ * @returns {{stock: number, disponible_a_pedido: boolean}}
+ */
 function parsearStock(valor) {
   const v = String(valor == null ? '' : valor).trim();
   if (v === '>20') return { stock: 21, disponible_a_pedido: false };
@@ -283,6 +304,7 @@ function parsearStock(valor) {
   return { stock: 0, disponible_a_pedido: true };
 }
 
+/** Parsea un precio del CSV a número (quita espacios y separadores de miles). Devuelve NaN si no es válido. */
 function parsearPrecio(valor) {
   const bruto = String(valor == null ? '' : valor).trim();
   if (!bruto) return NaN;
@@ -291,6 +313,12 @@ function parsearPrecio(valor) {
   return parseFloat(normalizado);
 }
 
+/**
+ * Parsea una línea CSV respetando comillas dobles y comillas escapadas ("").
+ * Implementación propia para no depender de una librería y manejar el formato
+ * particular del export de Deltron.
+ * @returns {string[]} Campos de la línea.
+ */
 function parsearLineaCSV(linea) {
   const campos = [];
   let actual = '';
@@ -316,6 +344,11 @@ function parsearLineaCSV(linea) {
   return campos;
 }
 
+/**
+ * Decodifica el buffer del CSV eligiendo la codificación correcta: intenta UTF-8 y,
+ * si detecta caracteres de reemplazo (indicio de bytes ANSI/Windows-1252 mal leídos),
+ * reintenta con latin1 para preservar tildes y caracteres especiales.
+ */
 function decodificarTextoCSV(buffer) {
   // Deltron suele venir en ANSI/Windows-1252. Si UTF-8 genera muchos �,
   // usamos latin1 para preservar tildes y caracteres especiales.
@@ -327,6 +360,11 @@ function decodificarTextoCSV(buffer) {
   return utf8;
 }
 
+/**
+ * Corrige mojibake común (secuencias tipo "Ã¡" -> "á") que aparece cuando un texto
+ * latin1 se interpretó como UTF-8, y normaliza el resultado a forma NFC. Deja el
+ * texto humano legible antes de guardarlo.
+ */
 function normalizarTextoHumano(valor) {
   let texto = String(valor || '');
   if (!texto) return '';
@@ -346,6 +384,15 @@ function normalizarTextoHumano(valor) {
   return texto.normalize('NFC');
 }
 
+/**
+ * Punto de entrada del parseo de CSV. Soporta dos formatos:
+ *   - CSV estructurado (tiene columna 'codigo_proveedor' en el encabezado): mapea
+ *     todas las columnas de specs por nombre.
+ *   - CSV Deltron raw (lista de precios): descarta separadores, encabezados repetidos
+ *     y metadatos, y extrae los campos b\u00E1sicos por posici\u00F3n.
+ * @param {Buffer} buffer - Contenido crudo del archivo CSV.
+ * @returns {Array<object>} Filas normalizadas listas para construirRegistroNormalizado.
+ */
 function parsearCSV(buffer) {
   const texto = decodificarTextoCSV(buffer).replace(/^\uFEFF/, '');
   const lineas = texto.split(/\r?\n/).filter((l) => l.trim());
@@ -548,6 +595,18 @@ function esFilaMetadata(linea) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Normalizadores y extractores de specs desde texto libre.
+// A partir del nombre/descripción del producto detectan valores canónicos:
+//   normalizarSocket/RamTipo/FormFactor -> valor estándar (AM5, DDR5, MICRO-ATX...).
+//   extraerNumero        -> primer número que cumple un patrón regex.
+//   extraerFrecuencias   -> frecuencias base/boost de CPU (soporta "3.5/4.2 GHz").
+//   extraerCapacidadGb   -> capacidad en GB (convierte TB a GB).
+//   inferirSpecsProcesadorPorModelo -> tabla de modelos Intel/AMD conocidos como
+//                           respaldo cuando el texto no trae núcleos/hilos.
+// ---------------------------------------------------------------------------
+
+/** Detecta el socket del CPU/placa (AM5, AM4, LGA1700, etc.) desde texto libre. */
 function normalizarSocket(texto) {
   const t = texto.toLowerCase();
   const match = t.match(/\b(am5|am4|am3\+?|lga\s?\d{3,4}|tr4|s?trx4|fm2\+?)\b/i);
@@ -555,12 +614,14 @@ function normalizarSocket(texto) {
   return match[1].toUpperCase().replace(/\s+/g, ' ');
 }
 
+/** Detecta el tipo de RAM (DDR3/DDR4/DDR5) desde texto libre. */
 function normalizarRamTipo(texto) {
   const t = texto.toLowerCase();
   const match = t.match(/\b(ddr5|ddr4|ddr3)\b/i);
   return match ? match[1].toUpperCase() : null;
 }
 
+/** Detecta el factor de forma (E-ATX/ATX/MICRO-ATX/MINI-ITX) cubriendo sus variantes de escritura. */
 function normalizarFormFactor(texto) {
   const t = texto.toLowerCase();
   // §14.7: cubrir variantes extendidas de E-ATX
@@ -579,6 +640,7 @@ function normalizarFormFactor(texto) {
   return null;
 }
 
+/** Aplica un regex y devuelve el primer grupo capturado como número finito, o null. */
 function extraerNumero(regex, texto) {
   const m = texto.match(regex);
   if (!m) return null;
@@ -586,6 +648,12 @@ function extraerNumero(regex, texto) {
   return Number.isFinite(valor) ? valor : null;
 }
 
+/**
+ * Extrae las frecuencias base y boost de un CPU. Reconoce el formato "3.5/4.2 GHz",
+ * el formato "base ... GHz ... boost ... GHz" y, como respaldo, toma el mínimo como
+ * base y el máximo como boost entre todos los valores en GHz encontrados.
+ * @returns {{base: number|null, boost: number|null}}
+ */
 function extraerFrecuencias(texto) {
   const par = texto.match(/(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*ghz\b/i);
   if (par) {
@@ -613,6 +681,12 @@ function extraerFrecuencias(texto) {
   return { base: Math.min(...matches), boost: Math.max(...matches) };
 }
 
+/**
+ * Respaldo determinístico: infiere núcleos, hilos, arquitectura y gráficos
+ * integrados a partir del modelo del procesador (tabla de SKUs Intel Core y AMD
+ * Ryzen conocidos). Se usa cuando el texto del CSV no trae esos datos. El sufijo
+ * "F" indica ausencia de gráficos integrados. Devuelve {} si el modelo no está en la tabla.
+ */
 function inferirSpecsProcesadorPorModelo(texto) {
   const t = String(texto || '').toLowerCase();
 
@@ -658,6 +732,7 @@ function inferirSpecsProcesadorPorModelo(texto) {
   return {};
 }
 
+/** Extrae capacidad de almacenamiento/memoria en GB (convierte TB a GB si corresponde). */
 function extraerCapacidadGb(texto) {
   const tb = extraerNumero(/(\d+(?:\.\d+)?)\s*tb/i, texto);
   if (tb != null) return Math.round(tb * 1024);
@@ -666,6 +741,7 @@ function extraerCapacidadGb(texto) {
 
 let _catalogoLocalGPU = null;
 
+/** Convierte un valor a entero, o null si no es un número finito. */
 function parsearEnteroSeguro(valor) {
   const numero = Number.parseInt(String(valor ?? '').trim(), 10);
   return Number.isFinite(numero) ? numero : null;
@@ -702,6 +778,12 @@ function parsearLineaCSVSimple(linea) {
   return columnas;
 }
 
+/**
+ * Carga (una sola vez, con cache en memoria) un catálogo local de specs de GPU desde
+ * los CSV de assets, indexado por código de proveedor y por nombre. Sirve de respaldo
+ * confiable para completar specs de GPU que el texto del CSV de importación no trae.
+ * Si los archivos no existen, devuelve mapas vacíos sin interrumpir la importación.
+ */
 function cargarCatalogoLocalGPU() {
   if (_catalogoLocalGPU) return _catalogoLocalGPU;
 
@@ -751,6 +833,7 @@ function cargarCatalogoLocalGPU() {
   return _catalogoLocalGPU;
 }
 
+/** Busca specs de una GPU en el catálogo local, primero por código de proveedor y luego por nombre. */
 function obtenerSpecsGpuCatalogoLocal(fila, nombreDetectado) {
   const { porCodigo, porNombre } = cargarCatalogoLocalGPU();
   const codigo = String(fila?.codigo || '').trim().toLowerCase();
@@ -758,6 +841,16 @@ function obtenerSpecsGpuCatalogoLocal(fila, nombreDetectado) {
   return porCodigo.get(codigo) || porNombre.get(nombre) || {};
 }
 
+/**
+ * Extrae las especificaciones técnicas tipadas de un producto a partir de su
+ * nombre y categoría de proveedor, aplicando reglas de expresiones regulares
+ * específicas por categoría (procesador, placa_madre, ram, almacenamiento, gpu,
+ * fuente, case). Es el paso que convierte texto comercial en datos de compatibilidad.
+ * @param {string} categoria - Categoría interna del producto.
+ * @param {string} nombre - Nombre/descripción del producto.
+ * @param {string} categoriaProveedor - Texto de categoría del proveedor (añade contexto).
+ * @returns {object} Campos de specs detectados (los no hallados quedan en null); {} si la categoría no aplica.
+ */
 function extraerSpecs(categoria, nombre, categoriaProveedor) {
   const texto = `${nombre} ${categoriaProveedor}`;
   const textoLower = texto.toLowerCase();
@@ -987,6 +1080,13 @@ function extraerSpecs(categoria, nombre, categoriaProveedor) {
   return {};
 }
 
+/**
+ * Convierte una fila cruda del CSV en un registro de producto normalizado y listo
+ * para persistir: resuelve la categoría interna, valida el precio, limpia nombre y
+ * descripción, combina las specs (CSV explícito > extraídas del texto > catálogo local)
+ * y marca si el producto necesita enriquecimiento IA por specs faltantes.
+ * @returns {object|null} Registro normalizado, {error} si el precio es inválido, o null si la fila se descarta.
+ */
 function construirRegistroNormalizado(fila) {
   const categoriaDirecta = String(fila.categoria || '').trim().toLowerCase();
   const subcategoriaDirecta = String(fila.subcategoria || '').trim().toLowerCase();
@@ -1102,6 +1202,7 @@ function construirRegistroNormalizado(fila) {
   };
 }
 
+/** Devuelve el id de una categoría (creándola si no existe), con cache en memoria para toda la importación. */
 async function obtenerIdCategoria(db, nombre, cache) {
   if (cache.has(nombre)) return cache.get(nombre);
   const r = await db('SELECT id FROM categorias WHERE nombre = $1', [nombre]);
@@ -1114,6 +1215,7 @@ async function obtenerIdCategoria(db, nombre, cache) {
   return creado.rows[0].id;
 }
 
+/** Devuelve el id de una marca (upsert por nombre único), con cache en memoria. Null si el nombre viene vacío. */
 async function obtenerIdMarca(db, nombre, cache) {
   const marca = String(nombre || '').trim();
   if (!marca) return null;
@@ -1129,6 +1231,13 @@ async function obtenerIdMarca(db, nombre, cache) {
   return id;
 }
 
+/**
+ * Inserta o actualiza la fila de specs tipadas del producto en la tabla specs_*
+ * que corresponde a su categoría. Usa COALESCE para no pisar con null los valores
+ * previamente cargados. El nombre de tabla proviene de un mapa cerrado (nunca del
+ * input), evitando inyección SQL.
+ * @param {Function} db - Helper de acceso a BD (ejecutarQuery o cliente transaccional).
+ */
 async function upsertSpecs(db, categoria, idProducto, registro) {
   const specsPorCategoria = {
     procesador: {
@@ -1237,6 +1346,16 @@ async function upsertSpecs(db, categoria, idProducto, registro) {
   );
 }
 
+/**
+ * Función principal de importación. Recorre las filas normalizadas y, por cada una,
+ * inserta o actualiza el producto, sus specs y su ficha. Clasifica el resultado en
+ * insertados / actualizados / omitidos / errores, y arma dos colas de post-proceso:
+ * productos que necesitan enriquecimiento IA (specs faltantes) y componentes
+ * completos por CSV que solo necesitan complemento de ficha técnica + imagen.
+ * @param {Array<object>} filas - Filas crudas provenientes de parsearCSV.
+ * @param {Function} db - Helper de acceso a BD.
+ * @returns {Promise<object>} Resumen con contadores, detalle de errores y colas de enriquecimiento.
+ */
 async function importar(filas, db) {
   let insertados = 0;
   let actualizados = 0;
@@ -1381,6 +1500,11 @@ async function importar(filas, db) {
   };
 }
 
+/**
+ * Normaliza las filas crudas (sin escribir en BD) y las ordena por categoría,
+ * subcategoría, marca y nombre. Se usa para la vista previa y la exportación del
+ * CSV estructurado a partir de un CSV Deltron raw.
+ */
 function normalizarFilasParaCSV(filas) {
   const resultado = [];
   for (const fila of filas) {

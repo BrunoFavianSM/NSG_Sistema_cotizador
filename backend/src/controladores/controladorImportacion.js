@@ -103,6 +103,7 @@ async function construirEstadoEnriquecimiento() {
   };
 }
 
+/** GET /api/importacion/estado-enriquecimiento — devuelve el estado combinado (memoria + BD) en una sola respuesta JSON. */
 async function obtenerEstadoEnriquecimiento(req, res) {
   try {
     return res.json(await construirEstadoEnriquecimiento());
@@ -115,6 +116,13 @@ async function obtenerEstadoEnriquecimiento(req, res) {
   }
 }
 
+/**
+ * GET /api/importacion/estado-enriquecimiento/stream
+ *
+ * Transmite el estado del enriquecimiento en tiempo real vía Server-Sent Events (SSE).
+ * Emite un evento "estado" cada 2 segundos y un comentario keep-alive cada 15 s para
+ * mantener viva la conexión a través de proxies. Limpia los intervalos al cerrarse la conexión.
+ */
 async function transmitirEstadoEnriquecimiento(req, res) {
   res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache, no-transform');

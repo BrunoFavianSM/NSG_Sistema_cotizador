@@ -16,6 +16,7 @@
 const URL_API = 'https://live.icecat.biz/api';
 const TIMEOUT_MS = Number(process.env.ICECAT_TIMEOUT_MS || 15000);
 
+/** Lee las credenciales y opciones de Icecat desde variables de entorno. */
 function obtenerConfig() {
   return {
     apiToken: process.env.ICECAT_API_TOKEN,
@@ -26,6 +27,7 @@ function obtenerConfig() {
   };
 }
 
+/** Indica si están las 3 credenciales mínimas para consultar Icecat (token, content-token, shopname). */
 function credencialesPresentes() {
   const c = obtenerConfig();
   return Boolean(c.apiToken && c.contentToken && c.shopname);

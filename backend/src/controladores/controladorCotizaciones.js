@@ -2,13 +2,13 @@
  * Controlador de Cotizaciones
  * 
  * Maneja todas las operaciones relacionadas con cotizaciones:
- * - CreaciÃ³n de cotizaciones con cÃ³digo ticket secuencial
- * - CÃ¡lculo de precio total con margen configurable
+ * - Creación de cotizaciones con código ticket secuencial
+ * - Cálculo de precio total con margen configurable
  * - Persistencia en tablas cotizaciones y detalle_cotizacion
- * - AsociaciÃ³n condicional con cliente (por email)
- * - Consulta por cÃ³digo ticket
- * - ValidaciÃ³n de cotizaciÃ³n con comparaciÃ³n de precios
- * - Marcar cotizaciÃ³n como reclamada
+ * - Asociación condicional con cliente (por email)
+ * - Consulta por código ticket
+ * - Validación de cotización con comparación de precios
+ * - Marcar cotización como reclamada
  * - Consulta de historial por cliente
  * 
  * Requisitos: 6.1, 6.2, 6.3, 6.4, 7.3, 7.6, 8.1, 8.2, 8.3, 8.4, 
@@ -36,6 +36,7 @@ const DEFAULT_IGV = 18;
 const DEFAULT_TIPO_CAMBIO = 3.75;
 let cacheEsquemaFinancieroV2 = null;
 
+/** Construye una respuesta de error estándar { status, body:{ error, mensaje, codigo } }. */
 function errorEstandar({ status, error, mensaje, codigo }) {
   return {
     status,
@@ -47,6 +48,7 @@ function errorEstandar({ status, error, mensaje, codigo }) {
   };
 }
 
+/** Unifica el estado legacy 'Reclamada' al estado actual 'Completada'. */
 function normalizarEstadoCotizacion(estado) {
   if (estado === 'Reclamada') {
     return ESTADO_COMPLETADA;
@@ -54,6 +56,7 @@ function normalizarEstadoCotizacion(estado) {
   return estado;
 }
 
+/** Descifra un valor devolviendo null ante error o valor vacío (no interrumpe el flujo). */
 function desencriptarSeguro(valor) {
   if (!valor) return null;
   try {
@@ -84,6 +87,11 @@ function normalizarTelefonoCliente(telefono) {
   return telefonoLimpio;
 }
 
+/**
+ * Determina si la petición proviene de un admin. Usa primero el usuario ya
+ * autenticado por el middleware y, si no lo hay, intenta verificar el JWT del header
+ * Authorization. Devuelve false ante cualquier ausencia o token inválido.
+ */
 function resolverContextoAdmin(req) {
   // Solo retorna true si el usuario autenticado tiene rol 'admin'
   if (req?.usuario?.id) {
@@ -106,6 +114,13 @@ function resolverContextoAdmin(req) {
   }
 }
 
+/**
+ * Valida y normaliza los datos del cliente según quién crea la cotización:
+ * privilegiado (admin/vendedor) cotiza PARA un cliente y requiere su correo;
+ * usuario autenticado usa su identidad del token (no necesita nombre/correo);
+ * invitado requiere nombre y correo. Valida formato de email y teléfono si vienen.
+ * @returns {{valido: boolean, errores: string[], datos: object}}
+ */
 function validarDatosClienteParaCotizacion({ esPrivilegiado, esUsuarioAutenticado, email, nombre, apellidos, telefono }) {
   const errores = [];
   const emailNormalizado = typeof email === 'string' ? email.trim().toLowerCase() : '';
@@ -156,6 +171,7 @@ function validarDatosClienteParaCotizacion({ esPrivilegiado, esUsuarioAutenticad
   };
 }
 
+/** Redondea un valor monetario a 2 decimales de forma estable (evita errores de coma flotante). */
 function redondearMoneda(valor) {
   return Math.round((Number(valor) + Number.EPSILON) * 100) / 100;
 }
@@ -165,6 +181,7 @@ function parseNumeroSeguro(valor, fallback) {
   return Number.isFinite(numero) ? numero : fallback;
 }
 
+/** Valida un margen personalizado (0 a 100); devuelve null si no se envió o es inválido (se usará el default). */
 function validarMargenPersonalizado(valor) {
   if (valor === undefined || valor === null || valor === '') return null;
   const numero = Number(valor);
@@ -172,6 +189,11 @@ function validarMargenPersonalizado(valor) {
   return numero;
 }
 
+/**
+ * Lee de BD los parámetros financieros (margen por defecto, IGV, tipo de cambio),
+ * cayendo a constantes por defecto si faltan o si la consulta falla.
+ * @returns {Promise<{margenDefault:number, tasaIgv:number, tipoCambioUsdPen:number}>}
+ */
 async function obtenerConfiguracionFinanciera() {
   try {
     const resultado = await ejecutarQuery(
@@ -204,6 +226,12 @@ async function obtenerMargenGanancia() {
   return configuracion.margenDefault;
 }
 
+/**
+ * Calcula el resumen financiero de una cotización a partir del costo neto en USD:
+ * aplica el margen para obtener el subtotal, le suma el IGV y convierte los tres
+ * montos a PEN con el tipo de cambio. Todos los valores se redondean a 2 decimales.
+ * @returns {object} Montos en USD y PEN (subtotal, IGV y total con IGV).
+ */
 function calcularResumenFinanciero(costoNetoUsd, margenAplicado, tasaIgv, tipoCambio) {
   const subtotalNeto = redondearMoneda(costoNetoUsd * (1 + margenAplicado / 100));
   const igvMonto = redondearMoneda(subtotalNeto * (tasaIgv / 100));
@@ -254,6 +282,11 @@ function proyectarComponente(comp, privilegiado) {
   return base;
 }
 
+/**
+ * Reestructura los campos financieros planos de una cotización (subtotal, IGV, total)
+ * en un bloque anidado con montos en USD y PEN, aplicando defaults y conversión por
+ * tipo de cambio cuando falta algún valor en PEN.
+ */
 function construirBloqueFinanzas(base) {
   const subtotalNeto = parseNumeroSeguro(base.subtotal_neto, 0);
   const igvMonto = parseNumeroSeguro(base.igv_monto, 0);
@@ -280,6 +313,11 @@ function construirBloqueFinanzas(base) {
   };
 }
 
+/**
+ * Detecta (con cache en memoria) si la BD tiene el esquema financiero v2, es decir,
+ * las columnas de desglose de IGV/subtotal en `cotizaciones` y `detalle_cotizacion`.
+ * Permite que el controlador funcione con esquemas viejos y nuevos. En tests, false.
+ */
 async function usaEsquemaFinancieroV2() {
   if (cacheEsquemaFinancieroV2 !== null) return cacheEsquemaFinancieroV2;
   if (process.env.NODE_ENV === 'test') {
@@ -308,10 +346,10 @@ async function usaEsquemaFinancieroV2() {
 }
 
 /**
- * Genera un cÃ³digo ticket secuencial (NSG-YYYY-NNNN)
- * Usa la funciÃ³n de PostgreSQL para garantizar secuencialidad
- * 
- * @returns {Promise<string>} CÃ³digo ticket generado
+ * Genera un código ticket secuencial (NSG-YYYY-NNNN).
+ * Usa la función de PostgreSQL para garantizar secuencialidad.
+ *
+ * @returns {Promise<string>} Código ticket generado
  */
 async function generarCodigoTicket() {
   try {
@@ -328,11 +366,14 @@ async function generarCodigoTicket() {
 }
 
 /**
- * Busca o crea un cliente por email
- * 
+ * Busca o crea un cliente por email. Si existe, completa nombre/teléfono faltantes;
+ * si no existe, lo crea como cuenta 'pendiente_activacion' (sin contraseña). La
+ * búsqueda usa el hash determinístico del correo porque el cifrado AES no es determinístico.
+ *
  * @param {string} email - Email del cliente
- * @param {string} nombre - Nombre del cliente (opcional)
- * @param {string} telefono - TelÃ©fono del cliente (opcional)
+ * @param {string} [nombre] - Nombre del cliente (opcional)
+ * @param {string} [apellidos] - Apellidos del cliente (opcional)
+ * @param {string} [telefono] - Teléfono del cliente (opcional)
  * @returns {Promise<number|null>} ID del cliente o null si no hay email
  */
 async function buscarOCrearCliente(email, nombre = null, apellidos = null, telefono = null) {
@@ -424,7 +465,7 @@ function calcularPrecioTotal(componentes, margen) {
 }
 
 /**
- * Crear una nueva cotizaciÃ³n
+ * Crear una nueva cotización
  * 
  * POST /api/cotizaciones
  * Body: {
@@ -444,7 +485,7 @@ async function crearCotizacion(req, res) {
     
     // Sanitizar datos de entrada (excepto email que se maneja por separado)
     const datosSanitizados = sanitizarObjeto(req.body);
-    // Restaurar email original para que no sea alterado por la sanitizaciÃ³n HTML
+    // Restaurar email original para que no sea alterado por la sanitización HTML
     if (emailOriginal) {
       datosSanitizados.email_cliente = emailOriginal.trim().toLowerCase();
     }
@@ -470,7 +511,7 @@ async function crearCotizacion(req, res) {
       });
     }
 
-    // Validar estructura bÃ¡sica
+    // Validar estructura básica
     if (!datosSanitizados.componentes || !Array.isArray(datosSanitizados.componentes)) {
       return res.status(400).json({
         error: 'Datos inválidos',
@@ -523,7 +564,7 @@ async function crearCotizacion(req, res) {
 
     const tieneEsquemaFinancieroV2 = await usaEsquemaFinancieroV2();
 
-    // Usar transacciÃ³n para garantizar consistencia
+    // Usar transacción para garantizar consistencia
     const resultado = await ejecutarTransaccion(async (cliente) => {
       // 1. Obtener información de productos (multi-tabla canónica)
       const gruposPorTabla = new Map();
@@ -611,7 +652,7 @@ async function crearCotizacion(req, res) {
         configuracionFinanciera.tipoCambioUsdPen
       );
 
-      // 4. Generar cÃ³digo ticket
+      // 4. Generar código ticket
       const codigoTicket = await generarCodigoTicket();
 
       // 5. Determinar id_cliente
@@ -636,7 +677,7 @@ async function crearCotizacion(req, res) {
       const fechaValidez = new Date();
       fechaValidez.setDate(fechaValidez.getDate() + 15);
 
-      // 7. Insertar cotizaciÃ³n
+      // 7. Insertar cotización
       const cotizacion = tieneEsquemaFinancieroV2
         ? await cliente.query(
             `INSERT INTO cotizaciones (
@@ -687,7 +728,7 @@ async function crearCotizacion(req, res) {
 
       const cotizacionCreada = cotizacion.rows[0];
 
-      // 8. Insertar detalles de cotizaciÃ³n
+      // 8. Insertar detalles de cotización
       const detalles = [];
       for (const comp of componentesConInfo) {
         const costoUnitarioNetoUsd = redondearMoneda(parseFloat(comp.precio_base));
@@ -812,12 +853,10 @@ async function crearCotizacion(req, res) {
 
 
 /**
- * Consultar cotizaciÃ³n por cÃ³digo ticket
- * 
- * GET /api/cotizaciones/:codigoTicket
- * 
- * @param {Object} req - Request de Express
- * @param {Object} res - Response de Express
+ * Helper de lectura: recupera una cotización y sus detalles por código de ticket,
+ * adaptando las columnas consultadas según el esquema financiero (v1 o v2) presente
+ * en la BD. Devuelve el objeto ya proyectado, o null si no existe la cotización.
+ * (Lo consumen consultarCotizacion, los PDF y la validación.)
  */
 async function obtenerCotizacionConDetallesPorTicket(codigoTicket) {
   const tieneEsquemaFinancieroV2 = await usaEsquemaFinancieroV2();
@@ -962,7 +1001,7 @@ async function consultarCotizacion(req, res) {
 
 
 /**
- * Validar cotizaciÃ³n con comparaciÃ³n de precios
+ * Validar cotización con comparación de precios
  * 
  * GET /api/cotizaciones/:codigoTicket/validar
  * 
@@ -1125,13 +1164,8 @@ async function validarCotizacion(req, res) {
 
 
 /**
- * Marcar cotizaciÃ³n como reclamada
- * 
- * PUT /api/cotizaciones/:codigoTicket/reclamar
- * Body: { id_vendedor?: number }
- * 
- * @param {Object} req - Request de Express
- * @param {Object} res - Response de Express
+ * Adapta los datos de una cotización al formato que espera servicioPDF: mapea los
+ * componentes (precio USD/PEN, stock/a pedido) y arma el total en ambas monedas.
  */
 function construirDatosPdf(cotizacionData) {
   const tipoCambio = parseNumeroSeguro(cotizacionData.tipo_cambio_referencia, DEFAULT_TIPO_CAMBIO);
@@ -1164,6 +1198,7 @@ function construirDatosPdf(cotizacionData) {
   };
 }
 
+/** Normaliza la moneda solicitada para el PDF a 'PEN' o 'USD' (por defecto 'USD'). */
 function resolverMonedaPdf(valor) {
   const moneda = String(valor || 'USD').toUpperCase();
   return moneda === 'PEN' ? 'PEN' : 'USD';
@@ -1178,6 +1213,11 @@ function puedeAccederCotizacion(req, cotizacionData) {
   return cotizacionData.id_cliente != null && cotizacionData.id_cliente === req.usuario?.id;
 }
 
+/**
+ * GET /api/cotizaciones/:codigoTicket/pdf
+ * Genera y descarga el PDF comercial de la cotización (con precios). Valida el ticket,
+ * el acceso del solicitante (dueño o rol privilegiado) y que la cotización no esté caducada.
+ */
 async function obtenerPdfCotizacion(req, res) {
   try {
     const { codigoTicket } = req.params;
@@ -1228,6 +1268,11 @@ async function obtenerPdfCotizacion(req, res) {
   }
 }
 
+/**
+ * GET /api/cotizaciones/:codigoTicket/pdf-tecnico
+ * Genera y descarga el PDF de listado técnico (sin precios). Mismas validaciones de
+ * ticket y acceso que el PDF comercial.
+ */
 async function obtenerPdfTecnico(req, res) {
   try {
     const { codigoTicket } = req.params;
@@ -1271,6 +1316,7 @@ async function obtenerPdfTecnico(req, res) {
   }
 }
 
+/** Registra en `notificaciones_cotizacion` un intento de aviso 'listo_recojo' en estado pendiente; devuelve su id o null. */
 async function registrarIntentoNotificacion(idCotizacion, emailDestino, payload) {
   try {
     const r = await ejecutarQuery(
@@ -1286,6 +1332,7 @@ async function registrarIntentoNotificacion(idCotizacion, emailDestino, payload)
   }
 }
 
+/** Actualiza el estado de un intento de notificación (enviada/fallida) y sella la fecha de envío si corresponde. */
 async function actualizarIntentoNotificacion(idNotificacion, estado, detalle) {
   if (!idNotificacion) return;
   try {
@@ -1308,6 +1355,11 @@ async function actualizarIntentoNotificacion(idNotificacion, estado, detalle) {
   }
 }
 
+/**
+ * POST /api/cotizaciones/:codigoTicket/notificar-listo
+ * Envía al cliente el correo de "equipo listo para recoger", registrando el intento y
+ * su resultado en `notificaciones_cotizacion`. Solo admin/vendedor. (Requisitos 9.x)
+ */
 async function notificarCotizacionLista(req, res) {
   try {
     const { codigoTicket } = req.params;
@@ -1380,6 +1432,11 @@ async function notificarCotizacionLista(req, res) {
   }
 }
 
+/**
+ * PUT /api/cotizaciones/:codigoTicket/reclamar
+ * Marca una cotización como reclamada/completada (estado 'Completada'). Solo admin/vendedor.
+ * Body opcional: { id_vendedor }.
+ */
 async function marcarComoReclamada(req, res) {
   try {
     const { codigoTicket } = req.params;

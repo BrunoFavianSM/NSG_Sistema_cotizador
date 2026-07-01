@@ -14,11 +14,17 @@ const { hashPassword } = require('../servicios/servicioAuth');
 const ROLES_VALIDOS = ['admin', 'vendedor', 'usuario'];
 const ESTADOS_VALIDOS = ['activa', 'pendiente_activacion', 'desactivada'];
 
+/** Descifra un valor cifrado devolviendo null ante error o valor vacío (no interrumpe el listado). */
 function descifrarSeguro(valor) {
   if (!valor) return null;
   try { return desencriptar(valor); } catch { return null; }
 }
 
+/**
+ * GET /api/cuentas
+ * Lista todas las cuentas ordenadas por fecha de creación descendente, descifrando
+ * correo y teléfono para mostrarlos en el panel de administración.
+ */
 async function listarCuentas(req, res) {
   try {
     const { rows } = await ejecutarQuery(
@@ -47,6 +53,11 @@ async function listarCuentas(req, res) {
   }
 }
 
+/**
+ * POST /api/cuentas
+ * Crea una cuenta con estado 'activa' (login por correo, username NULL). Valida rol,
+ * longitud de contraseña y formato de DNI, cifra correo/teléfono y rechaza correos duplicados.
+ */
 async function crearCuenta(req, res) {
   try {
     const { password, correo, nombre, apellidos, nombre_completo, telefono, dni, rol } = req.body || {};
@@ -99,6 +110,12 @@ async function crearCuenta(req, res) {
   }
 }
 
+/**
+ * PUT /api/cuentas/:id
+ * Actualiza campos editables de una cuenta (nombre/apellidos, rol, estado, DNI,
+ * contraseña) construyendo el UPDATE dinámicamente solo con lo enviado.
+ * Resguardo: el admin no puede quitarse a sí mismo el rol admin.
+ */
 async function actualizarCuenta(req, res) {
   try {
     const id = parseInt(req.params.id, 10);
@@ -159,6 +176,10 @@ async function actualizarCuenta(req, res) {
   }
 }
 
+/**
+ * DELETE /api/cuentas/:id
+ * Elimina una cuenta de forma definitiva. Resguardo: el admin no puede auto-eliminarse.
+ */
 async function eliminarCuenta(req, res) {
   try {
     const id = parseInt(req.params.id, 10);

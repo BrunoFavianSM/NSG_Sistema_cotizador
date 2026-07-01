@@ -1,5 +1,5 @@
 /**
- * AsistenteIA.jsx �?" Componente raíz v2
+ * AsistenteIA.jsx - Componente raíz v2
  *
  * Orquesta todos los subcomponentes del Asistente IA NSG Concierge.
  * Integra useAsistenteIA para toda la lógica de estado y comunicación.
@@ -28,7 +28,7 @@ import ValidandoIndicador from './AsistenteIA/ValidandoIndicador';
 import BotonAsesorHumano from './AsistenteIA/BotonAsesorHumano';
 import RutaUpgrade from './AsistenteIA/RutaUpgrade';
 
-// Icono de envío �?" SF Symbol equivalente: paperplane.fill
+// Icono de envío - SF Symbol equivalente: paperplane.fill
 const IconoEnviar = () => (
   <svg
     viewBox="0 0 24 24"
@@ -74,7 +74,7 @@ const IconoCerrar = () => (
   </svg>
 );
 
-// Icono de historial �?" SF Symbol equivalente: clock.arrow.circlepath
+// Icono de historial - SF Symbol equivalente: clock.arrow.circlepath
 const IconoHistorial = () => (
   <svg
     viewBox="0 0 24 24"
@@ -174,10 +174,10 @@ function BannerError({ mensaje, onReintentar }) {
 // ============================================================
 
 /**
- * AsistenteIA �?" Componente raíz v2
+ * AsistenteIA - Componente raíz v2
  *
  * Props:
- * - className: string �?" clases adicionales para el botón de apertura
+ * - className: string - clases adicionales para el botón de apertura
  *
  * La prop onAplicarRecomendacion se mantiene por retrocompatibilidad con v1,
  * pero la lógica principal usa aplicarConfiguracion del hook (vía AppContext).
@@ -185,31 +185,31 @@ function BannerError({ mensaje, onReintentar }) {
 const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
   const reducedMotion = useReducedMotion();
 
-  // �"?�"? Estado del modal �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
+  // --- Estado del modal ---
   const [modalAbierto, setModalAbierto] = useState(false);
   const [debugAbierto, setDebugAbierto] = useState(false);
 
-  // �"?�"? Estado del input �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
+  // --- Estado del input ---
   const [textoInput, setTextoInput] = useState('');
   const [estaEscribiendo, setEstaEscribiendo] = useState(false);
   // Indica que el turno en curso está armando la configuración (loading contextual).
   const [armandoConfig, setArmandoConfig] = useState(false);
 
-  // �"?�"? Estado de historial previo �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
+  // --- Estado de historial previo ---
   const [sesionPrevia, setSesionPrevia] = useState(null);
   const [mostrarBannerHistorial, setMostrarBannerHistorial] = useState(false);
   const [historialConsultado, setHistorialConsultado] = useState(false);
 
-  // �"?�"? Refs �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
+  // --- Refs ---
   const chatContainerRef = useRef(null);
   const inputRef = useRef(null);
   const timerEscribiendoRef = useRef(null);
 
-  // �"?�"? AppContext �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
+  // --- AppContext ---
   const navigate = useNavigate();
   const { autenticado, esInvitado, usuario, numeroWhatsAppVentas } = useAppContext();
 
-  // �"?�"? Hook del asistente �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
+  // --- Hook del asistente ---
   const {
     mensajes,
     cargando,
@@ -233,7 +233,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
     activo: modalAbierto,
   });
 
-  // �"?�"? Scroll automático al último mensaje �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
+  // --- Scroll automático al último mensaje ---
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -245,14 +245,14 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
     if (!cargando) setArmandoConfig(false);
   }, [cargando]);
 
-  // �"?�"? Foco en input al abrir modal �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
+  // --- Foco en input al abrir modal ---
   useEffect(() => {
     if (!modalAbierto) return;
     const timer = setTimeout(() => inputRef.current?.focus(), 50);
     return () => clearTimeout(timer);
   }, [modalAbierto]);
 
-  // �"?�"? Consultar historial previo al abrir (usuarios autenticados) �"?�"?
+  // --- Consultar historial previo al abrir (usuarios autenticados) ---
   useEffect(() => {
     if (!modalAbierto || !autenticado || !usuario?.id || historialConsultado) return;
 
@@ -277,14 +277,14 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
     consultarHistorial();
   }, [modalAbierto, autenticado, usuario, historialConsultado, mensajes.length]);
 
-  // �"?�"? Limpiar timer al desmontar �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
+  // --- Limpiar timer al desmontar ---
   useEffect(() => {
     return () => {
       if (timerEscribiendoRef.current) clearTimeout(timerEscribiendoRef.current);
     };
   }, []);
 
-  // �"?�"? Handlers �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
+  // --- Handlers ---
 
   const abrirModal = () => {
     if (esInvitado) {
@@ -379,18 +379,18 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
     reiniciar();
   };
 
-  // �"?�"? Datos para BotonAsesorHumano �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
+  // --- Datos para BotonAsesorHumano ---
   const nombreUsuario = autenticado && usuario?.nombre ? usuario.nombre : null;
 
   // Extraer presupuesto y perfil de la configuración propuesta si existe
   const presupuestoEstimado = configuracionPropuesta?.precio_total_pen ?? null;
 
-  // �"?�"? Animaciones �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
+  // --- Animaciones ---
   const animMensaje = reducedMotion
     ? {}
     : { initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.15 } };
 
-  // �"?�"? Determinar si mostrar quick replies �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
+  // --- Determinar si mostrar quick replies ---
   const mostrarQuickReplies = quickReplies.length > 0;
   const hayConfigEnMensajes = mensajes.some(
     (mensaje) => mensaje.rol === 'assistant' && Boolean(mensaje.metadata?.configuracion_propuesta)
@@ -398,7 +398,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
 
   return (
     <>
-      {/* �"?�"? Botón de apertura �"?�"? */}
+      {/* --- Botón de apertura --- */}
       <button
         type="button"
         onClick={abrirModal}
@@ -420,7 +420,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
         <span>Asistente de Configuración</span>
       </button>
 
-      {/* �"?�"? Modal del asistente �"?�"? */}
+      {/* --- Modal del asistente --- */}
       <AnimatePresence>
         {modalAbierto && (
           <>
@@ -494,7 +494,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
               exit={reducedMotion ? undefined : { opacity: 0, y: 12, scale: 0.98 }}
               transition={{ duration: reducedMotion ? 0 : 0.2 }}
             >
-              {/* �"?�"? Header �"?�"? */}
+              {/* --- Header --- */}
               <header className="flex flex-shrink-0 items-center justify-between gap-3 border-b border-[var(--color-border)] px-6 py-4">
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-accent)] text-white shadow-[var(--shadow-1)]">
@@ -529,7 +529,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                     </button>
                   )}
 
-                  {/* Botón asesor humano compacto �?" siempre visible (Req 8.4) */}
+                  {/* Botón asesor humano compacto - siempre visible (Req 8.4) */}
                   <BotonAsesorHumano
                     numeroWhatsApp={numeroWhatsAppVentas}
                     nombreUsuario={nombreUsuario}
@@ -569,7 +569,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                 </div>
               </header>
 
-              {/* �"?�"? Área de chat �"?�"? */}
+              {/* --- Área de chat --- */}
               <div
                 ref={chatContainerRef}
                 className="flex flex-1 flex-col gap-4 overflow-y-auto bg-[var(--color-surface-soft)] px-4 py-5"
@@ -604,7 +604,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                     );
                   }
 
-                  // Mensaje del asistente �?" puede incluir semáforo y configuración
+                  // Mensaje del asistente - puede incluir semáforo y configuración
                   const metaSemaforo = mensaje.metadata?.semaforo ?? null;
                   const metaConfig = mensaje.metadata?.configuracion_propuesta ?? null;
 
@@ -643,7 +643,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                   );
                 })}
 
-                {/* Indicador de validación (Req 13.2) �?" visible mientras carga y hay config en curso */}
+                {/* Indicador de validación (Req 13.2) - visible mientras carga y hay config en curso */}
                 {configuracionPropuesta && !hayConfigEnMensajes && (
                   <motion.div
                     key="configuracion-respaldo"
@@ -687,7 +687,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
 
               </div>
 
-              {/* �"?�"? Quick Replies (Req 10.1�?"10.7) �"?�"? */}
+              {/* --- Quick Replies (Req 10.1-10.7) --- */}
               {mostrarQuickReplies && (
                 <div className="px-3 py-2 border-t border-[var(--color-border)] bg-[var(--color-surface)] flex-shrink-0">
                   <QuickReplies
@@ -697,7 +697,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                 </div>
               )}
 
-              {/* �"?�"? Banner de error (Req 13.3) �"?�"? */}
+              {/* --- Banner de error (Req 13.3) --- */}
               {error && (
                 <BannerError
                   mensaje={error}
@@ -705,7 +705,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                 />
               )}
 
-              {/* �"?�"? Botón asesor humano completo cuando mostrarAsesor (Req 8.2, 13.4) �"?�"? */}
+              {/* --- Botón asesor humano completo cuando mostrarAsesor (Req 8.2, 13.4) --- */}
               {mostrarAsesor && (
                 <div className="px-4 py-3 border-t border-[var(--color-border)] bg-[var(--color-surface-soft)] flex-shrink-0">
                   <BotonAsesorHumano
@@ -717,7 +717,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                 </div>
               )}
 
-              {/* �"?�"? Footer: input de texto �"?�"? */}
+              {/* --- Footer: input de texto --- */}
               <footer className="flex-shrink-0 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-6 py-4">
                 <p className="mb-3 px-1 text-xs text-[var(--color-text-muted)]">
                   Describe tu PC ideal, pregunta por compatibilidad o pide una recomendación.

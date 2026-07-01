@@ -22,6 +22,7 @@ const HEADERS = {
   Referer: 'https://www.deltron.com.pe/',
 };
 
+/** Arma la URL de la ficha de Deltron para un código de proveedor dado. */
 function urlProducto(codigo) {
   return URL_BASE + encodeURIComponent(codigo);
 }
@@ -42,6 +43,7 @@ async function descargarHtmlDeltron(codigo) {
   }
 }
 
+/** Convierte un fragmento HTML a texto plano: quita etiquetas, decodifica entidades y colapsa espacios. */
 function decodificar(texto) {
   return String(texto || '')
     .replace(/<[^>]*>/g, ' ')
@@ -102,6 +104,7 @@ function extraerImagenDeHtml(html) {
   return null;
 }
 
+/** Normaliza una URL de imagen a absoluta con https (resuelve rutas relativas y protocol-relative). */
 function normalizarUrl(u) {
   const s = String(u || '').trim();
   if (!s) return null;
@@ -110,6 +113,11 @@ function normalizarUrl(u) {
   return s;
 }
 
+/**
+ * Extrae las celdas (<td>) de una fila de tabla, conservando los atributos
+ * relevantes de Deltron: `firCol` (marca la celda de etiqueta/grupo) y `rowspan`
+ * (cuántas subfilas abarca), además del texto decodificado.
+ */
 function celdasDeFila(trHtml) {
   const celdas = [];
   const re = /<td([^>]*)>([\s\S]*?)<\/td>/gi;
@@ -189,11 +197,13 @@ function parsearEspecificaciones(html) {
   return featuresGroups;
 }
 
+/** Extrae el título del producto desde el HTML de la ficha. */
 function extraerTitulo(html) {
   const m = html.match(/title-name-product[^>]*itemprop="name">([^<]+)</);
   return m ? decodificar(m[1]) : null;
 }
 
+/** Extrae una descripción corta (máx. 500 caracteres) desde la sección "home" de la ficha. */
 function extraerDescripcion(html) {
   const i = html.indexOf('id="home"');
   if (i === -1) return '';

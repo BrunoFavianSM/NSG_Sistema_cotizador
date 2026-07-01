@@ -8,6 +8,10 @@
 
 const { ejecutarQuery } = require('../configuracion/baseDatos');
 
+/**
+ * GET /api/etiquetas
+ * Lista todas las etiquetas de perfil ordenadas por su campo `orden` y luego por nombre.
+ */
 async function listarEtiquetas(req, res) {
   try {
     const { rows } = await ejecutarQuery(

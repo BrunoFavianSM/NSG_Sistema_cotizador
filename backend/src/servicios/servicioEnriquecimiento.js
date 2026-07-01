@@ -58,6 +58,18 @@ const COND_IMAGEN_ICECAT_REDIMENSIONAR = (expr) =>
 
 // ---------------------------------------------------------------------------
 // Utilidades de parseo / normalización
+//
+// Convierten el texto libre de las fichas (Icecat/Deltron) a los tipos que
+// esperan las columnas specs_*:
+//   quitarAcentos / norm  -> texto sin acentos, en minúsculas y recortado (para comparar).
+//   pInt / pFloat         -> primer entero / decimal presente en la cadena.
+//   pCapacidadGb          -> capacidad normalizada a GB (convierte TB a GB).
+//   pBool                 -> true/false a partir de "sí/no/integrado/dedicado/...".
+//   pRamTipo              -> tipo de RAM canónico (DDR3/DDR4/DDR5).
+//   pFormFactor           -> factor de forma canónico (ATX/MICRO-ATX/MINI-ITX/E-ATX).
+//   pSocket               -> socket normalizado (AM5, LGA1700, etc.).
+//   pTexto                -> texto recortado o null si queda vacío.
+//   pPcie                 -> versión PCIe normalizada ("4.0", "5.0").
 // ---------------------------------------------------------------------------
 function quitarAcentos(s) {
   return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -473,6 +485,11 @@ async function complementarFichaEImagen(item) {
 // ---------------------------------------------------------------------------
 const _estado = { cola: [], procesando: false, ok: 0, fallidos: 0, total: 0, actual: null };
 
+/**
+ * Agrega productos válidos a la cola de enriquecimiento y arranca el procesamiento
+ * en segundo plano si no estaba activo. Descarta items sin id, sin código de
+ * proveedor o de una categoría que no sea componente principal.
+ */
 function encolarProductos(items) {
   const validos = (items || []).filter((i) => i && i.id_producto && i.codigo_proveedor && TABLA_SPECS[i.categoria]);
   if (!validos.length) return;
@@ -481,6 +498,11 @@ function encolarProductos(items) {
   if (!_estado.procesando) _procesarCola();
 }
 
+/**
+ * Bucle secuencial que procesa la cola de a un producto por vez. Según el flag
+ * `complemento` del item, ejecuta el enriquecimiento completo o solo el complemento
+ * de ficha+imagen. Espera DELAY_DELTRON_MS entre productos para no saturar a Deltron.
+ */
 async function _procesarCola() {
   if (_estado.procesando) return;
   _estado.procesando = true;
@@ -566,6 +588,7 @@ async function reactivarDesdeDB(db = ejecutarQuery) {
   }
 }
 
+/** Devuelve una instantánea del estado de la cola (para el endpoint de monitoreo). */
 function estado() {
   return {
     procesando: _estado.procesando,

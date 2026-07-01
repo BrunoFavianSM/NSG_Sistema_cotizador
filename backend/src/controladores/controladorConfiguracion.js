@@ -1,7 +1,18 @@
+/**
+ * Controlador de Configuración del sistema (solo admin).
+ *
+ * Centraliza los parámetros globales almacenados en la tabla `configuracion`
+ * (clave/valor): margen de ganancia por defecto, tasa de IGV, tipo de cambio USD/PEN
+ * y su modo (manual/automático), número de WhatsApp de ventas, modelos y API keys de
+ * los proveedores de IA (NVIDIA/Gemini) y el token de consulta de DNI. Los valores
+ * sensibles (API keys, token DNI) se guardan cifrados y nunca se devuelven al cliente.
+ */
+
 const { ejecutarQuery } = require('../configuracion/baseDatos');
 const { CLAVES, DEFAULTS_ENRIQUECIMIENTO, parsearBooleanoConfiguracion } = require('../asistente/servicioConfigIA');
 const { encriptar } = require('../utilidades/encriptacion');
 
+/** Valida un margen de ganancia: número entre 0 y 100, o null si es inválido. */
 function parseMargen(valor) {
   const numero = Number(valor);
   if (Number.isNaN(numero)) return null;
@@ -9,6 +20,7 @@ function parseMargen(valor) {
   return numero;
 }
 
+/** Valida un porcentaje (ej. IGV): número entre 0 y 100, o null si es inválido. */
 function parsePorcentaje(valor) {
   const numero = Number(valor);
   if (Number.isNaN(numero)) return null;
@@ -16,6 +28,7 @@ function parsePorcentaje(valor) {
   return numero;
 }
 
+/** Valida un tipo de cambio: número mayor a 0, o null si es inválido. */
 function parseTipoCambio(valor) {
   const numero = Number(valor);
   if (Number.isNaN(numero)) return null;
@@ -31,6 +44,7 @@ function parseNumeroWhatsApp(valor) {
   return limpio;
 }
 
+/** Lee de BD las claves de configuración comercial y las devuelve indexadas por clave. */
 async function obtenerMapaConfiguracion() {
   const resultado = await ejecutarQuery(
     "SELECT clave, valor, updated_at FROM configuracion WHERE clave IN ('margen_ganancia', 'margen_ganancia_default', 'tasa_igv', 'tipo_cambio_usd_pen', 'modo_tipo_cambio', 'whatsapp_numero_ventas')",
@@ -43,6 +57,7 @@ async function obtenerMapaConfiguracion() {
   }, {});
 }
 
+/** Upsert manual de una clave de configuración: intenta UPDATE y, si no existe, hace INSERT. */
 async function guardarConfiguracion(clave, valor, descripcion) {
   const actualizado = await ejecutarQuery(
     `UPDATE configuracion
@@ -66,6 +81,7 @@ async function guardarConfiguracion(clave, valor, descripcion) {
   return insertado.rows[0];
 }
 
+/** Arma el objeto de respuesta de configuración comercial, aplicando defaults cuando falta un valor. */
 function construirPayloadConfiguracion(mapa) {
   const margenPorDefecto = parseMargen(mapa.margen_ganancia_default?.valor ?? mapa.margen_ganancia?.valor);
   const tasaIgv = parsePorcentaje(mapa.tasa_igv?.valor);
@@ -97,6 +113,7 @@ function construirPayloadConfiguracion(mapa) {
   };
 }
 
+/** GET /api/configuracion/margen — devuelve margen, IGV, tipo de cambio, modo y WhatsApp de ventas. */
 async function obtenerMargen(req, res) {
   try {
     const mapaConfiguracion = await obtenerMapaConfiguracion();
@@ -110,6 +127,11 @@ async function obtenerMargen(req, res) {
   }
 }
 
+/**
+ * PUT /api/configuracion/margen
+ * Actualiza margen por defecto (y su alias legacy), y opcionalmente IGV, tipo de cambio
+ * y número de WhatsApp de ventas. Valida rangos antes de persistir; devuelve la config resultante.
+ */
 async function actualizarMargen(req, res) {
   try {
     const nuevoMargen = parseMargen(
@@ -169,6 +191,7 @@ async function actualizarMargen(req, res) {
   }
 }
 
+/** PUT /api/configuracion/modo-tipo-cambio — fija el modo de obtención del TC en 'manual' o 'automatico'. */
 async function actualizarModoTipoCambio(req, res) {
   try {
     const { modo } = req.body ?? {};
@@ -217,6 +240,7 @@ const DEFAULTS_IA = {
 
 const PROVEEDORES_ENRIQUECIMIENTO_VALIDOS = ['nvidia', 'gemini'];
 
+/** Normaliza la prioridad de proveedores de enriquecimiento: lista separada por comas, en minúsculas, sin duplicados ni proveedores no válidos. */
 function normalizarPrioridadEnriquecimiento(valor) {
   const prioridad = String(valor || '')
     .split(',')
@@ -230,6 +254,7 @@ function normalizarPrioridadEnriquecimiento(valor) {
   return deduplicada;
 }
 
+/** GET /api/configuracion/ia/modelos — devuelve el proveedor activo (nvidia/gemini) y el modelo configurado de cada uno. */
 async function obtenerModelosIA(req, res) {
   try {
     const { rows } = await ejecutarQuery(
@@ -260,6 +285,11 @@ async function obtenerModelosIA(req, res) {
   }
 }
 
+/**
+ * PUT /api/configuracion/ia/modelos
+ * Fija el proveedor de IA activo y su modelo. Exige que venga el modelo requerido por
+ * el modo elegido (nvidia_model si nvidia, gemini_model si gemini) antes de persistir.
+ */
 async function actualizarModelosIA(req, res) {
   try {
     const {
@@ -343,6 +373,11 @@ async function actualizarModelosIA(req, res) {
   }
 }
 
+/**
+ * GET /api/configuracion/ia/api-keys
+ * Informa solo SI cada proveedor tiene su API key configurada (booleanos); nunca
+ * devuelve el valor de la clave, que se guarda cifrado.
+ */
 async function obtenerApiKeysIA(req, res) {
   try {
     const { rows } = await ejecutarQuery(
@@ -366,6 +401,11 @@ async function obtenerApiKeysIA(req, res) {
   }
 }
 
+/**
+ * PUT /api/configuracion/ia/api-keys
+ * Guarda cifradas las API keys de Gemini y/o NVIDIA. Acepta actualizar una o ambas;
+ * rechaza el envío de una clave vacía.
+ */
 async function actualizarApiKeysIA(req, res) {
   try {
     const { gemini_api_key, nvidia_api_key } = req.body || {};
@@ -431,6 +471,7 @@ async function actualizarApiKeysIA(req, res) {
   }
 }
 
+/** GET /api/configuracion/ia/enriquecimiento — devuelve prioridad de proveedores, modelos y flags de habilitación del enriquecimiento IA. */
 async function obtenerModelosIAEnriquecimiento(req, res) {
   try {
     const { rows } = await ejecutarQuery(
@@ -464,6 +505,11 @@ async function obtenerModelosIAEnriquecimiento(req, res) {
   }
 }
 
+/**
+ * PUT /api/configuracion/ia/enriquecimiento
+ * Actualiza la prioridad de proveedores, sus modelos y flags de habilitación para el
+ * enriquecimiento. Exige al menos un proveedor habilitado y su modelo correspondiente.
+ */
 async function actualizarModelosIAEnriquecimiento(req, res) {
   try {
     const {
