@@ -28,9 +28,6 @@ import ValidandoIndicador from './AsistenteIA/ValidandoIndicador';
 import BotonAsesorHumano from './AsistenteIA/BotonAsesorHumano';
 import RutaUpgrade from './AsistenteIA/RutaUpgrade';
 
-// Número de WhatsApp del asesor (fallback; el backend lo gestiona en WHATSAPP_NUMERO_ASESOR)
-const WHATSAPP_NUMERO_ASESOR = '51999999999';
-
 // Icono de envío �?" SF Symbol equivalente: paperplane.fill
 const IconoEnviar = () => (
   <svg
@@ -210,7 +207,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
 
   // �"?�"? AppContext �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   const navigate = useNavigate();
-  const { autenticado, esInvitado, usuario } = useAppContext();
+  const { autenticado, esInvitado, usuario, numeroWhatsAppVentas } = useAppContext();
 
   // �"?�"? Hook del asistente �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?
   const {
@@ -532,7 +529,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
 
                   {/* Botón asesor humano compacto �?" siempre visible (Req 8.4) */}
                   <BotonAsesorHumano
-                    numeroWhatsApp={WHATSAPP_NUMERO_ASESOR}
+                    numeroWhatsApp={numeroWhatsAppVentas}
                     nombreUsuario={nombreUsuario}
                     presupuesto={presupuestoEstimado}
                     variante="compacto"
@@ -710,7 +707,7 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
               {mostrarAsesor && (
                 <div className="px-4 py-3 border-t border-[var(--color-border)] bg-[var(--color-surface-soft)] flex-shrink-0">
                   <BotonAsesorHumano
-                    numeroWhatsApp={WHATSAPP_NUMERO_ASESOR}
+                    numeroWhatsApp={numeroWhatsAppVentas}
                     nombreUsuario={nombreUsuario}
                     presupuesto={presupuestoEstimado}
                     variante="completo"

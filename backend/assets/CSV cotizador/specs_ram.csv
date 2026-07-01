@@ -1,4 +1,0 @@
-id_producto,ram_tipo,capacidad_gb,velocidad_mhz,latencia,modulos,cantidad_modulos,rgb,created_at,updated_at
-700,DDR4,16,3200,CL16,1x16GB,1,f,2026-04-15 17:02:12.189989,2026-05-04 10:14:33.732254
-773,DDR5,16,5600,CL36,1x16GB,1,t,2026-04-15 17:02:12.315268,2026-05-04 10:11:38.400069
-768,DDR5,16,5600,CL36,1x16GB,1,f,2026-04-15 17:02:12.305381,2026-05-04 10:16:38.141568

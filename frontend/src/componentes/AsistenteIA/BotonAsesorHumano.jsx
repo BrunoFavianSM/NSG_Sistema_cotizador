@@ -77,7 +77,7 @@ function construirMensajeWhatsApp({ nombreUsuario, perfilUsuario, presupuesto, r
 
 /**
  * Props:
- * - numeroWhatsApp: string — número en formato internacional sin + (ej: "51999999999")
+ * - numeroWhatsApp: string — número de ventas configurado, en formato internacional sin + (ej: "51987654321")
  * - nombreUsuario: string | null — nombre del usuario autenticado
  * - perfilUsuario: string | null — perfil identificado (basico, intermedio, avanzado, gamer_full)
  * - presupuesto: number | null — presupuesto en PEN
@@ -85,13 +85,19 @@ function construirMensajeWhatsApp({ nombreUsuario, perfilUsuario, presupuesto, r
  * - variante: "completo" | "compacto" — estilo del botón
  */
 export default function BotonAsesorHumano({
-  numeroWhatsApp = '51999999999',
+  numeroWhatsApp = '',
   nombreUsuario = null,
   perfilUsuario = null,
   presupuesto = null,
   resumenRequisitos = null,
   variante = 'completo',
 }) {
+  // Sin número de ventas configurado no se puede armar un enlace válido:
+  // se omite el botón en lugar de generar un wa.me roto.
+  if (!numeroWhatsApp) {
+    return null;
+  }
+
   const mensajeTexto = construirMensajeWhatsApp({
     nombreUsuario,
     perfilUsuario,

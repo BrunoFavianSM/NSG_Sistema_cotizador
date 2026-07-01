@@ -1,4 +1,0 @@
-id_producto,wattage,certificacion,modular,form_factor,pcie_conectores,sata_conectores,created_at,updated_at
-239,1000,80+ Gold,Full Modular,ATX,5,12,2026-04-15 17:02:11.493611,2026-05-04 10:30:44.145428
-251,750,80+ Gold,Full Modular,ATX,4,5,2026-04-15 17:02:11.515555,2026-05-04 10:31:53.616409
-261,550,80+ Silver,No Modular,ATX,2,6,2026-04-15 17:02:11.53163,2026-05-04 10:32:55.237606
