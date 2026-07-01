@@ -429,7 +429,7 @@ export default function HistorialCliente() {
     },
     {
       key: 'acciones',
-      label: 'PDF',
+      label: 'Acciones',
       align: 'right',
       render: (row) => (
         <div className="flex flex-wrap justify-end gap-2">
@@ -493,7 +493,8 @@ export default function HistorialCliente() {
               Técnico
             </Button>
           )}
-          {!esUsuario && (
+          {/* Botón de exportación a Excel — oculto a pedido */}
+          {false && !esUsuario && (
             <Button
               variant="ghost"
               size="sm"

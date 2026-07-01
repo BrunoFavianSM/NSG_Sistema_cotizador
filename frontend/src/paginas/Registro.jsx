@@ -162,7 +162,7 @@ export default function Registro() {
             inputMode="numeric"
             value={dni}
             onChange={manejarCambioDni}
-            placeholder="Ej: 01234567"
+            placeholder="Ej. 71234567"
             hint={consultandoDni ? 'Consultando datos del DNI...' : avisoDni}
           />
 
@@ -207,7 +207,7 @@ export default function Registro() {
             autoComplete="tel"
             value={telefono}
             onChange={(e) => { setTelefono(e.target.value); setError(''); }}
-            placeholder="+51 999 999 999"
+            placeholder="+51 987 654 321"
           />
 
           <div className="space-y-1.5">
@@ -228,7 +228,7 @@ export default function Registro() {
                   setError('');
                 }}
                 className="w-full min-h-11 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 pr-12 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] transition-colors duration-higNormal ease-hig hover:border-[var(--color-text-muted)]"
-                placeholder="Al menos 8 caracteres, mayúscula, número y símbolo"
+                placeholder="Crea una contraseña segura"
                 aria-required="true"
               />
 
@@ -301,7 +301,7 @@ export default function Registro() {
                       ? 'border-[var(--color-success)]'
                       : 'border-[var(--color-border)]'
                 } bg-[var(--color-surface)]`}
-                placeholder="Vuelve a ingresar la contraseña"
+                placeholder="Repite tu contraseña"
                 aria-required="true"
               />
             </div>

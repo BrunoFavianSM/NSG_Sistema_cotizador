@@ -101,7 +101,7 @@ export default function Login() {
               setCorreo(event.target.value);
               setError('');
             }}
-            placeholder="tucorreo@dominio.com"
+            placeholder="nombre@correo.com"
           />
 
           <div className="space-y-1.5">
@@ -122,7 +122,7 @@ export default function Login() {
                   setError('');
                 }}
                 className="w-full min-h-11 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 pr-12 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] transition-colors duration-higNormal ease-hig hover:border-[var(--color-text-muted)]"
-                placeholder="••••••••"
+                placeholder="Ingresa tu contraseña"
                 aria-required="true"
               />
 

@@ -511,21 +511,23 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                 </div>
 
                 <div className="flex flex-shrink-0 items-center gap-1">
-                  {/* TODO: ELIMINAR EN PRODUCCION - boton de debug temporal */}
-                  <button
-                    type="button"
-                    onClick={() => setDebugAbierto((v) => !v)}
-                    aria-label="Abrir panel de depuracion"
-                    className={[
-                      'min-h-11 px-3 rounded-[var(--radius-sm)]',
-                      'text-xs font-semibold',
-                      debugAbierto ? 'bg-[var(--color-warning)]/20 text-[var(--color-warning)]' : 'text-[var(--color-text-muted)]',
-                      'hover:bg-[var(--color-surface-soft)] transition-colors',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]',
-                    ].join(' ')}
-                  >
-                    Debug
-                  </button>
+                  {/* Boton de debug temporal — oculto en produccion */}
+                  {false && (
+                    <button
+                      type="button"
+                      onClick={() => setDebugAbierto((v) => !v)}
+                      aria-label="Abrir panel de depuracion"
+                      className={[
+                        'min-h-11 px-3 rounded-[var(--radius-sm)]',
+                        'text-xs font-semibold',
+                        debugAbierto ? 'bg-[var(--color-warning)]/20 text-[var(--color-warning)]' : 'text-[var(--color-text-muted)]',
+                        'hover:bg-[var(--color-surface-soft)] transition-colors',
+                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]',
+                      ].join(' ')}
+                    >
+                      Debug
+                    </button>
+                  )}
 
                   {/* Botón asesor humano compacto �?" siempre visible (Req 8.4) */}
                   <BotonAsesorHumano
@@ -574,8 +576,8 @@ const AsistenteIA = ({ onAplicarRecomendacion = null, className = '' }) => {
                 aria-live="polite"
                 aria-label="Conversación con el asistente"
               >
-                {/* Banner de historial previo (Req 14.2) */}
-                {mostrarBannerHistorial && sesionPrevia && (
+                {/* Banner de historial previo (Req 14.2) — oculto a pedido: no se muestra el aviso de conversación previa */}
+                {false && mostrarBannerHistorial && sesionPrevia && (
                   <BannerHistorialPrevio
                     sesionPrevia={sesionPrevia}
                     onContinuar={manejarContinuarHistorial}

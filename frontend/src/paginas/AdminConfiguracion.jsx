@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import AdminPageHeader from '../componentes/admin/AdminPageHeader';
-import ErrorState from '../componentes/feedback/ErrorState';
 import LoadingSpinner from '../componentes/feedback/LoadingSpinner';
 import { useToast } from '../componentes/feedback/ToastProvider';
 import Button from '../componentes/ui/Button';
@@ -144,9 +143,6 @@ export default function AdminConfiguracion() {
   const [modoTipoCambio, setModoTipoCambio] = useState(modoTipoCambioContexto);
   const [guardandoModo, setGuardandoModo] = useState(false);
 
-  const [estadisticasIA, setEstadisticasIA] = useState(null);
-  const [cargandoEstadisticas, setCargandoEstadisticas] = useState(true);
-  const [errorEstadisticas, setErrorEstadisticas] = useState('');
   const [limpiando, setLimpiando] = useState(false);
 
   // ── Estado sección Asistente de IA (Requisitos 2.10–2.17) ──────────────────
@@ -172,7 +168,6 @@ export default function AdminConfiguracion() {
 
   useEffect(() => {
     if (autenticado) {
-      cargarEstadisticasIA();
       cargarModelosIA();
       cargarEstadoApiKeys();
       cargarEstadoTokenDni();
@@ -218,19 +213,6 @@ export default function AdminConfiguracion() {
     setModoTipoCambio(modoTipoCambioContexto);
   }, [modoTipoCambioContexto]);
 
-  const cargarEstadisticasIA = async () => {
-    setCargandoEstadisticas(true);
-    setErrorEstadisticas('');
-    try {
-      const stats = await api.obtenerEstadisticasIA();
-      setEstadisticasIA(stats);
-    } catch {
-      setErrorEstadisticas('No se pudieron cargar las métricas en este momento.');
-      setEstadisticasIA(null);
-    } finally {
-      setCargandoEstadisticas(false);
-    }
-  };
 
   /** Carga la configuración de modo y modelos de IA desde el backend (Requisito 2.11). */
   const cargarModelosIA = async () => {
@@ -437,8 +419,7 @@ export default function AdminConfiguracion() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Configuración del Sistema"
-        description="Gestiona parámetros globales y monitorea el uso de IA con feedback de estado consistente."
-        actions={<Button variant="secondary" onClick={cargarEstadisticasIA} loading={cargandoEstadisticas}>Actualizar métricas</Button>}
+        description="Gestiona los parámetros globales del sistema y la configuración del asistente de IA."
       />
 
       <section className="surface-elevated p-6" data-tour="config-financieros">
@@ -661,49 +642,6 @@ export default function AdminConfiguracion() {
             Guardar token
           </Button>
         </div>
-      </section>
-
-      <section className="surface-elevated p-6">
-        <header className="mb-4">
-          <h2 className="text-lg font-semibold text-[var(--color-text)]">Métricas de IA</h2>
-          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-            Seguimiento operativo de llamadas y costos aproximados.
-          </p>
-        </header>
-
-        {cargandoEstadisticas ? (
-          <div className="py-6">
-            <LoadingSpinner label="Cargando métricas de IA..." />
-          </div>
-        ) : errorEstadisticas ? (
-          <ErrorState
-            title="No se cargaron las métricas"
-            description={errorEstadisticas}
-            onRetry={cargarEstadisticasIA}
-            retryLabel="Reintentar"
-          />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-3">
-            <StatCard
-              title="Llamadas"
-              value={estadisticasIA?.llamadas ?? 0}
-              helper="Consultas acumuladas"
-              tone="info"
-            />
-            <StatCard
-              title="Costo estimado"
-              value={`$${estadisticasIA?.costoEstimado ?? '0.00'}`}
-              helper="USD aproximado"
-              tone="success"
-            />
-            <StatCard
-              title="Promedio tokens"
-              value={estadisticasIA?.promedioTokens ?? 0}
-              helper="Tokens por consulta"
-              tone="warning"
-            />
-          </div>
-        )}
       </section>
 
       <section className="surface-elevated p-6" data-tour="config-asistente">
