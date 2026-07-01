@@ -128,7 +128,7 @@ export default function Registro() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-xl space-y-6">
+    <div className="mx-auto w-full max-w-3xl space-y-6">
       <header className="surface-elevated p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Nueva cuenta</p>
         <h1 className="mt-1 text-2xl font-semibold text-[var(--color-text)] sm:text-3xl">Crear cuenta</h1>
@@ -155,6 +155,7 @@ export default function Registro() {
             />
           ) : null}
 
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <InputField
             id="registro-dni"
             label="DNI"
@@ -164,6 +165,7 @@ export default function Registro() {
             onChange={manejarCambioDni}
             placeholder="Ej. 71234567"
             hint={consultandoDni ? 'Consultando datos del DNI...' : avisoDni}
+            className="sm:col-span-2"
           />
 
           <InputField
@@ -311,6 +313,7 @@ export default function Registro() {
             {confirmarPassword.length > 0 && contrasenasCoinciden && (
               <p className="text-xs text-[var(--color-success)]">Las contraseñas coinciden</p>
             )}
+          </div>
           </div>
 
           <TurnstileWidget onToken={setCaptchaToken} />

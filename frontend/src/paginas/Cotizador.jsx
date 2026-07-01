@@ -1565,7 +1565,7 @@ export default function Cotizador() {
     switch (pasoInfo.id) {
       case 'procesador':
         return (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <>
             {renderCampoFiltro(
               'filtro-procesador-marca',
               'Marca',
@@ -1582,11 +1582,11 @@ export default function Cotizador() {
               opcionesFiltrosPaso.modelos || [],
               'Todos'
             )}
-          </div>
+          </>
         );
       case 'placa_madre':
         return (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <>
             {renderCampoFiltro(
               'filtro-placa-marca',
               'Marca',
@@ -1595,11 +1595,11 @@ export default function Cotizador() {
               opcionesFiltrosPaso.marcas || [],
               'Todas'
             )}
-          </div>
+          </>
         );
       case 'ram':
         return (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <>
             {renderCampoFiltro(
               'filtro-ram-marca',
               'Marca',
@@ -1624,11 +1624,11 @@ export default function Cotizador() {
               opcionesFiltrosPaso.frecuencias || [],
               'Todas'
             )}
-          </div>
+          </>
         );
       case 'almacenamiento':
         return (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <>
             {renderCampoFiltro(
               'filtro-almacenamiento-marca',
               'Marca',
@@ -1653,11 +1653,11 @@ export default function Cotizador() {
               opcionesFiltrosPaso.tipos || [],
               'Todos'
             )}
-          </div>
+          </>
         );
       case 'gpu':
         return (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <>
             {renderCampoFiltro(
               'filtro-gpu-marca',
               'Marca',
@@ -1674,11 +1674,11 @@ export default function Cotizador() {
               opcionesFiltrosPaso.series || [],
               'Todas'
             )}
-          </div>
+          </>
         );
       case 'fuente':
         return (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <>
             {renderCampoFiltro(
               'filtro-fuente-marca',
               'Marca',
@@ -1695,11 +1695,11 @@ export default function Cotizador() {
               opcionesFiltrosPaso.potencias || [],
               'Todas'
             )}
-          </div>
+          </>
         );
       case 'case':
         return (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <>
             {renderCampoFiltro(
               'filtro-case-marca',
               'Marca',
@@ -1708,7 +1708,7 @@ export default function Cotizador() {
               opcionesFiltrosPaso.marcas || [],
               'Todas'
             )}
-          </div>
+          </>
         );
       default:
         return null;
@@ -1913,13 +1913,34 @@ export default function Cotizador() {
               </svg>
               Anterior
             </button>
-            <p className="text-center text-sm text-[var(--color-text-muted)]">
-              {pasoInfo.id === 'gpu' && procesadorTieneGraficosIntegrados && !configuracionSeleccionada.gpu
-                ? 'Paso opcional'
-                : pasoCompleto(pasoActual)
-                  ? 'Paso completado.'
-                  : 'Selecciona una opcion.'}
-            </p>
+            <div className="flex flex-1 items-center">
+              {seleccionActual && pasoInfo.id !== 'ram' ? (
+                <div className="flex w-full items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="text-[11px] uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Seleccion actual</p>
+                    <p className="truncate text-sm font-semibold text-[var(--color-text)]">{seleccionActual.nombre}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => seleccionarComponente(pasoInfo.id, null)}
+                    aria-label="Quitar seleccion actual"
+                    title="Quitar seleccion"
+                    className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors duration-higNormal ease-hig hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]"
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <p className="w-full text-center text-sm text-[var(--color-text-muted)]">
+                  {pasoInfo.id === 'gpu' && procesadorTieneGraficosIntegrados && !configuracionSeleccionada.gpu
+                    ? 'Paso opcional'
+                    : 'Selecciona una opcion.'}
+                </p>
+              )}
+            </div>
             <button
               type="button"
               onClick={irSiguiente}
@@ -1941,13 +1962,6 @@ export default function Cotizador() {
               </svg>
             </button>
           </div>
-
-          {seleccionActual && pasoInfo.id !== 'ram' ? (
-            <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3">
-              <p className="text-xs uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Seleccion actual</p>
-              <p className="mt-1 text-sm font-semibold text-[var(--color-text)]">{seleccionActual.nombre}</p>
-            </div>
-          ) : null}
 
           {pasoInfo.id === 'gpu' && procesadorTieneGraficosIntegrados ? (
             <div className="rounded-[var(--radius-md)] border border-[color:rgba(48,209,88,0.35)] bg-[color:rgba(48,209,88,0.10)] p-3 text-sm text-[var(--color-success)]">
@@ -1979,19 +1993,19 @@ export default function Cotizador() {
             /* ======== PASOS DE COMPONENTES — Grid original ======== */
             <>
               <section className="surface-card p-3" aria-label="Filtros de productos">
-                {renderFiltrosPaso()}
-                {etiquetasDisponibles.length > 0 ? (
-                  <div className="mt-3 border-t border-[var(--color-border)] pt-3">
-                    {renderCampoFiltro(
-                      'filtro-etiqueta-perfil',
-                      'Etiqueta de perfil',
-                      filtroEtiqueta,
-                      (valor) => setFiltroEtiqueta(valor),
-                      etiquetasDisponibles.map((et) => et.nombre),
-                      'Todas las etiquetas'
-                    )}
-                  </div>
-                ) : null}
+                <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(11rem,1fr))]">
+                  {renderFiltrosPaso()}
+                  {etiquetasDisponibles.length > 0
+                    ? renderCampoFiltro(
+                        'filtro-etiqueta-perfil',
+                        'Etiqueta de perfil',
+                        filtroEtiqueta,
+                        (valor) => setFiltroEtiqueta(valor),
+                        etiquetasDisponibles.map((et) => et.nombre),
+                        'Todas las etiquetas'
+                      )
+                    : null}
+                </div>
               </section>
 
               {cargandoProductos ? (
