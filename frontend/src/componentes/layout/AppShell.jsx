@@ -6,6 +6,7 @@ import { usePollingNotificaciones } from '../../hooks/usePollingNotificaciones';
 import { NotificacionesToastContainer } from '../feedback/NotificacionToast';
 import BadgeNotificaciones from '../ui/BadgeNotificaciones';
 import PanelNotificaciones from '../notificaciones/PanelNotificaciones';
+import { useTour } from '../../tours/useTour';
 
 const NAV_ITEMS = [
   {
@@ -281,6 +282,14 @@ function NavIcon({ name, className }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
       );
+    case 'help':
+      return (
+        <svg className={iconClass(className)} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" strokeWidth={1.8} />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9.4 9.2a2.7 2.7 0 015.1 1.2c0 1.8-2.5 2.2-2.5 3.9" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 17.2h.01" />
+        </svg>
+      );
     default:
       return null;
   }
@@ -490,8 +499,25 @@ function BottomNavigation({ navItems }) {
   );
 }
 
+/** Botón de ayuda que relanza el tour guiado de la vista actual. */
+function BotonAyudaTour({ onLanzar }) {
+  return (
+    <button
+      type="button"
+      onClick={onLanzar}
+      data-tour="ayuda-tour"
+      aria-label="Ver guía de esta pantalla"
+      title="Ver guía de esta pantalla"
+      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--color-border)] text-[var(--color-text-muted)] transition-colors duration-higNormal ease-hig hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-text)]"
+    >
+      <NavIcon name="help" className="h-5 w-5" />
+    </button>
+  );
+}
+
 export default function AppShell() {
   const { autenticado, usuario, logout, monedaVista, alternarMonedaVista, esInvitado } = useAppContext();
+  const { tourDisponible, lanzarTour } = useTour();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -587,6 +613,7 @@ export default function AppShell() {
 
               {autenticado ? (
                 <div className="flex items-center gap-2 sm:gap-3">
+                  {tourDisponible && <BotonAyudaTour onLanzar={lanzarTour} />}
                   <NavLink
                     to="/perfil"
                     aria-label="Ir a mi cuenta"
@@ -650,6 +677,7 @@ export default function AppShell() {
                 </div>
               ) : (
                 <div className="flex items-center gap-2 sm:gap-3">
+                  {tourDisponible && <BotonAyudaTour onLanzar={lanzarTour} />}
                   <button
                     type="button"
                     onClick={handleToggleDarkMode}

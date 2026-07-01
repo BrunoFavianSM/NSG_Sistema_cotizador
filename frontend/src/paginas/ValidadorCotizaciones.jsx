@@ -291,6 +291,7 @@ export default function ValidadorCotizaciones() {
         transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
         className="surface-elevated p-6"
         aria-labelledby="validador-busqueda-title"
+        data-tour="validador-buscar"
       >
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 id="validador-busqueda-title" className="text-lg font-semibold text-[var(--color-text)]">Buscar ticket</h2>
@@ -345,7 +346,7 @@ export default function ValidadorCotizaciones() {
 
       {cotizacion ? (
         <>
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5" data-tour="validador-resultado">
             <StatCard
               label="Ticket"
               value={cotizacion.codigo_ticket || '-'}

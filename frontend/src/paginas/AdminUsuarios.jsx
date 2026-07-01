@@ -7,6 +7,7 @@ import LoadingSpinner from '../componentes/feedback/LoadingSpinner';
 import ErrorState from '../componentes/feedback/ErrorState';
 import { useAppContext } from '../contexto/AppContext';
 import * as api from '../servicios/api';
+import { pasosModalUsuario } from '../tours/pasos/modales';
 
 const ROLES = [
   { value: 'admin', label: 'Administrador' },
@@ -101,10 +102,10 @@ export default function AdminUsuarios() {
           <h1 className="mt-1 text-2xl font-semibold text-[var(--color-text)]">Gestión de cuentas</h1>
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">Administra cuentas de administrador, vendedor y usuario.</p>
         </div>
-        <Button onClick={abrirCrear}>Nueva cuenta</Button>
+        <Button onClick={abrirCrear} data-tour="usuarios-nueva">Nueva cuenta</Button>
       </header>
 
-      <section className="surface-card p-4">
+      <section className="surface-card p-4" data-tour="usuarios-lista">
         {cargando ? (
           <LoadingSpinner label="Cargando cuentas..." />
         ) : error ? (
@@ -159,7 +160,7 @@ export default function AdminUsuarios() {
         )}
       </section>
 
-      <Modal open={modal.open} onClose={() => !guardando && setModal({ open: false, mode: 'create' })} title={modal.mode === 'create' ? 'Nueva cuenta' : 'Editar cuenta'}>
+      <Modal open={modal.open} onClose={() => !guardando && setModal({ open: false, mode: 'create' })} title={modal.mode === 'create' ? 'Nueva cuenta' : 'Editar cuenta'} pasosTour={pasosModalUsuario}>
         <form onSubmit={guardar} className="space-y-4">
           {errorForm ? (
             <p className="rounded-[var(--radius-sm)] border border-[color:rgba(255,69,58,0.4)] bg-[color:rgba(255,69,58,0.10)] px-3 py-2 text-sm text-[var(--color-danger)]">{errorForm}</p>
@@ -172,13 +173,17 @@ export default function AdminUsuarios() {
           ) : null}
           <InputField id="cu-telefono" label="Teléfono" value={form.telefono} onChange={(e) => setCampo('telefono', e.target.value)} />
           <InputField id="cu-dni" label="DNI" inputMode="numeric" value={form.dni} onChange={(e) => setCampo('dni', e.target.value.replace(/[^0-9]/g, ''))} />
-          <SelectField id="cu-rol" label="Rol" value={form.rol} onChange={(e) => setCampo('rol', e.target.value)} options={ROLES} />
+          <div data-tour="modal-usuario-rol">
+            <SelectField id="cu-rol" label="Rol" value={form.rol} onChange={(e) => setCampo('rol', e.target.value)} options={ROLES} />
+          </div>
           {modal.mode === 'edit' ? (
             <SelectField id="cu-estado" label="Estado" value={form.estado} onChange={(e) => setCampo('estado', e.target.value)}
               options={[{ value: 'activa', label: 'Activa' }, { value: 'pendiente_activacion', label: 'Pendiente' }, { value: 'desactivada', label: 'Desactivada' }]} />
           ) : null}
-          <InputField id="cu-password" label={modal.mode === 'create' ? 'Contraseña' : 'Nueva contraseña (opcional)'} type="password"
-            required={modal.mode === 'create'} value={form.password} onChange={(e) => setCampo('password', e.target.value)} placeholder="Mínimo 8 caracteres" />
+          <div data-tour="modal-usuario-password">
+            <InputField id="cu-password" label={modal.mode === 'create' ? 'Contraseña' : 'Nueva contraseña (opcional)'} type="password"
+              required={modal.mode === 'create'} value={form.password} onChange={(e) => setCampo('password', e.target.value)} placeholder="Mínimo 8 caracteres" />
+          </div>
 
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="secondary" onClick={() => setModal({ open: false, mode: 'create' })} disabled={guardando}>Cancelar</Button>

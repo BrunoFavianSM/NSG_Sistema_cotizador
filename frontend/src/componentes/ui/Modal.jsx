@@ -1,6 +1,7 @@
-﻿import { useEffect, useId, useRef } from 'react';
+﻿import { useCallback, useEffect, useId, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from './cn';
+import { crearTour } from '../../tours/driver.config';
 
 export default function Modal({
   open,
@@ -10,11 +11,42 @@ export default function Modal({
   children,
   footer = null,
   size = 'md',
+  pasosTour = null,
 }) {
   const dialogRef = useRef(null);
   const onCloseRef = useRef(onClose);
+  const tourRef = useRef(null);
   const titleId = useId();
   const descriptionId = useId();
+  const tieneTour = Array.isArray(pasosTour) && pasosTour.length > 0;
+
+  // Lanza un mini-tour que explica los campos de este modal. Se ejecuta a
+  // demanda (botón de ayuda), no automáticamente, para no interrumpir.
+  const lanzarMiniTour = useCallback(() => {
+    if (!tieneTour) return;
+    if (tourRef.current) {
+      tourRef.current.destroy();
+      tourRef.current = null;
+    }
+    const instancia = crearTour({
+      pasos: pasosTour,
+      onFinalizar: () => {
+        tourRef.current = null;
+      },
+    });
+    tourRef.current = instancia;
+    instancia.drive();
+  }, [pasosTour, tieneTour]);
+
+  // Cierra el mini-tour si el modal se cierra o desmonta.
+  useEffect(() => {
+    if (open) return undefined;
+    if (tourRef.current) {
+      tourRef.current.destroy();
+      tourRef.current = null;
+    }
+    return undefined;
+  }, [open]);
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -49,6 +81,10 @@ export default function Modal({
     });
 
     const onKeyDown = (event) => {
+      // Si hay un mini-tour activo, dejamos que driver.js maneje el teclado
+      // (Escape cierra el tour, no el modal; el foco lo controla driver).
+      if (tourRef.current) return;
+
       if (event.key === 'Escape') {
         event.stopPropagation();
         onCloseRef.current?.();
@@ -132,17 +168,35 @@ export default function Modal({
                 <h2 id={titleId} className="text-xl font-semibold text-[var(--color-text)]">{title}</h2>
                 {description ? <p id={descriptionId} className="mt-1 text-sm text-[var(--color-text-muted)]">{description}</p> : null}
               </div>
-              <button
-                type="button"
-                onClick={onClose}
-                data-modal-close="true"
-                className="min-h-11 min-w-11 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors duration-higNormal ease-hig hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-text)]"
-                aria-label="Cerrar diálogo"
-              >
-                <svg className="mx-auto h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth={2} d="M6 6l12 12M18 6L6 18" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-1">
+                {tieneTour ? (
+                  <button
+                    type="button"
+                    onClick={lanzarMiniTour}
+                    tabIndex={-1}
+                    className="min-h-11 min-w-11 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors duration-higNormal ease-hig hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-text)]"
+                    aria-label="Ver guía de este formulario"
+                    title="Ver guía de este formulario"
+                  >
+                    <svg className="mx-auto h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9" strokeWidth={1.8} />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9.4 9.2a2.7 2.7 0 015.1 1.2c0 1.8-2.5 2.2-2.5 3.9" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 17.2h.01" />
+                    </svg>
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  data-modal-close="true"
+                  className="min-h-11 min-w-11 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors duration-higNormal ease-hig hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-text)]"
+                  aria-label="Cerrar diálogo"
+                >
+                  <svg className="mx-auto h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeWidth={2} d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </button>
+              </div>
             </header>
 
             <div>{children}</div>

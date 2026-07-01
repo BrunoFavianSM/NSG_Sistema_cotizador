@@ -241,6 +241,7 @@ export default function ImportarCSV() {
         role="button"
         tabIndex={0}
         aria-label="Zona para arrastrar archivo CSV"
+        data-tour="csv-zona"
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
         className={`surface-card cursor-pointer border-2 border-dashed p-10 text-center transition-all duration-higNormal ${
           arrastrando
@@ -280,7 +281,7 @@ export default function ImportarCSV() {
 
       {/* Previsualización */}
       {preview.filas.length > 0 && (
-        <section className="surface-card overflow-hidden">
+        <section className="surface-card overflow-hidden" data-tour="csv-preview">
           <div className="border-b border-[var(--color-border)] px-4 py-3">
             <h2 className="text-sm font-semibold text-[var(--color-text)]">
               Previsualización ({preview.filas.length} filas)
@@ -358,7 +359,7 @@ export default function ImportarCSV() {
 
       {/* Resultado */}
       {resultado && (
-        <section className="surface-card space-y-4 p-5">
+        <section className="surface-card space-y-4 p-5" data-tour="csv-resultado">
           <h2 className="text-base font-bold text-[var(--color-text)]">Resultado de la importación</h2>
 
           {/* Grid de resultados — 5 tarjetas (Req 7.1) */}

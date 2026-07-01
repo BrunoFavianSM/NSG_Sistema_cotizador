@@ -17,6 +17,7 @@ import SelectField from '../componentes/ui/SelectField';
 import Paginacion from '../componentes/ui/Paginacion';
 import { useAppContext } from '../contexto/AppContext';
 import { useEnriquecimientoTiempoReal } from '../hooks/useEnriquecimientoTiempoReal';
+import { pasosModalProducto } from '../tours/pasos/modales';
 import * as api from '../servicios/api';
 
 function normalizarValorFormulario(valor, mapa = {}) {
@@ -673,7 +674,7 @@ export default function AdminProductos() {
             <Button variant="secondary" onClick={cargarProductos} loading={cargando}>
               Actualizar
             </Button>
-            <Button onClick={abrirCrear}>Nuevo producto</Button>
+            <Button onClick={abrirCrear} data-tour="productos-nuevo">Nuevo producto</Button>
           </>
         )}
       />
@@ -728,7 +729,7 @@ export default function AdminProductos() {
       )}
 
       {vistaDetallada ? (
-        <section className="space-y-4" aria-label="Vista detallada de productos">
+        <section className="space-y-4" aria-label="Vista detallada de productos" data-tour="productos-lista">
           <div className="surface-elevated border border-[var(--color-border)] p-4">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div className="flex flex-wrap items-end gap-3">
@@ -980,6 +981,7 @@ export default function AdminProductos() {
         title={modalFormulario.mode === 'edit' ? 'Editar producto' : 'Nuevo producto'}
         description="Completa los campos y guarda los cambios."
         size="lg"
+        pasosTour={pasosModalProducto}
       >
         <ProductForm
           value={formulario}

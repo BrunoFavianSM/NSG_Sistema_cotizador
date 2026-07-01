@@ -12,6 +12,7 @@ import InputField from '../componentes/ui/InputField';
 import Modal from '../componentes/ui/Modal';
 import LoadingSpinner from '../componentes/feedback/LoadingSpinner';
 import { useToast } from '../componentes/feedback/ToastProvider';
+import { pasosModalBaja } from '../tours/pasos/modales';
 import { useAppContext } from '../contexto/AppContext';
 import {
   obtenerPerfilPropio,
@@ -78,7 +79,7 @@ function SeccionDatosPersonales({ perfil, cargando, onUpdated }) {
   };
 
   return (
-    <section className="surface-elevated p-6" aria-labelledby="datos-titulo">
+    <section className="surface-elevated p-6" aria-labelledby="datos-titulo" data-tour="perfil-datos">
       <h2 id="datos-titulo" className="text-lg font-semibold text-[var(--color-text)]">Datos personales</h2>
       <p className="mt-1 text-sm text-[var(--color-text-muted)]">
         Actualiza tu teléfono y correo. El nombre solo lo puede cambiar un administrador.
@@ -174,7 +175,7 @@ function SeccionCambiarContrasena() {
   };
 
   return (
-    <section className="surface-elevated p-6" aria-labelledby="password-titulo">
+    <section className="surface-elevated p-6" aria-labelledby="password-titulo" data-tour="perfil-password">
       <h2 id="password-titulo" className="text-lg font-semibold text-[var(--color-text)]">Cambiar contraseña</h2>
       <p className="mt-1 text-sm text-[var(--color-text-muted)]">
         Mínimo 8 caracteres, con mayúscula, minúscula, número y carácter especial.
@@ -242,7 +243,7 @@ function SeccionBaja() {
   };
 
   return (
-    <section className="surface-elevated p-6 border border-[color:rgba(255,69,58,0.3)]" aria-labelledby="baja-titulo">
+    <section className="surface-elevated p-6 border border-[color:rgba(255,69,58,0.3)]" aria-labelledby="baja-titulo" data-tour="perfil-baja">
       <h2 id="baja-titulo" className="text-lg font-semibold text-[var(--color-danger)]">Dar de baja mi cuenta</h2>
       <p className="mt-1 text-sm text-[var(--color-text-muted)]">
         Tu cuenta quedará desactivada y no podrás iniciar sesión. Tus cotizaciones se conservan. Un administrador puede reactivarla.
@@ -257,6 +258,7 @@ function SeccionBaja() {
         size="sm"
         title="Confirmar baja de cuenta"
         description="Esta acción desactiva tu cuenta. Para confirmar, ingresa tu contraseña."
+        pasosTour={pasosModalBaja}
         footer={(
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setModalOpen(false)} disabled={procesando}>Cancelar</Button>
@@ -264,14 +266,16 @@ function SeccionBaja() {
           </div>
         )}
       >
-        <InputField
-          id="baja-password"
-          label="Contraseña"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-        />
+        <div data-tour="modal-baja-password">
+          <InputField
+            id="baja-password"
+            label="Contraseña"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+          />
+        </div>
       </Modal>
     </section>
   );

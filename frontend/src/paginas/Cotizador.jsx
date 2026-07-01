@@ -1748,7 +1748,7 @@ export default function Cotizador() {
         <p className="mt-2 text-sm text-[var(--color-text-muted)]">Configura tu computadora paso a paso con validacion y total en tiempo real.</p>
       </header>
 
-      <section className="surface-card space-y-3 p-4" aria-label="Pasos del cotizador">
+      <section className="surface-card space-y-3 p-4" aria-label="Pasos del cotizador" data-tour="cotizador-pasos">
         <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-8">
           {PASOS.map((paso, indice) => {
             const activo = indice === pasoActual;
@@ -1797,7 +1797,7 @@ export default function Cotizador() {
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <section className="surface-elevated space-y-5 p-5 sm:p-6 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto scrollbar-thin">          {/* Header del paso */}
+        <section className="surface-elevated space-y-5 p-5 sm:p-6 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto scrollbar-thin" data-tour="cotizador-productos">          {/* Header del paso */}
           <div>
             <p className="text-xs uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Paso {pasoActual + 1} de {PASOS.length}</p>
             <h2 className="mt-1 text-2xl font-semibold text-[var(--color-text)]">{pasoInfo.nombre}</h2>
@@ -2250,7 +2250,7 @@ export default function Cotizador() {
 
         <div className="relative">
           <aside className="space-y-4 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto pb-4 pr-1 scrollbar-thin">
-          <section className="surface-elevated p-5">
+          <section className="surface-elevated p-5" data-tour="cotizador-asistente">
             <h3 className="text-sm font-semibold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Asistente IA</h3>
             <p className="mt-2 text-sm text-[var(--color-text-muted)]">Solicita una configuracion sugerida segun tu uso y aplicala en un click.</p>
             <div className="mt-4">
@@ -2397,7 +2397,7 @@ export default function Cotizador() {
 
           {/* Datos del cliente — obligatorios: selecciona una cuenta (correo) o ingresa los datos */}
           {(esPrivilegiado) && (
-          <section className="surface-elevated space-y-4 p-5" aria-label="Datos del cliente">
+          <section className="surface-elevated space-y-4 p-5" aria-label="Datos del cliente" data-tour="cotizador-cliente">
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Datos del cliente</h3>
               <p className="mt-2 text-sm text-[var(--color-text-muted)]">
@@ -2608,7 +2608,7 @@ export default function Cotizador() {
             />
           )}
 
-          <section className="surface-elevated space-y-4 p-5">
+          <section className="surface-elevated space-y-4 p-5" data-tour="cotizador-generar">
             {esInvitado ? (
               <div className="space-y-3">
                 <div className="rounded-[var(--radius-sm)] bg-[color:rgba(255,214,10,0.10)] p-3 text-sm text-[var(--color-text-muted)]">

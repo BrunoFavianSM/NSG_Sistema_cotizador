@@ -134,6 +134,7 @@ export default function ProductForm({
           label="Nombre"
           required
           data-autofocus="true"
+          data-tour="modal-producto-basicos"
           value={value.nombre}
           onChange={(e) => setCampo('nombre', e.target.value)}
           placeholder="Ejemplo: AMD Ryzen 7 7700X"
@@ -154,6 +155,7 @@ export default function ProductForm({
           type="number"
           step="0.01"
           min="0"
+          data-tour="modal-producto-comercial"
           label="Precio base (USD)"
           required
           value={value.precio_base}

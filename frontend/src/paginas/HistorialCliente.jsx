@@ -531,6 +531,7 @@ export default function HistorialCliente() {
           transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className="surface-elevated p-6"
           aria-labelledby="historial-busqueda-title"
+          data-tour="historial-buscar"
         >
           <div className="mb-4 flex items-center justify-between gap-3">
             <h2 id="historial-busqueda-title" className="text-lg font-semibold text-[var(--color-text)]">Buscar por correo</h2>
@@ -589,6 +590,7 @@ export default function HistorialCliente() {
           transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className="surface-elevated p-6"
           aria-labelledby="clientes-registrados-title"
+          data-tour="historial-clientes"
         >
           <h2 id="clientes-registrados-title" className="mb-4 text-base font-semibold text-[var(--color-text)]">
             Clientes registrados
@@ -652,7 +654,7 @@ export default function HistorialCliente() {
       {/* ── Historial cargado ── */}
       {!buscando && historialCargado ? (
         <>
-          <section className="grid gap-4 md:grid-cols-3">
+          <section className="grid gap-4 md:grid-cols-3" data-tour="historial-resumen">
             <StatCard label="Cliente" value={cliente?.nombre || 'Cliente'} helper={cliente?.email || '-'} />
             <StatCard label="Cotizaciones" value={String(cotizaciones.length)} helper="Registros historicos" />
             <StatCard

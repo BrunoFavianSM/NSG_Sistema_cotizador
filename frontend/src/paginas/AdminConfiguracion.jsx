@@ -441,7 +441,7 @@ export default function AdminConfiguracion() {
         actions={<Button variant="secondary" onClick={cargarEstadisticasIA} loading={cargandoEstadisticas}>Actualizar métricas</Button>}
       />
 
-      <section className="surface-elevated p-6">
+      <section className="surface-elevated p-6" data-tour="config-financieros">
         <header className="mb-4">
           <h2 className="text-lg font-semibold text-[var(--color-text)]">Parámetros financieros</h2>
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">
@@ -706,7 +706,7 @@ export default function AdminConfiguracion() {
         )}
       </section>
 
-      <section className="surface-elevated p-6">
+      <section className="surface-elevated p-6" data-tour="config-asistente">
         <header className="mb-6">
           <h2 className="text-lg font-semibold text-[var(--color-text)]">Asistente de IA</h2>
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">
@@ -842,7 +842,7 @@ export default function AdminConfiguracion() {
       </section>
 
       {/* ── Sección Claves API de IA (Requisitos 11.1–11.13) ── */}
-      <section className="surface-elevated p-6">
+      <section className="surface-elevated p-6" data-tour="config-claves">
         <header className="mb-6">
           <h2 className="text-lg font-semibold text-[var(--color-text)]">Claves API de IA</h2>
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">
